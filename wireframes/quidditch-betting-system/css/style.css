@@ -602,3 +602,262 @@ main {
     margin-bottom: 2rem;
     padding: 2rem;
 }
+
+/* Estilos para la cronología del partido */
+
+.match-timeline {
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.timeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.timeline-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: bold;
+    color: #ff3a3a;
+}
+
+.live-indicator {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    background-color: #ff3a3a;
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.3;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+.timeline-time {
+    font-weight: bold;
+    color: #4b0082;
+}
+
+.button-small {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+}
+
+.timeline-container {
+    display: flex;
+    flex-direction: column;
+    max-height: 500px;
+    overflow-y: auto;
+    border-left: 2px solid #e0e0e0;
+    margin-left: 1rem;
+    padding-right: 1rem;
+}
+
+.timeline-event {
+    position: relative;
+    padding: 0.5rem 0 0.5rem 2rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: flex-start;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -0.5rem;
+    top: 1.25rem;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+}
+
+.timeline-marker.gryffindor {
+    background-color: #7f0000;
+    border: 2px solid #ffc500;
+}
+
+.timeline-marker.slytherin {
+    background-color: #2a623d;
+    border: 2px solid #aaaaaa;
+}
+
+.timeline-marker.neutral {
+    background-color: #6a5acd;
+    border: 2px solid #ffffff;
+}
+
+.timeline-time-info {
+    min-width: 2.5rem;
+    text-align: center;
+    margin-right: 0.5rem;
+}
+
+.event-time {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #666;
+}
+
+.timeline-content {
+    display: flex;
+    background-color: #f9f9f9;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    width: 100%;
+}
+
+.event-icon {
+    width: 2rem;
+    height: 2rem;
+    margin-right: 1rem;
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    flex-shrink: 0;
+}
+
+.event-icon.goal {
+    background-color: #ffcc00;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.event-icon.goal::after {
+    content: "G";
+    color: #4b0082;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.event-icon.foul {
+    background-color: #ff3a3a;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.event-icon.foul::after {
+    content: "F";
+    color: white;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.event-icon.snitch {
+    background-color: #ffcc00;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.event-icon.snitch::after {
+    content: "S";
+    color: #4b0082;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.event-icon.save {
+    background-color: #4b0082;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.event-icon.save::after {
+    content: "P";
+    color: white;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.event-icon.timeout {
+    background-color: #666;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.event-icon.timeout::after {
+    content: "T";
+    color: white;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.event-icon.whistle {
+    background-color: #ffcc00;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.event-icon.whistle::after {
+    content: "W";
+    color: #4b0082;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.event-description {
+    flex-grow: 1;
+}
+
+.team-gryffindor {
+    color: #7f0000;
+}
+
+.team-slytherin {
+    color: #2a623d;
+}
+
+.timeline-more {
+    text-align: center;
+    margin-top: 1.5rem;
+}
+
+/* Responsive adjustments for timeline */
+@media (max-width: 768px) {
+    .timeline-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .timeline-filter {
+        width: 100%;
+        overflow-x: auto;
+        white-space: nowrap;
+        padding-bottom: 0.5rem;
+    }
+    
+    .timeline-event {
+        padding-left: 1.5rem;
+    }
+    
+    .event-icon {
+        width: 1.5rem;
+        height: 1.5rem;
+        margin-right: 0.75rem;
+    }
+}
