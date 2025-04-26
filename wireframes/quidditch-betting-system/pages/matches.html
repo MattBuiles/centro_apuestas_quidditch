@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atrapa la Snitch - Partidos</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/magical-elements.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+    <!-- Header with logo and navigation -->
+    <header class="main-header">
+        <div class="logo-container">
+            <div class="logo-placeholder">
+                <div class="placeholder-x">X</div>
+            </div>
+            <h1>Atrapa la Snitch</h1>
+        </div>
+        <nav class="main-nav">
+            <ul>
+                <li><a href="../index.html" class="nav-link">Inicio</a></li>
+                <li><a href="matches.html" class="nav-link active">Partidos</a></li>
+                <li><a href="teams.html" class="nav-link">Equipos</a></li>
+                <li><a href="betting.html" class="nav-link">Apostar</a></li>
+                <li><a href="standings.html" class="nav-link">Clasificación</a></li>
+            </ul>
+        </nav>
+        <div class="auth-buttons">
+            <a href="login.html" class="button button-login">Iniciar Sesión</a>
+            <a href="register.html" class="button button-register">Registrarse</a>
+        </div>
+    </header>
+
+    <main>
+        <section class="page-header card">
+            <h2>Partidos de Quidditch</h2>
+            <p>Explora todos los partidos disponibles para apostar</p>
+        </section>
+        
+        <section class="matches-filters card">
+            <h3>Filtros</h3>
+            <form id="filters-form" class="filters-form">
+                <div class="filter-group">
+                    <label for="date-filter">Fecha:</label>
+                    <select id="date-filter" name="date-filter">
+                        <option value="all">Todos</option>
+                        <option value="today">Hoy</option>
+                        <option value="tomorrow">Mañana</option>
+                        <option value="week">Esta semana</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="team-filter">Equipo:</label>
+                    <select id="team-filter" name="team-filter">
+                        <option value="all">Todos</option>
+                        <option value="gryffindor">Gryffindor</option>
+                        <option value="slytherin">Slytherin</option>
+                        <option value="hufflepuff">Hufflepuff</option>
+                        <option value="ravenclaw">Ravenclaw</option>
+                    </select>
+                </div>
+                <button type="submit" class="button">Aplicar</button>
+            </form>
+        </section>
+
+        <section class="matches-list">
+            <!-- Match card 1 -->
+            <div class="match-card card">
+                <div class="match-date">
+                    <p>Hoy • 19:00</p>
+                </div>
+                <div class="match-teams">
+                    <div class="team team-home">
+                        <div class="team-logo-placeholder">
+                            <div class="placeholder-x">X</div>
+                        </div>
+                        <p class="team-name">Gryffindor</p>
+                    </div>
+                    <div class="vs-indicator">VS</div>
+                    <div class="team team-away">
+                        <div class="team-logo-placeholder">
+                            <div class="placeholder-x">X</div>
+                        </div>
+                        <p class="team-name">Slytherin</p>
+                    </div>
+                </div>
+                <div class="match-actions">
+                    <a href="match-detail.html?id=1" class="button">Ver detalles</a>
+                    <a href="betting.html?match=1" class="button button-secondary">Apostar</a>
+                </div>
+            </div>
+
+            <!-- Match card 2 -->
+            <div class="match-card card">
+                <div class="match-date">
+                    <p>Mañana • 17:30</p>
+                </div>
+                <div class="match-teams">
+                    <div class="team team-home">
+                        <div class="team-logo-placeholder">
+                            <div class="placeholder-x">X</div>
+                        </div>
+                        <p class="team-name">Hufflepuff</p>
+                    </div>
+                    <div class="vs-indicator">VS</div>
+                    <div class="team team-away">
+                        <div class="team-logo-placeholder">
+                            <div class="placeholder-x">X</div>
+                        </div>
+                        <p class="team-name">Ravenclaw</p>
+                    </div>
+                </div>
+                <div class="match-actions">
+                    <a href="match-detail.html?id=2" class="button">Ver detalles</a>
+                    <a href="betting.html?match=2" class="button button-secondary">Apostar</a>
+                </div>
+            </div>
+
+            <!-- Match card 3 -->
+            <div class="match-card card">
+                <div class="match-date">
+                    <p>Domingo • 15:00</p>
+                </div>
+                <div class="match-teams">
+                    <div class="team team-home">
+                        <div class="team-logo-placeholder">
+                            <div class="placeholder-x">X</div>
+                        </div>
+                        <p class="team-name">Chudley Cannons</p>
+                    </div>
+                    <div class="vs-indicator">VS</div>
+                    <div class="team team-away">
+                        <div class="team-logo-placeholder">
+                            <div class="placeholder-x">X</div>
+                        </div>
+                        <p class="team-name">Holyhead Harpies</p>
+                    </div>
+                </div>
+                <div class="match-actions">
+                    <a href="match-detail.html?id=3" class="button">Ver detalles</a>
+                    <a href="betting.html?match=3" class="button button-secondary">Apostar</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="main-footer">
+        <div class="footer-links">
+            <ul>
+                <li><a href="about.html">Sobre Nosotros</a></li>
+                <li><a href="terms.html">Términos y Condiciones</a></li>
+                <li><a href="privacy.html">Política de Privacidad</a></li>
+                <li><a href="contact.html">Contacto</a></li>
+            </ul>
+        </div>
+        <p>&copy; 2025 Atrapa la Snitch. Todos los derechos reservados.</p>
+    </footer>
+    
+    <script src="../js/app.js"></script>
+    <script src="../js/matches.js"></script>
+</body>
+</html>

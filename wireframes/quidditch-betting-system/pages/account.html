@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atrapa la Snitch - Mi Cuenta</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/magical-elements.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+    <!-- Header with logo and navigation -->
+    <header class="main-header">
+        <div class="logo-container">
+            <!-- Placeholder for logo -->
+            <div class="logo-placeholder">
+                <div class="placeholder-x">X</div>
+            </div>
+            <h1>Atrapa la Snitch</h1>
+        </div>
+        <nav class="main-nav">
+            <ul>
+                <li><a href="../index.html" class="nav-link">Inicio</a></li>
+                <li><a href="matches.html" class="nav-link">Partidos</a></li>
+                <li><a href="teams.html" class="nav-link">Equipos</a></li>
+                <li><a href="betting.html" class="nav-link">Apostar</a></li>
+                <li><a href="standings.html" class="nav-link">Clasificación</a></li>
+            </ul>
+        </nav>
+        <div class="auth-buttons">
+            <a href="login.html" class="button button-login">Iniciar Sesión</a>
+            <a href="register.html" class="button button-register">Registrarse</a>
+        </div>
+    </header>
+
+    <main>
+        <section class="account-management card">
+            <h2>Tu Monedero Mágico</h2>
+            <div class="wallet-balance">
+                <h3>Saldo Actual</h3>
+                <p id="balance" class="balance">150 Galeones</p>
+            </div>
+            <div class="betting-history">
+                <h3>Historial de Apuestas</h3>
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Partido</th>
+                            <th>Apuesta</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="betting-history-body">
+                        <tr>
+                            <td>25/04/2025</td>
+                            <td>Gryffindor vs Slytherin</td>
+                            <td>20 Galeones</td>
+                            <td>Ganada</td>
+                        </tr>
+                        <tr>
+                            <td>24/04/2025</td>
+                            <td>Hufflepuff vs Ravenclaw</td>
+                            <td>10 Galeones</td>
+                            <td>Perdida</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="account-actions">
+                <button id="fund-button" class="button">Agregar Galeones</button>
+                <button id="withdraw-button" class="button">Retirar Galeones</button>
+            </div>
+        </section>
+    </main>
+
+    <footer class="main-footer">
+        <div class="footer-links">
+            <ul>
+                <li><a href="about.html">Sobre Nosotros</a></li>
+                <li><a href="terms.html">Términos y Condiciones</a></li>
+                <li><a href="privacy.html">Política de Privacidad</a></li>
+                <li><a href="contact.html">Contacto</a></li>
+            </ul>
+        </div>
+        <p>&copy; 2025 Atrapa la Snitch. Todos los derechos reservados.</p>
+    </footer>
+    
+    <script src="../js/app.js"></script>
+    <script src="../js/authentication.js"></script>
+</body>
+</html>

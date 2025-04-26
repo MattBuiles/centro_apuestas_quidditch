@@ -1,0 +1,79 @@
+
+/* Responsive styles for the Quidditch Betting System */
+
+/* Mobile styles */
+@media (max-width: 768px) {
+    body {
+        font-size: 14px;
+    }
+
+    header, footer {
+        padding: 10px;
+    }
+
+    .container {
+        padding: 15px;
+    }
+
+    .button {
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+    }
+
+    .match-card {
+        flex-direction: column;
+        margin-bottom: 20px;
+    }
+
+    .team-info {
+        text-align: center;
+    }
+}
+
+/* Tablet styles */
+@media (min-width: 769px) and (max-width: 1024px) {
+    body {
+        font-size: 16px;
+    }
+
+    .container {
+        padding: 20px;
+    }
+
+    .button {
+        width: auto;
+        padding: 12px 20px;
+    }
+
+    .match-card {
+        flex-direction: row;
+    }
+
+    .team-info {
+        text-align: left;
+    }
+}
+
+/* Desktop styles */
+@media (min-width: 1025px) {
+    body {
+        font-size: 18px;
+    }
+
+    .container {
+        padding: 30px;
+    }
+
+    .button {
+        padding: 15px 25px;
+    }
+
+    .match-card {
+        flex-direction: row;
+    }
+
+    .team-info {
+        text-align: left;
+    }
+}

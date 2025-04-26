@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atrapa la Snitch - Apostar</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/magical-elements.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+    <!-- Header with logo and navigation -->
+    <header class="main-header">
+        <div class="logo-container">
+            <!-- Placeholder for logo -->
+            <div class="logo-placeholder">
+                <div class="placeholder-x">X</div>
+            </div>
+            <h1>Atrapa la Snitch</h1>
+        </div>
+        <nav class="main-nav">
+            <ul>
+                <li><a href="../index.html" class="nav-link">Inicio</a></li>
+                <li><a href="matches.html" class="nav-link">Partidos</a></li>
+                <li><a href="teams.html" class="nav-link">Equipos</a></li>
+                <li><a href="betting.html" class="nav-link active">Apostar</a></li>
+                <li><a href="standings.html" class="nav-link">Clasificación</a></li>
+            </ul>
+        </nav>
+        <div class="auth-buttons">
+            <a href="login.html" class="button button-login">Iniciar Sesión</a>
+            <a href="register.html" class="button button-register">Registrarse</a>
+        </div>
+    </header>
+
+    <main>
+        <section class="betting-section card">
+            <h2>Realiza tu Apuesta Mágica</h2>
+            <form id="betting-form">
+                <div class="form-group">
+                    <label for="match">Selecciona un Partido:</label>
+                    <select id="match" name="match" required>
+                        <option value="">--Selecciona un Partido--</option>
+                        <option value="1">Gryffindor vs Slytherin</option>
+                        <option value="2">Hufflepuff vs Ravenclaw</option>
+                        <option value="3">Chudley Cannons vs Holyhead Harpies</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="bet-amount">Cantidad de Galeones:</label>
+                    <input type="number" id="bet-amount" name="bet-amount" min="1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="prediction">Tu Predicción:</label>
+                    <select id="prediction" name="prediction" required>
+                        <option value="">--Selecciona Predicción--</option>
+                        <option value="team1">Gana Equipo Local</option>
+                        <option value="team2">Gana Equipo Visitante</option>
+                        <option value="draw">Empate</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="button cta-button">¡Atrapa la Suerte!</button>
+            </form>
+            <div id="betting-message" class="message-container"></div>
+        </section>
+
+        <section class="daily-limit-info card">
+            <h3>Límite Diario</h3>
+            <p>Recuerda que solo puedes apostar en un máximo de <strong>3 partidos</strong> por día.</p>
+            <div class="limit-meter">
+                <div class="limit-text">Apuestas disponibles hoy: <span>3/3</span></div>
+                <div class="meter-container">
+                    <div class="meter-fill"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="main-footer">
+        <div class="footer-links">
+            <ul>
+                <li><a href="about.html">Sobre Nosotros</a></li>
+                <li><a href="terms.html">Términos y Condiciones</a></li>
+                <li><a href="privacy.html">Política de Privacidad</a></li>
+                <li><a href="contact.html">Contacto</a></li>
+            </ul>
+        </div>
+        <p>&copy; 2025 Atrapa la Snitch. Todos los derechos reservados.</p>
+    </footer>
+    
+    <script src="../js/app.js"></script>
+    <script src="../js/betting.js"></script>
+</body>
+</html>

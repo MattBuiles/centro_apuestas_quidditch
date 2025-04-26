@@ -1,0 +1,604 @@
+body {
+    background-color: #f0f8ff; /* Light sky blue background */
+    font-family: 'Garamond', serif; /* Elegant font */
+    color: #333; /* Dark text for readability */
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    background-color: #4b0082; /* Indigo header */
+    color: white;
+    padding: 20px;
+    text-align: center;
+    font-size: 2em;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+nav {
+    margin: 20px 0;
+}
+
+nav a {
+    color: #fff;
+    text-decoration: none;
+    margin: 0 15px;
+    font-weight: bold;
+    transition: color 0.3s;
+}
+
+nav a:hover {
+    color: #ffcc00; /* Gold color on hover */
+}
+
+.container {
+    width: 80%;
+    margin: auto;
+    overflow: hidden;
+}
+
+footer {
+    background-color: #4b0082; /* Indigo footer */
+    color: white;
+    text-align: center;
+    padding: 10px 0;
+    position: relative;
+    bottom: 0;
+    width: 100%;
+}
+
+.button {
+    background-color: #ffcc00; /* Gold button */
+    color: #4b0082; /* Indigo text */
+    border: none;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 1em;
+    margin: 10px 2px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+.button:hover {
+    background-color: #e6b800; /* Darker gold on hover */
+    transform: scale(1.05);
+}
+
+h1, h2, h3 {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.card {
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px 0;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.card img {
+    max-width: 100%;
+    border-radius: 10px;
+}
+
+@media (max-width: 768px) {
+    .container {
+        width: 95%;
+    }
+
+    nav a {
+        display: block;
+        margin: 10px 0;
+    }
+}
+
+/* Base wireframe styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    line-height: 1.6;
+    color: #333;
+    background-color: #f9f9f9;
+}
+
+/* Placeholder elements styling */
+.placeholder-x {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #e0e0e0;
+    color: #888;
+    font-size: 2rem;
+    width: 100%;
+    height: 100%;
+    border: 2px dashed #bbb;
+}
+
+.logo-placeholder {
+    width: 50px;
+    height: 50px;
+}
+
+.hero-image-placeholder {
+    width: 100%;
+    height: 300px;
+}
+
+.teams-placeholder {
+    width: 100%;
+    height: 120px;
+}
+
+.step-icon-placeholder {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin: 0 auto 15px;
+}
+
+/* Layout styles */
+.main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.main-nav ul {
+    display: flex;
+    list-style: none;
+    gap: 2rem;
+}
+
+.auth-buttons {
+    display: flex;
+    gap: 1rem;
+}
+
+main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.hero-section {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.hero-content {
+    flex: 1;
+}
+
+.matches-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin: 1.5rem 0;
+}
+
+.match-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.match-info {
+    padding: 1rem;
+}
+
+.steps-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin: 1.5rem 0;
+    text-align: center;
+}
+
+.main-footer {
+    background-color: #333;
+    color: #fff;
+    padding: 2rem;
+    text-align: center;
+}
+
+.footer-links ul {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    list-style: none;
+    margin-bottom: 1rem;
+}
+
+/* Button styles */
+.button {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.cta-button {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    margin-top: 1rem;
+    background-color: #6d4aff;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.button-secondary {
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+.button-login {
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+.button-register {
+    background-color: #6d4aff;
+    color: white;
+}
+
+.button-text {
+    color: #6d4aff;
+    text-decoration: underline;
+}
+
+/* Añadir al final del archivo para corregir los enlaces de navegación */
+
+.main-nav a {
+    color: #4b0082; /* Color índigo oscuro para mejor visibilidad */
+    font-weight: bold;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+}
+
+.main-nav a:hover, 
+.main-nav a.active {
+    color: #ffcc00; /* Color dorado al pasar el mouse */
+    background-color: rgba(75, 0, 130, 0.1);
+}
+
+/* Estilos para los formularios */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+    color: #4b0082;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    background-color: #fff;
+}
+
+.betting-section {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 2rem;
+}
+
+.message-container {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    border-radius: 4px;
+}
+
+.daily-limit-info {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.limit-meter {
+    margin-top: 1.5rem;
+}
+
+.meter-container {
+    height: 20px;
+    background-color: #e0e0e0;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+
+.meter-fill {
+    height: 100%;
+    width: 100%;
+    background-color: #6a5acd;
+    border-radius: 10px;
+}
+
+.card {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Estilos adicionales para las nuevas páginas */
+
+/* Página de partidos */
+.matches-filters {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+}
+
+.filters-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    align-items: flex-end;
+}
+
+.filter-group {
+    flex: 1;
+    min-width: 200px;
+}
+
+.matches-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.match-card {
+    padding: 1.5rem;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 2rem;
+}
+
+.team-logo-placeholder {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.team-logo-placeholder.small {
+    width: 30px;
+    height: 30px;
+}
+
+.team-logo-placeholder.large {
+    width: 100px;
+    height: 100px;
+}
+
+.match-teams {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.team {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.vs-indicator {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #6a5acd;
+}
+
+/* Página de clasificación */
+.standings-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1.5rem;
+}
+
+.standings-table th,
+.standings-table td {
+    padding: 1rem;
+    text-align: center;
+    border-bottom: 1px solid #eee;
+}
+
+.standings-table th {
+    background-color: rgba(106, 90, 205, 0.1);
+    color: #4b0082;
+}
+
+.team-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.standings-filters {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Páginas de autenticación */
+.auth-section {
+    max-width: 500px;
+    margin: 2rem auto;
+    padding: 2rem;
+    text-align: center;
+}
+
+.auth-form {
+    margin-top: 2rem;
+    text-align: left;
+}
+
+.remember-me,
+.terms {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 1.5rem 0;
+}
+
+.remember-me input,
+.terms input {
+    width: auto;
+}
+
+.auth-links {
+    margin-top: 1.5rem;
+    text-align: center;
+}
+
+/* Página de detalle de partido */
+.match-header {
+    text-align: center;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.match-teams-large {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 2rem 0;
+}
+
+.match-vs {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.match-score {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #4b0082;
+}
+
+.vs-text {
+    font-size: 1.2rem;
+    color: #6a5acd;
+}
+
+.match-status {
+    font-size: 0.9rem;
+    padding: 0.25rem 0.75rem;
+    background-color: rgba(106, 90, 205, 0.2);
+    border-radius: 1rem;
+}
+
+.match-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.odds-container {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 1.5rem;
+}
+
+.odds-item {
+    text-align: center;
+    flex: 1;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background-color: rgba(106, 90, 205, 0.1);
+}
+
+.odds-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #4b0082;
+    margin-top: 0.5rem;
+}
+
+.stats-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.stats-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.stats-bar {
+    display: flex;
+    height: 2rem;
+    width: 100%;
+    background-color: #f0f0f0;
+    border-radius: 0.25rem;
+    overflow: hidden;
+}
+
+.stats-bar-team1 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    background-color: #7f0000; /* Gryffindor color */
+    color: white;
+}
+
+.stats-bar-team2 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    background-color: #2a623d; /* Slytherin color */
+    color: white;
+}
+
+/* Estilo para página general */
+.page-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding: 2rem;
+}

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atrapa la Snitch - Detalle del Partido</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/magical-elements.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+    <!-- Header with logo and navigation -->
+    <header class="main-header">
+        <div class="logo-container">
+            <div class="logo-placeholder">
+                <div class="placeholder-x">X</div>
+            </div>
+            <h1>Atrapa la Snitch</h1>
+        </div>
+        <nav class="main-nav">
+            <ul>
+                <li><a href="../index.html" class="nav-link">Inicio</a></li>
+                <li><a href="matches.html" class="nav-link active">Partidos</a></li>
+                <li><a href="teams.html" class="nav-link">Equipos</a></li>
+                <li><a href="betting.html" class="nav-link">Apostar</a></li>
+                <li><a href="standings.html" class="nav-link">Clasificación</a></li>
+            </ul>
+        </nav>
+        <div class="auth-buttons">
+            <a href="login.html" class="button button-login">Iniciar Sesión</a>
+            <a href="register.html" class="button button-register">Registrarse</a>
+        </div>
+    </header>
+
+    <main>
+        <section class="match-header card">
+            <div class="match-date-location">
+                <p>Hoy • 19:00</p>
+                <p>Campo de Quidditch de Hogwarts</p>
+            </div>
+            
+            <div class="match-teams-large">
+                <div class="team team-home">
+                    <div class="team-logo-placeholder large">
+                        <div class="placeholder-x">X</div>
+                    </div>
+                    <h3 class="team-name">Gryffindor</h3>
+                </div>
+                
+                <div class="match-vs">
+                    <div class="match-score">0 - 0</div>
+                    <div class="vs-text">VS</div>
+                    <div class="match-status">Por comenzar</div>
+                </div>
+                
+                <div class="team team-away">
+                    <div class="team-logo-placeholder large">
+                        <div class="placeholder-x">X</div>
+                    </div>
+                    <h3 class="team-name">Slytherin</h3>
+                </div>
+            </div>
+            
+            <div class="match-actions">
+                <a href="betting.html?match=1" class="button cta-button">¡Apostar ahora!</a>
+            </div>
+        </section>
+        
+        <section class="match-details">
+            <div class="match-info-card card">
+                <h3>Información del partido</h3>
+                <div class="match-info-content">
+                    <p><strong>Fecha:</strong> 26 de abril de 2025</p>
+                    <p><strong>Hora:</strong> 19:00</p>
+                    <p><strong>Ubicación:</strong> Campo de Quidditch de Hogwarts</p>
+                    <p><strong>Temporada:</strong> 2025</p>
+                    <p><strong>Árbitro:</strong> Madam Hooch</p>
+                </div>
+            </div>
+            
+            <div class="betting-odds-card card">
+                <h3>Cuotas de apuesta</h3>
+                <div class="odds-container">
+                    <div class="odds-item">
+                        <p class="odds-team">Gryffindor</p>
+                        <p class="odds-value">1.75</p>
+                    </div>
+                    <div class="odds-item">
+                        <p class="odds-team">Empate</p>
+                        <p class="odds-value">3.25</p>
+                    </div>
+                    <div class="odds-item">
+                        <p class="odds-team">Slytherin</p>
+                        <p class="odds-value">2.10</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section class="match-statistics card">
+            <h3>Estadísticas históricas</h3>
+            <div class="stats-container">
+                <div class="stats-row">
+                    <div class="stats-label">Partidos ganados (últimos 5)</div>
+                    <div class="stats-bar">
+                        <div class="stats-bar-team1" style="width: 60%;">3</div>
+                        <div class="stats-bar-team2" style="width: 40%;">2</div>
+                    </div>
+                </div>
+                
+                <div class="stats-row">
+                    <div class="stats-label">Snitch capturadas (temporada)</div>
+                    <div class="stats-bar">
+                        <div class="stats-bar-team1" style="width: 70%;">7</div>
+                        <div class="stats-bar-team2" style="width: 30%;">3</div>
+                    </div>
+                </div>
+                
+                <div class="stats-row">
+                    <div class="stats-label">Puntos por partido (promedio)</div>
+                    <div class="stats-bar">
+                        <div class="stats-bar-team1" style="width: 55%;">165</div>
+                        <div class="stats-bar-team2" style="width: 45%;">135</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="main-footer">
+        <div class="footer-links">
+            <ul>
+                <li><a href="about.html">Sobre Nosotros</a></li>
+                <li><a href="terms.html">Términos y Condiciones</a></li>
+                <li><a href="privacy.html">Política de Privacidad</a></li>
+                <li><a href="contact.html">Contacto</a></li>
+            </ul>
+        </div>
+        <p>&copy; 2025 Atrapa la Snitch. Todos los derechos reservados.</p>
+    </footer>
+    
+    <script src="../js/app.js"></script>
+    <script src="../js/match-detail.js"></script>
+</body>
+</html>
