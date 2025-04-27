@@ -4,6 +4,36 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize the application
     initApp();
+    
+    // Initialize teams functionality
+    console.log("Teams functionality initialized");
+    
+    // Filter buttons functionality
+    const filterButtons = document.querySelectorAll('.filter-button');
+    if (filterButtons) {
+        filterButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Remove active class from all buttons
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                // Add active class to clicked button
+                this.classList.add('active');
+                
+                // Here would be the actual filtering logic
+                console.log("Filter selected:", this.textContent);
+            });
+        });
+    }
+    
+    // Search functionality
+    const searchForm = document.querySelector('.search-container');
+    if (searchForm) {
+        searchForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const searchInput = this.querySelector('input').value;
+            console.log("Search query:", searchInput);
+            // Here would be the actual search logic
+        });
+    }
 });
 
 function initApp() {

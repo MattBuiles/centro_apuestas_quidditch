@@ -3,47 +3,254 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quidditch Teams</title>
+    <title>Atrapa la Snitch - Equipos</title>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/magical-elements.css">
+    <link rel="stylesheet" href="../css/responsive.css">
 </head>
 <body>
-    <header>
-        <h1>Quidditch Teams</h1>
-        <nav>
+    <!-- Header with logo and navigation -->
+    <header class="main-header">
+        <div class="logo-container">
+            <div class="logo-placeholder">
+                <div class="placeholder-x">X</div>
+            </div>
+            <h1>Atrapa la Snitch</h1>
+        </div>
+        <nav class="main-nav">
             <ul>
-                <li><a href="../index.html">Home</a></li>
-                <li><a href="matches.html">Matches</a></li>
-                <li><a href="betting.html">Betting</a></li>
-                <li><a href="account.html">Account</a></li>
-                <li><a href="results.html">Results</a></li>
+                <li><a href="../index.html" class="nav-link">Inicio</a></li>
+                <li><a href="matches.html" class="nav-link">Partidos</a></li>
+                <li><a href="teams.html" class="nav-link active">Equipos</a></li>
+                <li><a href="betting.html" class="nav-link">Apostar</a></li>
+                <li><a href="standings.html" class="nav-link">Clasificación</a></li>
             </ul>
         </nav>
+        <div class="auth-buttons">
+            <a href="login.html" class="button button-login">Iniciar Sesión</a>
+            <a href="register.html" class="button button-register">Registrarse</a>
+        </div>
     </header>
+
     <main>
-        <section class="team-list">
-            <h2>Participating Teams</h2>
-            <div class="team">
-                <h3>Gryffindor</h3>
-                <p>Known for their bravery and determination, Gryffindor is a strong contender in the Quidditch league.</p>
+        <section class="page-header card">
+            <h2>Equipos de Quidditch</h2>
+            <p>Conoce a los mejores equipos del mundo mágico</p>
+        </section>
+
+        <!-- Buscador y filtros de equipos -->
+        <section class="teams-search card">
+            <div class="search-container">
+                <input type="text" placeholder="Buscar equipo..." class="search-input">
+                <button class="search-button button">Buscar</button>
             </div>
-            <div class="team">
-                <h3>Slytherin</h3>
-                <p>With a reputation for cunning and ambition, Slytherin always aims for the top.</p>
+            
+            <div class="teams-filter">
+                <div class="filter-label">Filtrar por:</div>
+                <button class="filter-button button button-small active">Todos</button>
+                <button class="filter-button button button-small">Hogwarts</button>
+                <button class="filter-button button button-small">Liga Profesional</button>
+                <button class="filter-button button button-small">Internacional</button>
             </div>
-            <div class="team">
-                <h3>Hufflepuff</h3>
-                <p>Hufflepuff values hard work and loyalty, making them a formidable team.</p>
+        </section>
+
+        <!-- Equipos destacados con carousel -->
+        <section class="featured-teams card">
+            <h3>Equipos Destacados</h3>
+            <div class="teams-carousel-placeholder">
+                <div class="placeholder-x">X</div>
+                <p class="placeholder-description">Carousel de equipos destacados</p>
             </div>
-            <div class="team">
-                <h3>Ravenclaw</h3>
-                <p>Ravenclaw is known for their intelligence and creativity, bringing unique strategies to the game.</p>
+        </section>
+        
+        <!-- Lista de equipos organizados por categorías -->
+        <section class="teams-list">
+            <!-- Hogwarts Teams -->
+            <div class="team-category">
+                <h3>Equipos de Hogwarts</h3>
+                
+                <div class="teams-grid">
+                    <!-- Gryffindor -->
+                    <div class="team-card card">
+                        <div class="team-banner">
+                            <div class="team-shield-placeholder">
+                                <div class="placeholder-x">X</div>
+                            </div>
+                            <h4>Gryffindor</h4>
+                        </div>
+                        
+                        <div class="team-info-brief">
+                            <p><strong>Fundada:</strong> 990 d.C.</p>
+                            <p><strong>Estadio:</strong> Campo de Quidditch de Hogwarts</p>
+                            <p><strong>Capitán:</strong> Harry Potter</p>
+                        </div>
+                        
+                        <div class="team-stats">
+                            <div class="stat">
+                                <span class="stat-value">9</span>
+                                <span class="stat-label">Títulos</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-value">75%</span>
+                                <span class="stat-label">Victorias</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-value">8</span>
+                                <span class="stat-label">Snitchs</span>
+                            </div>
+                        </div>
+                        
+                        <a href="team-detail.html?id=gryffindor" class="button">Ver detalles</a>
+                    </div>
+                    
+                    <!-- Slytherin -->
+                    <div class="team-card card">
+                        <div class="team-banner">
+                            <div class="team-shield-placeholder">
+                                <div class="placeholder-x">X</div>
+                            </div>
+                            <h4>Slytherin</h4>
+                        </div>
+                        
+                        <div class="team-info-brief">
+                            <p><strong>Fundada:</strong> 990 d.C.</p>
+                            <p><strong>Estadio:</strong> Campo de Quidditch de Hogwarts</p>
+                            <p><strong>Capitán:</strong> Draco Malfoy</p>
+                        </div>
+                        
+                        <div class="team-stats">
+                            <div class="stat">
+                                <span class="stat-value">7</span>
+                                <span class="stat-label">Títulos</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-value">68%</span>
+                                <span class="stat-label">Victorias</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-value">5</span>
+                                <span class="stat-label">Snitchs</span>
+                            </div>
+                        </div>
+                        
+                        <a href="team-detail.html?id=slytherin" class="button">Ver detalles</a>
+                    </div>
+                    
+                    <!-- Ravenclaw -->
+                    <div class="team-card card">
+                        <div class="team-banner">
+                            <div class="team-shield-placeholder">
+                                <div class="placeholder-x">X</div>
+                            </div>
+                            <h4>Ravenclaw</h4>
+                        </div>
+                        
+                        <div class="team-info-brief">
+                            <p><strong>Fundada:</strong> 990 d.C.</p>
+                            <p><strong>Estadio:</strong> Campo de Quidditch de Hogwarts</p>
+                            <p><strong>Capitán:</strong> Roger Davies</p>
+                        </div>
+                        
+                        <div class="team-stats">
+                            <div class="stat">
+                                <span class="stat-value">5</span>
+                                <span class="stat-label">Títulos</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-value">60%</span>
+                                <span class="stat-label">Victorias</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-value">4</span>
+                                <span class="stat-label">Snitchs</span>
+                            </div>
+                        </div>
+                        
+                        <a href="team-detail.html?id=ravenclaw" class="button">Ver detalles</a>
+                    </div>
+                    
+                    <!-- Hufflepuff -->
+                    <div class="team-card card">
+                        <div class="team-banner">
+                            <div class="team-shield-placeholder">
+                                <div class="placeholder-x">X</div>
+                            </div>
+                            <h4>Hufflepuff</h4>
+                        </div>
+                        
+                        <div class="team-info-brief">
+                            <p><strong>Fundada:</strong> 990 d.C.</p>
+                            <p><strong>Estadio:</strong> Campo de Quidditch de Hogwarts</p>
+                            <p><strong>Capitán:</strong> Cedric Diggory</p>
+                        </div>
+                        
+                        <div class="team-stats">
+                            <div class="stat">
+                                <span class="stat-value">3</span>
+                                <span class="stat-label">Títulos</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-value">45%</span>
+                                <span class="stat-label">Victorias</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-value">3</span>
+                                <span class="stat-label">Snitchs</span>
+                            </div>
+                        </div>
+                        
+                        <a href="team-detail.html?id=hufflepuff" class="button">Ver detalles</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Professional Teams -->
+            <div class="team-category">
+                <h3>Equipos Profesionales</h3>
+                
+                <div class="teams-grid">
+                    <!-- Placeholder for Professional Teams -->
+                    <div class="teams-placeholder-section">
+                        <div class="placeholder-x">X</div>
+                        <p class="placeholder-description">Equipos profesionales pendientes de cargar</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- International Teams -->
+            <div class="team-category">
+                <h3>Equipos Internacionales</h3>
+                
+                <div class="teams-placeholder-section">
+                    <div class="placeholder-x">X</div>
+                    <p class="placeholder-description">Equipos internacionales pendientes de cargar</p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Team Stats Comparison Tool -->
+        <section class="team-comparison card">
+            <h3>Comparador de Equipos</h3>
+            <div class="comparison-placeholder">
+                <div class="placeholder-x">X</div>
+                <p class="placeholder-description">Herramienta para comparar estadísticas entre equipos</p>
             </div>
         </section>
     </main>
-    <footer>
-        <p>&copy; 2023 Quidditch Betting System. All rights reserved.</p>
+
+    <footer class="main-footer">
+        <div class="footer-links">
+            <ul>
+                <li><a href="about.html">Sobre Nosotros</a></li>
+                <li><a href="terms.html">Términos y Condiciones</a></li>
+                <li><a href="privacy.html">Política de Privacidad</a></li>
+                <li><a href="contact.html">Contacto</a></li>
+            </ul>
+        </div>
+        <p>&copy; 2025 Atrapa la Snitch. Todos los derechos reservados.</p>
     </footer>
+    
     <script src="../js/app.js"></script>
+    <script src="../js/teams.js"></script>
 </body>
 </html>

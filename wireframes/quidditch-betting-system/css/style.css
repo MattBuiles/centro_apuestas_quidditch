@@ -861,3 +861,366 @@ main {
         margin-right: 0.75rem;
     }
 }
+
+/* Estilos adicionales para la sección de equipos */
+
+/* Estilos para la página de equipos */
+.teams-search {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.search-container {
+    display: flex;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.search-input {
+    flex: 1;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.teams-filter {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.filter-label {
+    font-weight: bold;
+    color: #4b0082;
+}
+
+.teams-carousel-placeholder {
+    height: 200px;
+    margin: 1.5rem 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.team-category {
+    margin: 2rem 0;
+}
+
+.teams-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin: 1.5rem 0;
+}
+
+.team-card {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    overflow: hidden;
+}
+
+.team-banner {
+    background-color: #f0f0f0;
+    padding: 1.5rem;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+}
+
+.team-shield-placeholder {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.team-shield-placeholder.large {
+    width: 120px;
+    height: 120px;
+}
+
+.team-info-brief {
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.team-stats {
+    display: flex;
+    justify-content: space-around;
+    padding: 1rem;
+    text-align: center;
+}
+
+.stat {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #4b0082;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.team-card .button {
+    margin: 0;
+    border-radius: 0;
+    padding: 1rem;
+}
+
+.teams-placeholder-section {
+    grid-column: 1 / -1;
+    height: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.comparison-placeholder {
+    height: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Estilos para la página de detalle de equipo */
+.team-header {
+    text-align: center;
+    padding: 2rem;
+}
+
+.team-banner-large {
+    margin-bottom: 2rem;
+}
+
+.team-motto {
+    font-style: italic;
+    color: #666;
+    margin-top: 0.5rem;
+}
+
+.team-quick-stats {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin: 2rem 0;
+    flex-wrap: wrap;
+}
+
+.stat-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #f9f9f9;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    min-width: 100px;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #4b0082;
+}
+
+.team-content-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.team-left-column,
+.team-right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.team-achievements {
+    margin-top: 1.5rem;
+}
+
+.team-achievements ul {
+    padding-left: 1.5rem;
+}
+
+.players-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.player-card {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+}
+
+.player-photo-placeholder {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.player-info {
+    flex: 1;
+}
+
+.player-position {
+    color: #666;
+    font-style: italic;
+    margin: 0.25rem 0;
+}
+
+.player-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.stat-pill {
+    background-color: #e0e0e0;
+    padding: 0.25rem 0.5rem;
+    border-radius: 1rem;
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.players-placeholder {
+    height: 150px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.stats-chart-placeholder {
+    height: 200px;
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.team-stats-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.team-stats-table td {
+    padding: 0.5rem;
+    border-bottom: 1px solid #eee;
+}
+
+.team-stats-table td:first-child {
+    font-weight: bold;
+    color: #666;
+}
+
+.team-stats-table td:last-child {
+    text-align: right;
+    font-weight: bold;
+    color: #4b0082;
+}
+
+.recent-matches-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.recent-match {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.match-result {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-right: 1rem;
+    flex-shrink: 0;
+}
+
+.match-result.win {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.match-result.loss {
+    background-color: #F44336;
+    color: white;
+}
+
+.match-details {
+    flex: 1;
+}
+
+.match-teams {
+    font-weight: bold;
+    margin-bottom: 0.25rem;
+}
+
+.match-date {
+    color: #666;
+    font-size: 0.9rem;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.news-placeholder,
+.fans-placeholder {
+    height: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.placeholder-description {
+    margin-top: 1rem;
+    color: #888;
+    font-style: italic;
+}
+
+/* Responsive para grids de equipos */
+@media (max-width: 768px) {
+    .team-content-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .team-quick-stats {
+        gap: 1rem;
+    }
+    
+    .stat-box {
+        padding: 0.75rem 1.5rem;
+        min-width: 80px;
+    }
+}
