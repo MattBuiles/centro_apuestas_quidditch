@@ -924,6 +924,149 @@
     margin-top: 20px;
 }
 
+/* Estilos para la predicción integrada */
+.prediction-inline {
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px 0;
+    text-align: center;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.prediction-title {
+    margin-bottom: 15px;
+    color: #4b0082;
+    font-size: 1.3rem;
+}
+
+.prediction-options-inline {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+}
+
+.prediction-option-inline {
+    position: relative;
+    flex: 1;
+    max-width: 180px;
+}
+
+.prediction-option-inline input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.prediction-team {
+    display: block;
+    padding: 12px 20px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    color: white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.prediction-team.home {
+    background: linear-gradient(45deg, #7f0000, #a40000);
+}
+
+.prediction-team.draw {
+    background: linear-gradient(45deg, #6a5acd, #9370db);
+}
+
+.prediction-team.away {
+    background: linear-gradient(45deg, #2a623d, #1a472a);
+}
+
+.prediction-option-inline input:checked + .prediction-team {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+    border: 2px solid #ffcc00;
+}
+
+.prediction-option-inline input:checked + .prediction-team::after {
+    content: '✓';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background: #ffcc00;
+    color: #4b0082;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.9rem;
+    animation: bounceIn 0.5s;
+}
+
+@keyframes bounceIn {
+    0% { transform: scale(0); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+.prediction-actions {
+    margin: 20px 0;
+}
+
+.prediction-result {
+    background: rgba(106, 90, 205, 0.1);
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 15px;
+    animation: fadeIn 0.5s;
+}
+
+.prediction-message {
+    padding: 15px;
+    border-radius: 8px;
+    margin: 15px 0;
+}
+
+#prediction-unavailable {
+    background: rgba(255, 59, 59, 0.1);
+    color: #d32f2f;
+    border: 1px solid rgba(255, 59, 59, 0.3);
+}
+
+#prediction-login-required {
+    background: rgba(255, 193, 7, 0.1);
+    color: #f57c00;
+    border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.login-link {
+    color: #4b0082;
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+/* Responsive para predicciones */
+@media (max-width: 768px) {
+    .prediction-options-inline {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .prediction-option-inline {
+        width: 100%;
+        max-width: 100%;
+    }
+}
+
 /* Sección de partidos relacionados */
 .related-matches {
     margin-top: 40px;
