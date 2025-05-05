@@ -12,7 +12,6 @@
     <!-- Header with logo and navigation -->
     <header class="main-header">
         <div class="logo-container">
-            <!-- Placeholder for logo -->
             <div class="logo-placeholder">
                 <div class="placeholder-x">X</div>
             </div>
@@ -27,49 +26,514 @@
                 <li><a href="standings.html" class="nav-link">Clasificación</a></li>
             </ul>
         </nav>
-        <div class="auth-buttons">
-            <a href="login.html" class="button button-login">Iniciar Sesión</a>
-            <a href="register.html" class="button button-register">Registrarse</a>
+        <div class="user-menu">
+            <div class="user-avatar">
+                <div class="placeholder-x">X</div>
+            </div>
+            <span class="username">MagoApostador123</span>
+            <div class="dropdown-menu">
+                <a href="account.html" class="active">Mi Perfil</a>
+                <a href="account.html#wallet">Mi Monedero</a>
+                <a href="account.html#bets">Mis Apuestas</a>
+                <a href="#" id="logout-button">Cerrar Sesión</a>
+            </div>
         </div>
     </header>
 
     <main>
-        <section class="account-management card">
-            <h2>Tu Monedero Mágico</h2>
-            <div class="wallet-balance">
-                <h3>Saldo Actual</h3>
-                <p id="balance" class="balance">150 Galeones</p>
+        <!-- CU-03: Gestión de perfil de usuario -->
+        <section class="account-container">
+            <div class="sidebar">
+                <div class="user-profile">
+                    <div class="user-avatar large">
+                        <div class="placeholder-x">X</div>
+                    </div>
+                    <h3 class="username">MagoApostador123</h3>
+                    <p class="user-level">Nivel: Buscador Novato</p>
+                    <div class="wallet-summary">
+                        <p class="balance">Balance: <span class="galeones">150</span> G</p>
+                        <a href="#wallet" class="button button-small">Añadir Fondos</a>
+                    </div>
+                </div>
+                <nav class="account-nav">
+                    <ul>
+                        <li><a href="#profile" class="active">Perfil</a></li>
+                        <li><a href="#wallet">Monedero Mágico</a></li>
+                        <li><a href="#bets">Historial de Apuestas</a></li>
+                        <li><a href="#notifications">Notificaciones</a></li>
+                        <li><a href="#settings">Configuración</a></li>
+                    </ul>
+                </nav>
             </div>
-            <div class="betting-history">
-                <h3>Historial de Apuestas</h3>
-                <table class="history-table">
-                    <thead>
-                        <tr>
-                            <th>Fecha</th>
-                            <th>Partido</th>
-                            <th>Apuesta</th>
-                            <th>Estado</th>
-                        </tr>
-                    </thead>
-                    <tbody id="betting-history-body">
-                        <tr>
-                            <td>25/04/2025</td>
-                            <td>Gryffindor vs Slytherin</td>
-                            <td>20 Galeones</td>
-                            <td>Ganada</td>
-                        </tr>
-                        <tr>
-                            <td>24/04/2025</td>
-                            <td>Hufflepuff vs Ravenclaw</td>
-                            <td>10 Galeones</td>
-                            <td>Perdida</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div class="account-actions">
-                <button id="fund-button" class="button">Agregar Galeones</button>
-                <button id="withdraw-button" class="button">Retirar Galeones</button>
+
+            <div class="main-content">
+                <!-- Perfil del usuario -->
+                <section id="profile" class="account-section">
+                    <h2>Mi Perfil</h2>
+                    <div class="card">
+                        <form id="profile-form">
+                            <div class="form-group">
+                                <label for="display-name">Nombre de usuario:</label>
+                                <input type="text" id="display-name" name="display-name" value="MagoApostador123">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="email">Correo electrónico:</label>
+                                <input type="email" id="email" name="email" value="mago@ejemplo.com" disabled>
+                                <small>Para cambiar tu email, contacta con soporte</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Casa de Hogwarts favorita:</label>
+                                <div class="radio-group">
+                                    <input type="radio" id="gryffindor" name="house" value="gryffindor" checked>
+                                    <label for="gryffindor">Gryffindor</label>
+                                    
+                                    <input type="radio" id="slytherin" name="house" value="slytherin">
+                                    <label for="slytherin">Slytherin</label>
+                                    
+                                    <input type="radio" id="ravenclaw" name="house" value="ravenclaw">
+                                    <label for="ravenclaw">Ravenclaw</label>
+                                    
+                                    <input type="radio" id="hufflepuff" name="house" value="hufflepuff">
+                                    <label for="hufflepuff">Hufflepuff</label>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="avatar">Cambiar avatar:</label>
+                                <input type="file" id="avatar" name="avatar" accept="image/*">
+                            </div>
+                            
+                            <button type="submit" class="button">Guardar Cambios</button>
+                        </form>
+                    </div>
+                    
+                    <div class="card danger-zone">
+                        <h3>Cambiar Contraseña</h3>
+                        <form id="password-form">
+                            <div class="form-group">
+                                <label for="current-password">Contraseña actual:</label>
+                                <input type="password" id="current-password" name="current-password" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="new-password">Nueva contraseña:</label>
+                                <input type="password" id="new-password" name="new-password" required>
+                                <small>Mínimo 8 caracteres, incluyendo letras y números</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="confirm-new-password">Confirmar nueva contraseña:</label>
+                                <input type="password" id="confirm-new-password" name="confirm-new-password" required>
+                            </div>
+                            
+                            <button type="submit" class="button">Cambiar Contraseña</button>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- Monedero mágico (CU-002: Gestionar monedero) -->
+                <section id="wallet" class="account-section hidden">
+                    <h2>Mi Monedero Mágico</h2>
+                    <div class="card">
+                        <div class="wallet-stats">
+                            <div class="stat">
+                                <h4>Balance Actual</h4>
+                                <p class="galeones">150 G</p>
+                            </div>
+                            <div class="stat">
+                                <h4>Ganancias Totales</h4>
+                                <p class="galeones">+450 G</p>
+                            </div>
+                            <div class="stat">
+                                <h4>Apuestas Activas</h4>
+                                <p>3</p>
+                            </div>
+                        </div>
+                        
+                        <div class="wallet-actions tabs">
+                            <button class="tab-button active" data-tab="deposit">Añadir Fondos</button>
+                            <button class="tab-button" data-tab="withdraw">Retirar Ganancias</button>
+                        </div>
+                        
+                        <div id="deposit" class="tab-content">
+                            <h3>Añadir Fondos</h3>
+                            <form id="deposit-form">
+                                <div class="form-group">
+                                    <label for="deposit-amount">Cantidad (Galeones):</label>
+                                    <input type="number" id="deposit-amount" name="amount" min="10" step="5" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="payment-method">Método de pago:</label>
+                                    <select id="payment-method" name="payment-method" required>
+                                        <option value="">Seleccionar método</option>
+                                        <option value="gringotts">Traslado de Gringotts</option>
+                                        <option value="lechuzapay">LechuzaPay</option>
+                                        <option value="magiccard">MagicCard</option>
+                                    </select>
+                                </div>
+                                
+                                <button type="submit" class="button cta-button">Realizar Depósito</button>
+                            </form>
+                        </div>
+                        
+                        <div id="withdraw" class="tab-content hidden">
+                            <h3>Retirar Ganancias</h3>
+                            <form id="withdraw-form">
+                                <div class="form-group">
+                                    <label for="withdraw-amount">Cantidad a retirar (Galeones):</label>
+                                    <input type="number" id="withdraw-amount" name="amount" min="10" max="150" step="5" required>
+                                    <small>Máximo retiro disponible: 150 G</small>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="withdraw-method">Método de retiro:</label>
+                                    <select id="withdraw-method" name="withdraw-method" required>
+                                        <option value="">Seleccionar método</option>
+                                        <option value="gringotts">Cuenta en Gringotts</option>
+                                        <option value="lechuzapay">LechuzaPay</option>
+                                        <option value="magiccard">Reembolso a MagicCard</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group withdraw-info">
+                                    <div id="gringotts-info" class="withdraw-method-info hidden">
+                                        <label for="gringotts-account">Número de bóveda:</label>
+                                        <input type="text" id="gringotts-account" name="gringotts-account" placeholder="Ej: B-12345">
+                                    </div>
+                                    
+                                    <div id="lechuzapay-info" class="withdraw-method-info hidden">
+                                        <label for="lechuzapay-email">Email de LechuzaPay:</label>
+                                        <input type="email" id="lechuzapay-email" name="lechuzapay-email" placeholder="tu@email.com">
+                                    </div>
+                                    
+                                    <div id="magiccard-info" class="withdraw-method-info hidden">
+                                        <label for="magiccard-number">Últimos 4 dígitos:</label>
+                                        <input type="text" id="magiccard-number" name="magiccard-number" placeholder="XXXX" maxlength="4" pattern="\d{4}">
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group checkbox">
+                                    <input type="checkbox" id="terms-withdraw" name="terms-withdraw" required>
+                                    <label for="terms-withdraw">Acepto los términos y condiciones de retiro</label>
+                                </div>
+                                
+                                <p class="withdraw-notice">Los retiros pueden tardar hasta 24 horas en procesarse. Se te notificará por correo electrónico cuando se complete la operación.</p>
+                                
+                                <button type="submit" class="button cta-button">Solicitar Retiro</button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>Historial de Transacciones</h3>
+                        <table class="transactions-table">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Tipo</th>
+                                    <th>Descripción</th>
+                                    <th>Cantidad</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>05/03/2025</td>
+                                    <td>Ganancia</td>
+                                    <td>Apuesta #1092 - Gryffindor vs Ravenclaw</td>
+                                    <td class="win">+75 G</td>
+                                </tr>
+                                <tr>
+                                    <td>01/03/2025</td>
+                                    <td>Depósito</td>
+                                    <td>Depósito vía LechuzaPay</td>
+                                    <td>+100 G</td>
+                                </tr>
+                                <tr>
+                                    <td>28/02/2025</td>
+                                    <td>Apuesta</td>
+                                    <td>Apuesta #1075 - Puddlemere United vs Chudley Cannons</td>
+                                    <td class="loss">-50 G</td>
+                                </tr>
+                                <tr>
+                                    <td>25/02/2025</td>
+                                    <td>Bonificación</td>
+                                    <td>Bono de primer depósito</td>
+                                    <td>+25 G</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Historial de apuestas (CU-05: Seguimiento de apuestas) -->
+                <section id="bets" class="account-section hidden">
+                    <h2>Mis Apuestas</h2>
+                    
+                    <div class="tabs">
+                        <button class="tab-button active" data-tab="active-bets">Activas</button>
+                        <button class="tab-button" data-tab="past-bets">Historial</button>
+                    </div>
+                    
+                    <div id="active-bets" class="tab-content">
+                        <div class="card bet-card">
+                            <div class="bet-header">
+                                <span class="bet-id">Apuesta #1092</span>
+                                <span class="bet-date">Realizada: 05/05/2025</span>
+                            </div>
+                            
+                            <div class="match-info">
+                                <div class="team-vs">
+                                    <span class="team">Gryffindor</span>
+                                    <span class="vs">vs</span>
+                                    <span class="team">Slytherin</span>
+                                </div>
+                                <div class="match-date">Hoy • 19:00</div>
+                            </div>
+                            
+                            <div class="bet-details">
+                                <div class="bet-type">
+                                    <span class="label">Tipo de Apuesta:</span>
+                                    <span class="value">Ganador</span>
+                                </div>
+                                <div class="bet-selection">
+                                    <span class="label">Selección:</span>
+                                    <span class="value">Gryffindor</span>
+                                </div>
+                                <div class="bet-amount">
+                                    <span class="label">Monto:</span>
+                                    <span class="value">50 G</span>
+                                </div>
+                                <div class="potential-win">
+                                    <span class="label">Ganancia Potencial:</span>
+                                    <span class="value">+95 G</span>
+                                </div>
+                            </div>
+                            
+                            <a href="match-detail.html" class="button button-small">Ver Partido</a>
+                        </div>
+                        
+                        <div class="card bet-card">
+                            <div class="bet-header">
+                                <span class="bet-id">Apuesta #1089</span>
+                                <span class="bet-date">Realizada: 04/05/2025</span>
+                            </div>
+                            
+                            <div class="match-info">
+                                <div class="team-vs">
+                                    <span class="team">Hufflepuff</span>
+                                    <span class="vs">vs</span>
+                                    <span class="team">Ravenclaw</span>
+                                </div>
+                                <div class="match-date">Mañana • 17:30</div>
+                            </div>
+                            
+                            <div class="bet-details">
+                                <div class="bet-type">
+                                    <span class="label">Tipo de Apuesta:</span>
+                                    <span class="value">Captura de Snitch</span>
+                                </div>
+                                <div class="bet-selection">
+                                    <span class="label">Selección:</span>
+                                    <span class="value">Ravenclaw</span>
+                                </div>
+                                <div class="bet-amount">
+                                    <span class="label">Monto:</span>
+                                    <span class="value">30 G</span>
+                                </div>
+                                <div class="potential-win">
+                                    <span class="label">Ganancia Potencial:</span>
+                                    <span class="value">+75 G</span>
+                                </div>
+                            </div>
+                            
+                            <a href="match-detail.html" class="button button-small">Ver Partido</a>
+                        </div>
+                    </div>
+                    
+                    <div id="past-bets" class="tab-content hidden">
+                        <div class="card">
+                            <table class="bets-history-table">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Partido</th>
+                                        <th>Tipo</th>
+                                        <th>Selección</th>
+                                        <th>Monto</th>
+                                        <th>Resultado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="win">
+                                        <td>05/03/2025</td>
+                                        <td>Gryffindor vs Ravenclaw</td>
+                                        <td>Ganador</td>
+                                        <td>Gryffindor</td>
+                                        <td>40 G</td>
+                                        <td>+75 G</td>
+                                    </tr>
+                                    <tr class="loss">
+                                        <td>28/02/2025</td>
+                                        <td>Puddlemere United vs Chudley Cannons</td>
+                                        <td>Margen de Puntos</td>
+                                        <td>&gt; 50 puntos</td>
+                                        <td>50 G</td>
+                                        <td>-50 G</td>
+                                    </tr>
+                                    <tr class="win">
+                                        <td>15/02/2025</td>
+                                        <td>Holyhead Harpies vs Montrose Magpies</td>
+                                        <td>Tiempo del Partido</td>
+                                        <td>&lt; 1 hora</td>
+                                        <td>25 G</td>
+                                        <td>+60 G</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Notificaciones y preferencias -->
+                <section id="notifications" class="account-section hidden">
+                    <h2>Mis Notificaciones</h2>
+                    <div class="card">
+                        <div class="notification unread">
+                            <div class="notification-header">
+                                <span class="notification-title">Partido a punto de comenzar</span>
+                                <span class="notification-date">Hace 1 hora</span>
+                            </div>
+                            <p class="notification-content">
+                                Tu partido Gryffindor vs Slytherin comenzará en 30 minutos. ¡Prepárate para la emoción!
+                            </p>
+                        </div>
+                        
+                        <div class="notification">
+                            <div class="notification-header">
+                                <span class="notification-title">Bono semanal disponible</span>
+                                <span class="notification-date">Hace 1 día</span>
+                            </div>
+                            <p class="notification-content">
+                                Tu bono semanal de 15 Galeones está disponible. ¡Apuesta en 3 partidos esta semana para reclamarlo!
+                            </p>
+                        </div>
+                        
+                        <div class="notification">
+                            <div class="notification-header">
+                                <span class="notification-title">Apuesta ganada</span>
+                                <span class="notification-date">Hace 2 días</span>
+                            </div>
+                            <p class="notification-content">
+                                ¡Felicidades! Has ganado 75 Galeones por tu apuesta en el partido Gryffindor vs Ravenclaw.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>Preferencias de Notificaciones</h3>
+                        <form id="notifications-preferences">
+                            <div class="form-group checkbox">
+                                <input type="checkbox" id="notify-match-start" name="notify-match-start" checked>
+                                <label for="notify-match-start">Inicio de partidos</label>
+                            </div>
+                            
+                            <div class="form-group checkbox">
+                                <input type="checkbox" id="notify-results" name="notify-results" checked>
+                                <label for="notify-results">Resultados de apuestas</label>
+                            </div>
+                            
+                            <div class="form-group checkbox">
+                                <input type="checkbox" id="notify-promotions" name="notify-promotions" checked>
+                                <label for="notify-promotions">Promociones y bonos</label>
+                            </div>
+                            
+                            <div class="form-group checkbox">
+                                <input type="checkbox" id="notify-news" name="notify-news">
+                                <label for="notify-news">Noticias de Quidditch</label>
+                            </div>
+                            
+                            <div class="form-group checkbox">
+                                <input type="checkbox" id="notify-email" name="notify-email" checked>
+                                <label for="notify-email">Recibir notificaciones por email</label>
+                            </div>
+                            
+                            <button type="submit" class="button">Guardar Preferencias</button>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- Ajustes de cuenta -->
+                <section id="settings" class="account-section hidden">
+                    <h2>Configuración</h2>
+                    
+                    <div class="card">
+                        <h3>Preferencias de Cuenta</h3>
+                        <form id="account-settings">
+                            <div class="form-group">
+                                <label for="language">Idioma:</label>
+                                <select id="language" name="language">
+                                    <option value="es" selected>Español</option>
+                                    <option value="en">English</option>
+                                    <option value="fr">Français</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="currency">Moneda:</label>
+                                <select id="currency" name="currency">
+                                    <option value="galeones" selected>Galeones (G)</option>
+                                    <option value="sickles">Sickles (S)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="timezone">Zona horaria:</label>
+                                <select id="timezone" name="timezone">
+                                    <option value="europe-madrid" selected>Europa/Madrid</option>
+                                    <option value="europe-london">Europa/Londres</option>
+                                    <option value="america-bogota">América/Bogotá</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group checkbox">
+                                <input type="checkbox" id="dark-mode" name="dark-mode">
+                                <label for="dark-mode">Modo oscuro</label>
+                            </div>
+                            
+                            <button type="submit" class="button">Guardar Configuración</button>
+                        </form>
+                    </div>
+                    
+                    <div class="card danger-zone">
+                        <h3>Límites de Apuestas</h3>
+                        <form id="betting-limits">
+                            <div class="form-group">
+                                <label for="daily-limit">Límite diario (Galeones):</label>
+                                <input type="number" id="daily-limit" name="daily-limit" min="0" value="100">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="weekly-limit">Límite semanal (Galeones):</label>
+                                <input type="number" id="weekly-limit" name="weekly-limit" min="0" value="500">
+                            </div>
+                            
+                            <button type="submit" class="button">Establecer Límites</button>
+                        </form>
+                    </div>
+                    
+                    <div class="card danger-zone">
+                        <h3>Desactivar Cuenta</h3>
+                        <p>Si desactivas tu cuenta, no podrás realizar apuestas ni participar en promociones, pero podrás reactivarla en cualquier momento.</p>
+                        <button type="button" class="button button-danger" id="deactivate-account">Desactivar mi cuenta</button>
+                        
+                        <h3>Eliminar Cuenta</h3>
+                        <p class="warning">¡Atención! Esta acción no se puede deshacer. Se eliminarán todos tus datos, historial de apuestas y saldo.</p>
+                        <button type="button" class="button button-danger" id="delete-account">Eliminar mi cuenta permanentemente</button>
+                    </div>
+                </section>
             </div>
         </section>
     </main>

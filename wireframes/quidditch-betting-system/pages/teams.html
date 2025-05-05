@@ -26,214 +26,702 @@
                 <li><a href="standings.html" class="nav-link">Clasificación</a></li>
             </ul>
         </nav>
+        <!-- Mostrar botones de autenticación o menú de usuario según estado de sesión -->
         <div class="auth-buttons">
             <a href="login.html" class="button button-login">Iniciar Sesión</a>
             <a href="register.html" class="button button-register">Registrarse</a>
         </div>
+        <!-- 
+        <div class="user-menu">
+            <div class="user-avatar">
+                <div class="placeholder-x">X</div>
+            </div>
+            <span class="username">MagoApostador123</span>
+            <div class="dropdown-menu">
+                <a href="account.html">Mi Perfil</a>
+                <a href="account.html#wallet">Mi Monedero</a>
+                <a href="account.html#bets">Mis Apuestas</a>
+                <a href="#" id="logout-button">Cerrar Sesión</a>
+            </div>
+        </div>
+        -->
     </header>
 
     <main>
-        <section class="page-header card">
-            <h2>Equipos de Quidditch</h2>
-            <p>Conoce a los mejores equipos del mundo mágico</p>
+        <!-- Sección principal de equipos -->
+        <section class="hero-section">
+            <h1 class="section-title">Equipos de Quidditch</h1>
+            <p class="section-description">
+                Explora todos los equipos, consulta sus estadísticas, plantillas y descubre las mejores oportunidades para tus apuestas
+            </p>
         </section>
 
-        <!-- Buscador y filtros de equipos -->
-        <section class="teams-search card">
-            <div class="search-container">
-                <input type="text" placeholder="Buscar equipo..." class="search-input">
-                <button class="search-button button">Buscar</button>
+        <!-- Filtros y búsqueda de equipos -->
+        <section class="filters-section">
+            <div class="search-filter">
+                <input type="text" id="team-search" placeholder="Buscar equipos...">
+                <button class="search-button"><span class="icon-search">⌕</span></button>
             </div>
             
-            <div class="teams-filter">
-                <div class="filter-label">Filtrar por:</div>
-                <button class="filter-button button button-small active">Todos</button>
-                <button class="filter-button button button-small">Hogwarts</button>
-                <button class="filter-button button button-small">Liga Profesional</button>
-                <button class="filter-button button button-small">Internacional</button>
+            <div class="filter-options">
+                <div class="filter-group">
+                    <label for="league-filter">Liga:</label>
+                    <select id="league-filter">
+                        <option value="all" selected>Todas</option>
+                        <option value="hogwarts">Copa de Hogwarts</option>
+                        <option value="british">Liga Británica</option>
+                        <option value="european">Copa Europea</option>
+                        <option value="world">Mundial</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="sort-filter">Ordenar por:</label>
+                    <select id="sort-filter">
+                        <option value="name" selected>Nombre</option>
+                        <option value="rank">Ranking</option>
+                        <option value="wins">Victorias</option>
+                        <option value="form">Forma reciente</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="view-options">
+                <button class="view-button active" data-view="grid"><span class="icon-grid">☷</span></button>
+                <button class="view-button" data-view="list"><span class="icon-list">☰</span></button>
             </div>
         </section>
 
-        <!-- Equipos destacados con carousel -->
-        <section class="featured-teams card">
-            <h3>Equipos Destacados</h3>
-            <div class="teams-carousel-placeholder">
-                <div class="placeholder-x">X</div>
-                <p class="placeholder-description">Carousel de equipos destacados</p>
-            </div>
-        </section>
-        
-        <!-- Lista de equipos organizados por categorías -->
-        <section class="teams-list">
-            <!-- Hogwarts Teams -->
-            <div class="team-category">
-                <h3>Equipos de Hogwarts</h3>
+        <!-- Lista de equipos de Hogwarts -->
+        <section class="teams-container">
+            <div class="league-section">
+                <h2 class="league-title">Copa de Hogwarts</h2>
                 
                 <div class="teams-grid">
                     <!-- Gryffindor -->
-                    <div class="team-card card">
-                        <div class="team-banner">
-                            <div class="team-shield-placeholder">
-                                <div class="placeholder-x">X</div>
-                            </div>
-                            <h4>Gryffindor</h4>
+                    <div class="team-card">
+                        <div class="team-logo placeholder">
+                            <div class="placeholder-image">G</div>
                         </div>
-                        
-                        <div class="team-info-brief">
-                            <p><strong>Fundada:</strong> 990 d.C.</p>
-                            <p><strong>Estadio:</strong> Campo de Quidditch de Hogwarts</p>
-                            <p><strong>Capitán:</strong> Harry Potter</p>
+                        <div class="team-info">
+                            <h3 class="team-name">Gryffindor</h3>
+                            <div class="team-meta">
+                                <span class="team-founded">Fundado: Medieval</span>
+                                <span class="team-stadium">Estadio: Campo de Quidditch de Hogwarts</span>
+                            </div>
+                            <div class="team-stats">
+                                <div class="stat">
+                                    <div class="stat-value">7</div>
+                                    <div class="stat-label">Victorias</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-value">2</div>
+                                    <div class="stat-label">Derrotas</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-value">1</div>
+                                    <div class="stat-label">Empates</div>
+                                </div>
+                            </div>
+                            <div class="team-form">
+                                <span class="form-indicator win">V</span>
+                                <span class="form-indicator draw">E</span>
+                                <span class="form-indicator win">V</span>
+                                <span class="form-indicator win">V</span>
+                                <span class="form-indicator loss">D</span>
+                            </div>
                         </div>
-                        
-                        <div class="team-stats">
-                            <div class="stat">
-                                <span class="stat-value">9</span>
-                                <span class="stat-label">Títulos</span>
-                            </div>
-                            <div class="stat">
-                                <span class="stat-value">75%</span>
-                                <span class="stat-label">Victorias</span>
-                            </div>
-                            <div class="stat">
-                                <span class="stat-value">8</span>
-                                <span class="stat-label">Snitchs</span>
-                            </div>
+                        <div class="team-actions">
+                            <a href="team-detail.html?id=gryffindor" class="button button-small">Ver equipo</a>
+                            <button class="button button-secondary button-small follow-team">
+                                <span class="icon-star">★</span>
+                            </button>
                         </div>
-                        
-                        <a href="team-detail.html?id=gryffindor" class="button">Ver detalles</a>
                     </div>
                     
                     <!-- Slytherin -->
-                    <div class="team-card card">
-                        <div class="team-banner">
-                            <div class="team-shield-placeholder">
-                                <div class="placeholder-x">X</div>
-                            </div>
-                            <h4>Slytherin</h4>
+                    <div class="team-card">
+                        <div class="team-logo placeholder">
+                            <div class="placeholder-image">S</div>
                         </div>
-                        
-                        <div class="team-info-brief">
-                            <p><strong>Fundada:</strong> 990 d.C.</p>
-                            <p><strong>Estadio:</strong> Campo de Quidditch de Hogwarts</p>
-                            <p><strong>Capitán:</strong> Draco Malfoy</p>
+                        <div class="team-info">
+                            <h3 class="team-name">Slytherin</h3>
+                            <div class="team-meta">
+                                <span class="team-founded">Fundado: Medieval</span>
+                                <span class="team-stadium">Estadio: Campo de Quidditch de Hogwarts</span>
+                            </div>
+                            <div class="team-stats">
+                                <div class="stat">
+                                    <div class="stat-value">5</div>
+                                    <div class="stat-label">Victorias</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-value">3</div>
+                                    <div class="stat-label">Derrotas</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-value">2</div>
+                                    <div class="stat-label">Empates</div>
+                                </div>
+                            </div>
+                            <div class="team-form">
+                                <span class="form-indicator loss">D</span>
+                                <span class="form-indicator draw">E</span>
+                                <span class="form-indicator win">V</span>
+                                <span class="form-indicator win">V</span>
+                                <span class="form-indicator loss">D</span>
+                            </div>
                         </div>
-                        
-                        <div class="team-stats">
-                            <div class="stat">
-                                <span class="stat-value">7</span>
-                                <span class="stat-label">Títulos</span>
-                            </div>
-                            <div class="stat">
-                                <span class="stat-value">68%</span>
-                                <span class="stat-label">Victorias</span>
-                            </div>
-                            <div class="stat">
-                                <span class="stat-value">5</span>
-                                <span class="stat-label">Snitchs</span>
-                            </div>
+                        <div class="team-actions">
+                            <a href="team-detail.html?id=slytherin" class="button button-small">Ver equipo</a>
+                            <button class="button button-secondary button-small follow-team">
+                                <span class="icon-star">★</span>
+                            </button>
                         </div>
-                        
-                        <a href="team-detail.html?id=slytherin" class="button">Ver detalles</a>
                     </div>
                     
                     <!-- Ravenclaw -->
-                    <div class="team-card card">
-                        <div class="team-banner">
-                            <div class="team-shield-placeholder">
-                                <div class="placeholder-x">X</div>
-                            </div>
-                            <h4>Ravenclaw</h4>
+                    <div class="team-card">
+                        <div class="team-logo placeholder">
+                            <div class="placeholder-image">R</div>
                         </div>
-                        
-                        <div class="team-info-brief">
-                            <p><strong>Fundada:</strong> 990 d.C.</p>
-                            <p><strong>Estadio:</strong> Campo de Quidditch de Hogwarts</p>
-                            <p><strong>Capitán:</strong> Roger Davies</p>
+                        <div class="team-info">
+                            <h3 class="team-name">Ravenclaw</h3>
+                            <div class="team-meta">
+                                <span class="team-founded">Fundado: Medieval</span>
+                                <span class="team-stadium">Estadio: Campo de Quidditch de Hogwarts</span>
+                            </div>
+                            <div class="team-stats">
+                                <div class="stat">
+                                    <div class="stat-value">6</div>
+                                    <div class="stat-label">Victorias</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-value">3</div>
+                                    <div class="stat-label">Derrotas</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-value">1</div>
+                                    <div class="stat-label">Empates</div>
+                                </div>
+                            </div>
+                            <div class="team-form">
+                                <span class="form-indicator win">V</span>
+                                <span class="form-indicator win">V</span>
+                                <span class="form-indicator loss">D</span>
+                                <span class="form-indicator win">V</span>
+                                <span class="form-indicator win">V</span>
+                            </div>
                         </div>
-                        
-                        <div class="team-stats">
-                            <div class="stat">
-                                <span class="stat-value">5</span>
-                                <span class="stat-label">Títulos</span>
-                            </div>
-                            <div class="stat">
-                                <span class="stat-value">60%</span>
-                                <span class="stat-label">Victorias</span>
-                            </div>
-                            <div class="stat">
-                                <span class="stat-value">4</span>
-                                <span class="stat-label">Snitchs</span>
-                            </div>
+                        <div class="team-actions">
+                            <a href="team-detail.html?id=ravenclaw" class="button button-small">Ver equipo</a>
+                            <button class="button button-secondary button-small follow-team">
+                                <span class="icon-star">★</span>
+                            </button>
                         </div>
-                        
-                        <a href="team-detail.html?id=ravenclaw" class="button">Ver detalles</a>
                     </div>
                     
                     <!-- Hufflepuff -->
-                    <div class="team-card card">
-                        <div class="team-banner">
-                            <div class="team-shield-placeholder">
-                                <div class="placeholder-x">X</div>
-                            </div>
-                            <h4>Hufflepuff</h4>
+                    <div class="team-card">
+                        <div class="team-logo placeholder">
+                            <div class="placeholder-image">H</div>
                         </div>
-                        
-                        <div class="team-info-brief">
-                            <p><strong>Fundada:</strong> 990 d.C.</p>
-                            <p><strong>Estadio:</strong> Campo de Quidditch de Hogwarts</p>
-                            <p><strong>Capitán:</strong> Cedric Diggory</p>
+                        <div class="team-info">
+                            <h3 class="team-name">Hufflepuff</h3>
+                            <div class="team-meta">
+                                <span class="team-founded">Fundado: Medieval</span>
+                                <span class="team-stadium">Estadio: Campo de Quidditch de Hogwarts</span>
+                            </div>
+                            <div class="team-stats">
+                                <div class="stat">
+                                    <div class="stat-value">4</div>
+                                    <div class="stat-label">Victorias</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-value">4</div>
+                                    <div class="stat-label">Derrotas</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-value">2</div>
+                                    <div class="stat-label">Empates</div>
+                                </div>
+                            </div>
+                            <div class="team-form">
+                                <span class="form-indicator loss">D</span>
+                                <span class="form-indicator draw">E</span>
+                                <span class="form-indicator win">V</span>
+                                <span class="form-indicator loss">D</span>
+                                <span class="form-indicator win">V</span>
+                            </div>
                         </div>
-                        
-                        <div class="team-stats">
-                            <div class="stat">
-                                <span class="stat-value">3</span>
-                                <span class="stat-label">Títulos</span>
-                            </div>
-                            <div class="stat">
-                                <span class="stat-value">45%</span>
-                                <span class="stat-label">Victorias</span>
-                            </div>
-                            <div class="stat">
-                                <span class="stat-value">3</span>
-                                <span class="stat-label">Snitchs</span>
-                            </div>
+                        <div class="team-actions">
+                            <a href="team-detail.html?id=hufflepuff" class="button button-small">Ver equipo</a>
+                            <button class="button button-secondary button-small follow-team">
+                                <span class="icon-star">★</span>
+                            </button>
                         </div>
-                        
-                        <a href="team-detail.html?id=hufflepuff" class="button">Ver detalles</a>
                     </div>
                 </div>
             </div>
-            
-            <!-- Professional Teams -->
-            <div class="team-category">
-                <h3>Equipos Profesionales</h3>
+
+            <!-- Liga Británica -->
+            <div class="league-section">
+                <h2 class="league-title">Liga Británica de Quidditch</h2>
                 
                 <div class="teams-grid">
-                    <!-- Placeholder for Professional Teams -->
-                    <div class="teams-placeholder-section">
-                        <div class="placeholder-x">X</div>
-                        <p class="placeholder-description">Equipos profesionales pendientes de cargar</p>
+                    <!-- Puddlemere United -->
+                    <div class="team-card">
+                        <div class="team-logo placeholder">
+                            <div class="placeholder-image">PU</div>
+                        </div>
+                        <div class="team-info">
+                            <h3 class="team-name">Puddlemere United</h3>
+                            <div class="team-meta">
+                                <span class="team-founded">Fundado: 1163</span>
+                                <span class="team-stadium">Estadio: Puddlemere</span>
+                            </div>
+                            <div class="team-stats">
+                                <div class="stat">
+                                    <div class="stat-value">9</div>
+                                    <div class="stat-label">Victorias</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-value">1</div>
+                                    <div class="stat-label">Derrotas</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-value">0</div>
+                                    <div class="stat-label">Empates</div>
+                                </div>
+                            </div>
+                            <div class="team-form">
+                                <span class="form-indicator win">V</span>
+                                <span class="form-indicator win">V</span>
+                                <span class="form-indicator win">V</span>
+                                <span class="form-indicator win">V</span>
+                                <span class="form-indicator loss">D</span>
+                            </div>
+                        </div>
+                        <div class="team-actions">
+                            <a href="team-detail.html?id=puddlemere" class="button button-small">Ver equipo</a>
+                            <button class="button button-secondary button-small follow-team">
+                                <span class="icon-star">★</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Holyhead Harpies -->
+                    <div class="team-card">
+                        <div class="team-logo placeholder">
+                            <div class="placeholder-image">HH</div>
+                        </div>
+                        <div class="team-info">
+                            <h3 class="team-name">Holyhead Harpies</h3>
+                            <div class="team-meta">
+                                <span class="team-founded">Fundado: 1203</span>
+                                <span class="team-stadium">Estadio: Holyhead</span>
+                            </div>
+                            <div class="team-stats">
+                                <div class="stat">
+                                    <div class="stat-value">8</div>
+                                    <div class="stat-label">Victorias</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-value">2</div>
+                                    <div class="stat-label">Derrotas</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-value">0</div>
+                                    <div class="stat-label">Empates</div>
+                                </div>
+                            </div>
+                            <div class="team-form">
+                                <span class="form-indicator win">V</span>
+                                <span class="form-indicator win">V</span>
+                                <span class="form-indicator loss">D</span>
+                                <span class="form-indicator win">V</span>
+                                <span class="form-indicator win">V</span>
+                            </div>
+                        </div>
+                        <div class="team-actions">
+                            <a href="team-detail.html?id=holyhead" class="button button-small">Ver equipo</a>
+                            <button class="button button-secondary button-small follow-team">
+                                <span class="icon-star">★</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Montrose Magpies -->
+                    <div class="team-card">
+                        <div class="team-logo placeholder">
+                            <div class="placeholder-image">MM</div>
+                        </div>
+                        <div class="team-info">
+                            <h3 class="team-name">Montrose Magpies</h3>
+                            <div class="team-meta">
+                                <span class="team-founded">Fundado: 1296</span>
+                                <span class="team-stadium">Estadio: Montrose</span>
+                            </div>
+                            <div class="team-stats">
+                                <div class="stat">
+                                    <div class="stat-value">7</div>
+                                    <div class="stat-label">Victorias</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-value">2</div>
+                                    <div class="stat-label">Derrotas</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-value">1</div>
+                                    <div class="stat-label">Empates</div>
+                                </div>
+                            </div>
+                            <div class="team-form">
+                                <span class="form-indicator win">V</span>
+                                <span class="form-indicator loss">D</span>
+                                <span class="form-indicator draw">E</span>
+                                <span class="form-indicator win">V</span>
+                                <span class="form-indicator win">V</span>
+                            </div>
+                        </div>
+                        <div class="team-actions">
+                            <a href="team-detail.html?id=montrose" class="button button-small">Ver equipo</a>
+                            <button class="button button-secondary button-small follow-team">
+                                <span class="icon-star">★</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Chudley Cannons -->
+                    <div class="team-card">
+                        <div class="team-logo placeholder">
+                            <div class="placeholder-image">CC</div>
+                        </div>
+                        <div class="team-info">
+                            <h3 class="team-name">Chudley Cannons</h3>
+                            <div class="team-meta">
+                                <span class="team-founded">Fundado: 1753</span>
+                                <span class="team-stadium">Estadio: Chudley</span>
+                            </div>
+                            <div class="team-stats">
+                                <div class="stat">
+                                    <div class="stat-value">2</div>
+                                    <div class="stat-label">Victorias</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-value">8</div>
+                                    <div class="stat-label">Derrotas</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-value">0</div>
+                                    <div class="stat-label">Empates</div>
+                                </div>
+                            </div>
+                            <div class="team-form">
+                                <span class="form-indicator loss">D</span>
+                                <span class="form-indicator loss">D</span>
+                                <span class="form-indicator win">V</span>
+                                <span class="form-indicator loss">D</span>
+                                <span class="form-indicator loss">D</span>
+                            </div>
+                        </div>
+                        <div class="team-actions">
+                            <a href="team-detail.html?id=chudley" class="button button-small">Ver equipo</a>
+                            <button class="button button-secondary button-small follow-team">
+                                <span class="icon-star">★</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Wimbourne Wasps -->
+                    <div class="team-card">
+                        <div class="team-logo placeholder">
+                            <div class="placeholder-image">WW</div>
+                        </div>
+                        <div class="team-info">
+                            <h3 class="team-name">Wimbourne Wasps</h3>
+                            <div class="team-meta">
+                                <span class="team-founded">Fundado: 1312</span>
+                                <span class="team-stadium">Estadio: Wimbourne</span>
+                            </div>
+                            <div class="team-stats">
+                                <div class="stat">
+                                    <div class="stat-value">6</div>
+                                    <div class="stat-label">Victorias</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-value">3</div>
+                                    <div class="stat-label">Derrotas</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-value">1</div>
+                                    <div class="stat-label">Empates</div>
+                                </div>
+                            </div>
+                            <div class="team-form">
+                                <span class="form-indicator win">V</span>
+                                <span class="form-indicator win">V</span>
+                                <span class="form-indicator draw">E</span>
+                                <span class="form-indicator loss">D</span>
+                                <span class="form-indicator win">V</span>
+                            </div>
+                        </div>
+                        <div class="team-actions">
+                            <a href="team-detail.html?id=wimbourne" class="button button-small">Ver equipo</a>
+                            <button class="button button-secondary button-small follow-team">
+                                <span class="icon-star">★</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Tutshill Tornados -->
+                    <div class="team-card">
+                        <div class="team-logo placeholder">
+                            <div class="placeholder-image">TT</div>
+                        </div>
+                        <div class="team-info">
+                            <h3 class="team-name">Tutshill Tornados</h3>
+                            <div class="team-meta">
+                                <span class="team-founded">Fundado: 1520</span>
+                                <span class="team-stadium">Estadio: Tutshill</span>
+                            </div>
+                            <div class="team-stats">
+                                <div class="stat">
+                                    <div class="stat-value">5</div>
+                                    <div class="stat-label">Victorias</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-value">4</div>
+                                    <div class="stat-label">Derrotas</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-value">1</div>
+                                    <div class="stat-label">Empates</div>
+                                </div>
+                            </div>
+                            <div class="team-form">
+                                <span class="form-indicator loss">D</span>
+                                <span class="form-indicator win">V</span>
+                                <span class="form-indicator win">V</span>
+                                <span class="form-indicator draw">E</span>
+                                <span class="form-indicator loss">D</span>
+                            </div>
+                        </div>
+                        <div class="team-actions">
+                            <a href="team-detail.html?id=tutshill" class="button button-small">Ver equipo</a>
+                            <button class="button button-secondary button-small follow-team">
+                                <span class="icon-star">★</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
-            
-            <!-- International Teams -->
-            <div class="team-category">
-                <h3>Equipos Internacionales</h3>
                 
-                <div class="teams-placeholder-section">
-                    <div class="placeholder-x">X</div>
-                    <p class="placeholder-description">Equipos internacionales pendientes de cargar</p>
+                <div class="view-all-container">
+                    <button class="button load-more">Cargar más equipos</button>
+                </div>
+            </div>
+
+            <!-- Equipos internacionales destacados -->
+            <div class="league-section">
+                <h2 class="league-title">Equipos Internacionales Destacados</h2>
+                
+                <div class="teams-grid">
+                    <!-- Bulgaria -->
+                    <div class="team-card">
+                        <div class="team-logo placeholder">
+                            <div class="placeholder-image">BUL</div>
+                        </div>
+                        <div class="team-info">
+                            <h3 class="team-name">Bulgaria</h3>
+                            <div class="team-meta">
+                                <span class="team-founded">Selección Nacional</span>
+                                <span class="team-stadium">Estadio: Arena Nacional de Sofia</span>
+                            </div>
+                            <div class="team-stats">
+                                <div class="stat">
+                                    <div class="stat-value">12</div>
+                                    <div class="stat-label">Victorias</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-value">3</div>
+                                    <div class="stat-label">Derrotas</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-value">1</div>
+                                    <div class="stat-label">Empates</div>
+                                </div>
+                            </div>
+                            <div class="team-form">
+                                <span class="form-indicator win">V</span>
+                                <span class="form-indicator win">V</span>
+                                <span class="form-indicator win">V</span>
+                                <span class="form-indicator draw">E</span>
+                                <span class="form-indicator win">V</span>
+                            </div>
+                        </div>
+                        <div class="team-actions">
+                            <a href="team-detail.html?id=bulgaria" class="button button-small">Ver equipo</a>
+                            <button class="button button-secondary button-small follow-team">
+                                <span class="icon-star">★</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Irlanda -->
+                    <div class="team-card">
+                        <div class="team-logo placeholder">
+                            <div class="placeholder-image">IRE</div>
+                        </div>
+                        <div class="team-info">
+                            <h3 class="team-name">Irlanda</h3>
+                            <div class="team-meta">
+                                <span class="team-founded">Selección Nacional</span>
+                                <span class="team-stadium">Estadio: Estadio Nacional de Dublín</span>
+                            </div>
+                            <div class="team-stats">
+                                <div class="stat">
+                                    <div class="stat-value">13</div>
+                                    <div class="stat-label">Victorias</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-value">2</div>
+                                    <div class="stat-label">Derrotas</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-value">1</div>
+                                    <div class="stat-label">Empates</div>
+                                </div>
+                            </div>
+                            <div class="team-form">
+                                <span class="form-indicator win">V</span>
+                                <span class="form-indicator win">V</span>
+                                <span class="form-indicator loss">D</span>
+                                <span class="form-indicator win">V</span>
+                                <span class="form-indicator win">V</span>
+                            </div>
+                        </div>
+                        <div class="team-actions">
+                            <a href="team-detail.html?id=ireland" class="button button-small">Ver equipo</a>
+                            <button class="button button-secondary button-small follow-team">
+                                <span class="icon-star">★</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- EEUU -->
+                    <div class="team-card">
+                        <div class="team-logo placeholder">
+                            <div class="placeholder-image">USA</div>
+                        </div>
+                        <div class="team-info">
+                            <h3 class="team-name">Estados Unidos</h3>
+                            <div class="team-meta">
+                                <span class="team-founded">Selección Nacional</span>
+                                <span class="team-stadium">Estadio: American Magic Stadium</span>
+                            </div>
+                            <div class="team-stats">
+                                <div class="stat">
+                                    <div class="stat-value">9</div>
+                                    <div class="stat-label">Victorias</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-value">5</div>
+                                    <div class="stat-label">Derrotas</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-value">2</div>
+                                    <div class="stat-label">Empates</div>
+                                </div>
+                            </div>
+                            <div class="team-form">
+                                <span class="form-indicator loss">D</span>
+                                <span class="form-indicator win">V</span>
+                                <span class="form-indicator win">V</span>
+                                <span class="form-indicator win">V</span>
+                                <span class="form-indicator draw">E</span>
+                            </div>
+                        </div>
+                        <div class="team-actions">
+                            <a href="team-detail.html?id=usa" class="button button-small">Ver equipo</a>
+                            <button class="button button-secondary button-small follow-team">
+                                <span class="icon-star">★</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
-        
-        <!-- Team Stats Comparison Tool -->
-        <section class="team-comparison card">
-            <h3>Comparador de Equipos</h3>
-            <div class="comparison-placeholder">
-                <div class="placeholder-x">X</div>
-                <p class="placeholder-description">Herramienta para comparar estadísticas entre equipos</p>
+
+        <!-- Equipos destacados y estadísticas -->
+        <section class="teams-highlights">
+            <div class="section-header">
+                <h2>Destacados esta temporada</h2>
+            </div>
+            
+            <div class="highlights-grid">
+                <div class="highlight-card">
+                    <div class="highlight-header">
+                        <h3>Mejor racha ganadora</h3>
+                    </div>
+                    <div class="highlight-content">
+                        <div class="team-mini">
+                            <div class="team-logo small placeholder">
+                                <div class="placeholder-image">PU</div>
+                            </div>
+                            <div class="team-name">Puddlemere United</div>
+                        </div>
+                        <div class="highlight-value">8 victorias consecutivas</div>
+                        <div class="highlight-description">El equipo está en su mejor momento histórico con una impresionante racha de 8 victorias seguidas.</div>
+                    </div>
+                </div>
+                
+                <div class="highlight-card">
+                    <div class="highlight-header">
+                        <h3>Mejor defensa</h3>
+                    </div>
+                    <div class="highlight-content">
+                        <div class="team-mini">
+                            <div class="team-logo small placeholder">
+                                <div class="placeholder-image">HH</div>
+                            </div>
+                            <div class="team-name">Holyhead Harpies</div>
+                        </div>
+                        <div class="highlight-value">Solo 45 puntos en contra</div>
+                        <div class="highlight-description">Con Gwenog Jones como capitana, las Harpies han demostrado tener la defensa más sólida de la liga.</div>
+                    </div>
+                </div>
+                
+                <div class="highlight-card">
+                    <div class="highlight-header">
+                        <h3>Más capturas de Snitch</h3>
+                    </div>
+                    <div class="highlight-content">
+                        <div class="team-mini">
+                            <div class="team-logo small placeholder">
+                                <div class="placeholder-image">G</div>
+                            </div>
+                            <div class="team-name">Gryffindor</div>
+                        </div>
+                        <div class="highlight-value">7 capturas en 10 partidos</div>
+                        <div class="highlight-description">El buscador estrella de Gryffindor lidera la tabla de capturas de Snitch de esta temporada.</div>
+                    </div>
+                </div>
+                
+                <div class="highlight-card">
+                    <div class="highlight-header">
+                        <h3>Mayor sorpresa</h3>
+                    </div>
+                    <div class="highlight-content">
+                        <div class="team-mini">
+                            <div class="team-logo small placeholder">
+                                <div class="placeholder-image">H</div>
+                            </div>
+                            <div class="team-name">Hufflepuff</div>
+                        </div>
+                        <div class="highlight-value">3 victorias consecutivas</div>
+                        <div class="highlight-description">Tras años de resultados mediocres, Hufflepuff está dando la sorpresa con 3 victorias impresionantes.</div>
+                    </div>
+                </div>
             </div>
         </section>
     </main>

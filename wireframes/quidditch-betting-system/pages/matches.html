@@ -26,120 +26,500 @@
                 <li><a href="standings.html" class="nav-link">Clasificación</a></li>
             </ul>
         </nav>
+        <!-- Mostrar botones de autenticación o menú de usuario según estado de sesión -->
         <div class="auth-buttons">
             <a href="login.html" class="button button-login">Iniciar Sesión</a>
             <a href="register.html" class="button button-register">Registrarse</a>
         </div>
+        <!-- 
+        <div class="user-menu">
+            <div class="user-avatar">
+                <div class="placeholder-x">X</div>
+            </div>
+            <span class="username">MagoApostador123</span>
+            <div class="dropdown-menu">
+                <a href="account.html">Mi Perfil</a>
+                <a href="account.html#wallet">Mi Monedero</a>
+                <a href="account.html#bets">Mis Apuestas</a>
+                <a href="#" id="logout-button">Cerrar Sesión</a>
+            </div>
+        </div>
+        -->
     </header>
 
     <main>
-        <section class="page-header card">
-            <h2>Partidos de Quidditch</h2>
-            <p>Explora todos los partidos disponibles para apostar</p>
-        </section>
-        
-        <section class="matches-filters card">
-            <h3>Filtros</h3>
-            <form id="filters-form" class="filters-form">
-                <div class="filter-group">
-                    <label for="date-filter">Fecha:</label>
-                    <select id="date-filter" name="date-filter">
-                        <option value="all">Todos</option>
-                        <option value="today">Hoy</option>
-                        <option value="tomorrow">Mañana</option>
-                        <option value="week">Esta semana</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label for="team-filter">Equipo:</label>
-                    <select id="team-filter" name="team-filter">
-                        <option value="all">Todos</option>
-                        <option value="gryffindor">Gryffindor</option>
-                        <option value="slytherin">Slytherin</option>
-                        <option value="hufflepuff">Hufflepuff</option>
-                        <option value="ravenclaw">Ravenclaw</option>
-                    </select>
-                </div>
-                <button type="submit" class="button">Aplicar</button>
-            </form>
+        <!-- CU-06: Visualización de partidos programados -->
+        <section class="hero-section">
+            <h1 class="section-title">Partidos de Quidditch</h1>
+            <p class="section-description">
+                Explora todos los partidos programados, sigue los resultados en vivo y encuentra las mejores oportunidades para apostar
+            </p>
         </section>
 
-        <section class="matches-list">
-            <!-- Match card 1 -->
-            <div class="match-card card">
-                <div class="match-date">
-                    <p>Hoy • 19:00</p>
+        <section class="matches-container">
+            <!-- Filtros y ordenamiento de partidos -->
+            <div class="filters-section">
+                <div class="search-filter">
+                    <input type="text" id="match-search" placeholder="Buscar partidos o equipos...">
+                    <button class="search-button"><span class="icon-search">⌕</span></button>
                 </div>
-                <div class="match-teams">
-                    <div class="team team-home">
-                        <div class="team-logo-placeholder">
-                            <div class="placeholder-x">X</div>
-                        </div>
-                        <p class="team-name">Gryffindor</p>
+                
+                <div class="filter-options">
+                    <div class="filter-group">
+                        <label for="date-filter">Fecha:</label>
+                        <select id="date-filter">
+                            <option value="today">Hoy</option>
+                            <option value="tomorrow">Mañana</option>
+                            <option value="week" selected>Esta semana</option>
+                            <option value="month">Este mes</option>
+                        </select>
                     </div>
-                    <div class="vs-indicator">VS</div>
-                    <div class="team team-away">
-                        <div class="team-logo-placeholder">
-                            <div class="placeholder-x">X</div>
-                        </div>
-                        <p class="team-name">Slytherin</p>
+                    
+                    <div class="filter-group">
+                        <label for="league-filter">Liga:</label>
+                        <select id="league-filter">
+                            <option value="all" selected>Todas</option>
+                            <option value="hogwarts">Copa de Hogwarts</option>
+                            <option value="british">Liga Británica</option>
+                            <option value="european">Copa Europea</option>
+                            <option value="world">Mundial</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="team-filter">Equipo:</label>
+                        <select id="team-filter">
+                            <option value="all" selected>Todos</option>
+                            <option value="gryffindor">Gryffindor</option>
+                            <option value="slytherin">Slytherin</option>
+                            <option value="ravenclaw">Ravenclaw</option>
+                            <option value="hufflepuff">Hufflepuff</option>
+                            <option value="puddlemere">Puddlemere United</option>
+                            <option value="cannons">Chudley Cannons</option>
+                        </select>
                     </div>
                 </div>
-                <div class="match-actions">
-                    <a href="match-detail.html?id=1" class="button">Ver detalles</a>
-                    <a href="betting.html?match=1" class="button button-secondary">Apostar</a>
+                
+                <div class="view-options">
+                    <button class="view-button active" data-view="list"><span class="icon-list">☰</span></button>
+                    <button class="view-button" data-view="grid"><span class="icon-grid">☷</span></button>
                 </div>
             </div>
 
-            <!-- Match card 2 -->
-            <div class="match-card card">
-                <div class="match-date">
-                    <p>Mañana • 17:30</p>
+            <!-- Tabs para diferentes categorías de partidos -->
+            <div class="matches-tabs">
+                <button class="tab-button active" data-tab="live-matches">En Vivo</button>
+                <button class="tab-button" data-tab="upcoming-matches">Próximos</button>
+                <button class="tab-button" data-tab="finished-matches">Finalizados</button>
+                <button class="tab-button" data-tab="featured-matches">Destacados</button>
+            </div>
+
+            <!-- Lista de partidos en vivo -->
+            <div id="live-matches" class="tab-content">
+                <div class="match-header">
+                    <span class="live-indicator pulsing">EN VIVO</span>
+                    <span class="match-count">2 partidos en curso</span>
                 </div>
-                <div class="match-teams">
-                    <div class="team team-home">
-                        <div class="team-logo-placeholder">
-                            <div class="placeholder-x">X</div>
+
+                <!-- Partido en vivo 1 -->
+                <div class="match-card live">
+                    <div class="live-tag">EN VIVO</div>
+                    <div class="match-time">45 min</div>
+                    
+                    <div class="match-details">
+                        <div class="teams">
+                            <div class="team team-home">
+                                <div class="team-logo placeholder"></div>
+                                <div class="team-name">Gryffindor</div>
+                                <div class="team-score">80</div>
+                            </div>
+                            <div class="versus">VS</div>
+                            <div class="team team-away">
+                                <div class="team-logo placeholder"></div>
+                                <div class="team-name">Slytherin</div>
+                                <div class="team-score">70</div>
+                            </div>
                         </div>
-                        <p class="team-name">Hufflepuff</p>
+                        
+                        <div class="match-status">
+                            <div class="status-info">
+                                <span class="snitch-status">Snitch no capturada</span>
+                                <span class="league">Copa de Hogwarts</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="vs-indicator">VS</div>
-                    <div class="team team-away">
-                        <div class="team-logo-placeholder">
-                            <div class="placeholder-x">X</div>
-                        </div>
-                        <p class="team-name">Ravenclaw</p>
+                    
+                    <div class="match-actions">
+                        <a href="match-detail.html?id=2025-05-05-1" class="button button-small">Ver Detalles</a>
+                        <a href="betting.html?match=2025-05-05-1" class="button button-small cta-button">Apostar</a>
                     </div>
                 </div>
-                <div class="match-actions">
-                    <a href="match-detail.html?id=2" class="button">Ver detalles</a>
-                    <a href="betting.html?match=2" class="button button-secondary">Apostar</a>
+
+                <!-- Partido en vivo 2 -->
+                <div class="match-card live">
+                    <div class="live-tag">EN VIVO</div>
+                    <div class="match-time">78 min</div>
+                    
+                    <div class="match-details">
+                        <div class="teams">
+                            <div class="team team-home">
+                                <div class="team-logo placeholder"></div>
+                                <div class="team-name">Puddlemere United</div>
+                                <div class="team-score">120</div>
+                            </div>
+                            <div class="versus">VS</div>
+                            <div class="team team-away">
+                                <div class="team-logo placeholder"></div>
+                                <div class="team-name">Chudley Cannons</div>
+                                <div class="team-score">50</div>
+                            </div>
+                        </div>
+                        
+                        <div class="match-status">
+                            <div class="status-info">
+                                <span class="snitch-status">Snitch no capturada</span>
+                                <span class="league">Liga Británica</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="match-actions">
+                        <a href="match-detail.html?id=2025-05-05-2" class="button button-small">Ver Detalles</a>
+                        <a href="betting.html?match=2025-05-05-2" class="button button-small cta-button">Apostar</a>
+                    </div>
                 </div>
             </div>
 
-            <!-- Match card 3 -->
-            <div class="match-card card">
-                <div class="match-date">
-                    <p>Domingo • 15:00</p>
+            <!-- Lista de próximos partidos -->
+            <div id="upcoming-matches" class="tab-content hidden">
+                <div class="match-header">
+                    <span class="match-count">6 próximos partidos</span>
                 </div>
-                <div class="match-teams">
-                    <div class="team team-home">
-                        <div class="team-logo-placeholder">
-                            <div class="placeholder-x">X</div>
+
+                <!-- Partido programado 1 -->
+                <div class="match-card">
+                    <div class="match-time">Hoy • 19:30</div>
+                    
+                    <div class="match-details">
+                        <div class="teams">
+                            <div class="team team-home">
+                                <div class="team-logo placeholder"></div>
+                                <div class="team-name">Ravenclaw</div>
+                            </div>
+                            <div class="versus">VS</div>
+                            <div class="team team-away">
+                                <div class="team-logo placeholder"></div>
+                                <div class="team-name">Hufflepuff</div>
+                            </div>
                         </div>
-                        <p class="team-name">Chudley Cannons</p>
+                        
+                        <div class="match-status">
+                            <div class="status-info">
+                                <span class="league">Copa de Hogwarts</span>
+                                <span class="location">Campo de Quidditch de Hogwarts</span>
+                            </div>
+                            <div class="betting-odds">
+                                <div class="odd">
+                                    <span class="odd-team">Local</span>
+                                    <span class="odd-value">1.90</span>
+                                </div>
+                                <div class="odd">
+                                    <span class="odd-team">Empate</span>
+                                    <span class="odd-value">3.50</span>
+                                </div>
+                                <div class="odd">
+                                    <span class="odd-team">Visitante</span>
+                                    <span class="odd-value">2.10</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="vs-indicator">VS</div>
-                    <div class="team team-away">
-                        <div class="team-logo-placeholder">
-                            <div class="placeholder-x">X</div>
-                        </div>
-                        <p class="team-name">Holyhead Harpies</p>
+                    
+                    <div class="match-actions">
+                        <a href="match-detail.html?id=2025-05-05-3" class="button button-small">Ver Detalles</a>
+                        <a href="betting.html?match=2025-05-05-3" class="button button-small cta-button">Apostar</a>
                     </div>
                 </div>
-                <div class="match-actions">
-                    <a href="match-detail.html?id=3" class="button">Ver detalles</a>
-                    <a href="betting.html?match=3" class="button button-secondary">Apostar</a>
+
+                <!-- Partido programado 2 -->
+                <div class="match-card">
+                    <div class="match-time">Mañana • 15:00</div>
+                    
+                    <div class="match-details">
+                        <div class="teams">
+                            <div class="team team-home">
+                                <div class="team-logo placeholder"></div>
+                                <div class="team-name">Holyhead Harpies</div>
+                            </div>
+                            <div class="versus">VS</div>
+                            <div class="team team-away">
+                                <div class="team-logo placeholder"></div>
+                                <div class="team-name">Montrose Magpies</div>
+                            </div>
+                        </div>
+                        
+                        <div class="match-status">
+                            <div class="status-info">
+                                <span class="league">Liga Británica</span>
+                                <span class="location">Estadio de Holyhead</span>
+                            </div>
+                            <div class="betting-odds">
+                                <div class="odd">
+                                    <span class="odd-team">Local</span>
+                                    <span class="odd-value">2.50</span>
+                                </div>
+                                <div class="odd">
+                                    <span class="odd-team">Empate</span>
+                                    <span class="odd-value">3.20</span>
+                                </div>
+                                <div class="odd">
+                                    <span class="odd-team">Visitante</span>
+                                    <span class="odd-value">1.80</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="match-actions">
+                        <a href="match-detail.html?id=2025-05-06-1" class="button button-small">Ver Detalles</a>
+                        <a href="betting.html?match=2025-05-06-1" class="button button-small cta-button">Apostar</a>
+                    </div>
+                </div>
+
+                <!-- Más partidos programados -->
+                <div class="match-card">
+                    <div class="match-time">07/05/2025 • 18:00</div>
+                    
+                    <div class="match-details">
+                        <div class="teams">
+                            <div class="team team-home">
+                                <div class="team-logo placeholder"></div>
+                                <div class="team-name">Slytherin</div>
+                            </div>
+                            <div class="versus">VS</div>
+                            <div class="team team-away">
+                                <div class="team-logo placeholder"></div>
+                                <div class="team-name">Hufflepuff</div>
+                            </div>
+                        </div>
+                        
+                        <div class="match-status">
+                            <div class="status-info">
+                                <span class="league">Copa de Hogwarts</span>
+                                <span class="location">Campo de Quidditch de Hogwarts</span>
+                            </div>
+                            <div class="betting-odds">
+                                <div class="odd">
+                                    <span class="odd-team">Local</span>
+                                    <span class="odd-value">1.75</span>
+                                </div>
+                                <div class="odd">
+                                    <span class="odd-team">Empate</span>
+                                    <span class="odd-value">3.80</span>
+                                </div>
+                                <div class="odd">
+                                    <span class="odd-team">Visitante</span>
+                                    <span class="odd-value">2.30</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="match-actions">
+                        <a href="match-detail.html?id=2025-05-07-1" class="button button-small">Ver Detalles</a>
+                        <a href="betting.html?match=2025-05-07-1" class="button button-small cta-button">Apostar</a>
+                    </div>
+                </div>
+                
+                <div class="load-more-container">
+                    <button class="button load-more">Cargar más partidos</button>
+                </div>
+            </div>
+
+            <!-- Lista de partidos finalizados -->
+            <div id="finished-matches" class="tab-content hidden">
+                <div class="match-header">
+                    <span class="match-count">10 partidos recientes</span>
+                </div>
+
+                <!-- Partido finalizado 1 -->
+                <div class="match-card finished">
+                    <div class="match-time finished">Finalizado</div>
+                    
+                    <div class="match-details">
+                        <div class="teams">
+                            <div class="team team-home winner">
+                                <div class="team-logo placeholder"></div>
+                                <div class="team-name">Gryffindor</div>
+                                <div class="team-score">240</div>
+                            </div>
+                            <div class="versus">VS</div>
+                            <div class="team team-away">
+                                <div class="team-logo placeholder"></div>
+                                <div class="team-name">Ravenclaw</div>
+                                <div class="team-score">110</div>
+                            </div>
+                        </div>
+                        
+                        <div class="match-status">
+                            <div class="status-info">
+                                <span class="snitch-status">Snitch capturada por Gryffindor</span>
+                                <span class="league">Copa de Hogwarts</span>
+                                <span class="match-date">04/05/2025</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="match-actions">
+                        <a href="match-detail.html?id=2025-05-04-1" class="button button-small">Ver Resumen</a>
+                        <a href="results.html?match=2025-05-04-1" class="button button-small">Ver Resultados</a>
+                    </div>
+                </div>
+
+                <!-- Partido finalizado 2 -->
+                <div class="match-card finished">
+                    <div class="match-time finished">Finalizado</div>
+                    
+                    <div class="match-details">
+                        <div class="teams">
+                            <div class="team team-home">
+                                <div class="team-logo placeholder"></div>
+                                <div class="team-name">Tutshill Tornados</div>
+                                <div class="team-score">80</div>
+                            </div>
+                            <div class="versus">VS</div>
+                            <div class="team team-away winner">
+                                <div class="team-logo placeholder"></div>
+                                <div class="team-name">Wimbourne Wasps</div>
+                                <div class="team-score">190</div>
+                            </div>
+                        </div>
+                        
+                        <div class="match-status">
+                            <div class="status-info">
+                                <span class="snitch-status">Snitch capturada por Wimbourne Wasps</span>
+                                <span class="league">Liga Británica</span>
+                                <span class="match-date">03/05/2025</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="match-actions">
+                        <a href="match-detail.html?id=2025-05-03-1" class="button button-small">Ver Resumen</a>
+                        <a href="results.html?match=2025-05-03-1" class="button button-small">Ver Resultados</a>
+                    </div>
+                </div>
+                
+                <div class="load-more-container">
+                    <button class="button load-more">Cargar más resultados</button>
+                </div>
+            </div>
+
+            <!-- Partidos destacados -->
+            <div id="featured-matches" class="tab-content hidden">
+                <div class="match-header">
+                    <span class="featured-indicator">DESTACADOS</span>
+                    <span class="match-count">3 partidos destacados</span>
+                </div>
+
+                <!-- Partido destacado 1 -->
+                <div class="match-card featured">
+                    <div class="featured-tag">DESTACADO</div>
+                    <div class="match-time">08/05/2025 • 20:00</div>
+                    
+                    <div class="match-details">
+                        <div class="teams">
+                            <div class="team team-home">
+                                <div class="team-logo placeholder"></div>
+                                <div class="team-name">Gryffindor</div>
+                            </div>
+                            <div class="versus">VS</div>
+                            <div class="team team-away">
+                                <div class="team-logo placeholder"></div>
+                                <div class="team-name">Slytherin</div>
+                            </div>
+                        </div>
+                        
+                        <div class="match-status">
+                            <div class="status-info">
+                                <span class="league">Copa de Hogwarts - Final</span>
+                                <span class="location">Gran Estadio de Hogwarts</span>
+                            </div>
+                            <div class="betting-odds">
+                                <div class="odd">
+                                    <span class="odd-team">Gryffindor</span>
+                                    <span class="odd-value">2.10</span>
+                                </div>
+                                <div class="odd">
+                                    <span class="odd-team">Empate</span>
+                                    <span class="odd-value">3.50</span>
+                                </div>
+                                <div class="odd">
+                                    <span class="odd-team">Slytherin</span>
+                                    <span class="odd-value">1.85</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="match-description">
+                            <p>Gran final de la Copa de Hogwarts. El clásico duelo entre Gryffindor y Slytherin promete ser un partido épico con las estrellas de ambos equipos en su mejor momento.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="match-actions">
+                        <a href="match-detail.html?id=2025-05-08-1" class="button button-small">Ver Detalles</a>
+                        <a href="betting.html?match=2025-05-08-1" class="button button-small cta-button">Apostar</a>
+                    </div>
+                </div>
+
+                <!-- Partido destacado 2 -->
+                <div class="match-card featured">
+                    <div class="featured-tag">DESTACADO</div>
+                    <div class="match-time">10/05/2025 • 19:00</div>
+                    
+                    <div class="match-details">
+                        <div class="teams">
+                            <div class="team team-home">
+                                <div class="team-logo placeholder"></div>
+                                <div class="team-name">Puddlemere United</div>
+                            </div>
+                            <div class="versus">VS</div>
+                            <div class="team team-away">
+                                <div class="team-logo placeholder"></div>
+                                <div class="team-name">Holyhead Harpies</div>
+                            </div>
+                        </div>
+                        
+                        <div class="match-status">
+                            <div class="status-info">
+                                <span class="league">Liga Británica - Semifinal</span>
+                                <span class="location">Estadio Puddlemere</span>
+                            </div>
+                            <div class="betting-odds">
+                                <div class="odd">
+                                    <span class="odd-team">Puddlemere</span>
+                                    <span class="odd-value">1.95</span>
+                                </div>
+                                <div class="odd">
+                                    <span class="odd-team">Empate</span>
+                                    <span class="odd-value">3.20</span>
+                                </div>
+                                <div class="odd">
+                                    <span class="odd-team">Holyhead</span>
+                                    <span class="odd-value">2.25</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="match-description">
+                            <p>Primera semifinal de la Liga Británica. Puddlemere United busca su quinta final consecutiva mientras que las Holyhead Harpies intentan llegar a su primera final en 10 años.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="match-actions">
+                        <a href="match-detail.html?id=2025-05-10-1" class="button button-small">Ver Detalles</a>
+                        <a href="betting.html?match=2025-05-10-1" class="button button-small cta-button">Apostar</a>
+                    </div>
                 </div>
             </div>
         </section>
