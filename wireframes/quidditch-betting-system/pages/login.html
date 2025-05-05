@@ -33,9 +33,10 @@
     </header>
 
     <main>
+        <!-- CU-01: Autenticación de usuario (Inicio de sesión) -->
         <section class="auth-section card">
-            <h2>Ingresar al mundo mágico</h2>
-            <p>Introduce tus credenciales para acceder a tu cuenta</p>
+            <h2>Bienvenido de vuelta, mago apostador</h2>
+            <p>Inicia sesión para continuar apostando en los partidos de Quidditch</p>
             
             <form id="login-form" class="auth-form">
                 <div class="form-group">
@@ -50,17 +51,18 @@
                 
                 <div class="form-group remember-me">
                     <input type="checkbox" id="remember" name="remember">
-                    <label for="remember">Recordarme</label>
+                    <label for="remember">Mantener sesión iniciada</label>
                 </div>
                 
-                <button type="submit" class="button cta-button">Acceder</button>
+                <button type="submit" class="button cta-button">Iniciar Sesión</button>
                 
                 <div class="auth-links">
-                    <a href="#" class="forgot-password">¿Olvidaste tu contraseña?</a>
-                    <p>¿No tienes cuenta? <a href="register.html">Regístrate</a></p>
+                    <a href="recovery.html" class="forgot-password">¿Olvidaste tu contraseña?</a>
+                    <p>¿No tienes una cuenta? <a href="register.html">Regístrate ahora</a></p>
                 </div>
             </form>
             
+            <!-- CU-01: Mensajes de error o éxito durante el inicio de sesión -->
             <div id="login-message" class="message-container"></div>
         </section>
     </main>

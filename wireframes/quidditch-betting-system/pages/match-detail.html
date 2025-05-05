@@ -26,309 +26,912 @@
                 <li><a href="standings.html" class="nav-link">Clasificación</a></li>
             </ul>
         </nav>
+        <!-- Mostrar botones de autenticación o menú de usuario según estado de sesión -->
         <div class="auth-buttons">
             <a href="login.html" class="button button-login">Iniciar Sesión</a>
             <a href="register.html" class="button button-register">Registrarse</a>
         </div>
+        <!-- 
+        <div class="user-menu">
+            <div class="user-avatar">
+                <div class="placeholder-x">X</div>
+            </div>
+            <span class="username">MagoApostador123</span>
+            <div class="dropdown-menu">
+                <a href="account.html">Mi Perfil</a>
+                <a href="account.html#wallet">Mi Monedero</a>
+                <a href="account.html#bets">Mis Apuestas</a>
+                <a href="#" id="logout-button">Cerrar Sesión</a>
+            </div>
+        </div>
+        -->
     </header>
 
     <main>
-        <section class="match-header card">
-            <div class="match-date-location">
-                <p>Hoy • 19:00</p>
-                <p>Campo de Quidditch de Hogwarts</p>
-            </div>
-            
-            <div class="match-teams-large">
-                <div class="team team-home">
-                    <div class="team-logo-placeholder large">
-                        <div class="placeholder-x">X</div>
-                    </div>
-                    <h3 class="team-name">Gryffindor</h3>
-                </div>
-                
-                <div class="match-vs">
-                    <div class="match-score">70 - 50</div>
-                    <div class="vs-text">VS</div>
-                    <div class="match-status">En progreso</div>
-                </div>
-                
-                <div class="team team-away">
-                    <div class="team-logo-placeholder large">
-                        <div class="placeholder-x">X</div>
-                    </div>
-                    <h3 class="team-name">Slytherin</h3>
+        <!-- Sección de navegación y ubicación actual -->
+        <div class="breadcrumbs">
+            <a href="../index.html">Inicio</a> &gt; 
+            <a href="matches.html">Partidos</a> &gt; 
+            <span>Gryffindor vs Slytherin</span>
+        </div>
+        
+        <!-- CU-06: Detalles de partido específico -->
+        <section class="match-detail-container">
+            <!-- Información principal del partido -->
+            <div class="match-header">
+                <div class="status-badge live">EN VIVO</div>
+                <h1 class="match-title">Gryffindor vs Slytherin</h1>
+                <div class="match-meta">
+                    <span class="league">Copa de Hogwarts</span>
+                    <span class="date-time">05/05/2025 • 19:00</span>
+                    <span class="location">Campo de Quidditch de Hogwarts</span>
                 </div>
             </div>
             
+            <!-- Marcador y estado actual del partido -->
+            <div class="match-scoreboard">
+                <div class="team home-team">
+                    <div class="team-logo large placeholder">
+                        <div class="placeholder-image">G</div>
+                    </div>
+                    <div class="team-name">Gryffindor</div>
+                </div>
+                
+                <div class="score-display">
+                    <div class="current-score">
+                        <span class="home-score">80</span>
+                        <span class="score-divider">-</span>
+                        <span class="away-score">70</span>
+                    </div>
+                    <div class="time-display">
+                        <span class="current-time">45:23</span>
+                        <span class="status-indicator pulsing"></span>
+                    </div>
+                </div>
+                
+                <div class="team away-team">
+                    <div class="team-logo large placeholder">
+                        <div class="placeholder-image">S</div>
+                    </div>
+                    <div class="team-name">Slytherin</div>
+                </div>
+            </div>
+            
+            <!-- Acciones rápidas para el partido -->
             <div class="match-actions">
-                <a href="betting.html?match=1" class="button cta-button">¡Apostar ahora!</a>
+                <a href="betting.html?match=2025-05-05-1" class="button cta-button">Apostar</a>
+                <button class="button button-secondary add-to-favorites">
+                    <span class="icon-star">★</span> Seguir partido
+                </button>
+                <button class="button button-secondary share-match">
+                    <span class="icon-share">↗</span> Compartir
+                </button>
+                <!-- CU-006: Botón para predecir resultado -->
+                <button id="predict-result-btn" class="button button-secondary">Predecir Resultado</button>
             </div>
-        </section>
-        
-        <section class="match-details">
-            <div class="match-info-card card">
-                <h3>Información del partido</h3>
-                <div class="match-info-content">
-                    <p><strong>Fecha:</strong> 26 de abril de 2025</p>
-                    <p><strong>Hora:</strong> 19:00</p>
-                    <p><strong>Ubicación:</strong> Campo de Quidditch de Hogwarts</p>
-                    <p><strong>Temporada:</strong> 2025</p>
-                    <p><strong>Árbitro:</strong> Madam Hooch</p>
+            
+            <!-- CU-006: Modal de predicción de resultado -->
+            <div id="prediction-modal" class="modal hidden">
+                <div class="modal-content">
+                    <span class="close-modal">&times;</span>
+                    <h3>Predice el Resultado</h3>
+                    <p>Elige el equipo que crees que ganará este partido</p>
+                    
+                    <form id="prediction-form">
+                        <div class="prediction-options">
+                            <div class="prediction-option">
+                                <input type="radio" name="prediction" id="home-win" value="home">
+                                <label for="home-win">
+                                    <div class="team-mini">
+                                        <div class="team-logo-small placeholder">
+                                            <div class="placeholder-image">G</div>
+                                        </div>
+                                        <span>Gryffindor Ganará</span>
+                                    </div>
+                                </label>
+                            </div>
+                            
+                            <div class="prediction-option">
+                                <input type="radio" name="prediction" id="draw" value="draw">
+                                <label for="draw">
+                                    <div class="team-mini">
+                                        <span>Empate</span>
+                                    </div>
+                                </label>
+                            </div>
+                            
+                            <div class="prediction-option">
+                                <input type="radio" name="prediction" id="away-win" value="away">
+                                <label for="away-win">
+                                    <div class="team-mini">
+                                        <div class="team-logo-small placeholder">
+                                            <div class="placeholder-image">S</div>
+                                        </div>
+                                        <span>Slytherin Ganará</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="prediction-info">
+                            <p>¡Acumula puntos con tus predicciones correctas y sube de nivel!</p>
+                            <p><strong>Nota:</strong> Las predicciones solo pueden realizarse antes del inicio del partido</p>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="button cta-button">Confirmar Predicción</button>
+                            <button type="button" class="button button-secondary close-prediction">Cancelar</button>
+                        </div>
+                    </form>
+                    
+                    <!-- Mensaje para usuario no logueado -->
+                    <div id="prediction-login-required" class="hidden">
+                        <p>Debes iniciar sesión para realizar predicciones</p>
+                        <a href="login.html" class="button">Iniciar Sesión</a>
+                        <a href="register.html" class="button button-secondary">Registrarse</a>
+                    </div>
+                    
+                    <!-- Mensaje para partido ya iniciado -->
+                    <div id="prediction-unavailable" class="hidden">
+                        <p>No se pueden hacer predicciones para partidos en curso o finalizados</p>
+                        <button class="button close-prediction">Aceptar</button>
+                    </div>
                 </div>
             </div>
             
-            <div class="betting-odds-card card">
-                <h3>Cuotas de apuesta</h3>
-                <div class="odds-container">
-                    <div class="odds-item">
-                        <p class="odds-team">Gryffindor</p>
-                        <p class="odds-value">1.75</p>
-                    </div>
-                    <div class="odds-item">
-                        <p class="odds-team">Empate</p>
-                        <p class="odds-value">3.25</p>
-                    </div>
-                    <div class="odds-item">
-                        <p class="odds-team">Slytherin</p>
-                        <p class="odds-value">2.10</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-        
-        <!-- Nueva sección: Cronología del partido en vivo -->
-        <section class="match-timeline card">
-            <h3>Cronología del Partido</h3>
-            <div class="timeline-header">
-                <div class="timeline-status">
-                    <span class="live-indicator"></span> EN VIVO
-                </div>
-                <div class="timeline-time">
-                    Minuto 45
-                </div>
-                <div class="timeline-filter">
-                    <button class="button button-small active">Todos</button>
-                    <button class="button button-small">Goles</button>
-                    <button class="button button-small">Faltas</button>
-                    <button class="button button-small">Snitch</button>
-                </div>
+            <!-- Pestañas de contenido del partido -->
+            <div class="match-content-tabs">
+                <button class="tab-button active" data-tab="live-updates">Directo</button>
+                <button class="tab-button" data-tab="stats">Estadísticas</button>
+                <button class="tab-button" data-tab="lineups">Alineaciones</button>
+                <button class="tab-button" data-tab="head-to-head">Historial</button>
+                <button class="tab-button" data-tab="betting-options">Apuestas</button>
+                <button class="tab-button" data-tab="predictions">Predicciones</button>
             </div>
             
-            <div class="timeline-container">
-                <div class="timeline-event">
-                    <div class="timeline-marker gryffindor"></div>
-                    <div class="timeline-time-info">
-                        <span class="event-time">45'</span>
-                    </div>
-                    <div class="timeline-content">
-                        <div class="event-icon goal"></div>
-                        <div class="event-description">
-                            <strong class="team-gryffindor">Gryffindor</strong> - ¡GOOOL! Ginny Weasley anota 10 puntos atravesando el aro central.
+            <!-- Contenido en directo -->
+            <div id="live-updates" class="tab-content">
+                <div class="live-commentary">
+                    <h2>Comentarios en vivo</h2>
+                    
+                    <div class="commentary-feed">
+                        <div class="commentary-item">
+                            <div class="time-stamp">45:23</div>
+                            <div class="commentary-text">Continúa el partido tras una breve pausa. Slytherin en posesión de la Quaffle.</div>
                         </div>
+                        
+                        <div class="commentary-item highlight">
+                            <div class="time-stamp">43:15</div>
+                            <div class="commentary-text">¡GOL! Gryffindor aumenta su ventaja. Excelente jugada de Smith que supera al guardián con un tiro imposible.</div>
+                        </div>
+                        
+                        <div class="commentary-item">
+                            <div class="time-stamp">40:02</div>
+                            <div class="commentary-text">Bludger rozando peligrosamente la cabeza de Watson de Slytherin. Buen trabajo del golpeador de Gryffindor.</div>
+                        </div>
+                        
+                        <div class="commentary-item">
+                            <div class="time-stamp">38:45</div>
+                            <div class="commentary-text">Los buscadores siguen sin rastro de la Snitch. Ambos patrullan el campo a gran altura.</div>
+                        </div>
+                        
+                        <div class="commentary-item highlight">
+                            <div class="time-stamp">35:20</div>
+                            <div class="commentary-text">¡GOL! Slytherin recorta distancias. Precisa combinación entre sus cazadores.</div>
+                        </div>
+                        
+                        <div class="commentary-item">
+                            <div class="time-stamp">32:15</div>
+                            <div class="commentary-text">Tiempo muerto solicitado por el capitán de Slytherin.</div>
+                        </div>
+                    </div>
+                    
+                    <div class="auto-refresh">
+                        <span class="refresh-status">Actualizando automáticamente</span>
+                        <button class="toggle-refresh">Pausar</button>
                     </div>
                 </div>
                 
-                <div class="timeline-event">
-                    <div class="timeline-marker slytherin"></div>
-                    <div class="timeline-time-info">
-                        <span class="event-time">43'</span>
-                    </div>
-                    <div class="timeline-content">
-                        <div class="event-icon foul"></div>
-                        <div class="event-description">
-                            <strong class="team-slytherin">Slytherin</strong> - Falta por "Blatching". Draco Malfoy penalizado por colisión deliberada.
+                <div class="key-events">
+                    <h3>Momentos clave</h3>
+                    
+                    <div class="event-timeline">
+                        <div class="event goal home">
+                            <div class="event-time">43:15</div>
+                            <div class="event-icon">⚽</div>
+                            <div class="event-description">
+                                <span class="event-type">GOL</span>
+                                <span class="player-name">Smith</span>
+                                <span class="team-name">(Gryffindor)</span>
+                            </div>
                         </div>
-                    </div>
-                </div>
-                
-                <div class="timeline-event">
-                    <div class="timeline-marker neutral"></div>
-                    <div class="timeline-time-info">
-                        <span class="event-time">40'</span>
-                    </div>
-                    <div class="timeline-content">
-                        <div class="event-icon snitch"></div>
-                        <div class="event-description">
-                            <strong>¡Snitch avistada!</strong> La Snitch Dorada aparece cerca de las gradas de Hufflepuff.
+                        
+                        <div class="event goal away">
+                            <div class="event-time">35:20</div>
+                            <div class="event-icon">⚽</div>
+                            <div class="event-description">
+                                <span class="event-type">GOL</span>
+                                <span class="player-name">Malfoy</span>
+                                <span class="team-name">(Slytherin)</span>
+                            </div>
                         </div>
-                    </div>
-                </div>
-                
-                <div class="timeline-event">
-                    <div class="timeline-marker slytherin"></div>
-                    <div class="timeline-time-info">
-                        <span class="event-time">38'</span>
-                    </div>
-                    <div class="timeline-content">
-                        <div class="event-icon goal"></div>
-                        <div class="event-description">
-                            <strong class="team-slytherin">Slytherin</strong> - ¡GOL! Marcus Flint anota 10 puntos con un tiro desviado.
+                        
+                        <div class="event goal home">
+                            <div class="event-time">28:45</div>
+                            <div class="event-icon">⚽</div>
+                            <div class="event-description">
+                                <span class="event-type">GOL</span>
+                                <span class="player-name">Johnson</span>
+                                <span class="team-name">(Gryffindor)</span>
+                            </div>
                         </div>
-                    </div>
-                </div>
-                
-                <div class="timeline-event">
-                    <div class="timeline-marker gryffindor"></div>
-                    <div class="timeline-time-info">
-                        <span class="event-time">35'</span>
-                    </div>
-                    <div class="timeline-content">
-                        <div class="event-icon save"></div>
-                        <div class="event-description">
-                            <strong class="team-gryffindor">Gryffindor</strong> - Gran parada de Oliver Wood evitando un gol seguro.
+                        
+                        <div class="event foul away">
+                            <div class="event-time">22:10</div>
+                            <div class="event-icon">🟨</div>
+                            <div class="event-description">
+                                <span class="event-type">FALTA</span>
+                                <span class="player-name">Crabbe</span>
+                                <span class="team-name">(Slytherin)</span>
+                            </div>
                         </div>
-                    </div>
-                </div>
-                
-                <div class="timeline-event">
-                    <div class="timeline-marker slytherin"></div>
-                    <div class "timeline-time-info">
-                        <span class="event-time">32'</span>
-                    </div>
-                    <div class="timeline-content">
-                        <div class="event-icon goal"></div>
-                        <div class="event-description">
-                            <strong class="team-slytherin">Slytherin</strong> - ¡GOL! Adrian Pucey anota tras una jugada colectiva.
+                        
+                        <div class="event goal away">
+                            <div class="event-time">15:30</div>
+                            <div class="event-icon">⚽</div>
+                            <div class="event-description">
+                                <span class="event-type">GOL</span>
+                                <span class="player-name">Zabini</span>
+                                <span class="team-name">(Slytherin)</span>
+                            </div>
                         </div>
-                    </div>
-                </div>
-                
-                <div class="timeline-event">
-                    <div class="timeline-marker gryffindor"></div>
-                    <div class="timeline-time-info">
-                        <span class="event-time">29'</span>
-                    </div>
-                    <div class="timeline-content">
-                        <div class="event-icon goal"></div>
-                        <div class="event-description">
-                            <strong class="team-gryffindor">Gryffindor</strong> - ¡GOOOL! Angelina Johnson anota después de un excelente pase.
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="timeline-event">
-                    <div class="timeline-marker neutral"></div>
-                    <div class="timeline-time-info">
-                        <span class="event-time">25'</span>
-                    </div>
-                    <div class="timeline-content">
-                        <div class="event-icon timeout"></div>
-                        <div class="event-description">
-                            <strong>Tiempo muerto</strong> solicitado por el capitán de Gryffindor.
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="timeline-event">
-                    <div class="timeline-marker gryffindor"></div>
-                    <div class="timeline-time-info">
-                        <span class="event-time">20'</span>
-                    </div>
-                    <div class="timeline-content">
-                        <div class="event-icon goal"></div>
-                        <div class="event-description">
-                            <strong class="team-gryffindor">Gryffindor</strong> - ¡GOOOL! Katie Bell anota con un tiro desde larga distancia.
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="timeline-event">
-                    <div class="timeline-marker gryffindor"></div>
-                    <div class="timeline-time-info">
-                        <span class="event-time">15'</span>
-                    </div>
-                    <div class="timeline-content">
-                        <div class="event-icon goal"></div>
-                        <div class="event-description">
-                            <strong class="team-gryffindor">Gryffindor</strong> - ¡GOOOL! Alicia Spinnet anota el tercer tanto para su equipo.
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="timeline-event">
-                    <div class="timeline-marker slytherin"></div>
-                    <div class="timeline-time-info">
-                        <span class="event-time">12'</span>
-                    </div>
-                    <div class="timeline-content">
-                        <div class="event-icon goal"></div>
-                        <div class="event-description">
-                            <strong class="team-slytherin">Slytherin</strong> - ¡GOL! Bletchley sorprende con un lanzamiento lejano.
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="timeline-event">
-                    <div class="timeline-marker slytherin"></div>
-                    <div class="timeline-time-info">
-                        <span class="event-time">8'</span>
-                    </div>
-                    <div class="timeline-content">
-                        <div class="event-icon goal"></div>
-                        <div class="event-description">
-                            <strong class="team-slytherin">Slytherin</strong> - ¡GOL! Graham Montague anota el primer tanto para su equipo.
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="timeline-event">
-                    <div class="timeline-marker gryffindor"></div>
-                    <div class="timeline-time-info">
-                        <span class="event-time">5'</span>
-                    </div>
-                    <div class="timeline-content">
-                        <div class="event-icon goal"></div>
-                        <div class="event-description">
-                            <strong class="team-gryffindor">Gryffindor</strong> - ¡GOOOL! Angelina Johnson abre el marcador.
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="timeline-event">
-                    <div class="timeline-marker neutral"></div>
-                    <div class="timeline-time-info">
-                        <span class="event-time">0'</span>
-                    </div>
-                    <div class="timeline-content">
-                        <div class="event-icon whistle"></div>
-                        <div class="event-description">
-                            <strong>¡Comienza el partido!</strong> Madam Hooch da el silbatazo inicial.
+                        
+                        <div class="event start">
+                            <div class="event-time">00:00</div>
+                            <div class="event-icon">▶</div>
+                            <div class="event-description">
+                                <span class="event-type">INICIO</span>
+                                <span class="additional-info">Comienza el partido</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <div class="timeline-more">
-                <button class="button button-text">Cargar más eventos</button>
+            <!-- Estadísticas del partido -->
+            <div id="stats" class="tab-content hidden">
+                <div class="stats-overview">
+                    <h2>Estadísticas del partido</h2>
+                    
+                    <div class="stats-container">
+                        <div class="stat-comparison">
+                            <div class="stat-bar home" style="width: 60%;">60%</div>
+                            <div class="stat-name">Posesión</div>
+                            <div class="stat-bar away" style="width: 40%;">40%</div>
+                        </div>
+                        
+                        <div class="stat-comparison">
+                            <div class="stat-bar home" style="width: 55%;">12</div>
+                            <div class="stat-name">Tiros</div>
+                            <div class="stat-bar away" style="width: 45%;">10</div>
+                        </div>
+                        
+                        <div class="stat-comparison">
+                            <div class="stat-bar home" style="width: 66%;">8</div>
+                            <div class="stat-name">Tiros a puerta</div>
+                            <div class="stat-bar away" style="width: 34%;">4</div>
+                        </div>
+                        
+                        <div class="stat-comparison">
+                            <div class="stat-bar home" style="width: 33%;">1</div>
+                            <div class="stat-name">Faltas</div>
+                            <div class="stat-bar away" style="width: 67%;">2</div>
+                        </div>
+                        
+                        <div class="stat-comparison">
+                            <div class="stat-bar home" style="width: 55%;">5</div>
+                            <div class="stat-name">Paradas del guardián</div>
+                            <div class="stat-bar away" style="width: 45%;">4</div>
+                        </div>
+                        
+                        <div class="stat-comparison">
+                            <div class="stat-bar home" style="width: 40%;">4</div>
+                            <div class="stat-name">Bludgers dirigidas</div>
+                            <div class="stat-bar away" style="width: 60%;">6</div>
+                        </div>
+                        
+                        <div class="stat-comparison">
+                            <div class="stat-bar home" style="width: 60%;">3</div>
+                            <div class="stat-name">Avistamientos de Snitch</div>
+                            <div class="stat-bar away" style="width: 40%;">2</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="player-stats">
+                    <div class="team-stats">
+                        <h3>Gryffindor</h3>
+                        <table class="stats-table">
+                            <thead>
+                                <tr>
+                                    <th>Jugador</th>
+                                    <th>Posición</th>
+                                    <th>Goles</th>
+                                    <th>Asistencias</th>
+                                    <th>Faltas</th>
+                                    <th>Rating</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>P. Potter</td>
+                                    <td>Buscador</td>
+                                    <td>0</td>
+                                    <td>0</td>
+                                    <td>0</td>
+                                    <td>8.5</td>
+                                </tr>
+                                <tr>
+                                    <td>A. Smith</td>
+                                    <td>Cazador</td>
+                                    <td>4</td>
+                                    <td>1</td>
+                                    <td>0</td>
+                                    <td>9.2</td>
+                                </tr>
+                                <tr>
+                                    <td>K. Johnson</td>
+                                    <td>Cazador</td>
+                                    <td>3</td>
+                                    <td>2</td>
+                                    <td>1</td>
+                                    <td>8.7</td>
+                                </tr>
+                                <tr>
+                                    <td>T. Bell</td>
+                                    <td>Cazador</td>
+                                    <td>1</td>
+                                    <td>3</td>
+                                    <td>0</td>
+                                    <td>8.0</td>
+                                </tr>
+                                <tr>
+                                    <td>F. Weasley</td>
+                                    <td>Golpeador</td>
+                                    <td>0</td>
+                                    <td>0</td>
+                                    <td>0</td>
+                                    <td>7.8</td>
+                                </tr>
+                                <tr>
+                                    <td>G. Weasley</td>
+                                    <td>Golpeador</td>
+                                    <td>0</td>
+                                    <td>0</td>
+                                    <td>0</td>
+                                    <td>7.6</td>
+                                </tr>
+                                <tr>
+                                    <td>O. Wood</td>
+                                    <td>Guardián</td>
+                                    <td>0</td>
+                                    <td>0</td>
+                                    <td>0</td>
+                                    <td>8.2</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="team-stats">
+                        <h3>Slytherin</h3>
+                        <table class="stats-table">
+                            <thead>
+                                <tr>
+                                    <th>Jugador</th>
+                                    <th>Posición</th>
+                                    <th>Goles</th>
+                                    <th>Asistencias</th>
+                                    <th>Faltas</th>
+                                    <th>Rating</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>D. Malfoy</td>
+                                    <td>Buscador</td>
+                                    <td>0</td>
+                                    <td>0</td>
+                                    <td>0</td>
+                                    <td>7.8</td>
+                                </tr>
+                                <tr>
+                                    <td>B. Zabini</td>
+                                    <td>Cazador</td>
+                                    <td>3</td>
+                                    <td>2</td>
+                                    <td>0</td>
+                                    <td>8.5</td>
+                                </tr>
+                                <tr>
+                                    <td>M. Flint</td>
+                                    <td>Cazador</td>
+                                    <td>2</td>
+                                    <td>1</td>
+                                    <td>1</td>
+                                    <td>7.9</td>
+                                </tr>
+                                <tr>
+                                    <td>A. Pucey</td>
+                                    <td>Cazador</td>
+                                    <td>2</td>
+                                    <td>2</td>
+                                    <td>0</td>
+                                    <td>8.1</td>
+                                </tr>
+                                <tr>
+                                    <td>V. Crabbe</td>
+                                    <td>Golpeador</td>
+                                    <td>0</td>
+                                    <td>0</td>
+                                    <td>1</td>
+                                    <td>6.7</td>
+                                </tr>
+                                <tr>
+                                    <td>G. Goyle</td>
+                                    <td>Golpeador</td>
+                                    <td>0</td>
+                                    <td>0</td>
+                                    <td>0</td>
+                                    <td>7.3</td>
+                                </tr>
+                                <tr>
+                                    <td>M. Bletchley</td>
+                                    <td>Guardián</td>
+                                    <td>0</td>
+                                    <td>0</td>
+                                    <td>0</td>
+                                    <td>7.4</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Alineaciones -->
+            <div id="lineups" class="tab-content hidden">
+                <h2>Alineaciones</h2>
+                
+                <div class="lineups-container">
+                    <div class="team-lineup">
+                        <h3>Gryffindor</h3>
+                        <div class="formation-display">
+                            <div class="pitch">
+                                <!-- Representación gráfica del campo y posiciones -->
+                                <div class="position seeker" title="Buscador - P. Potter">
+                                    <div class="player-dot">P</div>
+                                    <div class="player-name">Potter</div>
+                                </div>
+                                
+                                <div class="position chaser1" title="Cazador - A. Smith">
+                                    <div class="player-dot">S</div>
+                                    <div class="player-name">Smith</div>
+                                </div>
+                                
+                                <div class="position chaser2" title="Cazador - K. Johnson">
+                                    <div class="player-dot">J</div>
+                                    <div class="player-name">Johnson</div>
+                                </div>
+                                
+                                <div class="position chaser3" title="Cazador - T. Bell">
+                                    <div class="player-dot">B</div>
+                                    <div class="player-name">Bell</div>
+                                </div>
+                                
+                                <div class="position beater1" title="Golpeador - F. Weasley">
+                                    <div class="player-dot">W1</div>
+                                    <div class="player-name">F. Weasley</div>
+                                </div>
+                                
+                                <div class="position beater2" title="Golpeador - G. Weasley">
+                                    <div class="player-dot">W2</div>
+                                    <div class="player-name">G. Weasley</div>
+                                </div>
+                                
+                                <div class="position keeper" title="Guardián - O. Wood">
+                                    <div class="player-dot">W</div>
+                                    <div class="player-name">Wood</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="substitutes">
+                            <h4>Suplentes</h4>
+                            <ul>
+                                <li>L. Jordan (Cazador)</li>
+                                <li>D. Thomas (Golpeador)</li>
+                                <li>S. Finnigan (Guardián)</li>
+                                <li>G. Weasley (Buscador)</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="team-coach">
+                            <h4>Entrenador</h4>
+                            <p>Minerva McGonagall</p>
+                        </div>
+                    </div>
+                    
+                    <div class="team-lineup">
+                        <h3>Slytherin</h3>
+                        <div class="formation-display">
+                            <div class="pitch">
+                                <!-- Representación gráfica del campo y posiciones -->
+                                <div class="position seeker away" title="Buscador - D. Malfoy">
+                                    <div class="player-dot">M</div>
+                                    <div class="player-name">Malfoy</div>
+                                </div>
+                                
+                                <div class="position chaser1 away" title="Cazador - B. Zabini">
+                                    <div class="player-dot">Z</div>
+                                    <div class="player-name">Zabini</div>
+                                </div>
+                                
+                                <div class="position chaser2 away" title="Cazador - M. Flint">
+                                    <div class="player-dot">F</div>
+                                    <div class="player-name">Flint</div>
+                                </div>
+                                
+                                <div class="position chaser3 away" title="Cazador - A. Pucey">
+                                    <div class="player-dot">P</div>
+                                    <div class="player-name">Pucey</div>
+                                </div>
+                                
+                                <div class="position beater1 away" title="Golpeador - V. Crabbe">
+                                    <div class="player-dot">C</div>
+                                    <div class="player-name">Crabbe</div>
+                                </div>
+                                
+                                <div class="position beater2 away" title="Golpeador - G. Goyle">
+                                    <div class="player-dot">G</div>
+                                    <div class="player-name">Goyle</div>
+                                </div>
+                                
+                                <div class="position keeper away" title="Guardián - M. Bletchley">
+                                    <div class="player-dot">B</div>
+                                    <div class="player-name">Bletchley</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="substitutes">
+                            <h4>Suplentes</h4>
+                            <ul>
+                                <li>C. Warrington (Cazador)</li>
+                                <li>T. Higgs (Buscador)</li>
+                                <li>L. Montague (Golpeador)</li>
+                                <li>H. Derrick (Guardián)</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="team-coach">
+                            <h4>Entrenador</h4>
+                            <p>Severus Snape</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Historial de enfrentamientos -->
+            <div id="head-to-head" class="tab-content hidden">
+                <h2>Historial de enfrentamientos</h2>
+                
+                <div class="h2h-summary">
+                    <div class="h2h-overall">
+                        <div class="h2h-title">Últimos 10 partidos</div>
+                        <div class="h2h-stats">
+                            <div class="h2h-stat">
+                                <div class="stat-value">5</div>
+                                <div class="stat-label">Gryffindor</div>
+                            </div>
+                            <div class="h2h-stat">
+                                <div class="stat-value">2</div>
+                                <div class="stat-label">Empates</div>
+                            </div>
+                            <div class="h2h-stat">
+                                <div class="stat-value">3</div>
+                                <div class="stat-label">Slytherin</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="h2h-form">
+                        <div class="team-form">
+                            <div class="team-name">Gryffindor</div>
+                            <div class="form-indicators">
+                                <span class="form-indicator win">V</span>
+                                <span class="form-indicator draw">E</span>
+                                <span class="form-indicator win">V</span>
+                                <span class="form-indicator loss">D</span>
+                                <span class="form-indicator win">V</span>
+                            </div>
+                        </div>
+                        
+                        <div class="team-form">
+                            <div class="team-name">Slytherin</div>
+                            <div class="form-indicators">
+                                <span class="form-indicator loss">D</span>
+                                <span class="form-indicator draw">E</span>
+                                <span class="form-indicator loss">D</span>
+                                <span class="form-indicator win">V</span>
+                                <span class="form-indicator loss">D</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="h2h-matches">
+                    <h3>Partidos anteriores</h3>
+                    
+                    <div class="previous-matches">
+                        <div class="match-item">
+                            <div class="match-date">12/02/2025</div>
+                            <div class="match-details">
+                                <div class="team-name home">Gryffindor</div>
+                                <div class="match-score">
+                                    <span class="home-score">220</span>
+                                    <span class="score-divider">:</span>
+                                    <span class="away-score">90</span>
+                                </div>
+                                <div class="team-name away">Slytherin</div>
+                            </div>
+                            <div class="match-competition">Copa de Hogwarts</div>
+                        </div>
+                        
+                        <div class="match-item">
+                            <div class="match-date">08/11/2024</div>
+                            <div class="match-details">
+                                <div class="team-name home">Slytherin</div>
+                                <div class="match-score">
+                                    <span class="home-score">170</span>
+                                    <span class="score-divider">:</span>
+                                    <span class="away-score">170</span>
+                                </div>
+                                <div class="team-name away">Gryffindor</div>
+                            </div>
+                            <div class="match-competition">Liga Escolar</div>
+                        </div>
+                        
+                        <div class="match-item">
+                            <div class="match-date">25/05/2024</div>
+                            <div class="match-details">
+                                <div class="team-name home">Gryffindor</div>
+                                <div class="match-score">
+                                    <span class="home-score">280</span>
+                                    <span class="score-divider">:</span>
+                                    <span class="away-score">120</span>
+                                </div>
+                                <div class="team-name away">Slytherin</div>
+                            </div>
+                            <div class="match-competition">Final de Copa</div>
+                        </div>
+                        
+                        <div class="match-item">
+                            <div class="match-date">10/02/2024</div>
+                            <div class="match-details">
+                                <div class="team-name home">Slytherin</div>
+                                <div class="match-score">
+                                    <span class="home-score">190</span>
+                                    <span class="score-divider">:</span>
+                                    <span class="away-score">80</span>
+                                </div>
+                                <div class="team-name away">Gryffindor</div>
+                            </div>
+                            <div class="match-competition">Copa de Hogwarts</div>
+                        </div>
+                        
+                        <div class="match-item">
+                            <div class="match-date">03/11/2023</div>
+                            <div class="match-details">
+                                <div class="team-name home">Gryffindor</div>
+                                <div class="match-score">
+                                    <span class="home-score">210</span>
+                                    <span class="score-divider">:</span>
+                                    <span class="away-score">50</span>
+                                </div>
+                                <div class="team-name away">Slytherin</div>
+                            </div>
+                            <div class="match-competition">Liga Escolar</div>
+                        </div>
+                    </div>
+                    
+                    <button class="button load-more">Ver más partidos</button>
+                </div>
+            </div>
+            
+            <!-- Opciones de apuestas -->
+            <div id="betting-options" class="tab-content hidden">
+                <div class="betting-header">
+                    <h2>Apuestas disponibles</h2>
+                    <div class="wallet-status">
+                        <span class="balance-label">Tu saldo:</span>
+                        <span class="balance-value">150 G</span>
+                        <a href="account.html#wallet" class="button button-small">Añadir fondos</a>
+                    </div>
+                </div>
+                
+                <div class="betting-markets">
+                    <div class="market-group">
+                        <h3>Resultado final</h3>
+                        <div class="betting-options">
+                            <a href="betting.html?match=2025-05-05-1&type=winner&option=home" class="betting-option">
+                                <div class="option-name">Gryffindor</div>
+                                <div class="option-odds">2.10</div>
+                            </a>
+                            
+                            <a href="betting.html?match=2025-05-05-1&type=winner&option=draw" class="betting-option">
+                                <div class="option-name">Empate</div>
+                                <div class="option-odds">3.50</div>
+                            </a>
+                            
+                            <a href="betting.html?match=2025-05-05-1&type=winner&option=away" class="betting-option">
+                                <div class="option-name">Slytherin</div>
+                                <div class="option-odds">1.85</div>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="market-group">
+                        <h3>Captura de Snitch</h3>
+                        <div class="betting-options">
+                            <a href="betting.html?match=2025-05-05-1&type=snitch&option=home" class="betting-option">
+                                <div class="option-name">Gryffindor</div>
+                                <div class="option-odds">1.75</div>
+                            </a>
+                            
+                            <a href="betting.html?match=2025-05-05-1&type=snitch&option=away" class="betting-option">
+                                <div class="option-name">Slytherin</div>
+                                <div class="option-odds">2.25</div>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="market-group">
+                        <h3>Puntuación total</h3>
+                        <div class="betting-options">
+                            <a href="betting.html?match=2025-05-05-1&type=total&option=under-150" class="betting-option">
+                                <div class="option-name">Menos de 150</div>
+                                <div class="option-odds">2.75</div>
+                            </a>
+                            
+                            <a href="betting.html?match=2025-05-05-1&type=total&option=150-250" class="betting-option">
+                                <div class="option-name">150-250</div>
+                                <div class="option-odds">1.90</div>
+                            </a>
+                            
+                            <a href="betting.html?match=2025-05-05-1&type=total&option=over-250" class="betting-option">
+                                <div class="option-name">Más de 250</div>
+                                <div class="option-odds">3.40</div>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="market-group">
+                        <h3>Apuestas especiales</h3>
+                        <div class="betting-options special">
+                            <a href="betting.html?match=2025-05-05-1&type=special&option=bludger-knockout" class="betting-option">
+                                <div class="option-name">Jugador noqueado por Bludger</div>
+                                <div class="option-odds">3.75</div>
+                            </a>
+                            
+                            <a href="betting.html?match=2025-05-05-1&type=special&option=golden-snitch-fake" class="betting-option">
+                                <div class="option-name">Finta de Wronski exitosa</div>
+                                <div class="option-odds">4.50</div>
+                            </a>
+                            
+                            <a href="betting.html?match=2025-05-05-1&type=special&option=referee-penalty" class="betting-option">
+                                <div class="option-name">Más de 3 penaltis</div>
+                                <div class="option-odds">2.25</div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="view-all-bets">
+                    <a href="betting.html?match=2025-05-05-1" class="button cta-button">Ver todas las opciones de apuesta</a>
+                </div>
+            </div>
+            
+            <!-- Pestaña de Predicciones (CU-006) -->
+            <div id="predictions-tab" class="tab-content hidden">
+                <div class="predictions-container card">
+                    <h3>Predicciones de la comunidad</h3>
+                    <div class="prediction-stats">
+                        <div class="prediction-bar-container">
+                            <div class="prediction-label">Gryffindor</div>
+                            <div class="prediction-bar">
+                                <div class="prediction-fill home" style="width: 45%;">45%</div>
+                            </div>
+                        </div>
+                        <div class="prediction-bar-container">
+                            <div class="prediction-label">Empate</div>
+                            <div class="prediction-bar">
+                                <div class="prediction-fill draw" style="width: 15%;">15%</div>
+                            </div>
+                        </div>
+                        <div class="prediction-bar-container">
+                            <div class="prediction-label">Slytherin</div>
+                            <div class="prediction-bar">
+                                <div class="prediction-fill away" style="width: 40%;">40%</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="predictions-counter">
+                        <p>Total de predicciones: <strong>1,842</strong></p>
+                    </div>
+                    
+                    <div class="user-prediction">
+                        <h4>Tu predicción</h4>
+                        <div id="user-prediction-display">
+                            <!-- Esta sección cambiará dinámicamente según la predicción del usuario -->
+                            <p>No has realizado ninguna predicción para este partido</p>
+                            <button id="make-prediction-btn" class="button">Predecir Resultado</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
         
-        <section class="match-statistics card">
-            <h3>Estadísticas históricas</h3>
-            <div class="stats-container">
-                <div class="stats-row">
-                    <div class="stats-label">Partidos ganados (últimos 5)</div>
-                    <div class="stats-bar">
-                        <div class="stats-bar-team1" style="width: 60%;">3</div>
-                        <div class="stats-bar-team2" style="width: 40%;">2</div>
+        <!-- Otros partidos recomendados -->
+        <section class="related-matches">
+            <h2>Otros partidos que te pueden interesar</h2>
+            
+            <div class="matches-grid">
+                <div class="match-card mini">
+                    <div class="match-time">Hoy • 19:30</div>
+                    <div class="teams-mini">
+                        <span class="team-name">Ravenclaw</span>
+                        <span class="vs">vs</span>
+                        <span class="team-name">Hufflepuff</span>
                     </div>
+                    <div class="odds-mini">
+                        <div class="odd">1.90</div>
+                        <div class="odd">3.50</div>
+                        <div class="odd">2.10</div>
+                    </div>
+                    <a href="match-detail.html?id=2025-05-05-3" class="button button-small">Ver detalles</a>
                 </div>
                 
-                <div class="stats-row">
-                    <div class="stats-label">Snitch capturadas (temporada)</div>
-                    <div class="stats-bar">
-                        <div class="stats-bar-team1" style="width: 70%;">7</div>
-                        <div class="stats-bar-team2" style="width: 30%;">3</div>
+                <div class="match-card mini">
+                    <div class="match-time">Mañana • 15:00</div>
+                    <div class="teams-mini">
+                        <span class="team-name">Holyhead Harpies</span>
+                        <span class="vs">vs</span>
+                        <span class="team-name">Montrose Magpies</span>
                     </div>
+                    <div class="odds-mini">
+                        <div class="odd">2.50</div>
+                        <div class="odd">3.20</div>
+                        <div class="odd">1.80</div>
+                    </div>
+                    <a href="match-detail.html?id=2025-05-06-1" class="button button-small">Ver detalles</a>
                 </div>
                 
-                <div class="stats-row">
-                    <div class="stats-label">Puntos por partido (promedio)</div>
-                    <div class="stats-bar">
-                        <div class="stats-bar-team1" style="width: 55%;">165</div>
-                        <div class="stats-bar-team2" style="width: 45%;">135</div>
+                <div class="match-card mini featured">
+                    <div class="match-time">08/05 • 20:00</div>
+                    <div class="teams-mini">
+                        <span class="team-name">Gryffindor</span>
+                        <span class="vs">vs</span>
+                        <span class="team-name">Slytherin</span>
                     </div>
+                    <div class="odds-mini">
+                        <div class="odd">2.10</div>
+                        <div class="odd">3.50</div>
+                        <div class="odd">1.85</div>
+                    </div>
+                    <div class="featured-label">Final</div>
+                    <a href="match-detail.html?id=2025-05-08-1" class="button button-small">Ver detalles</a>
                 </div>
             </div>
         </section>
@@ -347,6 +950,6 @@
     </footer>
     
     <script src="../js/app.js"></script>
-    <script src="../js/match-detail.js"></script>
+    <script src="../js/matches.js"></script>
 </body>
 </html>
