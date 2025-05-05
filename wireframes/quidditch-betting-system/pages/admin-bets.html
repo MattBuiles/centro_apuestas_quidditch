@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atrapa la Snitch - Historial de Apuestas</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/magical-elements.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+    <style>
+        /* Estilos mágicos para los botones de navegación */
+        .admin-nav ul {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .admin-nav a {
+            display: block;
+            padding: 12px 16px;
+            border-radius: 15px;
+            color: #4b0082;
+            font-weight: bold;
+            background: linear-gradient(145deg, #f0e6f6, #d9c9e8);
+            text-align: center;
+            box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.1), 
+                        -3px -3px 10px rgba(255, 255, 255, 0.7);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            border: 1px solid rgba(106, 90, 205, 0.2);
+        }
+        
+        .admin-nav a::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 105, 180, 0.3), transparent);
+            transition: left 0.6s ease;
+            z-index: -1;
+        }
+        
+        .admin-nav a:hover {
+            transform: translateY(-3px);
+            color: #6a0dad;
+            box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.15),
+                        -5px -5px 15px rgba(255, 255, 255, 0.8);
+        }
+        
+        .admin-nav a:hover::before {
+            left: 100%;
+        }
+        
+        .admin-nav a.active {
+            background: linear-gradient(145deg, #8a70d6, #6a5acd);
+            color: white;
+            box-shadow: inset 3px 3px 6px rgba(0, 0, 0, 0.2),
+                        inset -3px -3px 6px rgba(255, 255, 255, 0.1);
+        }
+        
+        .admin-nav a.active:hover {
+            transform: translateY(-1px);
+        }
+        
+        /* Animación de brillo mágico */
+        @keyframes magical-glow {
+            0% {
+                box-shadow: 0 0 5px rgba(106, 90, 205, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 15px rgba(106, 90, 205, 0.8), 0 0 20px rgba(255, 105, 180, 0.4);
+            }
+            100% {
+                box-shadow: 0 0 5px rgba(106, 90, 205, 0.5);
+            }
+        }
+        
+        .admin-nav a:active {
+            animation: magical-glow 0.8s ease;
+        }
+
+        /* Estilos específicos para la tabla de apuestas */
+        .bets-table-container {
+            overflow-x: auto;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        .bets-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .bets-table th {
+            background-color: #f1edfa;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #4e2a84;
+            border-bottom: 2px solid #d4c5f9;
+        }
+
+        .bets-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e9e3f8;
+            transition: background-color 0.2s ease;
+        }
+
+        .bets-table tr:hover td {
+            background-color: #f8f6fd;
+        }
+        
+        /* Estilos para tipos de apuestas */
+        .bet-type {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .bet-type.winner {
+            background-color: #4e2a84; /* Morado para ganador */
+        }
+
+        .bet-type.snitch {
+            background-color: #ffd700; /* Dorado para snitch */
+            color: #333;
+        }
+
+        .bet-type.score {
+            background-color: #1e88e5; /* Azul para puntuación */
+        }
+
+        .bet-type.time {
+            background-color: #43a047; /* Verde para tiempo */
+        }
+
+        .bet-type.special {
+            background-color: #e53935; /* Rojo para especiales */
+        }
+
+        .bet-type.margin {
+            background-color: #ff9800; /* Naranja para margen */
+            color: #333;
+        }
+
+        /* Estilos para estados de apuestas */
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status.won {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #a5d6a7;
+        }
+
+        .status.lost {
+            background-color: #ffebee;
+            color: #c62828;
+            border: 1px solid #ef9a9a;
+        }
+
+        .status.pending {
+            background-color: #e3f2fd;
+            color: #1565c0;
+            border: 1px solid #90caf9;
+        }
+
+        /* Mejora en botones de acción */
+        .actions {
+            white-space: nowrap;
+        }
+        
+        .action-btn {
+            border: none;
+            background: none;
+            padding: 4px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .action-btn:hover {
+            background-color: #e9e3f8;
+        }
+        
+        .edit-btn {
+            color: #4e2a84;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header with logo and navigation -->
+    <header class="main-header">
+        <div class="logo-container">
+            <div class="logo-placeholder">
+                <div class="placeholder-x">X</div>
+            </div>
+            <h1>Atrapa la Snitch</h1>
+        </div>
+        <nav class="main-nav">
+            <ul>
+                <li><a href="../index.html" class="nav-link">Inicio</a></li>
+                <li><a href="matches.html" class="nav-link">Partidos</a></li>
+                <li><a href="teams.html" class="nav-link">Equipos</a></li>
+                <li><a href="betting.html" class="nav-link">Apostar</a></li>
+                <li><a href="standings.html" class="nav-link">Clasificación</a></li>
+                <li><a href="results.html" class="nav-link">Resultados</a></li>
+                <li><a href="account.html" class="nav-link">Cuenta</a></li>
+            </ul>
+        </nav>
+        <!-- Menú de usuario administrador -->
+        <div class="auth-buttons">
+            <a href="#" id="logout-button" class="button button-logout">Cerrar Sesión</a>
+        </div>
+    </header>
+
+    <main class="admin-panel">
+        <!-- Barra lateral con menú de administración -->
+        <aside class="admin-sidebar">
+            <nav class="admin-nav">
+                <ul>
+                    <li><a href="admin.html" class="nav-link">Panel General</a></li>
+                    <li><a href="admin-users.html" class="nav-link">Gestionar Usuarios</a></li>
+                    <li><a href="admin-bets.html" class="nav-link active">Historial de Apuestas</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Sección principal - Historial de Apuestas -->
+        <div class="admin-content">
+            <!-- CU_013: Histórico General de Apuestas -->
+            <section id="betting-history" class="admin-section active">
+                <h1>Historial de Apuestas</h1>
+                
+                <div class="actions-bar">
+                    <div class="search-container">
+                        <input type="text" id="bet-search" placeholder="Buscar apuestas por ID, usuario o tipo...">
+                        <button class="button button-search"><span class="icon-search">⌕</span></button>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <div class="date-filter">
+                            <label for="date-from">Desde:</label>
+                            <input type="date" id="date-from" name="date-from">
+                            <label for="date-to">Hasta:</label>
+                            <input type="date" id="date-to" name="date-to">
+                            <button class="button button-small">Aplicar</button>
+                        </div>
+                        <div class="filter-dropdown">
+                            <button class="button button-secondary">Filtrar <span class="icon-down">▼</span></button>
+                            <div class="dropdown-content">
+                                <label><input type="checkbox" checked> Ganadas</label>
+                                <label><input type="checkbox" checked> Perdidas</label>
+                                <label><input type="checkbox" checked> Pendientes</label>
+                                <hr>
+                                <label><input type="checkbox" checked> Ganador</label>
+                                <label><input type="checkbox" checked> Captura de Snitch</label>
+                                <label><input type="checkbox" checked> Puntuación</label>
+                                <label><input type="checkbox" checked> Tiempo</label>
+                                <label><input type="checkbox" checked> Especiales</label>
+                                <label><input type="checkbox" checked> Margen</label>
+                            </div>
+                        </div>
+                        <button class="button button-secondary">Exportar</button>
+                    </div>
+                </div>
+                
+                <div class="betting-stats-summary">
+                    <div class="stat-card">
+                        <div class="stat-value">12,489</div>
+                        <div class="stat-label">Total de apuestas</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-value">G 45,678</div>
+                        <div class="stat-label">Volumen total</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-value">42%</div>
+                        <div class="stat-label">Apuestas ganadas</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-value">G 5,432</div>
+                        <div class="stat-label">Beneficio del sistema</div>
+                    </div>
+                </div>
+                
+                <div class="charts-container">
+                    <div class="chart-card">
+                        <h3>Distribución de apuestas por tipo</h3>
+                        <div class="chart-placeholder">
+                            <div class="placeholder-x">Gráfico circular</div>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-card">
+                        <h3>Volumen de apuestas por día</h3>
+                        <div class="chart-placeholder">
+                            <div class="placeholder-x">Gráfico de barras</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h2>Listado de Apuestas</h2>
+                
+                <div class="bets-table-container">
+                    <table class="data-table bets-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Usuario</th>
+                                <th>Partido</th>
+                                <th>Tipo</th>
+                                <th>Selección</th>
+                                <th>Monto</th>
+                                <th>Cuota</th>
+                                <th>Potencial</th>
+                                <th>Estado</th>
+                                <th>Fecha</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>10001</td>
+                                <td>MagoApostador123</td>
+                                <td>Gryffindor vs Slytherin</td>
+                                <td><span class="bet-type winner">Ganador</span></td>
+                                <td>Gryffindor</td>
+                                <td>50 G</td>
+                                <td>1.90</td>
+                                <td>95 G</td>
+                                <td><span class="status pending">Pendiente</span></td>
+                                <td>05/05/2025</td>
+                                <td class="actions">
+                                    <button class="action-btn edit-btn" title="Editar estado"><span>✏️</span></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>10002</td>
+                                <td>QuidditchFan42</td>
+                                <td>Hufflepuff vs Ravenclaw</td>
+                                <td><span class="bet-type snitch">Snitch</span></td>
+                                <td>Ravenclaw captura la Snitch</td>
+                                <td>30 G</td>
+                                <td>2.50</td>
+                                <td>75 G</td>
+                                <td><span class="status won">Ganada</span></td>
+                                <td>01/05/2025</td>
+                                <td class="actions">
+                                    <button class="action-btn edit-btn" title="Editar estado"><span>✏️</span></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>10003</td>
+                                <td>ProfesionalBet</td>
+                                <td>Chudley vs Holyhead</td>
+                                <td><span class="bet-type score">Puntuación</span></td>
+                                <td>>200 pts</td>
+                                <td>45 G</td>
+                                <td>3.10</td>
+                                <td>139.5 G</td>
+                                <td><span class="status lost">Perdida</span></td>
+                                <td>28/04/2025</td>
+                                <td class="actions">
+                                    <button class="action-btn edit-btn" title="Editar estado"><span>✏️</span></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>10004</td>
+                                <td>BuscadorDeOro</td>
+                                <td>Gryffindor vs Ravenclaw</td>
+                                <td><span class="bet-type winner">Ganador</span></td>
+                                <td>Gryffindor</td>
+                                <td>100 G</td>
+                                <td>2.15</td>
+                                <td>215 G</td>
+                                <td><span class="status won">Ganada</span></td>
+                                <td>05/03/2025</td>
+                                <td class="actions">
+                                    <button class="action-btn edit-btn" title="Editar estado"><span>✏️</span></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>10005</td>
+                                <td>MagoApostador123</td>
+                                <td>Puddlemere vs Chudley</td>
+                                <td><span class="bet-type margin">Margen</span></td>
+                                <td>>50 pts</td>
+                                <td>50 G</td>
+                                <td>2.80</td>
+                                <td>140 G</td>
+                                <td><span class="status lost">Perdida</span></td>
+                                <td>28/02/2025</td>
+                                <td class="actions">
+                                    <button class="action-btn edit-btn" title="Editar estado"><span>✏️</span></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>10006</td>
+                                <td>TimeMaster</td>
+                                <td>Ravenclaw vs Hufflepuff</td>
+                                <td><span class="bet-type time">Tiempo</span></td>
+                                <td>Entre 1 y 2 horas</td>
+                                <td>25 G</td>
+                                <td>2.10</td>
+                                <td>52.5 G</td>
+                                <td><span class="status pending">Pendiente</span></td>
+                                <td>06/05/2025</td>
+                                <td class="actions">
+                                    <button class="action-btn edit-btn" title="Editar estado"><span>✏️</span></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>10007</td>
+                                <td>BludgerFan</td>
+                                <td>Slytherin vs Gryffindor</td>
+                                <td><span class="bet-type special">Especial</span></td>
+                                <td>Un buscador caerá de su escoba</td>
+                                <td>15 G</td>
+                                <td>3.75</td>
+                                <td>56.25 G</td>
+                                <td><span class="status won">Ganada</span></td>
+                                <td>01/04/2025</td>
+                                <td class="actions">
+                                    <button class="action-btn edit-btn" title="Editar estado"><span>✏️</span></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="pagination">
+                    <span class="pagination-info">Mostrando 1-7 de 12,489 apuestas</span>
+                    <div class="pagination-controls">
+                        <button class="pagination-btn prev" disabled><span>←</span> Anterior</button>
+                        <div class="pagination-pages">
+                            <button class="page-btn active">1</button>
+                            <button class="page-btn">2</button>
+                            <button class="page-btn">3</button>
+                            <span class="page-ellipsis">...</span>
+                            <button class="page-btn">1784</button>
+                        </div>
+                        <button class="pagination-btn next">Siguiente <span>→</span></button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="main-footer">
+        <div class="footer-links">
+            <ul>
+                <li><a href="about.html">Sobre Nosotros</a></li>
+                <li><a href="terms.html">Términos y Condiciones</a></li>
+                <li><a href="privacy.html">Política de Privacidad</a></li>
+                <li><a href="contact.html">Contacto</a></li>
+            </ul>
+        </div>
+        <p>&copy; 2025 Atrapa la Snitch. Todos los derechos reservados.</p>
+    </footer>
+    
+    <script src="../js/app.js"></script>
+    <script src="../js/admin-bets.js"></script>
+</body>
+</html>
