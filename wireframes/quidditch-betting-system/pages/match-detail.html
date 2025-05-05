@@ -99,6 +99,48 @@
                 </div>
             </div>
             
+            <!-- CU-006: Predicción directamente bajo el marcador -->
+            <div id="prediction-section" class="prediction-inline">
+                <h3 class="prediction-title">¿Quién ganará este partido?</h3>
+                
+                <div class="prediction-options-inline">
+                    <div class="prediction-option-inline">
+                        <input type="radio" name="prediction" id="home-win" value="home">
+                        <label for="home-win" class="prediction-team home">Gryffindor</label>
+                    </div>
+                    
+                    <div class="prediction-option-inline">
+                        <input type="radio" name="prediction" id="draw" value="draw">
+                        <label for="draw" class="prediction-team draw">Empate</label>
+                    </div>
+                    
+                    <div class="prediction-option-inline">
+                        <input type="radio" name="prediction" id="away-win" value="away">
+                        <label for="away-win" class="prediction-team away">Slytherin</label>
+                    </div>
+                </div>
+                
+                <div class="prediction-actions">
+                    <button id="confirm-prediction-btn" class="button cta-button">Confirmar predicción</button>
+                </div>
+                
+                <!-- Para mostrar después de la predicción -->
+                <div id="prediction-result" class="prediction-result hidden">
+                    <p>Tu predicción: <span id="prediction-choice"></span></p>
+                    <p class="prediction-timestamp" id="prediction-time"></p>
+                </div>
+                
+                <!-- Mensaje para partido ya iniciado -->
+                <div id="prediction-unavailable" class="prediction-message hidden">
+                    <p>No se pueden hacer predicciones para partidos en curso o finalizados</p>
+                </div>
+                
+                <!-- Mensaje para usuario no logueado -->
+                <div id="prediction-login-required" class="prediction-message hidden">
+                    <p>Debes <a href="login.html" class="login-link">iniciar sesión</a> para realizar predicciones</p>
+                </div>
+            </div>
+            
             <!-- Acciones rápidas para el partido -->
             <div class="match-actions">
                 <a href="betting.html?match=2025-05-05-1" class="button cta-button">Apostar</a>
@@ -108,8 +150,6 @@
                 <button class="button button-secondary share-match">
                     <span class="icon-share">↗</span> Compartir
                 </button>
-                <!-- CU-006: Botón para predecir resultado -->
-                <button id="predict-result-btn" class="button button-secondary">Predecir Resultado</button>
             </div>
             
             <!-- CU-006: Modal de predicción de resultado -->
