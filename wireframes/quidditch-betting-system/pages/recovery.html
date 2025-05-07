@@ -37,36 +37,22 @@
         <section class="auth-section card">
             <h2>Recuperación de Contraseña</h2>
             
-            <!-- Paso 1: Solicitar correo electrónico -->
-            <div id="recovery-step-1" class="recovery-step active">
-                <p>Introduce tu correo electrónico para recibir un enlace de recuperación</p>
+            <!-- Verificación de correo electrónico -->
+            <div id="email-verification" class="recovery-step active">
+                <p>Verifica tu correo electrónico para continuar</p>
                 
-                <form id="recovery-email-form" class="auth-form">
+                <form id="email-verification-form" class="auth-form">
                     <div class="form-group">
                         <label for="email">Correo electrónico:</label>
                         <input type="email" id="email" name="email" required>
                     </div>
                     
-                    <button type="submit" class="button cta-button">Enviar Enlace</button>
+                    <button type="button" class="button cta-button">Verificar correo</button>
                 </form>
             </div>
             
-            <!-- Paso 2: Introducir código de verificación (simulado) -->
-            <div id="recovery-step-2" class="recovery-step hidden">
-                <p>Hemos enviado un código de verificación a tu correo electrónico</p>
-                
-                <form id="recovery-code-form" class="auth-form">
-                    <div class="form-group">
-                        <label for="verification-code">Código de verificación:</label>
-                        <input type="text" id="verification-code" name="verification-code" required>
-                    </div>
-                    
-                    <button type="submit" class="button cta-button">Verificar Código</button>
-                </form>
-            </div>
-            
-            <!-- Paso 3: Establecer nueva contraseña -->
-            <div id="recovery-step-3" class="recovery-step hidden">
+            <!-- Establecer nueva contraseña -->
+            <div id="new-password-section" class="recovery-step">
                 <p>Establece tu nueva contraseña</p>
                 
                 <form id="recovery-password-form" class="auth-form">
@@ -85,8 +71,8 @@
                 </form>
             </div>
             
-            <!-- Paso 4: Confirmación -->
-            <div id="recovery-step-4" class="recovery-step hidden">
+            <!-- Confirmación -->
+            <div id="recovery-confirmation" class="recovery-step hidden">
                 <div class="success-message">
                     <h3>¡Contraseña restablecida con éxito!</h3>
                     <p>Ya puedes iniciar sesión con tu nueva contraseña</p>
