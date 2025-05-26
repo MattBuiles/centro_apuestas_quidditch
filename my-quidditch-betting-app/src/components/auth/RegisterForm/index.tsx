@@ -17,6 +17,18 @@ const RegisterForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setFormError(null)
+
+    // Basic validation: check for empty fields
+    if (!username || !email || !password || !confirmPassword || !birthdate || !terms) {
+      setFormError('Por favor, completa todos los campos y acepta los términos.')
+      return
+    }
+
+    // Basic email format validation (can be more robust)
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      setFormError('Por favor, introduce un correo electrónico válido.')
+      return
+    }
     
     // Validate password
     if (password !== confirmPassword) {

@@ -1,0 +1,11 @@
+.accountPageContainer {
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.accountPageTitle {
+    text-align: center;
+    color: #333; /* Example color */
+    margin-bottom: 30px;
+}

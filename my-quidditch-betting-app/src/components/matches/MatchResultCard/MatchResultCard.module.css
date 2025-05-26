@@ -1,0 +1,45 @@
+.matchResultCard {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.teamInfo {
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+}
+
+.teamLogo {
+    width: 40px;
+    height: 40px;
+    margin-right: 12px;
+    object-fit: contain;
+}
+
+.teamName {
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.score {
+    font-size: 1.3em;
+    font-weight: bold;
+    color: #333;
+}
+
+.score strong {
+    color: #007bff; /* Example highlight color for score */
+}
+
+.date {
+    font-size: 0.9em;
+    color: #666;
+    margin-left: 20px; /* Add some space between score and date if present */
+}

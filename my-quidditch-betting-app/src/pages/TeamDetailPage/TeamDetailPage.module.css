@@ -1,0 +1,26 @@
+.teamDetailPageContainer {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.teamDetailPageTitle {
+    font-size: 2em;
+    margin-bottom: 20px;
+    color: var(--text-color); /* Assuming a CSS variable for text color */
+}
+
+/* Add more styles for team info, stats, etc. as needed */
+.teamDetailPageContainer {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.teamDetailPageTitle {
+    font-size: 2em;
+    margin-bottom: 20px;
+    color: var(--text-color); /* Assuming a CSS variable for text color */
+}
+
+/* Add more styles for team info, stats, etc. as needed */

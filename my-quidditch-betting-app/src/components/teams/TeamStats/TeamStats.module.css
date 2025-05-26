@@ -1,0 +1,39 @@
+.teamStatsContainer {
+  margin-top: 20px;
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.teamStatsContainer h3 {
+  margin-top: 0;
+  color: #333;
+}
+
+.statsList {
+  list-style: none;
+  padding: 0;
+}
+
+.statItem {
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 5px;
+  border-bottom: 1px dashed #eee;
+}
+
+.statItem:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.statLabel {
+  font-weight: bold;
+  color: #555;
+  margin-right: 10px;
+}
+
+.statValue {
+  color: #000;
+}

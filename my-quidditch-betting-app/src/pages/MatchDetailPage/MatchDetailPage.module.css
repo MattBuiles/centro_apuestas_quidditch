@@ -1,0 +1,13 @@
+.matchDetailPageContainer {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.matchDetailPageTitle {
+  font-size: 2em;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* Add more styles for match details layout later */

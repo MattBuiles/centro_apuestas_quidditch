@@ -1,0 +1,62 @@
+.betHistoryItemContainer {
+  border: 1px solid #ccc;
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--card-background);
+}
+
+.matchInfo {
+  flex-grow: 1;
+  margin-right: 20px;
+}
+
+.matchInfo h4 {
+  margin: 0 0 5px 0;
+  color: var(--text-primary);
+}
+
+.matchInfo p {
+  margin: 0;
+  font-size: 0.9em;
+  color: var(--text-secondary);
+}
+
+.betDetails {
+  width: 150px;
+  text-align: right;
+}
+
+.betDetails p {
+  margin: 0;
+  font-size: 0.9em;
+  color: var(--text-secondary);
+}
+
+.betResult {
+  width: 80px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.betResult.win {
+  color: var(--color-success);
+}
+
+.betResult.loss {
+  color: var(--color-danger);
+}
+
+.betResult.pending {
+  color: var(--color-warning);
+}
+
+.payout {
+  width: 100px;
+  text-align: right;
+  font-weight: bold;
+  color: var(--color-primary); /* Or another color indicating payout */
+}

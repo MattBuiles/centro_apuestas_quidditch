@@ -1,0 +1,13 @@
+.bettingPageContainer {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.bettingPageTitle {
+    text-align: center;
+    color: #333;
+    margin-bottom: 30px;
+}
+
+/* Add more styles as needed for match listings and betting interface */
