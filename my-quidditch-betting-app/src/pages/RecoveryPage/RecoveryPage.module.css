@@ -1,0 +1,11 @@
+.recoveryPageContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+}
+
+.recoveryPageTitle {
+    font-size: 2em;
+    margin-bottom: 20px;
+}

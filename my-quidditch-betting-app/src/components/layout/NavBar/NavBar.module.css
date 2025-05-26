@@ -1,0 +1,26 @@
+.navBarContainer {
+  background-color: #f0f0f0; /* Example background color */
+  padding: 10px;
+}
+
+.navList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex; /* Arrange links horizontally */
+  gap: 20px; /* Space between links */
+}
+
+.navList li {
+  display: inline; /* Ensure list items are inline */
+}
+
+.navLink {
+  text-decoration: none; /* Remove underline from links */
+  color: #333; /* Example link color */
+  font-weight: bold;
+}
+
+.navLink:hover {
+  color: #007bff; /* Example hover effect */
+}

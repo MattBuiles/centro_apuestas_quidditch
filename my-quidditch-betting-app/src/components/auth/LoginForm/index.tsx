@@ -11,7 +11,7 @@ const LoginForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    await login(email, password, remember)
+    await login(email, password, remember) // Keep the original logic for now
   }
 
   return (

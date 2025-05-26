@@ -1,0 +1,21 @@
+.teamHeaderContainer {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  background-color: var(--color-background-card); /* Example using a CSS variable */
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.teamLogo {
+  width: 80px;
+  height: 80px;
+  margin-right: 20px;
+  object-fit: contain;
+}
+
+.teamName {
+  font-size: 2em;
+  color: var(--color-text-primary); /* Example using a CSS variable */
+  margin: 0;
+}
