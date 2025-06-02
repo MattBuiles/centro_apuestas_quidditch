@@ -14,7 +14,6 @@ const TeamsPage = lazy(() => import('./pages/TeamsPage'))
 const StandingsPage = lazy(() => import('./pages/StandingsPage'))
 const TeamDetailPage = lazy(() => import('./pages/TeamDetailPage'))
 const BettingPage = lazy(() => import('./pages/BettingPage'))
-// const StandingsPage = lazy(() => import('./pages/StandingsPage'))
 const ResultsPage = lazy(() => import('./pages/ResultsPage'))
 const AccountPage = lazy(() => import('./pages/AccountPage'))
 const RecoveryPage = lazy(() => import('./pages/RecoveryPage'))
@@ -37,7 +36,8 @@ function App() {
           {/* Protected routes */}
           <Route element={<ProtectedRoute />}>
             <Route path="betting" element={<BettingPage />} />
-            <Route path="account" element={<AccountPage />} />
+            <Route path="betting/:matchId" element={<BettingPage />} />
+            <Route path="account/*" element={<AccountPage />} />
           </Route>
           <Route path="*" element={<div>Page not found</div>} />
         </Route>

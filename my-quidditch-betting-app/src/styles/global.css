@@ -68,12 +68,17 @@ body {
   background-color: var(--color-background);
   color: var(--color-gray-800);
   line-height: 1.6;
+  /* From magical-elements.css */
+  background: linear-gradient(to bottom, #f0e6f6, #d9c9e8);
+  color: #4b3d6b;
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Garamond', serif;
   font-weight: bold;
   color: var(--color-primary);
+  /* From magical-elements.css */
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5); /* Adjusted for subtlety */
 }
 
 h1 { font-size: var(--text-4xl); }
@@ -149,9 +154,20 @@ h6 { font-size: var(--text-base); }
 /* Componentes */
 .card {
   background-color: var(--color-white);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-xl); /* Updated from wireframe */
   box-shadow: var(--shadow-md);
   padding: var(--spacing-6);
+  /* From magical-elements.css */
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 15px; /* var(--radius-xl) is 0.75rem, 15px is closer to this */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  margin: var(--spacing-4); /* 20px */
+  transition: transform 0.3s ease;
+}
+
+.card:hover {
+  /* From magical-elements.css */
+  transform: translateY(-5px);
 }
 
 .button {
@@ -166,6 +182,19 @@ h6 { font-size: var(--text-base); }
   cursor: pointer;
   transition: all 0.2s ease;
   font-size: var(--text-sm);
+  /* From magical-elements.css */
+  background-color: #6a5acd; /* var(--color-primary-light) */
+  border: none;
+  color: white;
+  padding: 10px 20px; /* Roughly var(--spacing-2) var(--spacing-4) */
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px; /* var(--text-base) */
+  margin: 4px 2px; /* var(--spacing-1) */
+  cursor: pointer;
+  border-radius: 12px; /* close to var(--radius-lg) */
+  transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
 .button:focus {
@@ -202,173 +231,973 @@ h6 { font-size: var(--text-base); }
 }
 
 .button-outline:hover {
-  background-color: rgba(75, 0, 130, 0.1);
+  background-color: rgba(75, 0, 130, 0.1); /* var(--color-primary)/10 */
 }
 
-.button-sm {
-  padding: var(--spacing-1) var(--spacing-3);
-  font-size: var(--text-xs);
+/* Styles from wireframe style.css for Header */
+.main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1rem; /* var(--spacing-2) var(--spacing-4) */
+    background-color: var(--color-white); /* #fff */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* var(--shadow-sm) or custom */
+    flex-wrap: wrap;
 }
 
-.button-lg {
-  padding: var(--spacing-3) var(--spacing-6);
-  font-size: var(--text-base);
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem; /* var(--spacing-2) */
 }
 
-.button-full {
-  width: 100%;
+.logo-container .site-title { /* Custom class for h1 in Header */
+    font-size: 1.5rem; /* var(--text-2xl) */
+    margin: 0;
+    color: var(--color-primary);
 }
 
-/* Formularios */
-.form-group {
-  margin-bottom: var(--spacing-4);
+.main-nav {
+    flex: 1;
+    display: flex;
+    justify-content: center;
 }
 
-.form-label {
-  display: block;
-  font-size: var(--text-sm);
-  font-weight: 500;
-  color: var(--color-gray-700);
-  margin-bottom: var(--spacing-1);
+.main-nav ul {
+    display: flex;
+    list-style: none;
+    gap: 0.5rem; /* var(--spacing-2) */
+    margin: 0;
+    padding: 0;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
-.form-input {
-  width: 100%;
-  padding: var(--spacing-3);
-  border: 1px solid var(--color-gray-300);
-  border-radius: var(--radius-md);
-  font-size: var(--text-sm);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+.main-nav .nav-link { /* Custom class for NavLink in Header */
+    padding: 0.5rem 1rem; /* var(--spacing-2) var(--spacing-4) */
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: 500; /* font-medium */
+    border-radius: var(--radius-md);
+    transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-.form-input:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px rgba(75, 0, 130, 0.2);
+.main-nav .nav-link:hover,
+.main-nav .nav-link.active {
+    background-color: var(--color-primary-light);
+    color: var(--color-white);
 }
 
-/* Estados de texto */
-.text-center { text-align: center; }
-.text-primary { color: var(--color-primary); }
-.text-secondary { color: var(--color-secondary); }
-.text-gray-500 { color: var(--color-gray-500); }
-.text-gray-600 { color: var(--color-gray-600); }
-.text-gray-700 { color: var(--color-gray-700); }
-.text-white { color: var(--color-white); }
-
-.text-sm { font-size: var(--text-sm); }
-.text-lg { font-size: var(--text-lg); }
-.text-xl { font-size: var(--text-xl); }
-.text-2xl { font-size: var(--text-2xl); }
-
-.font-bold { font-weight: bold; }
-.font-medium { font-weight: 500; }
-
-/* Fondos */
-.bg-white { background-color: var(--color-white); }
-.bg-primary { background-color: var(--color-primary); }
-.bg-gray-50 { background-color: var(--color-gray-100); }
-.bg-gray-100 { background-color: var(--color-gray-200); }
-
-/* Bordes y radius */
-.rounded-md { border-radius: var(--radius-md); }
-.rounded-lg { border-radius: var(--radius-lg); }
-.rounded-xl { border-radius: var(--radius-xl); }
-.rounded-full { border-radius: var(--radius-full); }
-
-.border { border: 1px solid var(--color-gray-300); }
-.border-gray-200 { border-color: var(--color-gray-200); }
-
-/* Sombras */
-.shadow-sm { box-shadow: var(--shadow-sm); }
-.shadow-md { box-shadow: var(--shadow-md); }
-.shadow-lg { box-shadow: var(--shadow-lg); }
-
-/* Espacios y tamaños */
-.w-full { width: 100%; }
-.w-10 { width: 2.5rem; }
-.w-20 { width: 5rem; }
-.h-10 { height: 2.5rem; }
-.h-16 { height: 4rem; }
-.h-20 { height: 5rem; }
-.h-40 { height: 10rem; }
-.h-64 { height: 16rem; }
-
-.min-h-screen { min-height: 100vh; }
-.max-w-md { max-width: 28rem; }
-.max-w-7xl { max-width: 80rem; }
-
-.mx-auto { margin-left: auto; margin-right: auto; }
-
-/* Posicionamiento */
-.relative { position: relative; }
-.absolute { position: absolute; }
-.fixed { position: fixed; }
-
-.top-0 { top: 0; }
-.right-0 { right: 0; }
-.bottom-0 { bottom: 0; }
-.left-0 { left: 0; }
-
-.z-10 { z-index: 10; }
-.z-50 { z-index: 50; }
-
-/* Overflow */
-.overflow-hidden { overflow: hidden; }
-
-/* Animaciones */
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+.auth-buttons {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem; /* var(--spacing-2) */
 }
 
-.animate-float {
-  animation: float 3s ease-in-out infinite;
+.auth-buttons .button-login,
+.auth-buttons .button-register,
+.auth-buttons .button-logout {
+    /* Using existing Button component styles, can be customized if needed */
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+.user-menu {
+    position: relative;
 }
 
-.animate-pulse-custom {
-  animation: pulse 1.5s infinite;
+.user-menu .username {
+    color: var(--color-primary);
 }
 
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+.dropdown-menu {
+    position: absolute;
+    right: 0;
+    margin-top: var(--spacing-2);
+    width: 12rem; /* w-48 */
+    background-color: var(--color-white);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    padding-top: var(--spacing-1);
+    padding-bottom: var(--spacing-1);
+    z-index: 50;
 }
 
-.animate-spin {
-  animation: spin 1s linear infinite;
+.dropdown-menu a, .dropdown-menu button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: var(--spacing-2) var(--spacing-4);
+    font-size: var(--text-sm);
+    color: var(--color-gray-700);
+}
+.dropdown-menu a:hover, .dropdown-menu button:hover {
+    background-color: var(--color-gray-100);
 }
 
-/* Gradientes */
-.gradient-primary {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+
+/* Styles for HomePage from wireframe style.css */
+.hero-section {
+    /* Basic structure, can be enhanced with gradients/images */
+    padding: var(--spacing-12) 0; /* py-12 */
+}
+.hero-content h2 { /* Targeting h2 within hero-content */
+    font-size: var(--text-4xl); /* text-4xl */
+    font-weight: bold; /* font-bold */
+    color: var(--color-primary); /* text-primary */
+}
+.hero-content p {
+    font-size: var(--text-lg); /* text-lg */
+    color: var(--color-gray-700); /* text-gray-700 */
+}
+.hero-section .cta-button { /* Targeting .cta-button within .hero-section */
+    /* Uses Button component, specific styles if needed */
 }
 
-.gradient-secondary {
-  background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary-light) 100%);
+.featured-matches h3 {
+    font-size: var(--text-2xl);
+    font-weight: bold;
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-6);
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
+.match-card { /* General match card style */
+    background-color: var(--color-white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    overflow: hidden; /* To contain image placeholders */
+}
+.match-card .teams-placeholder { /* Placeholder for team logos/images */
+    height: 10rem; /* h-40 */
+    background-color: var(--color-gray-200);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.match-card .match-info {
+    padding: var(--spacing-4);
+}
+.match-card .match-info h4 {
+    font-weight: bold;
+    font-size: var(--text-lg);
+    color: var(--color-primary);
+}
+.match-card .match-info p {
+    color: var(--color-gray-600);
+    margin-top: var(--spacing-1);
+    margin-bottom: var(--spacing-2);
 }
 
-::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
+.how-it-works h3 {
+    font-size: var(--text-2xl);
+    font-weight: bold;
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-6);
+}
+.steps-container .step {
+    text-align: center;
+}
+.steps-container .step-icon-placeholder {
+    margin-left: auto;
+    margin-right: auto;
+    width: 5rem; /* w-20 */
+    height: 5rem; /* h-20 */
+    background-color: rgba(75,0,130,0.1); /* bg-primary/10 */
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: var(--spacing-4);
+}
+.steps-container .step h4 {
+    font-weight: bold;
+    font-size: var(--text-lg);
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-2);
+}
+.steps-container .step p {
+    color: var(--color-gray-600);
 }
 
-::-webkit-scrollbar-thumb {
-  background: rgba(106, 90, 205, 0.3);
-  border-radius: var(--radius-lg);
+/* Auth Pages (Register, Login) */
+.auth-section { /* Used in RegisterPage, LoginPage */
+    /* .card class already provides most styling */
+    /* max-w-md mx-auto mt-8 are utility classes */
+}
+.auth-section h2 {
+    font-size: var(--text-2xl);
+    font-weight: bold;
+    color: var(--color-primary);
+}
+.auth-section p {
+    color: var(--color-gray-600);
+    margin-top: var(--spacing-2);
+}
+.auth-form { /* Used in RegisterForm, LoginForm */
+    /* space-y-4 or space-y-6 are utility classes */
+}
+.auth-form .form-group {
+    margin-bottom: var(--spacing-4); /* mb-4 */
+}
+.auth-form .form-label {
+    display: block;
+    font-size: var(--text-sm);
+    font-weight: 500; /* font-medium */
+    color: var(--color-gray-700);
+    margin-bottom: var(--spacing-1);
+}
+.auth-form .form-input {
+    width: 100%;
+    padding: var(--spacing-2) var(--spacing-3); /* px-3 py-2 */
+    border: 1px solid var(--color-gray-300);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+.auth-form .form-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(75,0,130,0.2); /* ring-2 ring-primary/50 */
+}
+.auth-form small { /* For password hints, etc. */
+    font-size: var(--text-xs);
+    color: var(--color-gray-500);
+    margin-top: var(--spacing-1);
+    display: block;
+}
+.auth-form .terms-and-conditions { /* Specific to RegisterForm */
+    display: flex;
+    align-items: flex-start; /* items-start */
+}
+.auth-form .terms-and-conditions input[type="checkbox"] {
+    height: 1rem; /* h-4 */
+    width: 1rem; /* w-4 */
+    margin-top: 0.25rem; /* mt-1 (approx) */
+    margin-right: var(--spacing-2); /* mr-2 */
+}
+.auth-form .auth-links { /* For "Already have an account?" links */
+    text-align: center;
+    margin-top: var(--spacing-4);
+}
+.auth-form .auth-links p, .auth-form .auth-links a {
+    font-size: var(--text-sm);
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(106, 90, 205, 0.5);
+/* Message container for errors/success */
+.message-container {
+    padding: var(--spacing-3) var(--spacing-4);
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    margin-bottom: var(--spacing-4);
+}
+/* Example error style (can be more specific with classes like .message-error) */
+.message-container.error {
+    background-color: rgba(239, 68, 68, 0.1); /* bg-red-50 (approx) */
+    border: 1px solid rgba(220, 38, 38, 0.2); /* border-red-200 (approx) */
+    color: #b91c1c; /* text-red-700 (approx) */
+}
+
+
+/* Styles for MatchCard component */
+.match-card .live-tag {
+    position: absolute;
+    top: var(--spacing-2);
+    right: var(--spacing-2);
+    background-color: red; /* Example, adjust as per wireframe */
+    color: white;
+    padding: var(--spacing-1) var(--spacing-2);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-xs);
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+}
+.match-card .live-indicator {
+    width: 0.5rem; /* w-2 */
+    height: 0.5rem; /* h-2 */
+    background-color: white;
+    border-radius: var(--radius-full);
+    margin-right: var(--spacing-1);
+    animation: pulse 1.5s infinite; /* Assuming pulse animation is defined */
+}
+.match-card .match-details .teams { /* From MatchCard.tsx */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.match-card .match-details .team {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+}
+.match-card .team-logo-placeholder.small {
+    width: 2rem; /* w-8 */
+    height: 2rem; /* h-8 */
+    background-color: var(--color-gray-200);
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: var(--color-primary);
+}
+.match-card .team-name {
+    font-weight: 500; /* font-medium */
+}
+.match-card .score {
+    font-weight: bold;
+}
+.match-card .vs-indicator {
+    font-weight: bold;
+    color: var(--color-gray-500);
+}
+.match-card .match-status {
+    font-size: var(--text-sm);
+    color: var(--color-gray-600);
+    margin-top: var(--spacing-1);
+}
+.match-card .league-name {
+    font-style: italic;
+}
+.match-card .match-actions {
+    margin-top: var(--spacing-4);
+    display: flex;
+    gap: var(--spacing-2);
+}
+
+/* MatchesPage specific styles */
+.matches-page-container .hero-section { /* Specific hero for matches page */
+    padding: var(--spacing-8);
+    margin-bottom: var(--spacing-8);
+    border-radius: var(--radius-lg);
+    color: var(--color-white); /* Assuming text is white on gradient */
+}
+.matches-page-container .hero-section h1 {
+    font-size: var(--text-3xl);
+    font-weight: bold;
+    margin-bottom: var(--spacing-2);
+    color: var(--color-white); /* Override default h1 color */
+}
+.matches-container-main .filters-section { /* From matches.html wireframe */
+    /* .card class provides base */
+    margin-bottom: var(--spacing-8);
+    padding: var(--spacing-4);
+    display: flex; /* For layout of search and filter options */
+    flex-wrap: wrap;
+    gap: var(--spacing-4);
+    align-items: center;
+}
+.matches-container-main .search-filter {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    flex-grow: 1; /* Allow search to take more space */
+}
+.matches-container-main .search-filter .form-input {
+    flex-grow: 1;
+}
+.matches-container-main .filter-options {
+    display: flex;
+    gap: var(--spacing-2);
+    flex-wrap: wrap;
+}
+.matches-tabs {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-1); /* Reduced gap for tabs */
+    margin-bottom: var(--spacing-8);
+    padding: var(--spacing-2);
+    background-color: var(--color-gray-100);
+    border-radius: var(--radius-md);
+}
+.upcoming-matches-grid {
+    /* grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 are utility classes */
+}
+
+/* StandingsPage specific styles */
+.standings-page-container .page-header { /* From standings.html wireframe */
+    /* .card class provides base */
+    margin-bottom: var(--spacing-8);
+    padding: var(--spacing-6);
+    text-align: center;
+}
+.standings-page-container .page-header h2 {
+    font-size: var(--text-3xl);
+}
+.standings-section {
+    /* .card class provides base */
+    padding: var(--spacing-6);
+}
+.standings-filters {
+    display: flex;
+    gap: var(--spacing-2);
+    margin-bottom: var(--spacing-6);
+}
+.standings-table {
+    width: 100%;
+    text-align: left;
+    border-collapse: collapse;
+}
+.standings-table th, .standings-table td {
+    padding: var(--spacing-3); /* p-3 */
+    border-bottom: 1px solid var(--color-gray-200); /* border-b */
+}
+.standings-table th {
+    background-color: var(--color-gray-100); /* bg-gray-100 */
+    font-weight: 600; /* font-semibold */
+    font-size: var(--text-sm);
+    color: var(--color-gray-700);
+}
+.standings-table tbody tr:hover {
+    background-color: var(--color-gray-50); /* hover:bg-gray-50 */
+}
+.standings-table .team-info { /* From standings.html wireframe */
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+}
+.standings-table .team-logo-placeholder.small { /* From standings.html wireframe */
+    width: 1.5rem; /* w-6 */
+    height: 1.5rem; /* h-6 */
+    background-color: rgba(75,0,130,0.1); /* bg-primary/10 */
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-primary);
+    font-weight: bold;
+}
+
+/* MatchDetailPage Styles (from match-detail-enhanced.css) */
+.match-detail-container {
+    /* Basic container, can be enhanced with gradients/images */
+    padding: var(--spacing-4);
+}
+
+.match-header { /* From match-detail-enhanced.css */
+    text-align: center;
+    margin-bottom: var(--spacing-6);
+    padding: var(--spacing-4);
+    background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary-dark));
+    color: var(--color-white);
+    border-radius: var(--radius-lg);
+    position: relative;
+}
+.match-header .status-badge {
+    position: absolute;
+    top: var(--spacing-2);
+    right: var(--spacing-2);
+    background-color: var(--color-secondary);
+    color: var(--color-primary-dark);
+    padding: var(--spacing-1) var(--spacing-2);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-xs);
+    font-weight: bold;
+}
+.match-header .status-badge.live {
+    background-color: red; /* Example for live */
+    color: white;
+}
+.match-header .match-title {
+    font-size: var(--text-3xl);
+    font-weight: bold;
+    margin-bottom: var(--spacing-1);
+    color: var(--color-white); /* Override default h1 color */
+}
+.match-header .match-meta {
+    font-size: var(--text-sm);
+    opacity: 0.9;
+}
+.match-header .match-meta span:not(:last-child)::after {
+    content: '•';
+    margin: 0 var(--spacing-1);
+}
+
+.match-scoreboard { /* From match-detail-enhanced.css */
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: var(--spacing-6);
+    background-color: var(--color-white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    margin-bottom: var(--spacing-6);
+}
+.match-scoreboard .team {
+    text-align: center;
+    flex: 1;
+}
+.match-scoreboard .team-logo-placeholder.large { /* From match-detail-enhanced.css */
+    width: 6rem; /* w-24 approx */
+    height: 6rem; /* h-24 approx */
+    background-color: var(--color-gray-100);
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--text-3xl);
+    font-weight: bold;
+    color: var(--color-primary);
+    margin: 0 auto var(--spacing-2);
+    border: 2px solid var(--color-primary-light);
+}
+.match-scoreboard .team-name {
+    font-size: var(--text-xl);
+    font-weight: bold;
+    color: var(--color-primary);
+}
+.match-scoreboard .score-display { /* From match-detail-enhanced.css */
+    text-align: center;
+    flex: 0.5;
+}
+.match-scoreboard .current-score {
+    font-size: var(--text-4xl);
+    font-weight: bold;
+    color: var(--color-primary-dark);
+}
+.match-scoreboard .time-display {
+    font-size: var(--text-sm);
+    color: var(--color-gray-600);
+}
+.match-scoreboard .status-indicator.pulsing { /* From match-detail-enhanced.css */
+    animation: pulse 1.5s infinite;
+}
+
+.prediction-inline { /* From match-detail-enhanced.css */
+    background-color: var(--color-gray-50);
+    padding: var(--spacing-4);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-6);
+    text-align: center;
+}
+.prediction-inline .prediction-title {
+    font-size: var(--text-lg);
+    font-weight: bold;
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-3);
+}
+.prediction-options-inline { /* From match-detail-enhanced.css */
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-4);
+    margin-bottom: var(--spacing-3);
+}
+/* Basic styling for radio button options, can be enhanced */
+.prediction-option-inline {
+    /* Structure for label wrapping input and styled content */
+}
+
+.match-actions { /* From match-detail-enhanced.css */
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-4);
+    margin-bottom: var(--spacing-6);
+}
+
+.match-content-tabs { /* From match-detail-enhanced.css */
+    display: flex;
+    border-bottom: 2px solid var(--color-gray-200);
+    margin-bottom: var(--spacing-6);
+}
+.tab-button { /* From match-detail-enhanced.css */
+    padding: var(--spacing-3) var(--spacing-4);
+    cursor: pointer;
+    font-size: var(--text-base);
+    font-weight: 500; /* font-medium */
+    color: var(--color-gray-600);
+    border: none;
+    background: none;
+    position: relative;
+    transition: color 0.2s ease;
+}
+.tab-button:hover {
+    color: var(--color-primary);
+}
+.tab-button.active {
+    color: var(--color-primary);
+    font-weight: bold;
+}
+.tab-button.active::after { /* From match-detail-enhanced.css */
+    content: '';
+    position: absolute;
+    bottom: -2px; /* Align with border-bottom of .match-content-tabs */
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: var(--color-primary);
+}
+.tab-content { /* From match-detail-enhanced.css */
+    padding: var(--spacing-4);
+    /* background-color: var(--color-white); */ /* Optional: if tabs have distinct backgrounds */
+    /* border-radius: var(--radius-md); */
+    /* box-shadow: var(--shadow-sm); */
+}
+.tab-content.hidden { /* From match-detail-enhanced.css */
+    display: none;
+}
+
+/* Breadcrumbs */
+.breadcrumbs {
+    font-size: var(--text-sm);
+    color: var(--color-gray-600);
+    margin-bottom: var(--spacing-4);
+}
+.breadcrumbs a {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+.breadcrumbs a:hover {
+    text-decoration: underline;
+}
+.breadcrumbs span:not(:last-child)::after {
+    content: '>';
+    margin: 0 var(--spacing-1);
+    color: var(--color-gray-400);
+}
+
+/* TeamsPage specific styles */
+.teams-page-container .hero-section {
+    /* Similar to matches page hero, can be customized */
+}
+.teams-page-container .filters-section {
+    /* Similar to matches page filters, can be customized */
+}
+.teams-grid {
+    /* grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 */
+}
+.team-card { /* For TeamsPage */
+    /* .card provides base */
+    text-align: center;
+}
+.team-card .team-logo-placeholder { /* For TeamsPage */
+    width: 5rem; /* w-20 */
+    height: 5rem; /* h-20 */
+    background-color: var(--color-gray-100);
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--text-2xl);
+    font-weight: bold;
+    color: var(--color-primary);
+    margin: 0 auto var(--spacing-4);
+}
+.team-card .team-name { /* For TeamsPage */
+    font-size: var(--text-lg);
+    font-weight: bold;
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-2);
+}
+.team-card .team-league { /* For TeamsPage */
+    font-size: var(--text-sm);
+    color: var(--color-gray-500);
+    margin-bottom: var(--spacing-4);
+}
+
+/* TeamDetailPage specific styles */
+.team-detail-page-container .back-navigation {
+    margin-bottom: var(--spacing-4);
+}
+.team-header-detail { /* Renamed to avoid conflict with .match-header */
+    /* .card provides base */
+    padding: var(--spacing-6);
+    margin-bottom: var(--spacing-6);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-6);
+}
+.team-header-detail .team-logo-placeholder.large {
+    width: 8rem; /* w-32 */
+    height: 8rem; /* h-32 */
+    /* ... other styles from .team-logo-placeholder ... */
+    font-size: var(--text-4xl);
+}
+.team-header-detail .team-info-main h1 {
+    font-size: var(--text-3xl);
+    margin-bottom: var(--spacing-1);
+}
+.team-header-detail .team-info-main .team-slogan {
+    font-size: var(--text-md);
+    color: var(--color-gray-600);
+    font-style: italic;
+}
+.team-quick-stats {
+    display: flex;
+    gap: var(--spacing-4);
+    margin-top: var(--spacing-4);
+}
+.team-quick-stats .stat {
+    text-align: center;
+}
+.team-quick-stats .stat-value {
+    font-size: var(--text-xl);
+    font-weight: bold;
+    color: var(--color-primary);
+}
+.team-quick-stats .stat-label {
+    font-size: var(--text-xs);
+    color: var(--color-gray-500);
+}
+.team-content-tabs { /* Similar to .match-content-tabs */
+    /* ... */
+}
+
+/* BettingPage specific styles */
+.betting-page-container .page-header {
+    /* ... */
+}
+.betting-form-steps {
+    /* Logic for multi-step form */
+}
+.form-step {
+    /* Styles for individual steps */
+    margin-bottom: var(--spacing-8);
+}
+.step-indicator {
+    /* Styles for step number/title */
+    margin-bottom: var(--spacing-4);
+    padding-bottom: var(--spacing-2);
+    border-bottom: 1px dashed var(--color-gray-300);
+}
+.step-indicator .step-number {
+    display: inline-block;
+    width: 2rem; /* w-8 */
+    height: 2rem; /* h-8 */
+    line-height: 2rem;
+    text-align: center;
+    border-radius: var(--radius-full);
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    font-weight: bold;
+    margin-right: var(--spacing-2);
+}
+.bet-type-options { /* From betting.html */
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-4);
+    margin-bottom: var(--spacing-4);
+}
+.bet-type-option label { /* For radio button cards */
+    display: block;
+    padding: var(--spacing-4);
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.bet-type-option label:hover {
+    border-color: var(--color-primary-light);
+    box-shadow: var(--shadow-sm);
+}
+.bet-type-option input[type="radio"] {
+    display: none; /* Hide actual radio */
+}
+.bet-type-option input[type="radio"]:checked + label {
+    border-color: var(--color-primary);
+    background-color: var(--color-primary-light);
+    color: var(--color-white);
+}
+.bet-type-option input[type="radio"]:checked + label .option-name,
+.bet-type-option input[type="radio"]:checked + label .option-description {
+    color: var(--color-white);
+}
+.bet-type-option .option-name {
+    font-weight: bold;
+    margin-bottom: var(--spacing-1);
+    color: var(--color-primary);
+}
+.bet-type-option .option-description {
+    font-size: var(--text-sm);
+    color: var(--color-gray-600);
+}
+.betting-summary {
+    /* .card provides base */
+    margin-top: var(--spacing-6);
+    padding: var(--spacing-4);
+}
+.betting-summary h4 {
+    font-size: var(--text-lg);
+    font-weight: bold;
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-3);
+}
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--spacing-2) 0;
+    border-bottom: 1px solid var(--color-gray-100);
+}
+.summary-row:last-child {
+    border-bottom: none;
+}
+.summary-row.total .summary-label,
+.summary-row.total .summary-value {
+    font-weight: bold;
+    color: var(--color-primary-dark);
+}
+.summary-label {
+    color: var(--color-gray-700);
+}
+.summary-value {
+    color: var(--color-gray-900);
+}
+
+/* ResultsPage specific styles */
+.results-page-container .hero-section {
+    /* ... */
+}
+.results-page-container .filters-section {
+    /* .card provides base */
+    /* Similar to matches page filters */
+}
+.results-list .result-card { /* Extends .match-card */
+    /* Specific styles for result display */
+    border-left: 4px solid var(--color-secondary); /* Example highlight */
+}
+.result-card .match-score-final {
+    font-size: var(--text-xl);
+    font-weight: bold;
+    color: var(--color-primary-dark);
+    margin: var(--spacing-2) 0;
+}
+
+/* AccountPage specific styles */
+.account-container { /* From account.html */
+    display: flex;
+    gap: var(--spacing-8);
+    margin-top: var(--spacing-6);
+}
+.account-container .sidebar {
+    width: 250px; /* Or use flex-basis */
+    flex-shrink: 0;
+}
+.account-container .user-profile-summary { /* For sidebar */
+    /* .card provides base */
+    text-align: center;
+    padding: var(--spacing-6);
+    margin-bottom: var(--spacing-6);
+}
+.user-profile-summary .user-avatar-large {
+    width: 6rem; /* w-24 */
+    height: 6rem; /* h-24 */
+    background-color: var(--color-gray-200);
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--text-3xl);
+    font-weight: bold;
+    color: var(--color-primary);
+    margin: 0 auto var(--spacing-4);
+}
+.user-profile-summary h3 { /* Username */
+    font-size: var(--text-xl);
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-1);
+}
+.user-profile-summary p { /* Email or other info */
+    font-size: var(--text-sm);
+    color: var(--color-gray-600);
+}
+.account-nav ul {
+    list-style: none;
+}
+.account-nav li a {
+    display: block;
+    padding: var(--spacing-3) var(--spacing-4);
+    border-radius: var(--radius-md);
+    color: var(--color-gray-700);
+    font-weight: 500; /* font-medium */
+    transition: background-color 0.2s ease, color 0.2s ease;
+    margin-bottom: var(--spacing-1); /* From account.html style */
+}
+.account-nav li a:hover {
+    background-color: var(--color-gray-100);
+    color: var(--color-primary);
+}
+.account-nav li a.active { /* For active tab */
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    box-shadow: var(--shadow-sm);
+}
+.account-container .main-content {
+    flex-grow: 1;
+}
+.account-section { /* For each tab content in AccountPage */
+    /* .card provides base */
+    padding: var(--spacing-6);
+    margin-bottom: var(--spacing-6); /* If multiple sections are visible or for consistency */
+}
+.account-section h2 { /* Section title */
+    font-size: var(--text-2xl);
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-6);
+    padding-bottom: var(--spacing-3);
+    border-bottom: 1px solid var(--color-gray-200);
+}
+.wallet-balance-card {
+    /* .card provides base */
+    background: linear-gradient(135deg, var(--color-secondary-light), var(--color-secondary));
+    color: var(--color-primary-dark);
+    text-align: center;
+    padding: var(--spacing-8);
+}
+.wallet-balance-card .balance-label {
+    font-size: var(--text-lg);
+    opacity: 0.8;
+}
+.wallet-balance-card .balance-value {
+    font-size: var(--text-4xl);
+    font-weight: bold;
+    margin: var(--spacing-1) 0 var(--spacing-4);
+}
+.wallet-actions { /* From account.html */
+    display: flex;
+    gap: var(--spacing-4);
+    margin-top: var(--spacing-4);
+}
+
+/* Footer styles from wireframe style.css */
+.main-footer {
+    background-color: var(--color-primary-dark); /* Darker for footer */
+    color: var(--color-gray-300);
+    padding: var(--spacing-8) var(--spacing-4);
+    text-align: center;
+}
+.main-footer .footer-links ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 var(--spacing-4) 0;
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-6);
+    flex-wrap: wrap;
+}
+.main-footer .footer-links a {
+    color: var(--color-gray-300);
+    text-decoration: none;
+    font-size: var(--text-sm);
+}
+.main-footer .footer-links a:hover {
+    color: var(--color-white);
+    text-decoration: underline;
+}
+.main-footer p { /* Copyright text */
+    font-size: var(--text-sm);
+}
+
+/* Magical Elements from magical-elements.css */
+a { /* General link styling */
+    color: var(--color-primary-light); /* #6a5acd */
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+a:hover {
+    color: #ff69b4; /* Pinkish color, can be themed if needed */
+    text-shadow: 0 0 5px rgba(255, 105, 180, 0.5); /* Adjusted for subtlety */
+}
+
+.placeholder-x {
+    font-size: 2rem;
+    color: var(--color-gray-400);
+    font-weight: bold;
 }
 
 /* Responsive utilities */
