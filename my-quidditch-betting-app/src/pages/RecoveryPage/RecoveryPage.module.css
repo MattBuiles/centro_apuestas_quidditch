@@ -3,9 +3,110 @@
     flex-direction: column;
     align-items: center;
     padding: 20px;
+    max-width: 480px; /* Consistent with auth-section */
+    margin: var(--spacing-12) auto;
+    padding: var(--spacing-4);
+    animation: fadeInUp 0.7s ease-out forwards;
 }
 
 .recoveryPageTitle {
     font-size: 2em;
     margin-bottom: 20px;
+    font-family: var(--font-family-display);
+    font-size: var(--text-3xl); /* Slightly smaller than generic auth-section h2 */
+    color: var(--color-primary-dark);
+    text-align: center;
+    margin-bottom: var(--spacing-2);
+}
+
+.recoveryPageDescription {
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  text-align: center;
+  margin-bottom: var(--spacing-6);
+  line-height: 1.6;
+}
+
+/* The Card, Form, Button styles will be inherited from global.css 
+   or their respective component modules if they exist.
+   You can add specific overrides here if needed.
+   For example, if the Card within RecoveryPage needs a different shadow:
+*/
+.recoveryCard { /* Example: If you want to target the Card specifically on this page */
+  padding: var(--spacing-8);
+  box-shadow: var(--shadow-xl);
+  /* Add any specific overrides for the card on this page */
+}
+
+.recoveryForm {
+  /* Styles specific to the form within the recovery page if needed */
+}
+
+.formGroup {
+  margin-bottom: var(--spacing-5);
+}
+
+.formLabel {
+  display: block;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-gray-700);
+  margin-bottom: var(--spacing-2);
+}
+
+.formInput {
+  width: 100%;
+  padding: var(--spacing-3) var(--spacing-4);
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xs);
+  font-size: var(--text-base);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.formInput:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.25), var(--shadow-sm);
+}
+
+.submitButton {
+  /* Uses global button styles, add overrides if needed */
+  margin-top: var(--spacing-2); /* Add some space above the button */
+}
+
+.authLinks {
+  text-align: center;
+  margin-top: var(--spacing-6);
+}
+
+.authLinks p,
+.authLinks a {
+  font-size: var(--text-sm);
+}
+.authLinks a {
+  font-weight: 600;
+}
+
+/* Message styling (can also use global .message-container) */
+.message {
+  padding: var(--spacing-3) var(--spacing-4);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  margin-bottom: var(--spacing-4);
+  border-width: 1px;
+  border-style: solid;
+  animation: fadeIn 0.3s ease;
+}
+
+.messageSuccess {
+  background-color: rgba(var(--color-success-rgb), 0.1);
+  border-color: rgba(var(--color-success-rgb), 0.3);
+  color: var(--color-success);
+}
+
+.messageError {
+  background-color: rgba(var(--color-error-rgb), 0.1);
+  border-color: rgba(var(--color-error-rgb), 0.3);
+  color: var(--color-error);
 }
