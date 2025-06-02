@@ -12,6 +12,7 @@
   "dependencies": {
     "@vitejs/plugin-react": "^4.5.0",
     "clsx": "^2.1.1",
+    "my-quidditch-betting-app": "file:",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.6.1"

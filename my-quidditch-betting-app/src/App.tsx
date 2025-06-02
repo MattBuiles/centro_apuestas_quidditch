@@ -11,6 +11,7 @@ const RegisterPage = lazy(() => import('./pages/RegisterPage'))
 const MatchesPage = lazy(() => import('./pages/MatchesPage'))
 const MatchDetailPage = lazy(() => import('./pages/MatchDetailPage'))
 const TeamsPage = lazy(() => import('./pages/TeamsPage'))
+const StandingsPage = lazy(() => import('./pages/StandingsPage'))
 const TeamDetailPage = lazy(() => import('./pages/TeamDetailPage'))
 const BettingPage = lazy(() => import('./pages/BettingPage'))
 // const StandingsPage = lazy(() => import('./pages/StandingsPage'))
@@ -29,6 +30,8 @@ function App() {
           <Route path="recovery" element={<RecoveryPage />} />
           <Route path="matches" element={<MatchesPage />} />
           <Route path="matches/:matchId" element={<MatchDetailPage />} />
+          <Route path="teams" element={<TeamsPage />} />
+          <Route path="standings" element={<StandingsPage />} />
           <Route path="results" element={<ResultsPage />} />
           <Route path="teams/:teamId" element={<TeamDetailPage />} />
           {/* Protected routes */}
