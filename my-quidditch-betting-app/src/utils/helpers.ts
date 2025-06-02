@@ -1,1 +1,0 @@
-   npm create vite@latest my-quidditch-betting-app --template react-ts
