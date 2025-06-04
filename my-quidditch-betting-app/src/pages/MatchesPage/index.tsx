@@ -1,7 +1,7 @@
-// filepath: d:\Coding\Projects\centro_apuestas_quidditch\my-quidditch-betting-app\src\pages\MatchesPage\index.tsx
 import { useState } from 'react'
-import MatchCard from '@/components/matches/MatchCard' // Ensure this path is correct
+import MatchCard from '@/components/matches/MatchCard'
 import Button from '@/components/common/Button'
+import styles from './MatchesPage.module.css'
 
 // Mock data for matches - replace with actual data fetching
 const mockMatches = [
@@ -27,53 +27,51 @@ const MatchesPage = () => {
   });
 
   return (
-    <div className="matches-page-container">
-      <section className="hero-section text-center p-8 mb-8 rounded-lg" style={{ background: 'linear-gradient(135deg, rgba(75, 0, 130, 0.7), rgba(106, 90, 205, 0.4))', color: 'white' }}>
-        <h1 className="text-3xl font-bold mb-2">Partidos de Quidditch</h1>
-        <p>Explora todos los partidos, apuesta y sigue la acción en directo</p>
+    <div className={styles.matchesPageContainer}>
+      <section className={styles.heroSection}>
+        <h1 className={styles.heroTitle}>Partidos de Quidditch</h1>
+        <p className={styles.heroSubtitle}>Explora todos los partidos, apuesta y sigue la acción en directo</p>
       </section>
 
-      <section className="matches-container-main"> {/* From wireframe matches.html */}
-        <div className="filters-section card mb-8 p-4"> {/* Using card class */}
-          <div className="search-filter flex items-center gap-2 mb-4 md:mb-0">
+      <section className={styles.matchesContainerMain}>
+        <div className={styles.filtersSection}>
+          <div className={styles.searchFilter}>
             <input 
               type="text" 
               id="match-search" 
               placeholder="Buscar partidos, equipos..." 
-              className="form-input flex-grow"
+              className={styles.searchInput}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <Button size="sm" className="search-button">⌕</Button>
+            <Button variant="magical" size="sm">⌕</Button>
           </div>
-          <div className="filter-options flex gap-2 mb-4 md:mb-0">
+          <div className={styles.filterOptions}>
             <Button variant={selectedLeague === 'all' ? 'primary' : 'outline'} size="sm" onClick={() => setSelectedLeague('all')}>Todos</Button>
             <Button variant={selectedLeague === 'Liga de Hogwarts' ? 'primary' : 'outline'} size="sm" onClick={() => setSelectedLeague('Liga de Hogwarts')}>Liga de Hogwarts</Button>
             <Button variant={selectedLeague === 'Liga Británica' ? 'primary' : 'outline'} size="sm" onClick={() => setSelectedLeague('Liga Británica')}>Liga Británica</Button>
           </div>
-          {/* View options can be added here if needed */}
         </div>
 
-        <div className="matches-tabs flex justify-center gap-1 mb-8 p-2 bg-gray-100 rounded-md">
+        <div className={styles.matchesTabs}>
           <Button variant={activeTab === 'upcoming' ? 'primary' : 'outline'} onClick={() => setActiveTab('upcoming')}>Próximos</Button>
           <Button variant={activeTab === 'live' ? 'primary' : 'outline'} onClick={() => setActiveTab('live')}>En Vivo</Button>
           <Button variant={activeTab === 'finished' ? 'primary' : 'outline'} onClick={() => setActiveTab('finished')}>Finalizados</Button>
         </div>
 
         {/* Grid for matches */}
-        <div className="upcoming-matches-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className={styles.upcomingMatchesGrid}>
           {filteredMatches.length > 0 ? (
             filteredMatches.map(match => (
               <MatchCard key={match.id} match={match} />
             ))
           ) : (
-            <p className="text-gray-600 col-span-full text-center">No hay partidos que coincidan con los filtros seleccionados.</p>
+            <p className={styles.noMatchesMessage}>No hay partidos que coincidan con los filtros seleccionados.</p>
           )}
         </div>
-        {/* Pagination can be added here */}
       </section>
     </div>
   )
 }
 
-export default MatchesPage
+export default MatchesPage;

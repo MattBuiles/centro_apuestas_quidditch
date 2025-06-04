@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Button from '@/components/common/Button';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import Card from '@/components/common/Card';
 import styles from './TeamDetailPage.module.css';
 import { getTeamDetails } from '../../services/teamsService'; // Adjust path if necessary
 
@@ -61,70 +62,110 @@ const TeamDetailPage = () => {
   if (isLoading) return <LoadingSpinner />;
   if (!team) return <div className="text-center p-8">Equipo no encontrado.</div>;
 
+  // Determine team logo style based on team name
+  const getTeamLogoClass = (teamName: string) => {
+    const lowerTeam = teamName.toLowerCase();
+    if (lowerTeam.includes('gryffindor')) return styles.gryffindorLogo;
+    if (lowerTeam.includes('slytherin')) return styles.slytherinLogo;
+    if (lowerTeam.includes('ravenclaw')) return styles.ravenclawLogo;
+    if (lowerTeam.includes('hufflepuff')) return styles.hufflepuffLogo;
+    return '';
+  };
+  // Determine card variant based on team name
+  const getTeamCardVariant = (teamName: string): 'default' | 'magical' | 'gryffindor' | 'slytherin' | 'ravenclaw' | 'hufflepuff' => {
+    const lowerTeam = teamName.toLowerCase();
+    if (lowerTeam.includes('gryffindor')) return 'gryffindor';
+    if (lowerTeam.includes('slytherin')) return 'slytherin';
+    if (lowerTeam.includes('ravenclaw')) return 'ravenclaw';
+    if (lowerTeam.includes('hufflepuff')) return 'hufflepuff';
+    return 'magical';
+  };
+
   return (
-    <div className="team-detail-page-container">
-      <div className="back-navigation mb-4">
-        <Link to="/teams" className="button button-outline button-sm inline-flex items-center">
+    <div className={styles.teamDetailPageContainer}>
+      <div className={styles.backNavigation}>
+        <Link to="/teams" className={styles.backButton}>
           &larr; Volver a Equipos
         </Link>
       </div>
 
-      <section className="team-header-detail card flex items-center gap-6 mb-6">
-        <div className="team-logo-placeholder large text-4xl w-32 h-32 bg-gray-100 rounded-full flex items-center justify-center border-2 border-primary-light">
+      <section className={styles.teamHeaderDetail}>
+        <div className={`${styles.teamLogoPlaceholder} ${getTeamLogoClass(team.name)}`}>
           {team.logoChar}
         </div>
-        <div className="team-info-main">
-          <h1 className="text-3xl font-bold text-primary">{team.name}</h1>
-          <p className="team-slogan text-md text-gray-600 italic">"{team.slogan}"</p>
-          <p className="text-sm text-gray-500">Liga: {team.league} | Fundado: {team.founded}</p>
-          <div className="team-quick-stats mt-4 flex gap-4">
-            <div className="stat text-center">
-              <div className="stat-value text-xl font-bold text-primary">{team.wins}</div>
-              <div className="stat-label text-xs text-gray-500">Victorias</div>
+        <div className={styles.teamInfoMain}>
+          <h1 className={styles.teamName}>{team.name}</h1>
+          <p className={styles.teamSlogan}>"{team.slogan}"</p>
+          <p className={styles.teamMetaInfo}>Liga: {team.league} | Fundado: {team.founded}</p>
+          <div className={styles.teamQuickStats}>
+            <div className={styles.stat}>
+              <div className={styles.statValue}>{team.wins}</div>
+              <div className={styles.statLabel}>Victorias</div>
             </div>
-            <div className="stat text-center">
-              <div className="stat-value text-xl font-bold text-primary">{team.titles}</div>
-              <div className="stat-label text-xs text-gray-500">Títulos</div>
+            <div className={styles.stat}>
+              <div className={styles.statValue}>{team.titles}</div>
+              <div className={styles.statLabel}>Títulos</div>
             </div>
           </div>
         </div>
       </section>
 
-      <div className="team-content-tabs match-content-tabs card p-0"> {/* Reusing match tab style container */}
-         <div className="flex border-b-2 border-gray-200 px-4">
-            <button className={`tab-button ${activeTab === 'history' ? 'active' : ''}`} onClick={() => handleTabClick('history')}>Historia</button>
-            <button className={`tab-button ${activeTab === 'roster' ? 'active' : ''}`} onClick={() => handleTabClick('roster')}>Plantilla</button>
-            <button className={`tab-button ${activeTab === 'stats' ? 'active' : ''}`} onClick={() => handleTabClick('stats')}>Estadísticas</button>
-            <button className={`tab-button ${activeTab === 'upcoming' ? 'active' : ''}`} onClick={() => handleTabClick('upcoming')}>Próximos Partidos</button>
+      <Card variant={getTeamCardVariant(team.name)} className={styles.teamContentTabs}>
+         <div className={styles.tabsNavigation}>
+            <button 
+              className={`${styles.tabButton} ${activeTab === 'history' ? styles.active : ''}`} 
+              onClick={() => handleTabClick('history')}
+            >
+              Historia
+            </button>
+            <button 
+              className={`${styles.tabButton} ${activeTab === 'roster' ? styles.active : ''}`} 
+              onClick={() => handleTabClick('roster')}
+            >
+              Plantilla
+            </button>
+            <button 
+              className={`${styles.tabButton} ${activeTab === 'stats' ? styles.active : ''}`} 
+              onClick={() => handleTabClick('stats')}
+            >
+              Estadísticas
+            </button>
+            <button 
+              className={`${styles.tabButton} ${activeTab === 'upcoming' ? styles.active : ''}`} 
+              onClick={() => handleTabClick('upcoming')}
+            >
+              Próximos Partidos
+            </button>
         </div>
 
-        <div className="p-6">
-            <div id="history-tab" className={`tab-content ${activeTab === 'history' ? '' : 'hidden'}`}>
-                <h2 className="text-xl font-bold text-primary mb-4">Historia del Equipo</h2>
-                <p className="text-gray-700 leading-relaxed">{team.history}</p>
+        <div className={styles.tabContent}>
+            <div className={`${activeTab === 'history' ? '' : styles.hidden}`}>
+                <h2 className={styles.tabTitle}>Historia del Equipo</h2>
+                <p className={styles.tabText}>{team.history}</p>
             </div>
-            <div id="roster-tab" className={`tab-content ${activeTab === 'roster' ? '' : 'hidden'}`}>
-                <h2 className="text-xl font-bold text-primary mb-4">Plantilla Actual</h2>
+            <div className={`${activeTab === 'roster' ? '' : styles.hidden}`}>
+                <h2 className={styles.tabTitle}>Plantilla Actual</h2>
                 {team.roster.length > 0 ? (
-                <ul className="list-disc pl-5 space-y-2">
+                <ul className={styles.playersList}>
                     {team.roster.map(player => (
-                    <li key={player.id} className="text-gray-700">
-                        <strong>{player.name}</strong> - {player.position} {player.number && `(#${player.number})`}
+                    <li key={player.id} className={styles.playerItem}>
+                        <strong className={styles.playerName}>{player.name}</strong> 
+                        <span className={styles.playerPosition}> - {player.position} {player.number && `(#${player.number})`}</span>
                     </li>
                     ))}
                 </ul>
                 ) : <p>Información de la plantilla no disponible.</p>}
             </div>
-            <div id="stats-tab" className={`tab-content ${activeTab === 'stats' ? '' : 'hidden'}`}>
-                <h2 className="text-xl font-bold text-primary mb-4">Estadísticas Acumuladas</h2>
-                <p>Estadísticas detalladas del equipo aparecerán aquí...</p>
+            <div className={`${activeTab === 'stats' ? '' : styles.hidden}`}>
+                <h2 className={styles.tabTitle}>Estadísticas Acumuladas</h2>
+                <p className={styles.tabText}>Estadísticas detalladas del equipo aparecerán aquí...</p>
             </div>
-            <div id="upcoming-tab" className={`tab-content ${activeTab === 'upcoming' ? '' : 'hidden'}`}>
-                <h2 className="text-xl font-bold text-primary mb-4">Próximos Partidos</h2>
-                <p>Lista de próximos partidos del equipo aparecerá aquí...</p>
+            <div className={`${activeTab === 'upcoming' ? '' : styles.hidden}`}>
+                <h2 className={styles.tabTitle}>Próximos Partidos</h2>
+                <p className={styles.tabText}>Lista de próximos partidos del equipo aparecerá aquí...</p>
             </div>
         </div>
-      </div>
+      </Card>
     </div>
   );
 };

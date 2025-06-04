@@ -1,234 +1,201 @@
-import { useState } from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import Button from '../Button'
 import Logo from '../Logo'
+import styles from './Header.module.css'
 
 const Header = () => {
-  const { isAuthenticated, logout } = useAuth()
+  const { isAuthenticated, logout, user } = useAuth()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
+  const location = useLocation()
+
+  // Cierra el menú móvil cuando la ruta cambia
+  useEffect(() => {
+    setIsMobileMenuOpen(false)
+  }, [location.pathname])
+
+  // Detecta el scroll para cambiar la apariencia del header
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY
+      setIsScrolled(scrollPosition > 10)
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen)
   }
+  // Función para renderizar los NavLinks con animaciones escalonadas
+  const renderNavLink = (to: string, label: string, index: number) => {
+    return (
+      <NavLink 
+        to={to} 
+        className={({ isActive }) => 
+          `${styles.navLink} animate-fadeInUp ${
+            isActive 
+              ? styles.activeNavLink
+              : ''
+          }`
+        }
+        style={{ animationDelay: `${index * 100}ms` }}
+        end={to === '/'}
+      >
+        {label}
+      </NavLink>
+    )
+  }
 
   return (
-    <header className="bg-white shadow-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex items-center">
-            <Link to="/" className="flex-shrink-0 flex items-center">
-              <Logo />
-              <span className="ml-3 text-xl font-bold text-primary">Atrapa la Snitch</span>
-            </Link>
+    <header className={`${styles.header} ${isScrolled ? styles.headerScrolled : ''} ${document.documentElement.classList.contains('dark') ? styles.dark : ''}`}>
+      <div className={styles.headerInner}>
+        <div className="flex items-center animate-fadeIn">
+          <Link to="/" className={styles.logoContainer}>
+            <Logo />
+            <span className={styles.siteName}>
+              Atrapa la Snitch
+            </span>
+          </Link>
+        </div>
+
+        {/* Desktop Navigation */}
+        <nav className={styles.nav}>
+          <div className={styles.navLinks}>
+            {renderNavLink('/', 'Inicio', 1)}
+            {renderNavLink('/matches', 'Partidos', 2)}
+            {renderNavLink('/teams', 'Equipos', 3)}
+            {renderNavLink('/betting', 'Apostar', 4)}
+            {renderNavLink('/standings', 'Clasificación', 5)}
+            {renderNavLink('/results', 'Resultados', 6)}
+            {isAuthenticated && renderNavLink('/account', 'Mi Cuenta', 7)}
           </div>
+        </nav>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-4">
-            <NavLink 
-              to="/" 
-              className={({ isActive }) => 
-                `px-3 py-2 rounded-md text-sm font-medium ${
-                  isActive ? 'text-secondary bg-primary/10' : 'text-primary hover:text-secondary hover:bg-primary/5'
-                }`
-              }
-              end
-            >
-              Inicio
-            </NavLink>
-            <NavLink 
-              to="/matches" 
-              className={({ isActive }) => 
-                `px-3 py-2 rounded-md text-sm font-medium ${
-                  isActive ? 'text-secondary bg-primary/10' : 'text-primary hover:text-secondary hover:bg-primary/5'
-                }`
-              }
-            >
-              Partidos
-            </NavLink>
-            <NavLink 
-              to="/teams" 
-              className={({ isActive }) => 
-                `px-3 py-2 rounded-md text-sm font-medium ${
-                  isActive ? 'text-secondary bg-primary/10' : 'text-primary hover:text-secondary hover:bg-primary/5'
-                }`
-              }
-            >
-              Equipos
-            </NavLink>
-            <NavLink 
-              to="/betting" 
-              className={({ isActive }) => 
-                `px-3 py-2 rounded-md text-sm font-medium ${
-                  isActive ? 'text-secondary bg-primary/10' : 'text-primary hover:text-secondary hover:bg-primary/5'
-                }`
-              }
-            >
-              Apostar
-            </NavLink>
-            <NavLink 
-              to="/standings" 
-              className={({ isActive }) => 
-                `px-3 py-2 rounded-md text-sm font-medium ${
-                  isActive ? 'text-secondary bg-primary/10' : 'text-primary hover:text-secondary hover:bg-primary/5'
-                }`
-              }
-            >
-              Clasificación
-            </NavLink>
-            <NavLink 
-              to="/results" 
-              className={({ isActive }) => 
-                `px-3 py-2 rounded-md text-sm font-medium ${
-                  isActive ? 'text-secondary bg-primary/10' : 'text-primary hover:text-secondary hover:bg-primary/5'
-                }`
-              }
-            >
-              Resultados
-            </NavLink>
-            {isAuthenticated && (
-              <NavLink 
-                to="/account" 
-                className={({ isActive }) => 
-                  `px-3 py-2 rounded-md text-sm font-medium ${
-                    isActive ? 'text-secondary bg-primary/10' : 'text-primary hover:text-secondary hover:bg-primary/5'
-                  }`
-                }
+        {/* Auth Buttons Desktop */}
+        <div className={`${styles.authButtons} animate-fadeIn hidden md:flex`}>
+          {isAuthenticated ? (
+            <div className="flex items-center space-x-4">
+              {user && (
+                <div className={styles.userBalance}>
+                  <span className={styles.balanceText}>
+                    {user.balance}G
+                  </span>
+                  <div className={styles.userAvatar}>
+                    {user.username.charAt(0).toUpperCase()}
+                  </div>
+                </div>
+              )}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => logout()}
+                className="hover:bg-red-100 hover:text-red-600 hover:border-red-600 transition-colors"
               >
-                Mi Cuenta
-              </NavLink>
-            )}
-          </nav>
-
-          {/* Auth Buttons */}
-          <div className="hidden md:flex items-center ml-4 space-x-2">
-            {isAuthenticated ? (
-              <Button variant="outline" onClick={logout}>
                 Cerrar Sesión
               </Button>
-            ) : (
-              <>
-                <Link to="/login">
-                  <Button variant="outline">Iniciar Sesión</Button>
-                </Link>
-                <Link to="/register">
-                  <Button>Registrarse</Button>
-                </Link>
-              </>
-            )}
-          </div>
+            </div>
+          ) : (
+            <>
+              <Link to="/login">
+                <Button variant="outline" size="sm" className="border-primary">
+                  Iniciar Sesión
+                </Button>
+              </Link>
+              <Link to="/register">
+                <Button variant="magical" size="sm" animated>
+                  Registrarse
+                </Button>
+              </Link>
+            </>
+          )}
+        </div>
 
-          {/* Mobile menu button */}
-          <div className="flex items-center md:hidden">
-            <button
-              onClick={toggleMobileMenu}
-              className="inline-flex items-center justify-center p-2 rounded-md text-primary hover:text-secondary hover:bg-primary/5 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"
-            >
-              <span className="sr-only">Abrir menú principal</span>
-              {/* Hamburger icon */}
-              <svg
-                className={`${isMobileMenuOpen ? 'hidden' : 'block'} h-6 w-6`}
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
+        {/* Mobile menu button */}
+        <div className={styles.mobileMenuButton}>
+          {isAuthenticated && user && (
+            <div className={styles.userBalance}>
+              <span className={styles.balanceText}>
+                {user.balance}G
+              </span>
+              <div className={styles.userAvatar}>
+                {user.username.charAt(0).toUpperCase()}
+              </div>
+            </div>
+          )}
+          <button
+            type="button"
+            className="bg-primary/10 dark:bg-primary/20 inline-flex items-center justify-center p-2 rounded-md text-primary dark:text-white hover:text-white hover:bg-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+            aria-expanded="false"
+            onClick={toggleMobileMenu}
+          >
+            <span className="sr-only">Abrir menú principal</span>
+            {/* Icono para hamburguesa o X según estado */}
+            {!isMobileMenuOpen ? (
+              <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
               </svg>
-              {/* X icon */}
-              <svg
-                className={`${isMobileMenuOpen ? 'block' : 'hidden'} h-6 w-6`}
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
+            ) : (
+              <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
-            </button>
-          </div>
+            )}
+          </button>
         </div>
       </div>
 
       {/* Mobile menu */}
-      <div className={`${isMobileMenuOpen ? 'block' : 'hidden'} md:hidden`}>
-        <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+      <div className={`${isMobileMenuOpen ? 'block animate-fadeIn' : 'hidden'} md:hidden ${styles.mobileNav}`}>
+        <div className="pt-2 pb-3 space-y-1 px-4">
           <NavLink 
             to="/" 
             className={({ isActive }) => 
-              `block px-3 py-2 rounded-md text-base font-medium ${
-                isActive ? 'text-secondary bg-primary/10' : 'text-primary hover:text-secondary hover:bg-primary/5'
-              }`
+              `${styles.mobileNavLink} ${isActive ? styles.activeMobileLink : ''}`
             }
             end
-            onClick={() => setIsMobileMenuOpen(false)}
           >
             Inicio
           </NavLink>
           <NavLink 
             to="/matches" 
             className={({ isActive }) => 
-              `block px-3 py-2 rounded-md text-base font-medium ${
-                isActive ? 'text-secondary bg-primary/10' : 'text-primary hover:text-secondary hover:bg-primary/5'
-              }`
+              `${styles.mobileNavLink} ${isActive ? styles.activeMobileLink : ''}`
             }
-            onClick={() => setIsMobileMenuOpen(false)}
           >
             Partidos
           </NavLink>
           <NavLink 
             to="/teams" 
             className={({ isActive }) => 
-              `block px-3 py-2 rounded-md text-base font-medium ${
-                isActive ? 'text-secondary bg-primary/10' : 'text-primary hover:text-secondary hover:bg-primary/5'
-              }`
+              `${styles.mobileNavLink} ${isActive ? styles.activeMobileLink : ''}`
             }
-            onClick={() => setIsMobileMenuOpen(false)}
           >
             Equipos
           </NavLink>
           <NavLink 
             to="/betting" 
             className={({ isActive }) => 
-              `block px-3 py-2 rounded-md text-base font-medium ${
-                isActive ? 'text-secondary bg-primary/10' : 'text-primary hover:text-secondary hover:bg-primary/5'
-              }`
+              `${styles.mobileNavLink} ${isActive ? styles.activeMobileLink : ''}`
             }
-            onClick={() => setIsMobileMenuOpen(false)}
           >
             Apostar
           </NavLink>
           <NavLink 
             to="/standings" 
             className={({ isActive }) => 
-              `block px-3 py-2 rounded-md text-base font-medium ${
-                isActive ? 'text-secondary bg-primary/10' : 'text-primary hover:text-secondary hover:bg-primary/5'
-              }`
+              `${styles.mobileNavLink} ${isActive ? styles.activeMobileLink : ''}`
             }
-            onClick={() => setIsMobileMenuOpen(false)}
           >
             Clasificación
           </NavLink>
           <NavLink 
             to="/results" 
             className={({ isActive }) => 
-              `block px-3 py-2 rounded-md text-base font-medium ${
-                isActive ? 'text-secondary bg-primary/10' : 'text-primary hover:text-secondary hover:bg-primary/5'
-              }`
+              `${styles.mobileNavLink} ${isActive ? styles.activeMobileLink : ''}`
             }
-            onClick={() => setIsMobileMenuOpen(false)}
           >
             Resultados
           </NavLink>
@@ -236,34 +203,39 @@ const Header = () => {
             <NavLink 
               to="/account" 
               className={({ isActive }) => 
-                `block px-3 py-2 rounded-md text-base font-medium ${
-                  isActive ? 'text-secondary bg-primary/10' : 'text-primary hover:text-secondary hover:bg-primary/5'
-                }`
+                `${styles.mobileNavLink} ${isActive ? styles.activeMobileLink : ''}`
               }
-              onClick={() => setIsMobileMenuOpen(false)}
             >
               Mi Cuenta
             </NavLink>
           )}
         </div>
-        <div className="pt-4 pb-3 border-t border-gray-200">
-          <div className="flex items-center px-4 space-x-2">
-            {isAuthenticated ? (
-              <Button variant="outline" onClick={() => { logout(); setIsMobileMenuOpen(false); }} fullWidth>
-                Cerrar Sesión
+        {!isAuthenticated && (
+          <div className={styles.mobileAuthButtons}>
+            <Link to="/login" className="block">
+              <Button variant="outline" fullWidth>
+                Iniciar Sesión
               </Button>
-            ) : (
-              <div className="w-full space-y-2">
-                <Link to="/login" className="block w-full" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button variant="outline" fullWidth>Iniciar Sesión</Button>
-                </Link>
-                <Link to="/register" className="block w-full" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button fullWidth>Registrarse</Button>
-                </Link>
-              </div>
-            )}
+            </Link>
+            <Link to="/register" className="block">
+              <Button variant="magical" fullWidth>
+                Registrarse
+              </Button>
+            </Link>
           </div>
-        </div>
+        )}
+        {isAuthenticated && (
+          <div className={styles.mobileAuthButtons}>
+            <Button 
+              variant="outline" 
+              fullWidth
+              onClick={() => logout()}
+              className="hover:bg-red-100 hover:text-red-600 hover:border-red-600"
+            >
+              Cerrar Sesión
+            </Button>
+          </div>
+        )}
       </div>
     </header>
   )
