@@ -1,11 +1,151 @@
 .matchesPageContainer {
-    padding: 20px;
+    padding: 2rem;
     max-width: 1200px;
     margin: 0 auto;
 }
 
-.matchesPageTitle {
-    font-size: 2em;
-    margin-bottom: 20px;
-    color: #333; /* Example color */
+.heroSection {
+    position: relative;
+    text-align: center;
+    padding: 3rem 2rem;
+    margin-bottom: 2.5rem;
+    border-radius: 1rem;
+    overflow: hidden;
+    background: linear-gradient(135deg, rgba(75, 0, 130, 0.8), rgba(106, 90, 205, 0.6));
+    color: white;
+    box-shadow: 
+        0 10px 30px rgba(75, 0, 130, 0.2),
+        0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+}
+
+.heroSection::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('/src/assets/images/quidditch-pattern.svg');
+    background-size: 300px;
+    background-position: center;
+    opacity: 0.05;
+    z-index: 0;
+    animation: floatBackground 120s linear infinite;
+}
+
+.heroTitle {
+    position: relative;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+}
+
+.heroSubtitle {
+    position: relative;
+    font-size: 1.1rem;
+    max-width: 600px;
+    margin: 0 auto;
+    opacity: 0.9;
+    z-index: 1;
+}
+
+.matchesContainerMain {
+    position: relative;
+}
+
+.filtersSection {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+@media (min-width: 768px) {
+    .filtersSection {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.searchFilter {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.searchInput {
+    flex-grow: 1;
+    padding: 0.75rem 1rem;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 0.5rem;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.searchInput:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.15);
+}
+
+.filterOptions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.matchesTabs {
+    display: flex;
+    justify-content: center;
+    gap: 0.25rem;
+    margin-bottom: 2rem;
+    padding: 0.5rem;
+    background: rgba(0, 0, 0, 0.03);
+    border-radius: 0.75rem;
+}
+
+.upcomingMatchesGrid {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .upcomingMatchesGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .upcomingMatchesGrid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.noMatchesMessage {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-color-light);
+    font-size: 1.1rem;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+@keyframes floatBackground {
+    0% {
+        background-position: 0 0;
+    }
+    100% {
+        background-position: 1000px 1000px;
+    }
 }

@@ -1,26 +1,264 @@
 .teamDetailPageContainer {
-    padding: 20px;
+    padding: 2rem;
     max-width: 1200px;
     margin: 0 auto;
 }
 
-.teamDetailPageTitle {
-    font-size: 2em;
-    margin-bottom: 20px;
-    color: var(--text-color); /* Assuming a CSS variable for text color */
+.backNavigation {
+    margin-bottom: 1.5rem;
 }
 
-/* Add more styles for team info, stats, etc. as needed */
-.teamDetailPageContainer {
-    padding: 20px;
-    max-width: 1200px;
-    margin: 0 auto;
+.backButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--text-color);
+    transition: all 0.2s ease;
 }
 
-.teamDetailPageTitle {
-    font-size: 2em;
-    margin-bottom: 20px;
-    color: var(--text-color); /* Assuming a CSS variable for text color */
+.backButton:hover {
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transform: translateY(-2px);
 }
 
-/* Add more styles for team info, stats, etc. as needed */
+.teamHeaderDetail {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    padding: 2rem;
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    box-shadow: 
+        0 10px 30px rgba(0, 0, 0, 0.05),
+        0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+}
+
+.teamLogoPlaceholder {
+    width: 8rem;
+    height: 8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: white;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    border: 3px solid rgba(255, 255, 255, 0.6);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.gryffindorLogo {
+    background: linear-gradient(135deg, #ae0001, #740001);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.slytherinLogo {
+    background: linear-gradient(135deg, #1a472a, #0d351a);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.ravenclawLogo {
+    background: linear-gradient(135deg, #222f5b, #172147);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.hufflepuffLogo {
+    background: linear-gradient(135deg, #f0c75e, #d3a625);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.teamLogoPlaceholder::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 70%);
+    opacity: 0.6;
+}
+
+.teamLogoPlaceholder:hover {
+    transform: scale(1.05);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.25);
+}
+
+.teamInfoMain {
+    flex: 1;
+}
+
+.teamName {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.teamSlogan {
+    font-size: 1.1rem;
+    font-style: italic;
+    color: var(--text-color-light);
+    margin-bottom: 0.5rem;
+}
+
+.teamMetaInfo {
+    font-size: 0.875rem;
+    color: var(--text-color-lighter);
+    margin-bottom: 1.25rem;
+}
+
+.teamQuickStats {
+    display: flex;
+    gap: 2rem;
+    margin-top: 1.5rem;
+}
+
+.stat {
+    text-align: center;
+}
+
+.statValue {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.statLabel {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-color-light);
+}
+
+.teamContentTabs {
+    margin-bottom: 2rem;
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 
+        0 8px 20px rgba(0, 0, 0, 0.06),
+        0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+}
+
+.tabsNavigation {
+    display: flex;
+    overflow-x: auto;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+}
+
+.tabButton {
+    padding: 1rem 1.5rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-color-light);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.tabButton.active {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.tabButton.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 10%;
+    width: 80%;
+    height: 3px;
+    background: var(--primary-color);
+    border-radius: 3px 3px 0 0;
+}
+
+.tabButton:hover:not(.active) {
+    color: var(--primary-color-light);
+    background: rgba(0, 0, 0, 0.01);
+}
+
+.tabContent {
+    padding: 2rem;
+}
+
+.tabContent.hidden {
+    display: none;
+}
+
+.tabTitle {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 1.25rem;
+}
+
+.tabText {
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+.playersList {
+    list-style-type: none;
+    padding: 0;
+}
+
+.playerItem {
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 0.5rem;
+    border-left: 4px solid var(--primary-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+}
+
+.playerItem:hover {
+    transform: translateX(5px);
+    background: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.playerName {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.playerPosition {
+    font-size: 0.9rem;
+    color: var(--text-color-light);
+}
+
+@media (max-width: 768px) {
+    .teamHeaderDetail {
+        flex-direction: column;
+        text-align: center;
+        padding: 1.5rem;
+    }
+    
+    .teamQuickStats {
+        justify-content: center;
+    }
+    
+    .tabButton {
+        padding: 0.875rem 1.25rem;
+        font-size: 0.875rem;
+    }
+    
+    .tabContent {
+        padding: 1.5rem;
+    }
+}

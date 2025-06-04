@@ -1,0 +1,127 @@
+.teamLogo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-weight: bold;
+  color: white;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  transition: all 0.3s ease;
+}
+
+.teamLogo::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 70%);
+  opacity: 0.6;
+  z-index: 1;
+}
+
+.teamLogo:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+/* Sizes */
+.sm {
+  width: 2.5rem;
+  height: 2.5rem;
+  font-size: 1rem;
+  border-width: 1px;
+}
+
+.md {
+  width: 4rem;
+  height: 4rem;
+  font-size: 1.5rem;
+  border-width: 2px;
+}
+
+.lg {
+  width: 6rem;
+  height: 6rem;
+  font-size: 2rem;
+  border-width: 3px;
+}
+
+.xl {
+  width: 8rem;
+  height: 8rem;
+  font-size: 3rem;
+  border-width: 3px;
+}
+
+/* Team-specific styles */
+.gryffindor {
+  background: linear-gradient(135deg, #ae0001, #740001);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.gryffindor:hover {
+  box-shadow: 
+    0 8px 24px rgba(174, 0, 1, 0.3),
+    0 0 0 2px rgba(174, 0, 1, 0.2);
+}
+
+.slytherin {
+  background: linear-gradient(135deg, #1a472a, #0d351a);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.slytherin:hover {
+  box-shadow: 
+    0 8px 24px rgba(26, 71, 42, 0.3),
+    0 0 0 2px rgba(26, 71, 42, 0.2);
+}
+
+.ravenclaw {
+  background: linear-gradient(135deg, #222f5b, #172147);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.ravenclaw:hover {
+  box-shadow: 
+    0 8px 24px rgba(34, 47, 91, 0.3),
+    0 0 0 2px rgba(34, 47, 91, 0.2);
+}
+
+.hufflepuff {
+  background: linear-gradient(135deg, #f0c75e, #d3a625);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.hufflepuff:hover {
+  box-shadow: 
+    0 8px 24px rgba(240, 199, 94, 0.3),
+    0 0 0 2px rgba(240, 199, 94, 0.2);
+}
+
+/* Generic team styles */
+.generic {
+  background: linear-gradient(135deg, #6a5acd, #483d8b);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Animation for floating effect */
+.animated {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}

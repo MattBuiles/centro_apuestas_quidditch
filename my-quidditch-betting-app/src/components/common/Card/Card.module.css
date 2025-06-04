@@ -1,0 +1,114 @@
+.card {
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 12px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  position: relative;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0));
+  border-radius: inherit;
+  z-index: -1;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* Card with magical effect */
+.cardMagical {
+  composes: card;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 
+    0 8px 32px rgba(31, 38, 135, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+    0 0 15px rgba(142, 100, 230, 0.2) inset;
+}
+
+.cardMagical::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  right: -50%;
+  bottom: -50%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.1) 25%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(45deg) translate(0, 100%);
+  animation: shimmer 6s infinite;
+  z-index: -1;
+}
+
+.cardMagical:hover {
+  box-shadow: 
+    0 12px 36px rgba(31, 38, 135, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.2) inset,
+    0 0 20px rgba(142, 100, 230, 0.3) inset;
+}
+
+/* Card with house-specific colors */
+.cardGryffindor {
+  composes: cardMagical;
+  box-shadow: 
+    0 8px 32px rgba(135, 31, 31, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+    0 0 15px rgba(230, 100, 100, 0.2) inset;
+  border-color: rgba(174, 0, 1, 0.3);
+}
+
+.cardSlytherin {
+  composes: cardMagical;
+  box-shadow: 
+    0 8px 32px rgba(31, 135, 69, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+    0 0 15px rgba(100, 230, 126, 0.2) inset;
+  border-color: rgba(26, 71, 42, 0.3);
+}
+
+.cardRavenclaw {
+  composes: cardMagical;
+  box-shadow: 
+    0 8px 32px rgba(31, 81, 135, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+    0 0 15px rgba(100, 149, 230, 0.2) inset;
+  border-color: rgba(34, 47, 91, 0.3);
+}
+
+.cardHufflepuff {
+  composes: cardMagical;
+  box-shadow: 
+    0 8px 32px rgba(135, 123, 31, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+    0 0 15px rgba(230, 205, 100, 0.2) inset;
+  border-color: rgba(240, 199, 94, 0.3);
+}
+
+@keyframes shimmer {
+  0% {
+    transform: rotate(45deg) translate(-100%, 100%);
+  }
+  50% {
+    transform: rotate(45deg) translate(100%, -100%);
+  }
+  100% {
+    transform: rotate(45deg) translate(-100%, 100%);
+  }
+}

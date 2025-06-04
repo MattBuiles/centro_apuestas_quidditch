@@ -1,1 +1,319 @@
-   npm create vite@latest quidditch-betting-system --template react-ts
+   /* Hero Section */
+.heroSection {
+  position: relative;
+  background: linear-gradient(135deg, rgba(240, 230, 246, 0.9), rgba(217, 201, 232, 0.9));
+  border-radius: 1rem;
+  padding: 3rem 2rem;
+  margin-bottom: 3rem;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(106, 90, 205, 0.2);
+}
+
+.heroSection::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%236a5acd' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+  opacity: 0.3;
+  z-index: 0;
+}
+
+.heroContent {
+  position: relative;
+  z-index: 1;
+}
+
+.heroTitle {
+  font-size: 3.5rem;
+  margin-bottom: 1.5rem;
+  text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.8);
+  animation: fadeInUp 0.8s ease-out;
+  background: linear-gradient(45deg, var(--color-primary), var(--color-primary-light));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  display: inline-block;
+}
+
+.heroDescription {
+  font-size: 1.25rem;
+  color: var(--color-gray-700);
+  margin-bottom: 2rem;
+  max-width: 80%;
+  animation: fadeInUp 1s ease-out 0.2s both;
+}
+
+.heroImagePlaceholder {
+  position: relative;
+  height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeInUp 1.2s ease-out 0.4s both;
+}
+
+.heroImageInner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(106, 90, 205, 0.1), rgba(255, 204, 0, 0.1));
+  border-radius: 1rem;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.heroImageInner::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    to bottom right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(30deg);
+  animation: shimmer 6s linear infinite;
+}
+
+.heroImageSymbol {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--color-primary-light), var(--color-primary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 20px rgba(106, 90, 205, 0.5);
+  animation: float 3s ease-in-out infinite;
+}
+
+.heroImageSymbol span {
+  color: white;
+  font-size: 4rem;
+  font-weight: bold;
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+/* Featured Matches Section */
+.featuredSection {
+  padding: 3rem 2rem;
+  background: linear-gradient(to bottom, rgba(240, 248, 255, 0.5), rgba(217, 201, 232, 0.3));
+  border-radius: 1rem;
+  margin-bottom: 3rem;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+}
+
+.sectionTitle {
+  font-size: 2.5rem;
+  text-align: center;
+  margin-bottom: 2.5rem;
+  background: linear-gradient(45deg, var(--color-primary), var(--color-primary-light));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  display: inline-block;
+}
+
+.matchesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.matchCard {
+  background: white;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.matchCard:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 30px rgba(106, 90, 205, 0.15);
+}
+
+.matchHeader {
+  height: 160px;
+  background: linear-gradient(135deg, rgba(240, 230, 246, 0.8), rgba(217, 201, 232, 0.8));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.matchHeader::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url("data:image/svg+xml,%3Csvg width='52' height='26' viewBox='0 0 52 26' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%236a5acd' fill-opacity='0.1'%3E%3Cpath d='M10 10c0-2.21-1.79-4-4-4-3.314 0-6-2.686-6-6h2c0 2.21 1.79 4 4 4 3.314 0 6 2.686 6 6 0 2.21 1.79 4 4 4 3.314 0 6 2.686 6 6 0 2.21 1.79 4 4 4v2c-3.314 0-6-2.686-6-6 0-2.21-1.79-4-4-4-3.314 0-6-2.686-6-6zm25.464-1.95l8.486 8.486-1.414 1.414-8.486-8.486 1.414-1.414z' /%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  opacity: 0.5;
+}
+
+.teamLogos {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  width: 100%;
+  z-index: 1;
+}
+
+.teamLogo {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.5rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.vsLabel {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: rgba(0, 0, 0, 0.5);
+  margin: 0 1rem;
+}
+
+.matchInfo {
+  padding: 1.5rem;
+}
+
+.matchTitle {
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+  color: var(--color-primary);
+}
+
+.matchDate {
+  display: flex;
+  align-items: center;
+  color: var(--color-gray-600);
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.matchDate svg {
+  margin-right: 0.5rem;
+}
+
+.viewAllLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2rem;
+  color: var(--color-primary);
+  font-weight: 600;
+  transition: color 0.3s;
+}
+
+.viewAllLink:hover {
+  color: var(--color-primary-light);
+}
+
+.viewAllLink svg {
+  margin-left: 0.5rem;
+  transition: transform 0.3s;
+}
+
+.viewAllLink:hover svg {
+  transform: translateX(5px);
+}
+
+/* How It Works Section */
+.howItWorksSection {
+  padding: 3rem 2rem;
+  background: linear-gradient(135deg, rgba(106, 90, 205, 0.1), rgba(255, 204, 0, 0.1));
+  border-radius: 1rem;
+  margin-bottom: 3rem;
+}
+
+.stepsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 2rem;
+}
+
+.stepCard {
+  background: white;
+  border-radius: 1rem;
+  padding: 2rem;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease;
+}
+
+.stepCard:hover {
+  transform: translateY(-10px);
+}
+
+.stepIcon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 1.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+  color: white;
+  font-size: 2rem;
+  font-weight: bold;
+  box-shadow: 0 5px 15px rgba(106, 90, 205, 0.3);
+}
+
+.stepTitle {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+  color: var(--color-primary);
+}
+
+.stepDescription {
+  font-size: 0.9rem;
+  color: var(--color-gray-600);
+  line-height: 1.6;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .heroTitle {
+    font-size: 2.5rem;
+  }
+  
+  .heroDescription {
+    max-width: 100%;
+  }
+  
+  .heroSection {
+    padding: 2rem 1.5rem;
+  }
+  
+  .featuredSection,
+  .howItWorksSection {
+    padding: 2rem 1.5rem;
+  }
+  
+  .matchesGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .stepsGrid {
+    grid-template-columns: 1fr;
+  }
+}

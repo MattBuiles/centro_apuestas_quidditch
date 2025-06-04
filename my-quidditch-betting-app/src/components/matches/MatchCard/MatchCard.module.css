@@ -1,38 +1,213 @@
-.matchCardContainer {
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    padding: 16px;
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background-color: #fff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+.matchCard {
+    position: relative;
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(8px);
+    box-shadow: 
+        0 8px 20px rgba(0, 0, 0, 0.08),
+        0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+    transition: all 0.3s ease;
+    overflow: hidden;
 }
 
-.teamInfo {
-    display: flex;
-    align-items: center;
+.matchCard::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+    opacity: 0.7;
 }
 
-.teamLogo {
-    width: 40px;
-    height: 40px;
-    margin-right: 10px;
-}
-
-.teamInfo span {
-    font-weight: bold;
-    margin: 0 5px;
+.matchCard:hover {
+    transform: translateY(-5px);
+    box-shadow: 
+        0 12px 28px rgba(0, 0, 0, 0.15),
+        0 0 0 1px rgba(255, 255, 255, 0.6) inset;
 }
 
 .matchDetails {
-    text-align: right;
-    font-size: 0.9em;
-    color: #555;
+    margin-bottom: 1rem;
 }
 
-.matchDate,
+.teams {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    position: relative;
+}
+
+.team {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+}
+
+.homeTeam {
+    text-align: left;
+}
+
+.awayTeam {
+    text-align: right;
+    flex-direction: row-reverse;
+}
+
+.teamLogo {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.25rem;
+    color: white;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.4));
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.gryffindorLogo {
+    background: linear-gradient(135deg, #ae0001, #740001);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.slytherinLogo {
+    background: linear-gradient(135deg, #1a472a, #0d351a);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.ravenclawLogo {
+    background: linear-gradient(135deg, #222f5b, #172147);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.hufflepuffLogo {
+    background: linear-gradient(135deg, #f0c75e, #d3a625);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.teamName {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text-color-dark);
+}
+
+.score {
+    font-weight: bold;
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    margin: 0 0.5rem;
+}
+
+.vsIndicator {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--primary-color);
+    box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.1),
+        0 0 0 3px rgba(var(--primary-rgb), 0.15);
+    z-index: 1;
+}
+
+.matchStatus {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
 .matchTime {
-    display: block;
+    font-size: 0.875rem;
+    color: var(--text-color-light);
+    font-weight: 500;
+}
+
+.leagueName {
+    font-size: 0.75rem;
+    color: var(--text-color-lighter);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.matchActions {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.liveTag {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: linear-gradient(90deg, #e74c3c, #c0392b);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    box-shadow: 0 2px 4px rgba(231, 76, 60, 0.3);
+    animation: pulse 2s infinite;
+}
+
+.liveIndicator {
+    width: 0.5rem;
+    height: 0.5rem;
+    background-color: white;
+    border-radius: 50%;
+    display: inline-block;
+    animation: blink 1.5s infinite;
+}
+
+/* Special styling for live matches */
+.live {
+    box-shadow: 
+        0 8px 20px rgba(231, 76, 60, 0.15),
+        0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+}
+
+.live::before {
+    background: linear-gradient(90deg, #e74c3c, #c0392b);
+    opacity: 1;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 6px rgba(231, 76, 60, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(231, 76, 60, 0);
+    }
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
 }

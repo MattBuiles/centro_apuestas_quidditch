@@ -1,1 +1,155 @@
-   npm create vite@latest my-quidditch-betting-app --template react-ts
+   .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  font-family: 'Garamond', serif;
+}
+
+.button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(106, 90, 205, 0.3);
+}
+
+.button:active {
+  transform: translateY(1px);
+}
+
+/* Variants */
+.primary {
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+}
+
+.primary:hover {
+  background-color: var(--color-primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.secondary {
+  background-color: var(--color-secondary);
+  color: var(--color-primary-dark);
+  border: none;
+}
+
+.secondary:hover {
+  background-color: var(--color-secondary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.outline {
+  background-color: transparent;
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+}
+
+.outline:hover {
+  background-color: rgba(106, 90, 205, 0.1);
+  transform: translateY(-2px);
+}
+
+.magical {
+  background: linear-gradient(45deg, var(--color-primary), var(--color-primary-light));
+  color: white;
+  border: none;
+  box-shadow: 0 4px 10px rgba(106, 90, 205, 0.3);
+}
+
+.magical:hover {
+  background-position: right center;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(106, 90, 205, 0.4);
+}
+
+.magical::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    to bottom right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(30deg);
+  transition: transform 0.5s ease;
+  opacity: 0;
+}
+
+.magical:hover::before {
+  opacity: 1;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Sizes */
+.sm {
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+}
+
+.md {
+  font-size: 1rem;
+  padding: 0.625rem 1.25rem;
+}
+
+.lg {
+  font-size: 1.125rem;
+  padding: 0.75rem 1.5rem;
+}
+
+.xl {
+  font-size: 1.25rem;
+  padding: 1rem 2rem;
+}
+
+/* Full width */
+.fullWidth {
+  width: 100%;
+}
+
+/* Loading state */
+.loading {
+  position: relative;
+  color: transparent !important;
+}
+
+.loading::after {
+  content: '';
+  position: absolute;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 0.8s linear infinite;
+}
+
+/* Animations */
+.animated {
+  animation: pulse 2s infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%) rotate(30deg); }
+  100% { transform: translateX(100%) rotate(30deg); }
+}
