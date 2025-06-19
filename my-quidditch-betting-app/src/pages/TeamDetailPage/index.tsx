@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import Card from '@/components/common/Card';
+import TeamLogo from '@/components/teams/TeamLogo';
 import styles from './TeamDetailPage.module.css';
 
 interface Player {
@@ -13,7 +14,6 @@ interface Player {
 interface TeamDetails {
   id: string;
   name: string;
-  logoChar: string;
   league: string;
   slogan: string;
   history: string;
@@ -24,11 +24,9 @@ interface TeamDetails {
   // Add more details
 }
 
-const mockTeamDetails: { [key: string]: TeamDetails } = {
-  gryffindor: {
+const mockTeamDetails: { [key: string]: TeamDetails } = {  gryffindor: {
     id: 'gryffindor', 
     name: 'Gryffindor', 
-    logoChar: 'G', 
     league: 'Liga de Hogwarts', 
     slogan: "Donde habitan los valientes de corazón", 
     history: "Fundado por Godric Gryffindor, conocido por su coraje y caballerosidad. Los Gryffindor son famosos por su valentía, osadía, temple y caballerosidad.", 
@@ -45,10 +43,8 @@ const mockTeamDetails: { [key: string]: TeamDetails } = {
     ]
   },
   slytherin: {
-    id: 'slytherin', 
-    name: 'Slytherin', 
-    logoChar: 'S', 
-    league: 'Liga de Hogwarts', 
+    id: 'slytherin',    name: 'Slytherin', 
+    league: 'Liga de Hogwarts',
     slogan: "Lograrás tus fines verdaderos", 
     history: "Fundado por Salazar Slytherin, valora la ambición y la astucia. Los Slytherin son conocidos por su determinación, liderazgo y recursos para alcanzar sus objetivos.", 
     wins: 145, 
@@ -64,10 +60,8 @@ const mockTeamDetails: { [key: string]: TeamDetails } = {
     ]
   },
   ravenclaw: {
-    id: 'ravenclaw', 
-    name: 'Ravenclaw', 
-    logoChar: 'R', 
-    league: 'Liga de Hogwarts', 
+    id: 'ravenclaw',    name: 'Ravenclaw', 
+    league: 'Liga de Hogwarts',
     slogan: "Inteligencia es la primera y más grande virtud", 
     history: "Fundado por Rowena Ravenclaw, valora la inteligencia, el saber, la agudeza mental y el aprendizaje. Los Ravenclaw son conocidos por su sabiduría y creatividad.", 
     wins: 134, 
@@ -83,10 +77,8 @@ const mockTeamDetails: { [key: string]: TeamDetails } = {
     ]
   },
   hufflepuff: {
-    id: 'hufflepuff', 
-    name: 'Hufflepuff', 
-    logoChar: 'H', 
-    league: 'Liga de Hogwarts', 
+    id: 'hufflepuff',    name: 'Hufflepuff', 
+    league: 'Liga de Hogwarts',
     slogan: "Los de corazón justo y leal", 
     history: "Fundado por Helga Hufflepuff, valora el trabajo duro, la paciencia, la lealtad y la justicia. Los Hufflepuff son conocidos por su dedicación y espíritu de equipo.", 
     wins: 128, 
@@ -102,10 +94,8 @@ const mockTeamDetails: { [key: string]: TeamDetails } = {
     ]
   },
   chudley_cannons: {
-    id: 'chudley_cannons', 
-    name: 'Chudley Cannons', 
-    logoChar: 'C', 
-    league: 'Liga Británica e Irlandesa', 
+    id: 'chudley_cannons',    name: 'Chudley Cannons', 
+    league: 'Liga Británica e Irlandesa',
     slogan: "¡Vamos Cannons!", 
     history: "Un equipo profesional británico conocido por su larga sequía de títulos pero con una base de fanáticos muy leal. Famosos por sus uniformes naranjas brillantes.", 
     wins: 89, 
@@ -121,10 +111,8 @@ const mockTeamDetails: { [key: string]: TeamDetails } = {
     ]
   },
   holyhead_harpies: {
-    id: 'holyhead_harpies', 
-    name: 'Holyhead Harpies', 
-    logoChar: 'H', 
-    league: 'Liga Británica e Irlandesa', 
+    id: 'holyhead_harpies',    name: 'Holyhead Harpies', 
+    league: 'Liga Británica e Irlandesa',
     slogan: "Vuela alto, golpea fuerte", 
     history: "Un equipo profesional conocido por ser el único equipo completamente femenino en la liga. Tienen una historia rica y son famosas por su juego agresivo y habilidoso.", 
     wins: 156, 
@@ -163,19 +151,9 @@ const TeamDetailPage = () => {
   const handleTabClick = (tabName: string) => {
     setActiveTab(tabName);
   };
-
   if (isLoading) return <LoadingSpinner />;
   if (!team) return <div className="text-center p-8">Equipo no encontrado.</div>;
 
-  // Determine team logo style based on team name
-  const getTeamLogoClass = (teamName: string) => {
-    const lowerTeam = teamName.toLowerCase();
-    if (lowerTeam.includes('gryffindor')) return styles.gryffindorLogo;
-    if (lowerTeam.includes('slytherin')) return styles.slytherinLogo;
-    if (lowerTeam.includes('ravenclaw')) return styles.ravenclawLogo;
-    if (lowerTeam.includes('hufflepuff')) return styles.hufflepuffLogo;
-    return '';
-  };
   // Determine card variant based on team name
   const getTeamCardVariant = (teamName: string): 'default' | 'magical' | 'gryffindor' | 'slytherin' | 'ravenclaw' | 'hufflepuff' => {
     const lowerTeam = teamName.toLowerCase();
@@ -192,12 +170,13 @@ const TeamDetailPage = () => {
         <Link to="/teams" className={styles.backButton}>
           &larr; Volver a Equipos
         </Link>
-      </div>
-
-      <section className={styles.teamHeaderDetail}>
-        <div className={`${styles.teamLogoPlaceholder} ${getTeamLogoClass(team.name)}`}>
-          {team.logoChar}
-        </div>
+      </div>      <section className={styles.teamHeaderDetail}>
+        <TeamLogo 
+          teamName={team.name} 
+          size="xl" 
+          animated
+          className={styles.teamDetailLogo}
+        />
         <div className={styles.teamInfoMain}>
           <h1 className={styles.teamName}>{team.name}</h1>
           <p className={styles.teamSlogan}>"{team.slogan}"</p>

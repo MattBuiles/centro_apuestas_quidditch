@@ -180,6 +180,11 @@
     color: white;
 }
 
+/* Match detail logo styles */
+.match-detail-logo {
+  margin-bottom: var(--spacing-sm);
+}
+
 /* Mobile responsive */
 @media (max-width: 768px) {
     .matchDetailPageContainer {

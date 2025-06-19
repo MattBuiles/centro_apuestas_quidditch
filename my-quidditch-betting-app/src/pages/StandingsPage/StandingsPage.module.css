@@ -165,6 +165,16 @@
     background: linear-gradient(135deg, #6b7280, #4b5563);
 }
 
+.teamLogoInTable {
+  margin-right: var(--spacing-sm);
+  flex-shrink: 0;
+}
+
+.teamLogoInCard {
+  margin: 0 var(--spacing-sm);
+  flex-shrink: 0;
+}
+
 .teamName {
     font-weight: 500;
     color: var(--text-color);

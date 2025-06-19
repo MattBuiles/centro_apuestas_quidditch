@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Button from '@/components/common/Button';
+import TeamLogo from '@/components/teams/TeamLogo';
 import styles from './StandingsPage.module.css';
 
 // Mock standings data - updated to match teams from TeamsPage
@@ -14,7 +15,6 @@ const mockStandings = [
     drawn: 1, 
     lost: 1, 
     points: 31, 
-    logo: 'G',
     goalsFor: 245,
     goalsAgainst: 156,
     league: 'Liga de Hogwarts'
@@ -28,7 +28,6 @@ const mockStandings = [
     drawn: 2, 
     lost: 2, 
     points: 26, 
-    logo: 'R',
     goalsFor: 198,
     goalsAgainst: 134,
     league: 'Liga de Hogwarts'
@@ -42,7 +41,6 @@ const mockStandings = [
     drawn: 2, 
     lost: 3, 
     points: 23, 
-    logo: 'S',
     goalsFor: 187,
     goalsAgainst: 145,
     league: 'Liga de Hogwarts'
@@ -56,7 +54,6 @@ const mockStandings = [
     drawn: 3, 
     lost: 4, 
     points: 18, 
-    logo: 'H',
     goalsFor: 156,
     goalsAgainst: 167,
     league: 'Liga de Hogwarts'
@@ -70,7 +67,6 @@ const mockStandings = [
     drawn: 2, 
     lost: 7, 
     points: 11, 
-    logo: 'C',
     goalsFor: 123,
     goalsAgainst: 198,
     league: 'Liga Británica e Irlandesa'
@@ -84,24 +80,13 @@ const mockStandings = [
     drawn: 1, 
     lost: 9, 
     points: 7, 
-    logo: 'H',
     goalsFor: 98,
     goalsAgainst: 207,
     league: 'Liga Británica e Irlandesa'
   },
 ];
 
-const StandingsPage = () => {
-  const [filter, setFilter] = useState('all'); // 'all', 'hogwarts', 'british'
-
-  const getTeamLogoClass = (teamName: string) => {
-    const name = teamName.toLowerCase();
-    if (name.includes('gryffindor')) return 'gryffindor';
-    if (name.includes('slytherin')) return 'slytherin';
-    if (name.includes('ravenclaw')) return 'ravenclaw';
-    if (name.includes('hufflepuff')) return 'hufflepuff';
-    return 'other';
-  };
+const StandingsPage = () => {  const [filter, setFilter] = useState('all'); // 'all', 'hogwarts', 'british'
 
   const getPositionBadgeClass = (position: number) => {
     if (position === 1) return 'first';
@@ -176,12 +161,13 @@ const StandingsPage = () => {
                         <div className={`${styles.positionBadge} ${styles[getPositionBadgeClass(team.position)]}`}>
                           {team.position}
                         </div>
-                      </td>
-                      <td className={styles.tableCell}>
+                      </td>                      <td className={styles.tableCell}>
                         <div className={styles.teamInfo}>
-                          <div className={`${styles.teamLogoPlaceholder} ${styles[getTeamLogoClass(team.teamName)]}`}>
-                            {team.logo}
-                          </div>
+                          <TeamLogo 
+                            teamName={team.teamName} 
+                            size="sm" 
+                            className={styles.teamLogoInTable}
+                          />
                           <Link to={`/teams/${team.teamId}`} className={styles.teamName}>
                             {team.teamName}
                           </Link>
@@ -205,13 +191,14 @@ const StandingsPage = () => {
               {filteredStandings.map((team) => (
                 <div key={team.teamId} className={styles.standingCard}>
                   <div className={styles.cardHeader}>
-                    <div className={styles.cardTeamInfo}>
-                      <div className={`${styles.positionBadge} ${styles[getPositionBadgeClass(team.position)]}`}>
+                    <div className={styles.cardTeamInfo}>                      <div className={`${styles.positionBadge} ${styles[getPositionBadgeClass(team.position)]}`}>
                         {team.position}
                       </div>
-                      <div className={`${styles.teamLogoPlaceholder} ${styles[getTeamLogoClass(team.teamName)]}`}>
-                        {team.logo}
-                      </div>
+                      <TeamLogo 
+                        teamName={team.teamName} 
+                        size="md" 
+                        className={styles.teamLogoInCard}
+                      />
                       <Link to={`/teams/${team.teamId}`} className={styles.teamName}>
                         <strong>{team.teamName}</strong>
                       </Link>

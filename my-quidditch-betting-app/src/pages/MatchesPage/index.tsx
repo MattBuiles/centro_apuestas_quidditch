@@ -8,7 +8,7 @@ const mockMatches = [
   { id: '1', homeTeam: 'Gryffindor', awayTeam: 'Slytherin', date: 'Hoy', time: '19:00', league: 'Liga de Hogwarts', status: 'upcoming' as const },
   { id: '2', homeTeam: 'Hufflepuff', awayTeam: 'Ravenclaw', date: 'Mañana', time: '17:30', league: 'Liga de Hogwarts', status: 'upcoming' as const },
   { id: '3', homeTeam: 'Chudley Cannons', awayTeam: 'Holyhead Harpies', date: 'Domingo', time: '15:00', league: 'Liga Británica', status: 'upcoming' as const },
-  { id: '4', homeTeam: 'Tutshill Tornados', awayTeam: 'Montrose Magpies', date: 'En Curso', time: '35\'', homeScore: 50, awayScore: 70, league: 'Liga Británica', status: 'live' as const, minute: '35' },
+  { id: '4', homeTeam: 'Gryffindor', awayTeam: 'Hufflepuff', date: 'En Curso', time: '35\'', homeScore: 50, awayScore: 70, league: 'Liga de Hogwarts', status: 'live' as const, minute: '35' },
 ];
 
 const MatchesPage = () => {

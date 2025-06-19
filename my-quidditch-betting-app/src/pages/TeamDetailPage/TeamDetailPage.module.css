@@ -265,6 +265,12 @@
     color: var(--text-color-light);
 }
 
+/* Team detail logo styles */
+.teamDetailLogo {
+  margin-right: var(--spacing-lg);
+  flex-shrink: 0;
+}
+
 /* Mobile-first responsive design */
 @media (max-width: 768px) {
     .teamDetailPageContainer {

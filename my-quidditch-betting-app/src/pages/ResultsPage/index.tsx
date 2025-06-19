@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import MatchResultCard from '../../components/matches/MatchResultCard';
 import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import TeamLogo from '@/components/teams/TeamLogo';
 import './ResultsPage.module.css';
 
 interface Result {
@@ -18,7 +18,8 @@ interface Result {
 
 const mockResults: Result[] = [
   { id: 'r1', date: 'Ayer', homeTeam: 'Gryffindor', awayTeam: 'Slytherin', homeScore: 150, awayScore: 40, league: 'Liga de Hogwarts' },
-  { id: 'r2', date: 'Hace una semana', homeTeam: 'Holyhead Harpies', awayTeam: 'Appleby Arrows', homeScore: 210, awayScore: 180, league: 'Liga Británica' },
+  { id: 'r2', date: 'Hace una semana', homeTeam: 'Holyhead Harpies', awayTeam: 'Chudley Cannons', homeScore: 210, awayScore: 180, league: 'Liga Británica' },
+  { id: 'r3', date: 'Hace dos semanas', homeTeam: 'Hufflepuff', awayTeam: 'Ravenclaw', homeScore: 130, awayScore: 165, league: 'Liga de Hogwarts' },
 ];
 
 const ResultsPage: React.FC = () => {
@@ -75,15 +76,16 @@ const ResultsPage: React.FC = () => {
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm text-gray-500">{result.date} - {result.league}</span>
                 <Link to={`/matches/${result.id}`} className="text-sm text-primary hover:underline">Ver detalles</Link>
-              </div>
-              <div className="flex items-center justify-around text-center">
-                <div className="team-result flex-1">
-                  <h3 className="text-lg font-semibold text-primary">{result.homeTeam}</h3>
+              </div>              <div className="flex items-center justify-around text-center">
+                <div className="team-result flex-1 flex flex-col items-center">
+                  <TeamLogo teamName={result.homeTeam} size="md" />
+                  <h3 className="text-lg font-semibold text-primary mt-2">{result.homeTeam}</h3>
                   <p className="text-2xl font-bold">{result.homeScore}</p>
                 </div>
                 <span className="text-xl font-bold text-gray-400 mx-4">VS</span>
-                <div className="team-result flex-1">
-                  <h3 className="text-lg font-semibold text-primary">{result.awayTeam}</h3>
+                <div className="team-result flex-1 flex flex-col items-center">
+                  <TeamLogo teamName={result.awayTeam} size="md" />
+                  <h3 className="text-lg font-semibold text-primary mt-2">{result.awayTeam}</h3>
                   <p className="text-2xl font-bold">{result.awayScore}</p>
                 </div>
               </div>

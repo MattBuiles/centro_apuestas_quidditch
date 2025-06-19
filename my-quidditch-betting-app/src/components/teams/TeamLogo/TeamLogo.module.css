@@ -125,3 +125,30 @@
     transform: translateY(0);
   }
 }
+
+/* Logo container styles */
+.logoContainer {
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.logoContainer::before {
+  background: none;
+  opacity: 0;
+}
+
+.logoContainer:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* Logo image styles */
+.logoImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 0.2rem;
+  border-radius: 50%;
+  z-index: 2;
+  position: relative;
+}
