@@ -1,14 +1,14 @@
 .logoContainer {
   position: relative;
-  width: clamp(2rem, 5vw, 2.5rem);
-  height: clamp(2rem, 5vw, 2.5rem);
+  width: clamp(3rem, 6vw, 4rem);
+  height: clamp(3rem, 6vw, 4rem);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
   background: linear-gradient(135deg, var(--primary-color-light), var(--primary-color));
-  box-shadow: 0 4px 10px rgba(var(--primary-color-rgb), 0.3);
+  box-shadow: 0 6px 20px rgba(var(--primary-color-rgb), 0.4);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   animation: float 3s ease-in-out infinite;
 }

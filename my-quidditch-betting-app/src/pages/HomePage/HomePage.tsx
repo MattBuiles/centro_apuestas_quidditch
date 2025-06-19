@@ -42,23 +42,21 @@ const HomePage = () => {
         </h3>
         <div className={styles.matchesGrid}>
           {/* Match card 1 - Enhanced styling */}
-          <div className={styles.matchCard}>            <div className={styles.matchHeader}>
-              <div className={styles.teamLogos}>
+          <div className={styles.matchCard}>            <div className={styles.matchHeader}>              <div className={styles.teamLogos}>
                 <TeamLogo teamName="Gryffindor" size="md" className={styles.matchTeamLogo} />
                 <div className={styles.vsLabel}>VS</div>
                 <TeamLogo teamName="Slytherin" size="md" className={styles.matchTeamLogo} />
               </div>
-            </div>
-            <div className={styles.matchInfo}>
+            </div>            <div className={styles.matchInfo}>
               <h4 className={styles.matchTitle}>Gryffindor vs Slytherin</h4>
               <div className={styles.matchDate}>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <p>Hoy • 19:00</p>
               </div>
               <Link to="/matches/1">
-                <Button variant="secondary" fullWidth className="button-secondary mt-2">
+                <Button variant="secondary" size="sm" fullWidth>
                   Apostar
                 </Button>
               </Link>
@@ -66,23 +64,21 @@ const HomePage = () => {
           </div>
 
           {/* Match card 2 - Enhanced styling */}
-          <div className={styles.matchCard}>            <div className={styles.matchHeader}>
-              <div className={styles.teamLogos}>
+          <div className={styles.matchCard}>            <div className={styles.matchHeader}>              <div className={styles.teamLogos}>
                 <TeamLogo teamName="Hufflepuff" size="md" className={styles.matchTeamLogo} />
                 <div className={styles.vsLabel}>VS</div>
                 <TeamLogo teamName="Ravenclaw" size="md" className={styles.matchTeamLogo} />
               </div>
-            </div>
-            <div className={styles.matchInfo}>
+            </div>            <div className={styles.matchInfo}>
               <h4 className={styles.matchTitle}>Hufflepuff vs Ravenclaw</h4>
               <div className={styles.matchDate}>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <p>Mañana • 17:30</p>
               </div>
               <Link to="/matches/2">
-                <Button variant="secondary" fullWidth className="button-secondary mt-2">
+                <Button variant="secondary" size="sm" fullWidth>
                   Apostar
                 </Button>
               </Link>
@@ -96,27 +92,25 @@ const HomePage = () => {
                 <div className={styles.vsLabel}>VS</div>
                 <TeamLogo teamName="Holyhead Harpies" size="md" className={styles.matchTeamLogo} />
               </div>
-            </div>
-            <div className={styles.matchInfo}>
+            </div>            <div className={styles.matchInfo}>
               <h4 className={styles.matchTitle}>Chudley Cannons vs Holyhead Harpies</h4>
               <div className={styles.matchDate}>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <p>Domingo • 15:00</p>
               </div>
               <Link to="/matches/3">
-                <Button variant="secondary" fullWidth className="button-secondary mt-2">
+                <Button variant="secondary" size="sm" fullWidth>
                   Apostar
                 </Button>
               </Link>
-            </div>
-          </div>
+            </div>          </div>
         </div>
-        <div className="mt-10 text-center">
+        <div className="text-center">
           <Link to="/matches" className={styles.viewAllLink}>
             <span>Ver todos los partidos</span>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
             </svg>
           </Link>
@@ -125,32 +119,32 @@ const HomePage = () => {
 
       {/* How it works section - enhanced with cards and gradients */}
       <section className={styles.howItWorksSection}>
-        <h3 className={styles.sectionTitle}>
-          Cómo Funciona
+        <h3 className={styles.howItWorksTitle}>
+          Cómo Funciona la Magia
         </h3>
         <div className={styles.stepsGrid}>
           <div className={styles.stepCard}>
             <div className={styles.stepIcon}>
-              <span>1</span>
+              <span>✨</span>
             </div>
-            <h4 className={styles.stepTitle}>Regístrate</h4>
-            <p className={styles.stepDescription}>Crea tu cuenta y recibe 100 Galeones de bienvenida para comenzar tu aventura mágica de apuestas.</p>
+            <h4 className={styles.stepTitle}>Regístrate en el Mundo Mágico</h4>
+            <p className={styles.stepDescription}>Únete a nuestra comunidad de magos apostadores y recibe 100 Galeones de bienvenida para comenzar tu aventura mágica en el mundo del Quidditch.</p>
           </div>
 
           <div className={styles.stepCard}>
             <div className={styles.stepIcon}>
-              <span>2</span>
+              <span>🏆</span>
             </div>
-            <h4 className={styles.stepTitle}>Elige un Partido</h4>
-            <p className={styles.stepDescription}>Explora nuestra selección de partidos emocionantes y elige hasta 3 diarios para probar tu suerte.</p>
+            <h4 className={styles.stepTitle}>Elige tu Partido Favorito</h4>
+            <p className={styles.stepDescription}>Explora nuestra selección de los partidos más emocionantes de Quidditch. Desde la Liga de Hogwarts hasta campeonatos profesionales internacionales.</p>
           </div>
 
           <div className={styles.stepCard}>
             <div className={styles.stepIcon}>
-              <span>3</span>
+              <span>⚡</span>
             </div>
-            <h4 className={styles.stepTitle}>¡Apuesta y Gana!</h4>
-            <p className={styles.stepDescription}>Haz tus predicciones, siente la adrenalina del Quidditch y multiplica tus Galeones con cada victoria.</p>
+            <h4 className={styles.stepTitle}>Apuesta y Multiplica tus Galeones</h4>
+            <p className={styles.stepDescription}>Haz tus predicciones mágicas, siente la adrenalina del juego más emocionante del mundo y multiplica tus ganancias con cada victoria épica.</p>
           </div>
         </div>
       </section>
