@@ -1,10 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import Button from '@/components/common/Button';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import Card from '@/components/common/Card';
 import styles from './TeamDetailPage.module.css';
-import { getTeamDetails } from '../../services/teamsService'; // Adjust path if necessary
 
 interface Player {
   id: string;
@@ -28,12 +26,119 @@ interface TeamDetails {
 
 const mockTeamDetails: { [key: string]: TeamDetails } = {
   gryffindor: {
-    id: 'gryffindor', name: 'Gryffindor', logoChar: 'G', league: 'Liga de Hogwarts', slogan: "Donde habitan los valientes de corazón", history: "Fundado por Godric Gryffindor, conocido por su coraje y caballerosidad.", wins: 152, titles: 7, founded: 990,
-    roster: [ {id: 'hp', name: 'Harry Potter', position: 'Buscador', number: 7}, {id: 'kg', name: 'Katie Bell', position: 'Cazadora'} ]
+    id: 'gryffindor', 
+    name: 'Gryffindor', 
+    logoChar: 'G', 
+    league: 'Liga de Hogwarts', 
+    slogan: "Donde habitan los valientes de corazón", 
+    history: "Fundado por Godric Gryffindor, conocido por su coraje y caballerosidad. Los Gryffindor son famosos por su valentía, osadía, temple y caballerosidad.", 
+    wins: 152, 
+    titles: 7, 
+    founded: 990,
+    roster: [ 
+      {id: 'hp', name: 'Harry Potter', position: 'Buscador', number: 7}, 
+      {id: 'kg', name: 'Katie Bell', position: 'Cazadora', number: 6},
+      {id: 'aw', name: 'Angelina Johnson', position: 'Cazadora', number: 8},
+      {id: 'fw', name: 'Fred Weasley', position: 'Golpeador', number: 5},
+      {id: 'gw', name: 'George Weasley', position: 'Golpeador', number: 4},
+      {id: 'ow', name: 'Oliver Wood', position: 'Guardián', number: 1}
+    ]
   },
   slytherin: {
-    id: 'slytherin', name: 'Slytherin', logoChar: 'S', league: 'Liga de Hogwarts', slogan: "Lograrás tus fines verdaderos", history: "Fundado por Salazar Slytherin, valora la ambición y la astucia.", wins: 145, titles: 6, founded: 990,
-    roster: [ {id: 'dm', name: 'Draco Malfoy', position: 'Buscador'}, {id: 'mf', name: 'Marcus Flint', position: 'Cazador'} ]
+    id: 'slytherin', 
+    name: 'Slytherin', 
+    logoChar: 'S', 
+    league: 'Liga de Hogwarts', 
+    slogan: "Lograrás tus fines verdaderos", 
+    history: "Fundado por Salazar Slytherin, valora la ambición y la astucia. Los Slytherin son conocidos por su determinación, liderazgo y recursos para alcanzar sus objetivos.", 
+    wins: 145, 
+    titles: 6, 
+    founded: 990,
+    roster: [ 
+      {id: 'dm', name: 'Draco Malfoy', position: 'Buscador', number: 7}, 
+      {id: 'mf', name: 'Marcus Flint', position: 'Cazador', number: 9},
+      {id: 'cb', name: 'Vincent Crabbe', position: 'Golpeador', number: 3},
+      {id: 'gg', name: 'Gregory Goyle', position: 'Golpeador', number: 2},
+      {id: 'ap', name: 'Adrian Pucey', position: 'Cazador', number: 8},
+      {id: 'mp', name: 'Miles Bletchley', position: 'Guardián', number: 1}
+    ]
+  },
+  ravenclaw: {
+    id: 'ravenclaw', 
+    name: 'Ravenclaw', 
+    logoChar: 'R', 
+    league: 'Liga de Hogwarts', 
+    slogan: "Inteligencia es la primera y más grande virtud", 
+    history: "Fundado por Rowena Ravenclaw, valora la inteligencia, el saber, la agudeza mental y el aprendizaje. Los Ravenclaw son conocidos por su sabiduría y creatividad.", 
+    wins: 134, 
+    titles: 5, 
+    founded: 990,
+    roster: [ 
+      {id: 'cc', name: 'Cho Chang', position: 'Buscadora', number: 7}, 
+      {id: 'rl', name: 'Roger Davies', position: 'Cazador', number: 9},
+      {id: 'jq', name: 'Jeremy Stretton', position: 'Golpeador', number: 4},
+      {id: 'ag', name: 'Anthony Goldstein', position: 'Golpeador', number: 3},
+      {id: 'pb', name: 'Padma Patil', position: 'Cazadora', number: 6},
+      {id: 'gb', name: 'Grant Page', position: 'Guardián', number: 1}
+    ]
+  },
+  hufflepuff: {
+    id: 'hufflepuff', 
+    name: 'Hufflepuff', 
+    logoChar: 'H', 
+    league: 'Liga de Hogwarts', 
+    slogan: "Los de corazón justo y leal", 
+    history: "Fundado por Helga Hufflepuff, valora el trabajo duro, la paciencia, la lealtad y la justicia. Los Hufflepuff son conocidos por su dedicación y espíritu de equipo.", 
+    wins: 128, 
+    titles: 4, 
+    founded: 990,
+    roster: [ 
+      {id: 'cd', name: 'Cedric Diggory', position: 'Buscador', number: 7}, 
+      {id: 'za', name: 'Zacharias Smith', position: 'Cazador', number: 8},
+      {id: 'hm', name: 'Hannah Abbott', position: 'Cazadora', number: 6},
+      {id: 'jm', name: 'Justin Finch-Fletchley', position: 'Golpeador', number: 4},
+      {id: 'el', name: 'Ernie Macmillan', position: 'Golpeador', number: 3},
+      {id: 'sb', name: 'Susan Bones', position: 'Guardiana', number: 1}
+    ]
+  },
+  chudley_cannons: {
+    id: 'chudley_cannons', 
+    name: 'Chudley Cannons', 
+    logoChar: 'C', 
+    league: 'Liga Británica e Irlandesa', 
+    slogan: "¡Vamos Cannons!", 
+    history: "Un equipo profesional británico conocido por su larga sequía de títulos pero con una base de fanáticos muy leal. Famosos por sus uniformes naranjas brillantes.", 
+    wins: 89, 
+    titles: 1, 
+    founded: 1892,
+    roster: [ 
+      {id: 'jw', name: 'Joey Jenkins', position: 'Buscador', number: 7}, 
+      {id: 'rw', name: 'Ron Weasley', position: 'Guardián', number: 1},
+      {id: 'mb', name: 'Michael Chang', position: 'Cazador', number: 9},
+      {id: 'sp', name: 'Sarah Potter', position: 'Cazadora', number: 8},
+      {id: 'tk', name: 'Tom King', position: 'Golpeador', number: 5},
+      {id: 'bl', name: 'Ben Lewis', position: 'Golpeador', number: 4}
+    ]
+  },
+  holyhead_harpies: {
+    id: 'holyhead_harpies', 
+    name: 'Holyhead Harpies', 
+    logoChar: 'H', 
+    league: 'Liga Británica e Irlandesa', 
+    slogan: "Vuela alto, golpea fuerte", 
+    history: "Un equipo profesional conocido por ser el único equipo completamente femenino en la liga. Tienen una historia rica y son famosas por su juego agresivo y habilidoso.", 
+    wins: 156, 
+    titles: 8, 
+    founded: 1203,
+    roster: [ 
+      {id: 'gw', name: 'Ginny Weasley', position: 'Cazadora', number: 8}, 
+      {id: 'cj', name: 'Claire Johnson', position: 'Buscadora', number: 7},
+      {id: 'md', name: 'Mary Davies', position: 'Cazadora', number: 9},
+      {id: 'lb', name: 'Lisa Brown', position: 'Cazadora', number: 6},
+      {id: 'jh', name: 'Jane Harris', position: 'Golpeadora', number: 4},
+      {id: 'kt', name: 'Kate Thompson', position: 'Golpeadora', number: 3},
+      {id: 'sw', name: 'Sophie Wilson', position: 'Guardiana', number: 1}
+    ]
   },
 };
 

@@ -1,13 +1,234 @@
 .matchDetailPageContainer {
-  padding: 20px;
-  max-width: 800px;
-  margin: 0 auto;
+    padding: var(--container-padding-y) var(--container-padding-x);
+    max-width: var(--container-max-width);
+    margin: 0 auto;
+    min-height: 100vh;
 }
 
 .matchDetailPageTitle {
-  font-size: 2em;
-  margin-bottom: 20px;
-  text-align: center;
+    font-size: clamp(1.5rem, 5vw, 2rem);
+    margin-bottom: var(--spacing-xl);
+    text-align: center;
+    color: var(--primary-color);
+    font-weight: 700;
 }
 
-/* Add more styles for match details layout later */
+.matchDetailHeader {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-xl);
+    margin-bottom: var(--spacing-xl);
+    box-shadow: var(--shadow-card);
+}
+
+.matchTeamsContainer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.teamInfo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    flex: 1;
+}
+
+.teamLogo {
+    width: clamp(4rem, 12vw, 6rem);
+    height: clamp(4rem, 12vw, 6rem);
+    border-radius: 50%;
+    margin-bottom: var(--spacing-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    font-weight: bold;
+    color: white;
+    box-shadow: var(--shadow-card);
+}
+
+.teamName {
+    font-size: clamp(1rem, 3vw, 1.25rem);
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.vsText {
+    font-size: clamp(1.25rem, 4vw, 1.5rem);
+    font-weight: 700;
+    color: var(--primary-color);
+    margin: 0 var(--spacing-md);
+}
+
+.matchInfo {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-md);
+    padding: var(--spacing-lg);
+    background: rgba(var(--primary-color-rgb), 0.1);
+    border-radius: var(--border-radius);
+    margin-bottom: var(--spacing-lg);
+}
+
+.infoItem {
+    text-align: center;
+    padding: var(--spacing-sm);
+}
+
+.infoLabel {
+    font-size: var(--font-size-sm);
+    color: var(--text-color-light);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: var(--spacing-xs);
+}
+
+.infoValue {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.matchTabs {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+}
+
+.tabsNavigation {
+    display: flex;
+    overflow-x: auto;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+    -webkit-overflow-scrolling: touch;
+}
+
+.tabButton {
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    color: var(--text-color-light);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    white-space: nowrap;
+    min-height: 44px;
+}
+
+.tabButton.active {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.tabButton.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 10%;
+    width: 80%;
+    height: 3px;
+    background: var(--primary-color);
+    border-radius: 3px 3px 0 0;
+}
+
+.tabContent {
+    padding: var(--spacing-xl);
+}
+
+.bettingSection {
+    background: rgba(var(--primary-color-rgb), 0.05);
+    border: 2px solid var(--primary-color);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-lg);
+}
+
+.bettingOptions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.bettingOption {
+    padding: var(--spacing-md);
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    min-height: 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.bettingOption:hover {
+    border-color: var(--primary-color);
+    background: rgba(var(--primary-color-rgb), 0.1);
+}
+
+.bettingOption.selected {
+    border-color: var(--primary-color);
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .matchDetailPageContainer {
+        padding: var(--spacing-md);
+    }
+    
+    .matchDetailHeader {
+        padding: var(--spacing-lg);
+    }
+    
+    .matchTeamsContainer {
+        flex-direction: column;
+        gap: var(--spacing-md);
+    }
+    
+    .vsText {
+        order: -1;
+        margin: var(--spacing-sm) 0;
+    }
+    
+    .matchInfo {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-sm);
+        padding: var(--spacing-md);
+    }
+    
+    .tabContent {
+        padding: var(--spacing-lg);
+    }
+    
+    .bettingOptions {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .matchDetailHeader {
+        padding: var(--spacing-md);
+    }
+    
+    .tabContent {
+        padding: var(--spacing-md);
+    }
+    
+    .bettingSection {
+        padding: var(--spacing-md);
+    }
+    
+    .infoItem {
+        padding: var(--spacing-xs);
+    }
+}

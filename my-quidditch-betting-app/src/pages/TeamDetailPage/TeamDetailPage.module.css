@@ -1,24 +1,28 @@
 .teamDetailPageContainer {
-    padding: 2rem;
-    max-width: 1200px;
+    padding: var(--container-padding-y) var(--container-padding-x);
+    max-width: var(--container-max-width);
     margin: 0 auto;
+    min-height: 100vh;
 }
 
 .backNavigation {
-    margin-bottom: 1.5rem;
+    margin-bottom: var(--spacing-lg);
 }
 
 .backButton {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm) var(--spacing-md);
     background: rgba(255, 255, 255, 0.8);
     border: 1px solid rgba(0, 0, 0, 0.1);
-    border-radius: 0.5rem;
-    font-size: 0.875rem;
+    border-radius: var(--border-radius);
+    font-size: var(--font-size-sm);
     color: var(--text-color);
     transition: all 0.2s ease;
+    cursor: pointer;
+    text-decoration: none;
+    min-height: 44px; /* Touch target */
 }
 
 .backButton:hover {
@@ -30,10 +34,10 @@
 .teamHeaderDetail {
     display: flex;
     align-items: center;
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-    padding: 2rem;
-    border-radius: 1rem;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+    padding: var(--spacing-xl);
+    border-radius: var(--border-radius-lg);
     background: rgba(255, 255, 255, 0.8);
     backdrop-filter: blur(10px);
     box-shadow: 
@@ -42,13 +46,13 @@
 }
 
 .teamLogoPlaceholder {
-    width: 8rem;
-    height: 8rem;
+    width: clamp(6rem, 15vw, 8rem);
+    height: clamp(6rem, 15vw, 8rem);
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    font-size: 2.5rem;
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
     font-weight: bold;
     color: white;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
@@ -56,6 +60,7 @@
     position: relative;
     overflow: hidden;
     transition: all 0.3s ease;
+    flex-shrink: 0;
 }
 
 .gryffindorLogo {
@@ -96,55 +101,64 @@
 
 .teamInfoMain {
     flex: 1;
+    min-width: 0; /* Allows text to wrap */
 }
 
 .teamName {
-    font-size: 2rem;
+    font-size: clamp(1.5rem, 5vw, 2rem);
     font-weight: 700;
     color: var(--primary-color);
-    margin-bottom: 0.5rem;
+    margin-bottom: var(--spacing-xs);
+    line-height: 1.2;
 }
 
 .teamSlogan {
-    font-size: 1.1rem;
+    font-size: clamp(1rem, 3vw, 1.1rem);
     font-style: italic;
     color: var(--text-color-light);
-    margin-bottom: 0.5rem;
+    margin-bottom: var(--spacing-xs);
+    line-height: 1.4;
 }
 
 .teamMetaInfo {
-    font-size: 0.875rem;
+    font-size: var(--font-size-sm);
     color: var(--text-color-lighter);
-    margin-bottom: 1.25rem;
+    margin-bottom: var(--spacing-lg);
 }
 
 .teamQuickStats {
     display: flex;
-    gap: 2rem;
-    margin-top: 1.5rem;
+    gap: var(--spacing-xl);
+    margin-top: var(--spacing-lg);
+    flex-wrap: wrap;
+    justify-content: flex-start;
 }
 
 .stat {
     text-align: center;
+    flex: 1;
+    min-width: 80px;
 }
 
 .statValue {
-    font-size: 1.5rem;
+    font-size: clamp(1.25rem, 4vw, 1.5rem);
     font-weight: 700;
     color: var(--primary-color);
+    line-height: 1.1;
 }
 
 .statLabel {
-    font-size: 0.75rem;
+    font-size: var(--font-size-xs);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--text-color-light);
+    margin-top: var(--spacing-xs);
 }
 
 .teamContentTabs {
-    margin-bottom: 2rem;
+    margin-bottom: var(--spacing-xl);
     background: rgba(255, 255, 255, 0.85);
-    border-radius: 1rem;
+    border-radius: var(--border-radius-lg);
     overflow: hidden;
     box-shadow: 
         0 8px 20px rgba(0, 0, 0, 0.06),
@@ -155,11 +169,18 @@
     display: flex;
     overflow-x: auto;
     border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.tabsNavigation::-webkit-scrollbar {
+    display: none;
 }
 
 .tabButton {
-    padding: 1rem 1.5rem;
-    font-size: 0.95rem;
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-size: var(--font-size-sm);
     font-weight: 500;
     color: var(--text-color-light);
     background: transparent;
@@ -168,6 +189,8 @@
     position: relative;
     transition: all 0.2s ease;
     flex-shrink: 0;
+    white-space: nowrap;
+    min-height: 44px; /* Touch target */
 }
 
 .tabButton.active {
@@ -242,23 +265,61 @@
     color: var(--text-color-light);
 }
 
+/* Mobile-first responsive design */
 @media (max-width: 768px) {
+    .teamDetailPageContainer {
+        padding: var(--spacing-md);
+    }
+    
     .teamHeaderDetail {
         flex-direction: column;
         text-align: center;
-        padding: 1.5rem;
+        padding: var(--spacing-lg);
+        gap: var(--spacing-md);
     }
     
     .teamQuickStats {
         justify-content: center;
+        gap: var(--spacing-lg);
     }
     
     .tabButton {
-        padding: 0.875rem 1.25rem;
-        font-size: 0.875rem;
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-size: var(--font-size-xs);
     }
     
     .tabContent {
-        padding: 1.5rem;
+        padding: var(--spacing-lg);
+    }
+    
+    .backButton {
+        width: 100%;
+        justify-content: center;
+        margin-bottom: var(--spacing-sm);
+    }
+}
+
+@media (max-width: 480px) {
+    .teamDetailPageContainer {
+        padding: var(--spacing-sm);
+    }
+    
+    .teamHeaderDetail {
+        padding: var(--spacing-md);
+    }
+    
+    .teamQuickStats {
+        flex-direction: column;
+        align-items: center;
+        gap: var(--spacing-md);
+    }
+    
+    .stat {
+        min-width: 120px;
+    }
+    
+    .tabButton {
+        flex: 1;
+        min-width: 80px;
     }
 }

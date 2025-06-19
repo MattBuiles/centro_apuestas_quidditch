@@ -1,12 +1,195 @@
 .resultsPageContainer {
-    padding: 20px;
-    max-width: 1200px;
+    padding: var(--container-padding-y) var(--container-padding-x);
+    max-width: var(--container-max-width);
     margin: 0 auto;
+    min-height: 100vh;
 }
 
 .resultsPageTitle {
-    font-size: 2em;
-    color: #333;
-    margin-bottom: 20px;
+    font-size: clamp(1.5rem, 5vw, 2rem);
+    color: var(--primary-color);
+    margin-bottom: var(--spacing-xl);
     text-align: center;
+    font-weight: 700;
+}
+
+.resultsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+}
+
+.resultCard {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow-card);
+    transition: all 0.2s ease;
+}
+
+.resultCard:hover {
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-2px);
+}
+
+.matchResult {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.teamResult {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    flex: 1;
+}
+
+.teamName {
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: var(--spacing-xs);
+}
+
+.teamScore {
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.scoreVs {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--text-color-light);
+    margin: 0 var(--spacing-sm);
+}
+
+.matchMeta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: var(--spacing-sm);
+    border-top: 1px solid var(--border-color);
+    font-size: var(--font-size-sm);
+    color: var(--text-color-light);
+}
+
+.matchDate {
+    font-weight: 500;
+}
+
+.matchStatus {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.matchStatus.finished {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.matchStatus.live {
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.filtersContainer {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-xl);
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.filterButton {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background: transparent;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: var(--font-size-sm);
+    min-height: 44px;
+}
+
+.filterButton:hover {
+    border-color: var(--primary-color);
+    background: rgba(var(--primary-color-rgb), 0.1);
+}
+
+.filterButton.active {
+    border-color: var(--primary-color);
+    background: var(--primary-color);
+    color: white;
+}
+
+.noResults {
+    text-align: center;
+    padding: var(--spacing-xl);
+    color: var(--text-color-light);
+    font-size: var(--font-size-lg);
+}
+
+.loadingContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .resultsPageContainer {
+        padding: var(--spacing-md);
+    }
+    
+    .resultsGrid {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-md);
+    }
+    
+    .resultCard {
+        padding: var(--spacing-md);
+    }
+    
+    .matchResult {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+    
+    .scoreVs {
+        order: -1;
+        margin: var(--spacing-xs) 0;
+    }
+    
+    .filtersContainer {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .filterButton {
+        min-width: 120px;
+    }
+}
+
+@media (max-width: 480px) {
+    .resultCard {
+        padding: var(--spacing-sm);
+    }
+    
+    .matchMeta {
+        flex-direction: column;
+        gap: var(--spacing-xs);
+        text-align: center;
+    }
 }

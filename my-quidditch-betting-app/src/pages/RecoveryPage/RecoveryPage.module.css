@@ -2,29 +2,30 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 20px;
-    max-width: 480px; /* Consistent with auth-section */
-    margin: var(--spacing-12) auto;
-    padding: var(--spacing-4);
+    padding: var(--container-padding-y) var(--container-padding-x);
+    max-width: 480px;
+    margin: var(--spacing-xl) auto;
+    min-height: 100vh;
+    justify-content: center;
     animation: fadeInUp 0.7s ease-out forwards;
 }
 
 .recoveryPageTitle {
-    font-size: 2em;
-    margin-bottom: 20px;
     font-family: var(--font-family-display);
-    font-size: var(--text-3xl); /* Slightly smaller than generic auth-section h2 */
-    color: var(--color-primary-dark);
+    font-size: clamp(1.5rem, 5vw, 2rem);
+    color: var(--primary-color);
     text-align: center;
-    margin-bottom: var(--spacing-2);
+    margin-bottom: var(--spacing-sm);
+    font-weight: 700;
 }
 
 .recoveryPageDescription {
-  font-size: var(--text-base);
-  color: var(--color-text-secondary);
-  text-align: center;
-  margin-bottom: var(--spacing-6);
-  line-height: 1.6;
+    font-size: var(--font-size-base);
+    color: var(--text-color-light);
+    text-align: center;
+    margin-bottom: var(--spacing-xl);
+    line-height: 1.6;
+    max-width: 400px;
 }
 
 /* The Card, Form, Button styles will be inherited from global.css 
@@ -32,81 +33,108 @@
    You can add specific overrides here if needed.
    For example, if the Card within RecoveryPage needs a different shadow:
 */
-.recoveryCard { /* Example: If you want to target the Card specifically on this page */
-  padding: var(--spacing-8);
-  box-shadow: var(--shadow-xl);
-  /* Add any specific overrides for the card on this page */
-}
-
-.recoveryForm {
-  /* Styles specific to the form within the recovery page if needed */
+.recoveryCard {
+    padding: var(--spacing-xl);
+    box-shadow: var(--shadow-card);
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: var(--border-radius-lg);
+    backdrop-filter: blur(10px);
+    width: 100%;
+    max-width: 400px;
 }
 
 .formGroup {
-  margin-bottom: var(--spacing-5);
+    margin-bottom: var(--spacing-lg);
 }
 
 .formLabel {
-  display: block;
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--color-gray-700);
-  margin-bottom: var(--spacing-2);
+    display: block;
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: var(--spacing-sm);
 }
 
 .formInput {
-  width: 100%;
-  padding: var(--spacing-3) var(--spacing-4);
-  border: 1px solid var(--color-gray-300);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-xs);
-  font-size: var(--text-base);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    width: 100%;
+    padding: var(--spacing-md);
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    font-size: var(--font-size-base);
+    transition: all 0.2s ease;
+    background: rgba(255, 255, 255, 0.9);
 }
 
 .formInput:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.25), var(--shadow-sm);
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.1);
 }
 
 .submitButton {
-  /* Uses global button styles, add overrides if needed */
-  margin-top: var(--spacing-2); /* Add some space above the button */
+    margin-top: var(--spacing-md);
+    width: 100%;
 }
 
 .authLinks {
-  text-align: center;
-  margin-top: var(--spacing-6);
+    text-align: center;
+    margin-top: var(--spacing-xl);
 }
 
 .authLinks p,
 .authLinks a {
-  font-size: var(--text-sm);
-}
-.authLinks a {
-  font-weight: 600;
+    font-size: var(--font-size-sm);
 }
 
-/* Message styling (can also use global .message-container) */
+.authLinks a {
+    font-weight: 600;
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.authLinks a:hover {
+    color: var(--primary-color-dark);
+}
+
 .message {
-  padding: var(--spacing-3) var(--spacing-4);
-  border-radius: var(--radius-md);
-  font-size: var(--text-sm);
-  margin-bottom: var(--spacing-4);
-  border-width: 1px;
-  border-style: solid;
-  animation: fadeIn 0.3s ease;
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--spacing-md);
+    border-width: 2px;
+    border-style: solid;
+    animation: fadeIn 0.3s ease;
 }
 
 .messageSuccess {
-  background-color: rgba(var(--color-success-rgb), 0.1);
-  border-color: rgba(var(--color-success-rgb), 0.3);
-  color: var(--color-success);
+    background-color: rgba(40, 167, 69, 0.1);
+    border-color: #28a745;
+    color: #155724;
 }
 
 .messageError {
-  background-color: rgba(var(--color-error-rgb), 0.1);
-  border-color: rgba(var(--color-error-rgb), 0.3);
-  color: var(--color-error);
+    background-color: rgba(220, 53, 69, 0.1);
+    border-color: #dc3545;
+    color: #721c24;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .recoveryPageContainer {
+        padding: var(--spacing-md);
+        margin: var(--spacing-lg) auto;
+    }
+    
+    .recoveryCard {
+        padding: var(--spacing-lg);
+        margin: 0 var(--spacing-sm);
+    }
+}
+
+@media (max-width: 480px) {
+    .recoveryCard {
+        padding: var(--spacing-md);
+    }
 }

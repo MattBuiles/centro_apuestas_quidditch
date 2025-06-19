@@ -5,20 +5,20 @@ import styles from './HomePage.module.css'
 
 const HomePage = () => {
   return (
-    <div className="home-page-container space-y-16 py-8"> {/* Increased spacing between sections */}
-      {/* Hero section - updated with more magical styling */}
+    <div className="home-page-container space-y-8 md:space-y-16 py-4 md:py-8">
+      {/* Hero section */}
       <section className={styles.heroSection}> 
-        <div className="md:flex md:gap-12 items-center">
-          <div className={`flex-1 space-y-6 ${styles.heroContent}`}>
+        <div className="flex flex-col md:flex-row md:gap-12 items-center">
+          <div className={`flex-1 space-y-4 md:space-y-6 ${styles.heroContent}`}>
             <h2 className={styles.heroTitle}>
               La Magia de las Apuestas de Quidditch
             </h2>
             <p className={styles.heroDescription}>
               Predice resultados, gana Galeones y disfruta de la emoción del juego más mágico del mundo.
             </p>
-            <div className="pt-6">
+            <div className="pt-4 md:pt-6">
               <Link to="/register">
-                <Button size="lg" className="cta-button bg-gradient-to-r from-primary to-secondary text-white hover:shadow-lg transform hover:scale-105 transition-all duration-300">
+                <Button size="lg" className="cta-button bg-gradient-to-r from-primary to-secondary text-white hover:shadow-lg transform hover:scale-105 transition-all duration-300 w-full sm:w-auto">
                   ¡Atrapa tu Suerte!
                 </Button>
               </Link>
@@ -34,7 +34,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Featured matches section - enhanced cards */}
+      {/* Featured matches section */}
       <section className={styles.featuredSection}>
         <h3 className={styles.sectionTitle}>
           Partidos Destacados
