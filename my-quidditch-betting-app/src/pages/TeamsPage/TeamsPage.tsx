@@ -6,17 +6,16 @@ import Button from '@/components/common/Button';
 interface TeamData {
   id: string;
   name: string;
-  logoChar: string;
   league: string;
 }
 
 const mockTeams: TeamData[] = [
-  { id: 'gryffindor', name: 'Gryffindor', logoChar: 'G', league: 'Liga de Hogwarts' },
-  { id: 'slytherin', name: 'Slytherin', logoChar: 'S', league: 'Liga de Hogwarts' },
-  { id: 'ravenclaw', name: 'Ravenclaw', logoChar: 'R', league: 'Liga de Hogwarts' },
-  { id: 'hufflepuff', name: 'Hufflepuff', logoChar: 'H', league: 'Liga de Hogwarts' },
-  { id: 'chudley_cannons', name: 'Chudley Cannons', logoChar: 'C', league: 'Liga Británica e Irlandesa' },
-  { id: 'holyhead_harpies', name: 'Holyhead Harpies', logoChar: 'H', league: 'Liga Británica e Irlandesa' },
+  { id: 'gryffindor', name: 'Gryffindor', league: 'Liga de Hogwarts' },
+  { id: 'slytherin', name: 'Slytherin', league: 'Liga de Hogwarts' },
+  { id: 'ravenclaw', name: 'Ravenclaw', league: 'Liga de Hogwarts' },
+  { id: 'hufflepuff', name: 'Hufflepuff', league: 'Liga de Hogwarts' },
+  { id: 'chudley_cannons', name: 'Chudley Cannons', league: 'Liga Británica e Irlandesa' },
+  { id: 'holyhead_harpies', name: 'Holyhead Harpies', league: 'Liga Británica e Irlandesa' },
 ];
 
 const TeamsPage: React.FC = () => {

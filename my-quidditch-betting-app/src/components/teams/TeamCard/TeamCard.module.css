@@ -122,6 +122,11 @@
     margin-top: auto;
 }
 
+/* Team card logo styles */
+.teamCardLogo {
+  margin-bottom: var(--spacing-md);
+}
+
 /* Mobile responsive */
 @media (max-width: 768px) {
     .teamCard {

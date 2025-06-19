@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Button from '@/components/common/Button';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import TeamLogo from '@/components/teams/TeamLogo';
 // import { useAuth } from '@/context/AuthContext'; // If needed for predictions
 
 // Mock data - replace with actual data fetching
@@ -88,9 +89,8 @@ const MatchDetailPage = () => {
         </div>
       </div>
 
-      <div className="match-scoreboard">
-        <div className="team home-team">
-          <div className="team-logo-placeholder large">{match.homeTeam.charAt(0)}</div>
+      <div className="match-scoreboard">        <div className="team home-team">
+          <TeamLogo teamName={match.homeTeam} size="lg" className="match-detail-logo" />
           <div className="team-name">{match.homeTeam}</div>
         </div>
         <div className="score-display">
@@ -98,9 +98,8 @@ const MatchDetailPage = () => {
           {match.status === 'live' && match.minute && <div className="time-display status-indicator pulsing">{match.minute}</div>}
           {match.status === 'finished' && <div className="time-display">Finalizado</div>}
           {match.status === 'upcoming' && <div className="time-display">Próximamente</div>}
-        </div>
-        <div className="team away-team">
-          <div className="team-logo-placeholder large">{match.awayTeam.charAt(0)}</div>
+        </div>        <div className="team away-team">
+          <TeamLogo teamName={match.awayTeam} size="lg" className="match-detail-logo" />
           <div className="team-name">{match.awayTeam}</div>
         </div>
       </div>

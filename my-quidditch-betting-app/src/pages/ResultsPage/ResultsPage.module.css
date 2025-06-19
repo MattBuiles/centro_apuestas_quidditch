@@ -47,6 +47,11 @@
     align-items: center;
     text-align: center;
     flex: 1;
+    gap: var(--spacing-xs);
+}
+
+.teamResult .teamLogo {
+    margin-bottom: var(--spacing-xs);
 }
 
 .teamName {

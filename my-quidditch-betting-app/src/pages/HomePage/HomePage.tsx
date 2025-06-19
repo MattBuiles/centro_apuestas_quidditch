@@ -1,6 +1,7 @@
 // filepath: d:\Coding\Projects\centro_apuestas_quidditch\my-quidditch-betting-app\src\pages\HomePage\HomePage.tsx
 import { Link } from 'react-router-dom'
 import Button from '@/components/common/Button'
+import TeamLogo from '@/components/teams/TeamLogo'
 import styles from './HomePage.module.css'
 
 const HomePage = () => {
@@ -41,16 +42,11 @@ const HomePage = () => {
         </h3>
         <div className={styles.matchesGrid}>
           {/* Match card 1 - Enhanced styling */}
-          <div className={styles.matchCard}> 
-            <div className={styles.matchHeader}>
+          <div className={styles.matchCard}>            <div className={styles.matchHeader}>
               <div className={styles.teamLogos}>
-                <div className={styles.teamLogo} style={{background: 'rgba(180, 52, 52, 0.15)'}}>
-                  <span style={{color: '#b43434'}}>G</span>
-                </div>
+                <TeamLogo teamName="Gryffindor" size="md" className={styles.matchTeamLogo} />
                 <div className={styles.vsLabel}>VS</div>
-                <div className={styles.teamLogo} style={{background: 'rgba(38, 115, 38, 0.15)'}}>
-                  <span style={{color: '#267326'}}>S</span>
-                </div>
+                <TeamLogo teamName="Slytherin" size="md" className={styles.matchTeamLogo} />
               </div>
             </div>
             <div className={styles.matchInfo}>
@@ -70,16 +66,11 @@ const HomePage = () => {
           </div>
 
           {/* Match card 2 - Enhanced styling */}
-          <div className={styles.matchCard}> 
-            <div className={styles.matchHeader}>
+          <div className={styles.matchCard}>            <div className={styles.matchHeader}>
               <div className={styles.teamLogos}>
-                <div className={styles.teamLogo} style={{background: 'rgba(245, 199, 26, 0.15)'}}>
-                  <span style={{color: '#f5c71a'}}>H</span>
-                </div>
+                <TeamLogo teamName="Hufflepuff" size="md" className={styles.matchTeamLogo} />
                 <div className={styles.vsLabel}>VS</div>
-                <div className={styles.teamLogo} style={{background: 'rgba(28, 85, 168, 0.15)'}}>
-                  <span style={{color: '#1c55a8'}}>R</span>
-                </div>
+                <TeamLogo teamName="Ravenclaw" size="md" className={styles.matchTeamLogo} />
               </div>
             </div>
             <div className={styles.matchInfo}>
@@ -100,15 +91,10 @@ const HomePage = () => {
 
           {/* Match card 3 - Enhanced styling */}
           <div className={styles.matchCard}> 
-            <div className={styles.matchHeader}>
-              <div className={styles.teamLogos}>
-                <div className={styles.teamLogo} style={{background: 'rgba(232, 126, 4, 0.15)'}}>
-                  <span style={{color: '#e87e04'}}>CC</span>
-                </div>
+            <div className={styles.matchHeader}>              <div className={styles.teamLogos}>
+                <TeamLogo teamName="Chudley Cannons" size="md" className={styles.matchTeamLogo} />
                 <div className={styles.vsLabel}>VS</div>
-                <div className={styles.teamLogo} style={{background: 'rgba(40, 175, 95, 0.15)'}}>
-                  <span style={{color: '#28af5f'}}>HH</span>
-                </div>
+                <TeamLogo teamName="Holyhead Harpies" size="md" className={styles.matchTeamLogo} />
               </div>
             </div>
             <div className={styles.matchInfo}>

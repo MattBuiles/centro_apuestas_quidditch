@@ -369,6 +369,11 @@
   line-height: 1.6;
 }
 
+/* Match team logo styles */
+.matchTeamLogo {
+  margin: 0 var(--spacing-xs);
+}
+
 /* Responsive Adjustments */
 @media (max-width: 768px) {
   .heroTitle {

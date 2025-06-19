@@ -265,3 +265,9 @@
     0%, 100% { opacity: 1; }
     50% { opacity: 0.4; }
 }
+
+/* Match team logo styles */
+.matchTeamLogo {
+  margin-right: var(--spacing-xs);
+  flex-shrink: 0;
+}

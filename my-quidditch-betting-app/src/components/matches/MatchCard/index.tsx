@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import Button from '@/components/common/Button';
+import TeamLogo from '@/components/teams/TeamLogo';
 import styles from './MatchCard.module.css';
 
 interface Match {
@@ -21,16 +22,6 @@ interface MatchCardProps {
 }
 
 const MatchCard = ({ match }: MatchCardProps) => {
-  // Determine team logo styles based on team names
-  const getTeamLogoClass = (teamName: string) => {
-    const lowerTeam = teamName.toLowerCase();
-    if (lowerTeam.includes('gryffindor')) return styles.gryffindorLogo;
-    if (lowerTeam.includes('slytherin')) return styles.slytherinLogo;
-    if (lowerTeam.includes('ravenclaw')) return styles.ravenclawLogo;
-    if (lowerTeam.includes('hufflepuff')) return styles.hufflepuffLogo;
-    return '';
-  };
-
   return (
     <div className={`${styles.matchCard} ${match.status === 'live' ? styles.live : ''}`}>
       {match.status === 'live' && (
@@ -39,19 +30,21 @@ const MatchCard = ({ match }: MatchCardProps) => {
         </div>
       )}
       <div className={styles.matchDetails}>
-        <div className={styles.teams}>
-          <div className={`${styles.team} ${styles.homeTeam}`}>
-            <div className={`${styles.teamLogo} ${getTeamLogoClass(match.homeTeam)}`}>
-              {match.homeTeam.charAt(0)}
-            </div>
+        <div className={styles.teams}>          <div className={`${styles.team} ${styles.homeTeam}`}>
+            <TeamLogo 
+              teamName={match.homeTeam} 
+              size="sm" 
+              className={styles.matchTeamLogo}
+            />
             <span className={styles.teamName}>{match.homeTeam}</span>
             {typeof match.homeScore !== 'undefined' && <span className={styles.score}>{match.homeScore}</span>}
           </div>
-          <div className={styles.vsIndicator}>VS</div>
-          <div className={`${styles.team} ${styles.awayTeam}`}>
-            <div className={`${styles.teamLogo} ${getTeamLogoClass(match.awayTeam)}`}>
-              {match.awayTeam.charAt(0)}
-            </div>
+          <div className={styles.vsIndicator}>VS</div>          <div className={`${styles.team} ${styles.awayTeam}`}>
+            <TeamLogo 
+              teamName={match.awayTeam} 
+              size="sm" 
+              className={styles.matchTeamLogo}
+            />
             <span className={styles.teamName}>{match.awayTeam}</span>
             {typeof match.awayScore !== 'undefined' && <span className={styles.score}>{match.awayScore}</span>}
           </div>
