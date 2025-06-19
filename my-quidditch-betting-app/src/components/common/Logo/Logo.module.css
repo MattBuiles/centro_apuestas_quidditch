@@ -1,21 +1,21 @@
 .logoContainer {
   position: relative;
-  width: 2.5rem;
-  height: 2.5rem;
+  width: clamp(2rem, 5vw, 2.5rem);
+  height: clamp(2rem, 5vw, 2.5rem);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary));
-  box-shadow: 0 4px 10px rgba(106, 90, 205, 0.3);
+  background: linear-gradient(135deg, var(--primary-color-light), var(--primary-color));
+  box-shadow: 0 4px 10px rgba(var(--primary-color-rgb), 0.3);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   animation: float 3s ease-in-out infinite;
 }
 
 .logoContainer:hover {
   transform: translateY(-5px) scale(1.05);
-  box-shadow: 0 6px 15px rgba(106, 90, 205, 0.4);
+  box-shadow: 0 6px 15px rgba(var(--primary-color-rgb), 0.4);
 }
 
 .logoInner {
@@ -28,10 +28,22 @@
   height: 100%;
 }
 
+.logoImage {
+  width: 80%;
+  height: 80%;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  transition: filter 0.3s ease;
+}
+
+.logoContainer:hover .logoImage {
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4)) brightness(1.1);
+}
+
 .logoText {
   color: white;
   font-weight: bold;
-  font-size: 1.5rem;
+  font-size: clamp(1rem, 3vw, 1.5rem);
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 

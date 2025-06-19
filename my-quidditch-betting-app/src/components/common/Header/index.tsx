@@ -3,6 +3,7 @@ import { Link, NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import Button from '../Button'
 import Logo from '../Logo'
+import userLogoSrc from '@/assets/User_Logo.png'
 import styles from './Header.module.css'
 
 const Header = () => {
@@ -99,14 +100,17 @@ const Header = () => {
         {/* Auth Buttons Desktop */}
         <div className={`${styles.authButtons} animate-fadeIn`}>
           {isAuthenticated ? (
-            <div className="flex items-center space-x-2 md:space-x-4">
-              {user && (
+            <div className="flex items-center space-x-2 md:space-x-4">              {user && (
                 <div className={styles.userBalance}>
                   <span className={styles.balanceText}>
                     {user.balance}G
                   </span>
                   <div className={styles.userAvatar}>
-                    {user.username.charAt(0).toUpperCase()}
+                    <img 
+                      src={userLogoSrc} 
+                      alt="Usuario" 
+                      className={styles.userAvatarImage}
+                    />
                   </div>
                 </div>
               )}
@@ -136,14 +140,17 @@ const Header = () => {
         </div>
 
         {/* Mobile menu button */}
-        <div className={styles.mobileMenuButton}>
-          {isAuthenticated && user && (
+        <div className={styles.mobileMenuButton}>          {isAuthenticated && user && (
             <div className={styles.userBalance}>
               <span className={styles.balanceText}>
                 {user.balance}G
               </span>
               <div className={styles.userAvatar}>
-                {user.username.charAt(0).toUpperCase()}
+                <img 
+                  src={userLogoSrc} 
+                  alt="Usuario" 
+                  className={styles.userAvatarImage}
+                />
               </div>
             </div>
           )}

@@ -1,10 +1,15 @@
 import styles from './Logo.module.css'
+import pageLogoSrc from '@/assets/Page_Logo.png'
 
 const Logo = () => {
   return (
     <div className={styles.logoContainer}>
       <div className={styles.logoInner}>
-        <div className={styles.logoText}>S</div>
+        <img 
+          src={pageLogoSrc} 
+          alt="Atrapa la Snitch Logo" 
+          className={styles.logoImage}
+        />
       </div>
       <div className={styles.logoGlow} />
     </div>
