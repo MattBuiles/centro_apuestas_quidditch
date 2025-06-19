@@ -1,0 +1,154 @@
+.teamCard {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-lg);
+    text-align: center;
+    box-shadow: var(--shadow-card);
+    transition: all 0.3s ease;
+    border: 1px solid var(--border-color);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.teamCard:hover {
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-4px);
+    border-color: var(--primary-color);
+}
+
+.teamLogoPlaceholder {
+    width: clamp(4rem, 12vw, 5rem);
+    height: clamp(4rem, 12vw, 5rem);
+    margin: 0 auto var(--spacing-md);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    font-weight: bold;
+    color: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border: 3px solid rgba(255, 255, 255, 0.5);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.teamLogoPlaceholder::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 70%);
+    opacity: 0.6;
+}
+
+.teamCard:hover .teamLogoPlaceholder {
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* House-specific logo colors */
+.gryffindorLogo {
+    background: linear-gradient(135deg, #ae0001, #740001);
+}
+
+.slytherinLogo {
+    background: linear-gradient(135deg, #1a472a, #0d351a);
+}
+
+.ravenclawLogo {
+    background: linear-gradient(135deg, #222f5b, #172147);
+}
+
+.hufflepuffLogo {
+    background: linear-gradient(135deg, #f0c75e, #d3a625);
+}
+
+.teamName {
+    font-size: clamp(1rem, 3vw, 1.25rem);
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: var(--spacing-xs);
+    line-height: 1.2;
+}
+
+.teamLeague {
+    font-size: var(--font-size-sm);
+    color: var(--text-color-light);
+    margin-bottom: var(--spacing-lg);
+    line-height: 1.4;
+}
+
+.teamCardContent {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.teamStats {
+    display: flex;
+    justify-content: space-around;
+    margin: var(--spacing-md) 0;
+    padding: var(--spacing-sm) 0;
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.statItem {
+    text-align: center;
+}
+
+.statValue {
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    color: var(--primary-color);
+    line-height: 1.1;
+}
+
+.statLabel {
+    font-size: var(--font-size-xs);
+    color: var(--text-color-light);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.teamCardButton {
+    margin-top: auto;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .teamCard {
+        padding: var(--spacing-md);
+    }
+    
+    .teamStats {
+        margin: var(--spacing-sm) 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .teamCard {
+        padding: var(--spacing-sm);
+    }
+    
+    .teamLogoPlaceholder {
+        margin-bottom: var(--spacing-sm);
+    }
+    
+    .teamStats {
+        flex-direction: column;
+        gap: var(--spacing-xs);
+        align-items: center;
+    }
+    
+    .statItem {
+        min-width: 60px;
+    }
+}

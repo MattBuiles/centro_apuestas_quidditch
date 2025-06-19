@@ -1,0 +1,345 @@
+.standingsPageContainer {
+    padding: var(--container-padding-y) var(--container-padding-x);
+    max-width: var(--container-max-width);
+    margin: 0 auto;
+    min-height: 100vh;
+}
+
+.pageHeader {
+    text-align: center;
+    margin-bottom: var(--spacing-xl);
+    padding: var(--spacing-xl);
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-card);
+}
+
+.pageTitle {
+    font-size: clamp(1.5rem, 5vw, 2.5rem);
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: var(--spacing-sm);
+}
+
+.pageDescription {
+    font-size: var(--font-size-base);
+    color: var(--text-color-light);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.standingsSection {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-xl);
+    box-shadow: var(--shadow-card);
+    margin-bottom: var(--spacing-xl);
+}
+
+.standingsFilters {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-xl);
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.filterButton {
+    min-height: 44px;
+    min-width: 120px;
+}
+
+/* Responsive Table */
+.tableContainer {
+    overflow-x: auto;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--spacing-lg);
+    -webkit-overflow-scrolling: touch;
+}
+
+.standingsTable {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    min-width: 600px; /* Ensures table doesn't get too cramped */
+}
+
+.tableHeader {
+    background: rgba(var(--primary-color-rgb), 0.1);
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.tableHeaderCell {
+    padding: var(--spacing-md);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--primary-color);
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+    white-space: nowrap;
+}
+
+.tableHeaderCell.center {
+    text-align: center;
+}
+
+.standingRow {
+    border-bottom: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.standingRow:hover {
+    background: rgba(var(--primary-color-rgb), 0.05);
+}
+
+.standingRow:nth-child(odd) {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.standingRow:nth-child(odd):hover {
+    background: rgba(var(--primary-color-rgb), 0.08);
+}
+
+.tableCell {
+    padding: var(--spacing-md);
+    color: var(--text-color);
+    border-bottom: 1px solid var(--border-color);
+    font-size: var(--font-size-sm);
+}
+
+.tableCell.center {
+    text-align: center;
+}
+
+.tableCell.bold {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.positionCell {
+    font-weight: 700;
+    font-size: var(--font-size-base);
+    width: 60px;
+}
+
+.teamInfo {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    min-width: 180px;
+}
+
+.teamLogoPlaceholder {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-sm);
+    font-weight: bold;
+    color: white;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.teamLogoPlaceholder.gryffindor {
+    background: linear-gradient(135deg, #ae0001, #740001);
+}
+
+.teamLogoPlaceholder.slytherin {
+    background: linear-gradient(135deg, #1a472a, #0d351a);
+}
+
+.teamLogoPlaceholder.ravenclaw {
+    background: linear-gradient(135deg, #222f5b, #172147);
+}
+
+.teamLogoPlaceholder.hufflepuff {
+    background: linear-gradient(135deg, #f0c75e, #d3a625);
+}
+
+.teamLogoPlaceholder.other {
+    background: linear-gradient(135deg, #6b7280, #4b5563);
+}
+
+.teamName {
+    font-weight: 500;
+    color: var(--text-color);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.teamName:hover {
+    color: var(--primary-color);
+}
+
+.standingRow:hover .teamLogoPlaceholder {
+    transform: scale(1.1);
+}
+
+/* Position badges */
+.positionBadge {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: var(--font-size-xs);
+    color: white;
+    margin-right: var(--spacing-xs);
+}
+
+.positionBadge.first {
+    background: linear-gradient(135deg, #ffd700, #ffb700);
+}
+
+.positionBadge.second {
+    background: linear-gradient(135deg, #c0c0c0, #a0a0a0);
+}
+
+.positionBadge.third {
+    background: linear-gradient(135deg, #cd7f32, #b8860b);
+}
+
+.positionBadge.default {
+    background: var(--text-color-light);
+}
+
+/* Mobile Cards View */
+.mobileView {
+    display: none;
+}
+
+.standingCard {
+    background: white;
+    border-radius: var(--border-radius);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+    box-shadow: var(--shadow-card);
+    border-left: 4px solid var(--primary-color);
+    transition: all 0.2s ease;
+}
+
+.standingCard:hover {
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-2px);
+}
+
+.cardHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-md);
+}
+
+.cardTeamInfo {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.cardPosition {
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.cardStats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-md);
+    text-align: center;
+}
+
+.statItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.statValue {
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.statLabel {
+    font-size: var(--font-size-xs);
+    color: var(--text-color-light);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: var(--spacing-xs);
+}
+
+.emptyState {
+    text-align: center;
+    padding: var(--spacing-xl);
+    color: var(--text-color-light);
+}
+
+.emptyState h3 {
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--spacing-md);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .standingsPageContainer {
+        padding: var(--spacing-md);
+    }
+    
+    .pageHeader {
+        padding: var(--spacing-lg);
+    }
+    
+    .standingsSection {
+        padding: var(--spacing-lg);
+    }
+    
+    .standingsFilters {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .filterButton {
+        width: 100%;
+        max-width: 200px;
+    }
+    
+    /* Switch to mobile cards view */
+    .tableContainer {
+        display: none;
+    }
+    
+    .mobileView {
+        display: block;
+    }
+}
+
+@media (max-width: 480px) {
+    .standingsPageContainer {
+        padding: var(--spacing-sm);
+    }
+    
+    .pageHeader {
+        padding: var(--spacing-md);
+    }
+    
+    .standingsSection {
+        padding: var(--spacing-md);
+    }
+    
+    .standingCard {
+        padding: var(--spacing-md);
+    }
+    
+    .cardStats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-sm);
+    }
+}

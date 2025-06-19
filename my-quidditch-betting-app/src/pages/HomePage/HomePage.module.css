@@ -1,12 +1,19 @@
-   /* Hero Section */
+/* Hero Section - Mobile First */
 .heroSection {
   position: relative;
   background: linear-gradient(135deg, rgba(240, 230, 246, 0.9), rgba(217, 201, 232, 0.9));
   border-radius: 1rem;
-  padding: 3rem 2rem;
-  margin-bottom: 3rem;
+  padding: 2rem 1rem;
+  margin-bottom: 2rem;
   overflow: hidden;
   box-shadow: 0 10px 25px rgba(106, 90, 205, 0.2);
+}
+
+@media (min-width: 768px) {
+  .heroSection {
+    padding: 3rem 2rem;
+    margin-bottom: 3rem;
+  }
 }
 
 .heroSection::before {
@@ -24,11 +31,18 @@
 .heroContent {
   position: relative;
   z-index: 1;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .heroContent {
+    text-align: left;
+  }
 }
 
 .heroTitle {
-  font-size: 3.5rem;
-  margin-bottom: 1.5rem;
+  font-size: clamp(2rem, 8vw, 3.5rem);
+  margin-bottom: 1rem;
   text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.8);
   animation: fadeInUp 0.8s ease-out;
   background: linear-gradient(45deg, var(--color-primary), var(--color-primary-light));
@@ -36,23 +50,45 @@
   background-clip: text;
   color: transparent;
   display: inline-block;
+  line-height: 1.2;
+}
+
+@media (min-width: 768px) {
+  .heroTitle {
+    margin-bottom: 1.5rem;
+  }
 }
 
 .heroDescription {
-  font-size: 1.25rem;
+  font-size: clamp(1rem, 3vw, 1.25rem);
   color: var(--color-gray-700);
-  margin-bottom: 2rem;
-  max-width: 80%;
+  margin-bottom: 1.5rem;
   animation: fadeInUp 1s ease-out 0.2s both;
+  line-height: 1.6;
+}
+
+@media (min-width: 768px) {
+  .heroDescription {
+    margin-bottom: 2rem;
+    max-width: 80%;
+  }
 }
 
 .heroImagePlaceholder {
   position: relative;
-  height: 300px;
+  height: 200px;
   display: flex;
   align-items: center;
   justify-content: center;
   animation: fadeInUp 1.2s ease-out 0.4s both;
+  margin-top: 2rem;
+}
+
+@media (min-width: 768px) {
+  .heroImagePlaceholder {
+    height: 300px;
+    margin-top: 0;
+  }
 }
 
 .heroImageInner {
@@ -113,21 +149,52 @@
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
 }
 
+/* Featured Section - Responsive */
+.featuredSection {
+  margin-bottom: 2rem;
+}
+
+@media (min-width: 768px) {
+  .featuredSection {
+    margin-bottom: 3rem;
+  }
+}
+
 .sectionTitle {
-  font-size: 2.5rem;
+  font-size: clamp(1.75rem, 6vw, 2.5rem);
   text-align: center;
-  margin-bottom: 2.5rem;
+  margin-bottom: 1.5rem;
   background: linear-gradient(45deg, var(--color-primary), var(--color-primary-light));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
   display: inline-block;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .sectionTitle {
+    margin-bottom: 2.5rem;
+  }
 }
 
 .matchesGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .matchesGrid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .matchesGrid {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  }
 }
 
 .matchCard {
@@ -139,18 +206,30 @@
 }
 
 .matchCard:hover {
-  transform: translateY(-10px);
+  transform: translateY(-5px);
   box-shadow: 0 15px 30px rgba(106, 90, 205, 0.15);
 }
 
+@media (min-width: 768px) {
+  .matchCard:hover {
+    transform: translateY(-10px);
+  }
+}
+
 .matchHeader {
-  height: 160px;
+  height: 120px;
   background: linear-gradient(135deg, rgba(240, 230, 246, 0.8), rgba(217, 201, 232, 0.8));
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .matchHeader {
+    height: 160px;
+  }
 }
 
 .matchHeader::after {

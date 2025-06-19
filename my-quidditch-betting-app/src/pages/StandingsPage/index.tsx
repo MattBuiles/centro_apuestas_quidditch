@@ -1,78 +1,268 @@
-// filepath: d:\Coding\Projects\centro_apuestas_quidditch\my-quidditch-betting-app\src\pages\StandingsPage\index.tsx
-import React, { useState } from 'react'; // Added React import
-import Button from '@/components/common/Button'; // Assuming Button component path
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import Button from '@/components/common/Button';
+import styles from './StandingsPage.module.css';
 
-// Mock data - replace with actual data fetching
+// Mock standings data - updated to match teams from TeamsPage
 const mockStandings = [
-  { position: 1, teamName: 'Gryffindor', played: 10, won: 8, drawn: 1, lost: 1, points: 25, logo: 'G' },
-  { position: 2, teamName: 'Ravenclaw', played: 10, won: 7, drawn: 1, lost: 2, points: 22, logo: 'R' },
-  { position: 3, teamName: 'Slytherin', played: 10, won: 5, drawn: 2, lost: 3, points: 17, logo: 'S' },
-  { position: 4, teamName: 'Hufflepuff', played: 10, won: 4, drawn: 2, lost: 4, points: 14, logo: 'H' },
-  { position: 5, teamName: 'Chudley Cannons', played: 10, won: 2, drawn: 1, lost: 7, points: 7, logo: 'C' },
+  { 
+    position: 1, 
+    teamId: 'gryffindor',
+    teamName: 'Gryffindor', 
+    played: 12, 
+    won: 10, 
+    drawn: 1, 
+    lost: 1, 
+    points: 31, 
+    logo: 'G',
+    goalsFor: 245,
+    goalsAgainst: 156,
+    league: 'Liga de Hogwarts'
+  },
+  { 
+    position: 2, 
+    teamId: 'ravenclaw',
+    teamName: 'Ravenclaw', 
+    played: 12, 
+    won: 8, 
+    drawn: 2, 
+    lost: 2, 
+    points: 26, 
+    logo: 'R',
+    goalsFor: 198,
+    goalsAgainst: 134,
+    league: 'Liga de Hogwarts'
+  },
+  { 
+    position: 3, 
+    teamId: 'slytherin',
+    teamName: 'Slytherin', 
+    played: 12, 
+    won: 7, 
+    drawn: 2, 
+    lost: 3, 
+    points: 23, 
+    logo: 'S',
+    goalsFor: 187,
+    goalsAgainst: 145,
+    league: 'Liga de Hogwarts'
+  },
+  { 
+    position: 4, 
+    teamId: 'hufflepuff',
+    teamName: 'Hufflepuff', 
+    played: 12, 
+    won: 5, 
+    drawn: 3, 
+    lost: 4, 
+    points: 18, 
+    logo: 'H',
+    goalsFor: 156,
+    goalsAgainst: 167,
+    league: 'Liga de Hogwarts'
+  },
+  { 
+    position: 5, 
+    teamId: 'chudley_cannons',
+    teamName: 'Chudley Cannons', 
+    played: 12, 
+    won: 3, 
+    drawn: 2, 
+    lost: 7, 
+    points: 11, 
+    logo: 'C',
+    goalsFor: 123,
+    goalsAgainst: 198,
+    league: 'Liga Británica e Irlandesa'
+  },
+  { 
+    position: 6, 
+    teamId: 'holyhead_harpies',
+    teamName: 'Holyhead Harpies', 
+    played: 12, 
+    won: 2, 
+    drawn: 1, 
+    lost: 9, 
+    points: 7, 
+    logo: 'H',
+    goalsFor: 98,
+    goalsAgainst: 207,
+    league: 'Liga Británica e Irlandesa'
+  },
 ];
 
 const StandingsPage = () => {
-  const [filter, setFilter] = useState('current'); // 'current' or 'historical'
+  const [filter, setFilter] = useState('all'); // 'all', 'hogwarts', 'british'
+
+  const getTeamLogoClass = (teamName: string) => {
+    const name = teamName.toLowerCase();
+    if (name.includes('gryffindor')) return 'gryffindor';
+    if (name.includes('slytherin')) return 'slytherin';
+    if (name.includes('ravenclaw')) return 'ravenclaw';
+    if (name.includes('hufflepuff')) return 'hufflepuff';
+    return 'other';
+  };
+
+  const getPositionBadgeClass = (position: number) => {
+    if (position === 1) return 'first';
+    if (position === 2) return 'second';
+    if (position === 3) return 'third';
+    return 'default';
+  };
+
+  const filteredStandings = mockStandings.filter(team => {
+    if (filter === 'all') return true;
+    if (filter === 'hogwarts') return team.league === 'Liga de Hogwarts';
+    if (filter === 'british') return team.league === 'Liga Británica e Irlandesa';
+    return true;
+  });
 
   return (
-    <div className="standings-page-container">
-      <section className="page-header card mb-8 p-6 text-center"> {/* Using card class */}
-        <h2 className="text-3xl font-bold text-primary">Clasificación de la Liga</h2>
-        <p className="text-gray-600 mt-2">Consulta la tabla de posiciones actualizada</p>
+    <div className={styles.standingsPageContainer}>
+      <section className={styles.pageHeader}>
+        <h1 className={styles.pageTitle}>Clasificación de la Liga</h1>
+        <p className={styles.pageDescription}>
+          Consulta la tabla de posiciones actualizada con estadísticas detalladas de todos los equipos
+        </p>
       </section>
       
-      <section className="standings-section card p-6"> {/* Using card class */}
-        <div className="standings-filters flex gap-2 mb-6">
+      <section className={styles.standingsSection}>
+        <div className={styles.standingsFilters}>
           <Button 
-            variant={filter === 'current' ? 'primary' : 'outline'} 
-            onClick={() => setFilter('current')}
+            variant={filter === 'all' ? 'primary' : 'outline'} 
+            onClick={() => setFilter('all')}
+            className={styles.filterButton}
           >
-            Temporada actual
+            Todas las Ligas
           </Button>
           <Button 
-            variant={filter === 'historical' ? 'primary' : 'outline'} 
-            onClick={() => setFilter('historical')}
+            variant={filter === 'hogwarts' ? 'primary' : 'outline'} 
+            onClick={() => setFilter('hogwarts')}
+            className={styles.filterButton}
           >
-            Histórico
+            Liga de Hogwarts
+          </Button>
+          <Button 
+            variant={filter === 'british' ? 'primary' : 'outline'} 
+            onClick={() => setFilter('british')}
+            className={styles.filterButton}
+          >
+            Liga Británica
           </Button>
         </div>
         
-        {filter === 'current' ? (
-          <table className="standings-table w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="p-3 font-semibold text-sm text-gray-700 border-b">Posición</th>
-                <th className="p-3 font-semibold text-sm text-gray-700 border-b">Equipo</th>
-                <th className="p-3 font-semibold text-sm text-gray-700 border-b text-center">PJ</th>
-                <th className="p-3 font-semibold text-sm text-gray-700 border-b text-center">PG</th>
-                <th className="p-3 font-semibold text-sm text-gray-700 border-b text-center">PE</th>
-                <th className="p-3 font-semibold text-sm text-gray-700 border-b text-center">PP</th>
-                <th className="p-3 font-semibold text-sm text-gray-700 border-b text-center">Puntos</th>
-              </tr>
-            </thead>
-            <tbody>
-              {mockStandings.map((team) => (
-                <tr key={team.teamName} className="standing-row hover:bg-gray-50 border-b">
-                  <td className="p-3 text-gray-700 text-center">{team.position}</td>
-                  <td className="p-3 text-gray-700">
-                    <div className="team-info flex items-center gap-2">
-                      <div className="team-logo-placeholder small w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold">
+        {filteredStandings.length > 0 ? (
+          <>
+            {/* Desktop Table View */}
+            <div className={styles.tableContainer}>
+              <table className={styles.standingsTable}>
+                <thead className={styles.tableHeader}>
+                  <tr>
+                    <th className={styles.tableHeaderCell}>Pos</th>
+                    <th className={styles.tableHeaderCell}>Equipo</th>
+                    <th className={`${styles.tableHeaderCell} ${styles.center}`}>PJ</th>
+                    <th className={`${styles.tableHeaderCell} ${styles.center}`}>PG</th>
+                    <th className={`${styles.tableHeaderCell} ${styles.center}`}>PE</th>
+                    <th className={`${styles.tableHeaderCell} ${styles.center}`}>PP</th>
+                    <th className={`${styles.tableHeaderCell} ${styles.center}`}>GF</th>
+                    <th className={`${styles.tableHeaderCell} ${styles.center}`}>GC</th>
+                    <th className={`${styles.tableHeaderCell} ${styles.center}`}>Puntos</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredStandings.map((team) => (
+                    <tr key={team.teamId} className={styles.standingRow}>
+                      <td className={`${styles.tableCell} ${styles.positionCell}`}>
+                        <div className={`${styles.positionBadge} ${styles[getPositionBadgeClass(team.position)]}`}>
+                          {team.position}
+                        </div>
+                      </td>
+                      <td className={styles.tableCell}>
+                        <div className={styles.teamInfo}>
+                          <div className={`${styles.teamLogoPlaceholder} ${styles[getTeamLogoClass(team.teamName)]}`}>
+                            {team.logo}
+                          </div>
+                          <Link to={`/teams/${team.teamId}`} className={styles.teamName}>
+                            {team.teamName}
+                          </Link>
+                        </div>
+                      </td>
+                      <td className={`${styles.tableCell} ${styles.center}`}>{team.played}</td>
+                      <td className={`${styles.tableCell} ${styles.center}`}>{team.won}</td>
+                      <td className={`${styles.tableCell} ${styles.center}`}>{team.drawn}</td>
+                      <td className={`${styles.tableCell} ${styles.center}`}>{team.lost}</td>
+                      <td className={`${styles.tableCell} ${styles.center}`}>{team.goalsFor}</td>
+                      <td className={`${styles.tableCell} ${styles.center}`}>{team.goalsAgainst}</td>
+                      <td className={`${styles.tableCell} ${styles.center} ${styles.bold}`}>{team.points}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Cards View */}
+            <div className={styles.mobileView}>
+              {filteredStandings.map((team) => (
+                <div key={team.teamId} className={styles.standingCard}>
+                  <div className={styles.cardHeader}>
+                    <div className={styles.cardTeamInfo}>
+                      <div className={`${styles.positionBadge} ${styles[getPositionBadgeClass(team.position)]}`}>
+                        {team.position}
+                      </div>
+                      <div className={`${styles.teamLogoPlaceholder} ${styles[getTeamLogoClass(team.teamName)]}`}>
                         {team.logo}
                       </div>
-                      <span>{team.teamName}</span>
+                      <Link to={`/teams/${team.teamId}`} className={styles.teamName}>
+                        <strong>{team.teamName}</strong>
+                      </Link>
                     </div>
-                  </td>
-                  <td className="p-3 text-gray-700 text-center">{team.played}</td>
-                  <td className="p-3 text-gray-700 text-center">{team.won}</td>
-                  <td className="p-3 text-gray-700 text-center">{team.drawn}</td>
-                  <td className="p-3 text-gray-700 text-center">{team.lost}</td>
-                  <td className="p-3 text-gray-700 font-bold text-center">{team.points}</td>
-                </tr>
+                    <div className={styles.cardPosition}>
+                      {team.points} pts
+                    </div>
+                  </div>
+                  
+                  <div className={styles.cardStats}>
+                    <div className={styles.statItem}>
+                      <div className={styles.statValue}>{team.played}</div>
+                      <div className={styles.statLabel}>Jugados</div>
+                    </div>
+                    <div className={styles.statItem}>
+                      <div className={styles.statValue}>{team.won}</div>
+                      <div className={styles.statLabel}>Ganados</div>
+                    </div>
+                    <div className={styles.statItem}>
+                      <div className={styles.statValue}>{team.lost}</div>
+                      <div className={styles.statLabel}>Perdidos</div>
+                    </div>
+                    <div className={styles.statItem}>
+                      <div className={styles.statValue}>{team.goalsFor}</div>
+                      <div className={styles.statLabel}>Goles F</div>
+                    </div>
+                    <div className={styles.statItem}>
+                      <div className={styles.statValue}>{team.goalsAgainst}</div>
+                      <div className={styles.statLabel}>Goles C</div>
+                    </div>
+                    <div className={styles.statItem}>
+                      <div className={styles.statValue}>{team.goalsFor - team.goalsAgainst}</div>
+                      <div className={styles.statLabel}>Diferencia</div>
+                    </div>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </>
         ) : (
-          <p className="text-gray-600 text-center p-4">El histórico de clasificaciones estará disponible próximamente.</p>
+          <div className={styles.emptyState}>
+            <h3>No hay equipos para mostrar</h3>
+            <p>No se encontraron equipos que coincidan con el filtro seleccionado.</p>
+            <Button 
+              variant="outline" 
+              onClick={() => setFilter('all')}
+              style={{ marginTop: 'var(--spacing-md)' }}
+            >
+              Ver todos los equipos
+            </Button>
+          </div>
         )}
       </section>
     </div>

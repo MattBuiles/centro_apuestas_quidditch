@@ -1,4 +1,4 @@
-   .button {
+.button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -9,6 +9,11 @@
   position: relative;
   overflow: hidden;
   font-family: 'Garamond', serif;
+  border: none;
+  text-decoration: none;
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  min-height: 2.5rem;
+  white-space: nowrap;
 }
 
 .button:focus {
@@ -20,14 +25,19 @@
   transform: translateY(1px);
 }
 
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
 /* Variants */
 .primary {
   background-color: var(--color-primary);
   color: white;
-  border: none;
 }
 
-.primary:hover {
+.primary:hover:not(:disabled) {
   background-color: var(--color-primary-dark);
   transform: translateY(-2px);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
@@ -36,10 +46,9 @@
 .secondary {
   background-color: var(--color-secondary);
   color: var(--color-primary-dark);
-  border: none;
 }
 
-.secondary:hover {
+.secondary:hover:not(:disabled) {
   background-color: var(--color-secondary-dark);
   transform: translateY(-2px);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
@@ -51,15 +60,15 @@
   border: 1px solid var(--color-primary);
 }
 
-.outline:hover {
-  background-color: rgba(106, 90, 205, 0.1);
-  transform: translateY(-2px);
+.outline:hover:not(:disabled) {
+  background-color: var(--color-primary);
+  color: white;
+  transform: translateY(-1px);
 }
 
 .magical {
   background: linear-gradient(45deg, var(--color-primary), var(--color-primary-light));
   color: white;
-  border: none;
   box-shadow: 0 4px 10px rgba(106, 90, 205, 0.3);
 }
 
@@ -92,28 +101,55 @@
   animation: shimmer 1.5s infinite;
 }
 
-/* Sizes */
+/* Sizes - Responsive */
 .sm {
-  font-size: 0.875rem;
-  padding: 0.5rem 1rem;
+  font-size: clamp(0.8rem, 2vw, 0.875rem);
+  padding: 0.5rem 0.875rem;
+  min-height: 2rem;
+}
+
+@media (min-width: 768px) {
+  .sm {
+    padding: 0.5rem 1rem;
+  }
 }
 
 .md {
-  font-size: 1rem;
-  padding: 0.625rem 1.25rem;
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  padding: 0.625rem 1rem;
+  min-height: 2.5rem;
+}
+
+@media (min-width: 768px) {
+  .md {
+    padding: 0.625rem 1.25rem;
+  }
 }
 
 .lg {
-  font-size: 1.125rem;
-  padding: 0.75rem 1.5rem;
+  font-size: clamp(1rem, 3vw, 1.125rem);
+  padding: 0.75rem 1.25rem;
+  min-height: 3rem;
+}
+
+@media (min-width: 768px) {
+  .lg {
+    padding: 0.75rem 1.5rem;
+  }
 }
 
 .xl {
-  font-size: 1.25rem;
-  padding: 1rem 2rem;
+  font-size: clamp(1.125rem, 3.5vw, 1.25rem);
+  padding: 1rem 1.5rem;
+  min-height: 3.5rem;
 }
 
-/* Full width */
+@media (min-width: 768px) {
+  .xl {
+    padding: 1rem 2rem;  }
+}
+
+/* Full width utility */
 .fullWidth {
   width: 100%;
 }

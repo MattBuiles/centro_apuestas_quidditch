@@ -1,13 +1,210 @@
 .bettingPageContainer {
-    padding: 20px;
-    max-width: 1200px;
+    padding: var(--container-padding-y) var(--container-padding-x);
+    max-width: var(--container-max-width);
     margin: 0 auto;
+    min-height: 100vh;
 }
 
 .bettingPageTitle {
     text-align: center;
-    color: #333;
-    margin-bottom: 30px;
+    color: var(--text-color);
+    margin-bottom: var(--spacing-xl);
+    font-size: clamp(1.5rem, 5vw, 2.5rem);
+    font-weight: 700;
 }
 
-/* Add more styles as needed for match listings and betting interface */
+/* Betting Steps Navigation */
+.stepsContainer {
+    display: flex;
+    justify-content: center;
+    margin-bottom: var(--spacing-xl);
+    padding: 0 var(--spacing-md);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.stepIndicator {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--border-radius);
+    background: rgba(255, 255, 255, 0.8);
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.stepIndicator.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Betting Form Sections */
+.bettingFormSection {
+    margin-bottom: var(--spacing-xl);
+    padding: var(--spacing-xl);
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-card);
+}
+
+.sectionTitle {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: var(--spacing-lg);
+}
+
+.matchSelectionGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.betTypeSelector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-lg);
+}
+
+.betTypeButton {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background: transparent;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex: 1;
+    min-width: 120px;
+    min-height: 44px;
+}
+
+.betTypeButton:hover {
+    border-color: var(--primary-color);
+    background: rgba(var(--primary-color-rgb), 0.1);
+}
+
+.betTypeButton.selected {
+    border-color: var(--primary-color);
+    background: var(--primary-color);
+    color: white;
+}
+
+.betAmountContainer {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.betAmountInput {
+    padding: var(--spacing-md);
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: var(--font-size-base);
+    transition: border-color 0.2s ease;
+}
+
+.betAmountInput:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.quickAmountButtons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+}
+
+.quickAmountButton {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    background: transparent;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: var(--font-size-sm);
+    min-height: 36px;
+}
+
+.quickAmountButton:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.betSummaryCard {
+    background: rgba(var(--primary-color-rgb), 0.1);
+    border: 2px solid var(--primary-color);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.navigationButtons {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+.navigationButtons .button {
+    flex: 1;
+    min-width: 120px;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .bettingPageContainer {
+        padding: var(--spacing-md);
+    }
+    
+    .bettingFormSection {
+        padding: var(--spacing-lg);
+    }
+    
+    .matchSelectionGrid {
+        grid-template-columns: 1fr;
+    }
+    
+    .betTypeSelector {
+        flex-direction: column;
+    }
+    
+    .betTypeButton {
+        min-width: unset;
+    }
+    
+    .navigationButtons {
+        flex-direction: column-reverse;
+    }
+    
+    .stepsContainer {
+        padding: 0;
+    }
+    
+    .stepIndicator {
+        flex-direction: column;
+        text-align: center;
+        min-width: 80px;
+    }
+}
+
+@media (max-width: 480px) {
+    .quickAmountButtons {
+        grid-template-columns: repeat(3, 1fr);
+        display: grid;
+    }
+    
+    .bettingFormSection {
+        padding: var(--spacing-md);
+    }
+    
+    .betSummaryCard {
+        padding: var(--spacing-md);
+    }
+}

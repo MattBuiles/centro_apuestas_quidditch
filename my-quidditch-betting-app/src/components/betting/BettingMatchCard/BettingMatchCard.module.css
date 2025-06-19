@@ -1,69 +1,196 @@
 .bettingMatchCardContainer {
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
-    padding: var(--padding-medium);
-    margin-bottom: var(--margin-medium);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
     display: flex;
     flex-direction: column;
-    gap: var(--gap-medium);
-    background-color: var(--color-background-card);
+    gap: var(--spacing-md);
+    background-color: var(--color-background-card, rgba(255, 255, 255, 0.9));
+    box-shadow: var(--shadow-card);
+    transition: all 0.2s ease;
+}
+
+.bettingMatchCardContainer:hover {
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-2px);
+}
+
+.matchHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.matchTitle {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--primary-color);
+    flex: 1;
+}
+
+.matchDate {
+    font-size: var(--font-size-sm);
+    color: var(--text-color-light);
+    white-space: nowrap;
 }
 
 .bettingControls {
     display: flex;
     align-items: center;
-    gap: var(--gap-small);
+    gap: var(--spacing-sm);
     flex-wrap: wrap;
 }
 
 .bettingControls label {
-    font-weight: bold;
-    margin-right: var(--margin-small);
+    font-weight: 600;
+    margin-right: var(--spacing-sm);
+    color: var(--text-color);
+    font-size: var(--font-size-sm);
 }
 
 .betOptions {
     display: flex;
-    gap: var(--gap-small);
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+    flex: 1;
 }
 
 .betButton {
-    padding: var(--padding-small) var(--padding-medium);
-    border: 1px solid var(--color-primary);
-    border-radius: var(--border-radius-small);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 2px solid var(--primary-color);
+    border-radius: var(--border-radius);
     background-color: transparent;
-    color: var(--color-text);
+    color: var(--primary-color);
     cursor: pointer;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    transition: all 0.2s ease;
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    min-height: 40px;
+    min-width: 80px;
+    flex: 1;
 }
 
 .betButton:hover {
-    background-color: var(--color-primary-light);
+    background-color: rgba(var(--primary-color-rgb), 0.1);
+    transform: translateY(-1px);
 }
 
 .betButton.selected {
-    background-color: var(--color-primary);
-    color: var(--color-background-card);
+    background-color: var(--primary-color);
+    color: white;
+    box-shadow: 0 2px 8px rgba(var(--primary-color-rgb), 0.3);
 }
 
 .betInput {
-    padding: var(--padding-small);
-    border: 1px solid var(--color-border);
-    border-radius: var(--border-radius-small);
-    background-color: var(--color-background);
-    color: var(--color-text);
-    width: 80px; /* Adjust as needed */
+    padding: var(--spacing-sm);
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: var(--font-size-sm);
+    min-width: 80px;
+    flex: 1;
+    transition: border-color 0.2s ease;
 }
 
-.placeBetButton {
-    padding: var(--padding-small) var(--padding-medium);
-    background-color: var(--color-accent);
-    color: var(--color-text-inverted);
-    border: none;
-    border-radius: var(--border-radius-small);
-    cursor: pointer;
-    transition: background-color 0.3s ease;
+.betInput:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.1);
 }
 
-.placeBetButton:hover {
-    background-color: var(--color-accent-dark);
+.betAmountSection {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--border-color);
+}
+
+.betAmountLabel {
+    font-weight: 600;
+    color: var(--text-color);
+    font-size: var(--font-size-sm);
+    white-space: nowrap;
+}
+
+.betAmountInput {
+    padding: var(--spacing-sm);
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: var(--font-size-sm);
+    min-width: 100px;
+    flex: 1;
+    transition: border-color 0.2s ease;
+}
+
+.betAmountInput:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.1);
+}
+
+.potentialWin {
+    font-size: var(--font-size-sm);
+    color: var(--success-color, #28a745);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .bettingMatchCardContainer {
+        padding: var(--spacing-md);
+    }
+    
+    .matchHeader {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+    }
+    
+    .matchDate {
+        align-self: flex-end;
+    }
+    
+    .bettingControls {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--spacing-md);
+    }
+    
+    .bettingControls label {
+        margin-right: 0;
+        margin-bottom: var(--spacing-xs);
+    }
+    
+    .betOptions {
+        width: 100%;
+    }
+    
+    .betButton {
+        min-width: unset;
+    }
+    
+    .betAmountSection {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--spacing-sm);
+    }
+    
+    .betAmountInput {
+        min-width: unset;
+    }
+}
+
+@media (max-width: 480px) {
+    .betOptions {        flex-direction: column;
+    }
+    
+    .betButton {
+        min-width: unset;
+        width: 100%;
+    }
 }

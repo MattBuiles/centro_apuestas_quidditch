@@ -1,11 +1,238 @@
 .accountPageContainer {
-    padding: 20px;
-    max-width: 800px;
+    padding: var(--container-padding-y) var(--container-padding-x);
+    max-width: var(--container-max-width);
     margin: 0 auto;
+    min-height: 100vh;
 }
 
 .accountPageTitle {
     text-align: center;
-    color: #333; /* Example color */
-    margin-bottom: 30px;
+    color: var(--primary-color);
+    margin-bottom: var(--spacing-xl);
+    font-size: clamp(1.5rem, 5vw, 2rem);
+    font-weight: 700;
+}
+
+.accountContent {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--spacing-xl);
+    margin-bottom: var(--spacing-xl);
+}
+
+.accountSection {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-xl);
+    box-shadow: var(--shadow-card);
+}
+
+.sectionTitle {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: var(--spacing-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.userProfile {
+    text-align: center;
+}
+
+.userAvatar {
+    width: clamp(4rem, 12vw, 6rem);
+    height: clamp(4rem, 12vw, 6rem);
+    border-radius: 50%;
+    background: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    font-weight: bold;
+    color: white;
+    margin: 0 auto var(--spacing-md);
+    box-shadow: var(--shadow-card);
+}
+
+.userName {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: var(--spacing-xs);
+}
+
+.userEmail {
+    font-size: var(--font-size-sm);
+    color: var(--text-color-light);
+    margin-bottom: var(--spacing-md);
+}
+
+.userStats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-lg);
+}
+
+.statItem {
+    text-align: center;
+    padding: var(--spacing-sm);
+    background: rgba(var(--primary-color-rgb), 0.1);
+    border-radius: var(--border-radius);
+}
+
+.statValue {
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.statLabel {
+    font-size: var(--font-size-xs);
+    color: var(--text-color-light);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: var(--spacing-xs);
+}
+
+.betHistory {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.betHistoryItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: var(--border-radius);
+    border-left: 4px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.betHistoryItem:hover {
+    background: rgba(255, 255, 255, 0.8);
+    transform: translateX(4px);
+}
+
+.betHistoryItem.won {
+    border-left-color: #28a745;
+}
+
+.betHistoryItem.lost {
+    border-left-color: #dc3545;
+}
+
+.betHistoryItem.pending {
+    border-left-color: #ffc107;
+}
+
+.betInfo {
+    flex: 1;
+}
+
+.betMatch {
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: var(--spacing-xs);
+}
+
+.betDetails {
+    font-size: var(--font-size-sm);
+    color: var(--text-color-light);
+}
+
+.betAmount {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.betStatus {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.betStatus.won {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.betStatus.lost {
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.betStatus.pending {
+    background: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+}
+
+.emptyState {
+    text-align: center;
+    padding: var(--spacing-xl);
+    color: var(--text-color-light);
+}
+
+.actionButtons {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: center;
+    margin-top: var(--spacing-lg);
+    flex-wrap: wrap;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .accountPageContainer {
+        padding: var(--spacing-md);
+    }
+    
+    .accountContent {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-lg);
+    }
+    
+    .accountSection {
+        padding: var(--spacing-lg);
+    }
+    
+    .userStats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .betHistoryItem {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+    }
+    
+    .betAmount,
+    .betStatus {
+        align-self: flex-end;
+    }
+    
+    .actionButtons {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    .accountSection {
+        padding: var(--spacing-md);
+    }
+    
+    .userStats {
+        grid-template-columns: 1fr;
+    }
+    
+    .betHistoryItem {
+        padding: var(--spacing-sm);
+    }
 }

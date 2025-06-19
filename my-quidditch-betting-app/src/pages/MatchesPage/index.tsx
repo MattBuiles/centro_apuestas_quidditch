@@ -25,7 +25,6 @@ const MatchesPage = () => {
     const matchesStatus = activeTab === 'all' || match.status === activeTab;
     return matchesSearch && matchesLeague && matchesStatus;
   });
-
   return (
     <div className={styles.matchesPageContainer}>
       <section className={styles.heroSection}>
@@ -47,16 +46,52 @@ const MatchesPage = () => {
             <Button variant="magical" size="sm">⌕</Button>
           </div>
           <div className={styles.filterOptions}>
-            <Button variant={selectedLeague === 'all' ? 'primary' : 'outline'} size="sm" onClick={() => setSelectedLeague('all')}>Todos</Button>
-            <Button variant={selectedLeague === 'Liga de Hogwarts' ? 'primary' : 'outline'} size="sm" onClick={() => setSelectedLeague('Liga de Hogwarts')}>Liga de Hogwarts</Button>
-            <Button variant={selectedLeague === 'Liga Británica' ? 'primary' : 'outline'} size="sm" onClick={() => setSelectedLeague('Liga Británica')}>Liga Británica</Button>
+            <Button 
+              variant={selectedLeague === 'all' ? 'primary' : 'outline'} 
+              size="sm" 
+              onClick={() => setSelectedLeague('all')}
+            >
+              Todos
+            </Button>
+            <Button 
+              variant={selectedLeague === 'Liga de Hogwarts' ? 'primary' : 'outline'} 
+              size="sm" 
+              onClick={() => setSelectedLeague('Liga de Hogwarts')}
+            >
+              <span className="hidden sm:inline">Liga de</span> Hogwarts
+            </Button>
+            <Button 
+              variant={selectedLeague === 'Liga Británica' ? 'primary' : 'outline'} 
+              size="sm" 
+              onClick={() => setSelectedLeague('Liga Británica')}
+            >
+              <span className="hidden sm:inline">Liga</span> Británica
+            </Button>
           </div>
         </div>
 
         <div className={styles.matchesTabs}>
-          <Button variant={activeTab === 'upcoming' ? 'primary' : 'outline'} onClick={() => setActiveTab('upcoming')}>Próximos</Button>
-          <Button variant={activeTab === 'live' ? 'primary' : 'outline'} onClick={() => setActiveTab('live')}>En Vivo</Button>
-          <Button variant={activeTab === 'finished' ? 'primary' : 'outline'} onClick={() => setActiveTab('finished')}>Finalizados</Button>
+          <Button 
+            variant={activeTab === 'upcoming' ? 'primary' : 'outline'} 
+            onClick={() => setActiveTab('upcoming')}
+            fullWidth
+          >
+            Próximos
+          </Button>
+          <Button 
+            variant={activeTab === 'live' ? 'primary' : 'outline'} 
+            onClick={() => setActiveTab('live')}
+            fullWidth
+          >
+            En Vivo
+          </Button>
+          <Button 
+            variant={activeTab === 'finished' ? 'primary' : 'outline'} 
+            onClick={() => setActiveTab('finished')}
+            fullWidth
+          >
+            Finalizados
+          </Button>
         </div>
 
         {/* Grid for matches */}
