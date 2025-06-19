@@ -1,4 +1,6 @@
 /* Reset y base styles */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=Cinzel:wght@400;500;600;700&display=swap');
+
 * {
   margin: 0;
   padding: 0;
@@ -6,6 +8,11 @@
 }
 
 :root {
+  /* Fuentes elegantes y lujosas */
+  --font-primary: 'Playfair Display', serif; /* Para títulos elegantes */
+  --font-secondary: 'Cinzel', serif; /* Para elementos especiales y mágicos */
+  --font-body: 'Inter', sans-serif; /* Para texto general, moderno y legible */
+  
   /* Colores del tema */
   --color-primary: #4b0082;
   --color-primary-light: #6a5acd;
@@ -79,18 +86,21 @@
 }
 
 body {
-  font-family: 'Garamond', serif;
+  font-family: var(--font-body);
   background-color: var(--color-background);
   color: var(--color-gray-800);
   line-height: 1.6;
+  font-weight: 400;
   /* From magical-elements.css */
   background: linear-gradient(to bottom, #f0e6f6, #d9c9e8);
   color: #4b3d6b;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Garamond', serif;
-  font-weight: bold;
+  font-family: var(--font-primary);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.3;
   color: var(--color-primary);
   /* From magical-elements.css */
   text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5); /* Adjusted for subtlety */
@@ -1636,4 +1646,45 @@ html {
   html {
     scroll-behavior: auto;
   }
+}
+
+/* Utilidades especiales para elementos mágicos */
+.font-primary {
+  font-family: var(--font-primary);
+}
+
+.font-secondary {
+  font-family: var(--font-secondary);
+}
+
+.font-body {
+  font-family: var(--font-body);
+}
+
+.magical-text {
+  font-family: var(--font-secondary);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 10px rgba(106, 90, 205, 0.3);
+}
+
+.elegant-title {
+  font-family: var(--font-primary);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light), var(--color-secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.luxury-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 
+    0 20px 40px rgba(106, 90, 205, 0.12),
+    0 8px 25px rgba(0, 0, 0, 0.08);
 }
