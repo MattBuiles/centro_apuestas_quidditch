@@ -10,17 +10,21 @@ const HomePage = () => {
       {/* Hero section */}
       <section className={styles.heroSection}> 
         <div className="flex flex-col md:flex-row md:gap-12 items-center">
-          <div className={`flex-1 space-y-4 md:space-y-6 ${styles.heroContent}`}>
-            <h2 className={styles.heroTitle}>
+          <div className={`flex-1 space-y-4 md:space-y-6 ${styles.heroContent}`}>            <h2 className={styles.heroTitle}>
               La Magia de las Apuestas de Quidditch
             </h2>
             <p className={styles.heroDescription}>
-              Predice resultados, gana Galeones y disfruta de la emoción del juego más mágico del mundo.
+              Explora partidos en tiempo virtual, simula temporadas completas y disfruta de la emoción del juego más mágico del mundo.
             </p>
-            <div className="pt-4 md:pt-6">
+            <div className="pt-4 md:pt-6 flex flex-col sm:flex-row gap-4">
               <Link to="/register">
                 <Button size="lg" className="cta-button bg-gradient-to-r from-primary to-secondary text-white hover:shadow-lg transform hover:scale-105 transition-all duration-300 w-full sm:w-auto">
                   ¡Atrapa tu Suerte!
+                </Button>
+              </Link>
+              <Link to="/matches">
+                <Button variant="outline" size="lg" className="w-full sm:w-auto">
+                  🏆 Ver Liga Interactiva
                 </Button>
               </Link>
             </div>
@@ -32,8 +36,7 @@ const HomePage = () => {
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </div>      </section>
 
       {/* Featured matches section */}
       <section className={styles.featuredSection}>
@@ -122,29 +125,28 @@ const HomePage = () => {
         <h3 className={styles.howItWorksTitle}>
           Cómo Funciona la Magia
         </h3>
-        <div className={styles.stepsGrid}>
-          <div className={styles.stepCard}>
+        <div className={styles.stepsGrid}>          <div className={styles.stepCard}>
             <div className={styles.stepIcon}>
-              <span>✨</span>
+              <span>⏰</span>
             </div>
-            <h4 className={styles.stepTitle}>Regístrate en el Mundo Mágico</h4>
-            <p className={styles.stepDescription}>Únete a nuestra comunidad de magos apostadores y recibe 100 Galeones de bienvenida para comenzar tu aventura mágica en el mundo del Quidditch.</p>
+            <h4 className={styles.stepTitle}>Controla el Tiempo Virtual</h4>
+            <p className={styles.stepDescription}>Avanza el tiempo día por día, simula partidos bajo demanda y observa como se desarrolla toda una temporada de Quidditch a tu ritmo.</p>
           </div>
 
           <div className={styles.stepCard}>
             <div className={styles.stepIcon}>
               <span>🏆</span>
             </div>
-            <h4 className={styles.stepTitle}>Elige tu Partido Favorito</h4>
-            <p className={styles.stepDescription}>Explora nuestra selección de los partidos más emocionantes de Quidditch. Desde la Liga de Hogwarts hasta campeonatos profesionales internacionales.</p>
+            <h4 className={styles.stepTitle}>Simula Partidos en Vivo</h4>
+            <p className={styles.stepDescription}>Experimenta la emoción de partidos generados dinámicamente con eventos minuto a minuto, desde goles hasta la captura de la Snitch Dorada.</p>
           </div>
 
           <div className={styles.stepCard}>
             <div className={styles.stepIcon}>
               <span>⚡</span>
             </div>
-            <h4 className={styles.stepTitle}>Apuesta y Multiplica tus Galeones</h4>
-            <p className={styles.stepDescription}>Haz tus predicciones mágicas, siente la adrenalina del juego más emocionante del mundo y multiplica tus ganancias con cada victoria épica.</p>
+            <h4 className={styles.stepTitle}>Apuesta en Tiempo Real</h4>
+            <p className={styles.stepDescription}>Haz tus predicciones en una liga completamente simulada, sigue la evolución de los equipos y multiplica tus ganancias con cada victoria épica.</p>
           </div>
         </div>
       </section>

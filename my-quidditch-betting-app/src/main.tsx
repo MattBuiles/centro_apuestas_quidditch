@@ -5,6 +5,10 @@ import App from './App'
 import { AuthProvider } from './context/AuthContext'
 import './styles/global.css'
 
+// Import Quidditch System for console access and testing
+import './services/quidditchSystem'
+import './services/systemValidation'
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter>

@@ -1,0 +1,313 @@
+/* Upcoming Matches Component Styles */
+.upcomingMatchesCard {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-color);
+  margin: 0;
+}
+
+.lastUpdated {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.matchesList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.matchItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.matchItem:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.matchScheduled {
+  border-left: 4px solid var(--primary-color);
+}
+
+.matchSoon {
+  border-left: 4px solid var(--warning-color);
+  background: rgba(255, 193, 7, 0.05);
+}
+
+.matchInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.teams {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.team {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 120px;
+}
+
+.teamName {
+  font-weight: 500;
+  color: var(--text-color);
+  font-size: 0.9rem;
+}
+
+.vs {
+  font-weight: bold;
+  color: var(--primary-color);
+  font-size: 0.8rem;
+  padding: 0 0.5rem;
+}
+
+.matchDetails {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.dateTime {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.time {
+  font-weight: 600;
+  color: var(--text-color);
+  font-size: 0.9rem;
+}
+
+.countdown {
+  font-size: 0.75rem;
+  color: var(--success-color);
+  font-weight: 500;
+}
+
+.venue {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.leagueName {
+  font-weight: 500;
+}
+
+.venueName {
+  font-style: italic;
+}
+
+.odds {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.oddItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.oddLabel {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.oddValue {
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: var(--primary-color);
+  background: rgba(var(--primary-color-rgb), 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 120px;
+}
+
+.footer {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Loading States */
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem;
+}
+
+.loadingSpinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(var(--primary-color-rgb), 0.3);
+  border-top: 3px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Error States */
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem;
+}
+
+.errorMessage {
+  color: var(--error-color);
+  text-align: center;
+  margin: 0;
+}
+
+/* No Matches */
+.noMatchesContainer {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-muted);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .upcomingMatchesCard {
+    padding: 1rem;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .matchItem {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .teams {
+    justify-content: center;
+  }
+
+  .team {
+    min-width: auto;
+  }
+
+  .teamName {
+    font-size: 0.8rem;
+  }
+
+  .matchDetails {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .odds {
+    justify-content: center;
+  }
+
+  .actions {
+    flex-direction: row;
+    justify-content: center;
+    min-width: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .teams {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .vs {
+    transform: rotate(90deg);
+    font-size: 0.7rem;
+  }
+
+  .team {
+    justify-content: center;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+}
+
+/* Dark theme support */
+@media (prefers-color-scheme: dark) {
+  .upcomingMatchesCard {
+    background: rgba(30, 30, 30, 0.95);
+    color: white;
+  }
+
+  .matchItem {
+    background: rgba(40, 40, 40, 0.8);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .matchSoon {
+    background: rgba(255, 193, 7, 0.1);
+  }
+
+  .title {
+    color: white;
+  }
+
+  .teamName {
+    color: white;
+  }
+
+  .time {
+    color: white;
+  }
+}
