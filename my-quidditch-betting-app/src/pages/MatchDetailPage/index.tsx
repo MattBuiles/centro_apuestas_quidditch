@@ -3,6 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import Button from '@/components/common/Button';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import TeamLogo from '@/components/teams/TeamLogo';
+import LiveMatchViewer from '@/components/matches/LiveMatchViewer';
+import { Team, Match } from '@/types/league';
 // import { useAuth } from '@/context/AuthContext'; // If needed for predictions
 
 // Mock data - replace with actual data fetching
@@ -20,6 +22,57 @@ interface MatchDetails {
   location: string;
   // Add more details like stats, lineups, commentary etc.
 }
+
+// Mock teams for live simulation
+const mockHomeTeam: Team = {
+  id: 'gryffindor',
+  name: 'Gryffindor',
+  house: 'Gryffindor',
+  fuerzaAtaque: 85,
+  fuerzaDefensa: 78,
+  attackStrength: 85,
+  defenseStrength: 78,
+  seekerSkill: 90,
+  chaserSkill: 85,
+  keeperSkill: 80,
+  beaterSkill: 75,
+  venue: 'Gryffindor Tower Pitch'
+};
+
+const mockAwayTeam: Team = {
+  id: 'slytherin',
+  name: 'Slytherin',
+  house: 'Slytherin',
+  fuerzaAtaque: 82,
+  fuerzaDefensa: 88,
+  attackStrength: 82,
+  defenseStrength: 88,
+  seekerSkill: 85,
+  chaserSkill: 80,
+  keeperSkill: 90,
+  beaterSkill: 85,
+  venue: 'Slytherin Dungeon Pitch'
+};
+
+const mockMatch: Match = {
+  id: '1',
+  localId: 'gryffindor',
+  visitanteId: 'slytherin',
+  homeTeamId: 'gryffindor',
+  awayTeamId: 'slytherin',
+  fecha: new Date(),
+  date: new Date(),
+  eventos: [],
+  events: [],
+  status: 'scheduled',
+  homeScore: 0,
+  awayScore: 0,
+  duration: 0,
+  round: 1,
+  matchday: 1,
+  venue: 'Campo de Quidditch de Hogwarts',
+  snitchCaught: false
+};
 
 const mockMatchDetail: MatchDetails = {
   id: '1',
@@ -40,6 +93,7 @@ const MatchDetailPage = () => {
   const [match, setMatch] = useState<MatchDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('live'); // live, stats, lineups, h2h, betting, predictions
+  const [showLiveSimulation, setShowLiveSimulation] = useState(false);
   // const { isAuthenticated } = useAuth(); // If needed for predictions
 
   useEffect(() => {
@@ -58,6 +112,10 @@ const MatchDetailPage = () => {
 
   const handleTabClick = (tabName: string) => {
     setActiveTab(tabName);
+  };
+
+  const toggleLiveSimulation = () => {
+    setShowLiveSimulation(prev => !prev);
   };
 
   if (isLoading) {
@@ -165,6 +223,26 @@ const MatchDetailPage = () => {
         <h2 className="text-xl font-bold text-primary mb-4">Predicciones de la Comunidad</h2>
         <p>Las predicciones de otros usuarios aparecerán aquí...</p>
       </div>
+
+      {/* Live Simulation Section */}
+      {match.status === 'live' && (
+        <div className="live-simulation-section mt-8">
+          <h2 className="text-xl font-bold text-primary mb-4">Simulación en Vivo</h2>
+          <Button onClick={toggleLiveSimulation} className="mb-4">
+            {showLiveSimulation ? 'Ocultar Simulación' : 'Ver Simulación en Vivo'}
+          </Button>          {showLiveSimulation && (
+            <LiveMatchViewer 
+              match={mockMatch} 
+              homeTeam={mockHomeTeam} 
+              awayTeam={mockAwayTeam}
+              onMatchEnd={(matchState) => {
+                console.log('Match ended:', matchState);
+                setShowLiveSimulation(false);
+              }}
+            />
+          )}
+        </div>
+      )}
 
       {/* Related Matches Section (Simplified) */}
       <section className="related-matches mt-12 card">
