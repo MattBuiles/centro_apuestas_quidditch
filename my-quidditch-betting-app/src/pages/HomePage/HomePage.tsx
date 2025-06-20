@@ -2,6 +2,7 @@
 import { Link } from 'react-router-dom'
 import Button from '@/components/common/Button'
 import TeamLogo from '@/components/teams/TeamLogo'
+import welcomeLogo from '@/assets/Welcome_Logo.png'
 import styles from './HomePage.module.css'
 
 const HomePage = () => {
@@ -28,11 +29,14 @@ const HomePage = () => {
                 </Button>
               </Link>
             </div>
-          </div>
-          <div className={`flex-1 ${styles.heroImagePlaceholder}`}>
+          </div>          <div className={`flex-1 ${styles.heroImagePlaceholder}`}>
             <div className={styles.heroImageInner}>
               <div className={styles.heroImageSymbol}>
-                <span>Q</span>
+                <img 
+                  src={welcomeLogo} 
+                  alt="Centro de Apuestas Quidditch - Logo de Bienvenida" 
+                  className={styles.welcomeLogo}
+                />
               </div>
             </div>
           </div>

@@ -82,7 +82,7 @@
 
 .heroImagePlaceholder {
   position: relative;
-  height: 200px;
+  height: 220px;  /* Aumentado de 200px a 220px */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -92,7 +92,7 @@
 
 @media (min-width: 768px) {
   .heroImagePlaceholder {
-    height: 300px;
+    height: 320px;  /* Aumentado de 300px a 320px */
     margin-top: 0;
   }
 }
@@ -101,14 +101,13 @@
   position: relative;
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, rgba(106, 90, 205, 0.1), rgba(255, 204, 0, 0.1));
-  border-radius: 1rem;
-  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Removido: background, border-radius, overflow para mostrar solo el logo */
 }
 
+/* Shimmer effect disabled for clean logo display
 .heroImageInner::before {
   content: '';
   position: absolute;
@@ -125,17 +124,16 @@
   transform: rotate(30deg);
   animation: shimmer 6s linear infinite;
 }
+*/
 
 .heroImageSymbol {
   position: relative;
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  background: radial-gradient(circle, var(--color-primary-light), var(--color-primary));
+  width: 180px;  /* Aumentado de 120px a 180px */
+  height: 180px; /* Aumentado de 120px a 180px */
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 20px rgba(106, 90, 205, 0.5);
+  /* Removido: border-radius, background, box-shadow */
   animation: float 3s ease-in-out infinite;
 }
 
@@ -144,6 +142,27 @@
   font-size: 4rem;
   font-weight: bold;
   text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+/* Welcome Logo Styles */
+.welcomeLogo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
+  border: none;           /* Eliminar cualquier borde */
+  outline: none;          /* Eliminar cualquier outline */
+  background: transparent; /* Fondo transparente */
+  /* Removido: border-radius para permitir la forma natural del logo */
+}
+
+.welcomeLogo:hover {
+  transform: scale(1.05);
+}
+
+.welcomeLogo:focus {
+  outline: none; /* Eliminar outline al hacer focus */
 }
 
 /* Featured Matches Section */
