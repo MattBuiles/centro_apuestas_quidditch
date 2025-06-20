@@ -1,0 +1,213 @@
+/* CTA Button - Enhanced magical styles with full responsivity */
+.ctaButton {
+  position: relative;
+  background: linear-gradient(135deg, 
+    var(--color-primary) 0%,
+    var(--color-primary-light) 50%,
+    var(--color-secondary) 100%);
+  color: white;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border: none;
+  padding: clamp(0.75rem, 2.5vw, 1rem) clamp(1.5rem, 4vw, 2rem);
+  border-radius: clamp(0.5rem, 1.5vw, 0.75rem);
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  line-height: 1.2;
+  min-height: 44px;
+  width: 100%;
+  max-width: 300px;
+  box-shadow: 
+    0 8px 32px rgba(106, 90, 205, 0.4),
+    0 4px 16px rgba(255, 204, 0, 0.2),
+    inset 0 2px 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+  text-align: center;
+}
+
+@media (min-width: 640px) {
+  .ctaButton {
+    width: auto;
+    min-width: 200px;
+    padding: 1rem 2rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .ctaButton {
+    padding: 1.125rem 2.5rem;
+    font-size: 1rem;
+    letter-spacing: 0.75px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .ctaButton {
+    padding: 1.25rem 3rem;
+    font-size: 1.125rem;
+  }
+}
+
+.ctaButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.3), 
+    transparent);
+  transition: left 0.6s ease;
+}
+
+.ctaButton:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 
+    0 12px 40px rgba(106, 90, 205, 0.5),
+    0 6px 20px rgba(255, 204, 0, 0.3),
+    inset 0 2px 0 rgba(255, 255, 255, 0.3);
+  background: linear-gradient(135deg, 
+    var(--color-primary-dark) 0%,
+    var(--color-primary) 50%,
+    var(--color-secondary-light) 100%);
+}
+
+/* Reduce hover effect intensity on mobile for better touch experience */
+@media (max-width: 767px) {
+  .ctaButton:hover {
+    transform: translateY(-1px) scale(1.01);
+    box-shadow: 
+      0 8px 24px rgba(106, 90, 205, 0.4),
+      0 4px 12px rgba(255, 204, 0, 0.25),
+      inset 0 2px 0 rgba(255, 255, 255, 0.25);
+  }
+}
+
+.ctaButton:active {
+  transform: translateY(-1px) scale(1.01);
+  box-shadow: 
+    0 6px 20px rgba(106, 90, 205, 0.4),
+    0 3px 10px rgba(255, 204, 0, 0.2),
+    inset 0 2px 0 rgba(255, 255, 255, 0.2);
+}
+
+@media (max-width: 767px) {
+  .ctaButton:active {
+    transform: translateY(0) scale(1);
+    box-shadow: 
+      0 4px 16px rgba(106, 90, 205, 0.3),
+      0 2px 8px rgba(255, 204, 0, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  }
+}
+
+.ctaButton:focus-visible {
+  outline: 3px solid rgba(106, 90, 205, 0.5);
+  outline-offset: 3px;
+}
+
+/* Authenticated state - Different color scheme */
+.ctaButton[data-authenticated="true"] {
+  background: linear-gradient(135deg, 
+    #1e7e34 0%,
+    #28a745 50%,
+    var(--color-secondary) 100%);
+}
+
+.ctaButton[data-authenticated="true"]:hover {
+  background: linear-gradient(135deg, 
+    #155724 0%,
+    #218838 50%,
+    var(--color-secondary-light) 100%);
+  box-shadow: 
+    0 12px 40px rgba(40, 167, 69, 0.5),
+    0 6px 20px rgba(255, 204, 0, 0.3),
+    inset 0 2px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* Dark mode adjustments */
+.dark .ctaButton {
+  box-shadow: 
+    0 8px 32px rgba(106, 90, 205, 0.6),
+    0 4px 16px rgba(255, 204, 0, 0.3),
+    inset 0 2px 0 rgba(255, 255, 255, 0.15);
+}
+
+.dark .ctaButton:hover {
+  box-shadow: 
+    0 12px 40px rgba(106, 90, 205, 0.7),
+    0 6px 20px rgba(255, 204, 0, 0.4),
+    inset 0 2px 0 rgba(255, 255, 255, 0.2);
+}
+
+.dark .ctaButton[data-authenticated="true"]:hover {
+  box-shadow: 
+    0 12px 40px rgba(40, 167, 69, 0.7),
+    0 6px 20px rgba(255, 204, 0, 0.4),
+    inset 0 2px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .ctaButton {
+    font-size: clamp(0.9rem, 2.5vw, 1rem);
+    padding: 0.75rem 1rem;
+    letter-spacing: 0.3px;
+  }
+}
+
+@media (min-width: 768px) {
+  .ctaButton {
+    min-width: 200px;
+  }
+}
+
+/* Loading state */
+.ctaButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.ctaButton:disabled:hover {
+  transform: none;
+  box-shadow: 
+    0 8px 32px rgba(106, 90, 205, 0.4),
+    0 4px 16px rgba(255, 204, 0, 0.2),
+    inset 0 2px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Button content styling */
+.buttonContent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.buttonIcon {
+  font-size: 1.1em;
+  transition: transform 0.3s ease;
+}
+
+.buttonText {
+  font-weight: inherit;
+  letter-spacing: inherit;
+}
+
+.ctaButton:hover .buttonIcon {
+  transform: scale(1.2) rotate(5deg);
+}
+
+.ctaButton[data-authenticated="true"]:hover .buttonIcon {
+  transform: scale(1.2) rotate(-5deg);
+}
