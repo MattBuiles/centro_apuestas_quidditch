@@ -1,6 +1,7 @@
 // filepath: d:\Coding\Projects\centro_apuestas_quidditch\my-quidditch-betting-app\src\pages\HomePage\HomePage.tsx
 import { Link } from 'react-router-dom'
 import Button from '@/components/common/Button'
+import CTAButton from '@/components/common/CTAButton'
 import TeamLogo from '@/components/teams/TeamLogo'
 import welcomeLogo from '@/assets/Welcome_Logo.png'
 import styles from './HomePage.module.css'
@@ -16,13 +17,11 @@ const HomePage = () => {
             </h2>
             <p className={styles.heroDescription}>
               Explora partidos en tiempo virtual, simula temporadas completas y disfruta de la emoción del juego más mágico del mundo.
-            </p>
-            <div className="pt-4 md:pt-6 flex flex-col sm:flex-row gap-4">
-              <Link to="/register">
-                <Button size="lg" className="cta-button bg-gradient-to-r from-primary to-secondary text-white hover:shadow-lg transform hover:scale-105 transition-all duration-300 w-full sm:w-auto">
-                  ¡Atrapa tu Suerte!
-                </Button>
-              </Link>
+            </p>            <div className="pt-4 md:pt-6 flex flex-col sm:flex-row gap-4">
+              <CTAButton 
+                size="lg" 
+                className="w-full sm:w-auto"
+              />
               <Link to="/matches">
                 <Button variant="outline" size="lg" className="w-full sm:w-auto">
                   🏆 Ver Liga Interactiva

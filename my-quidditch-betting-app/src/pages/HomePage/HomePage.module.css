@@ -1,18 +1,27 @@
-/* Hero Section - Mobile First */
+/* Hero Section - Mobile First Optimizado */
 .heroSection {
   position: relative;
   background: linear-gradient(135deg, rgba(240, 230, 246, 0.9), rgba(217, 201, 232, 0.9));
-  border-radius: 1rem;
-  padding: 2rem 1rem;
-  margin-bottom: 2rem;
+  border-radius: clamp(0.75rem, 2vw, 1.5rem);
+  padding: clamp(1.5rem, 4vw, 2.5rem) clamp(1rem, 3vw, 2rem);
+  margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
   overflow: hidden;
   box-shadow: 0 10px 25px rgba(106, 90, 205, 0.2);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 @media (min-width: 768px) {
   .heroSection {
-    padding: 3rem 2rem;
-    margin-bottom: 3rem;
+    padding: clamp(2.5rem, 5vw, 3.5rem) clamp(2rem, 4vw, 3rem);
+    margin-bottom: clamp(2.5rem, 4vw, 3.5rem);
+  }
+}
+
+@media (min-width: 1024px) {
+  .heroSection {
+    padding: 3.5rem 3rem;
+    margin-bottom: 3.5rem;
   }
 }
 
@@ -32,6 +41,8 @@
   position: relative;
   z-index: 1;
   text-align: center;
+  width: 100%;
+  max-width: 100%;
 }
 
 @media (min-width: 768px) {
@@ -42,58 +53,67 @@
 
 .heroTitle {
   font-family: var(--font-primary);
-  font-size: clamp(2.5rem, 8vw, 4rem);
+  font-size: clamp(2rem, 6vw, 3.5rem);
   font-weight: 700;
-  margin-bottom: 1rem;
+  margin-bottom: clamp(1rem, 2vw, 1.5rem);
   letter-spacing: -0.02em;
   text-shadow: 2px 2px 8px rgba(255, 255, 255, 0.8);
   animation: fadeInUp 0.8s ease-out;
-  background: linear-gradient(45deg, var(--color-primary), var(--color-primary-light), var(--color-secondary));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  display: inline-block;
   line-height: 1.2;
+  word-wrap: break-word;
+  hyphens: auto;
 }
 
 @media (min-width: 768px) {
   .heroTitle {
+    font-size: clamp(2.5rem, 5vw, 4rem);
     margin-bottom: 1.5rem;
   }
 }
 
 .heroDescription {
   font-family: var(--font-body);
-  font-size: clamp(1.1rem, 3vw, 1.375rem);
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
   color: var(--color-gray-700);
-  margin-bottom: 1.5rem;
+  margin-bottom: clamp(1.5rem, 3vw, 2rem);
   animation: fadeInUp 1s ease-out 0.2s both;
-  line-height: 1.7;
+  line-height: 1.6;
   font-weight: 400;
   opacity: 0.9;
+  word-wrap: break-word;
+  hyphens: auto;
 }
 
 @media (min-width: 768px) {
   .heroDescription {
+    font-size: clamp(1.125rem, 2vw, 1.375rem);
     margin-bottom: 2rem;
-    max-width: 80%;
+    max-width: 85%;
+    line-height: 1.7;
   }
 }
 
 .heroImagePlaceholder {
   position: relative;
-  height: 220px;  /* Aumentado de 200px a 220px */
+  height: clamp(180px, 25vw, 250px);
   display: flex;
   align-items: center;
   justify-content: center;
   animation: fadeInUp 1.2s ease-out 0.4s both;
-  margin-top: 2rem;
+  margin-top: clamp(1.5rem, 3vw, 2rem);
+  width: 100%;
 }
 
 @media (min-width: 768px) {
   .heroImagePlaceholder {
-    height: 320px;  /* Aumentado de 300px a 320px */
+    height: clamp(280px, 35vw, 350px);
     margin-top: 0;
+  }
+}
+
+@media (min-width: 1024px) {
+  .heroImagePlaceholder {
+    height: clamp(320px, 30vw, 400px);
   }
 }
 
@@ -128,33 +148,47 @@
 
 .heroImageSymbol {
   position: relative;
-  width: 180px;  /* Aumentado de 120px a 180px */
-  height: 180px; /* Aumentado de 120px a 180px */
+  width: clamp(150px, 20vw, 200px);
+  height: clamp(150px, 20vw, 200px);
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Removido: border-radius, background, box-shadow */
   animation: float 3s ease-in-out infinite;
+}
+
+@media (min-width: 768px) {
+  .heroImageSymbol {
+    width: clamp(180px, 15vw, 250px);
+    height: clamp(180px, 15vw, 250px);
+  }
+}
+
+@media (min-width: 1024px) {
+  .heroImageSymbol {
+    width: clamp(200px, 12vw, 280px);
+    height: clamp(200px, 12vw, 280px);
+  }
 }
 
 .heroImageSymbol span {
   color: white;
-  font-size: 4rem;
+  font-size: clamp(3rem, 8vw, 4rem);
   font-weight: bold;
   text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
 }
 
-/* Welcome Logo Styles */
+/* Welcome Logo Styles - Completamente responsivo */
 .welcomeLogo {
   width: 100%;
   height: 100%;
   object-fit: contain;
   transition: transform 0.3s ease;
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
-  border: none;           /* Eliminar cualquier borde */
-  outline: none;          /* Eliminar cualquier outline */
-  background: transparent; /* Fondo transparente */
-  /* Removido: border-radius para permitir la forma natural del logo */
+  border: none;
+  outline: none;
+  background: transparent;
+  max-width: 100%;
+  max-height: 100%;
 }
 
 .welcomeLogo:hover {
@@ -639,5 +673,112 @@
   
   .stepsGrid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* CTA Button - Enhanced magical styles */
+.ctaButton {
+  position: relative;
+  background: linear-gradient(135deg, 
+    var(--color-primary) 0%,
+    var(--color-primary-light) 50%,
+    var(--color-secondary) 100%);
+  color: white;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border: none;
+  box-shadow: 
+    0 8px 32px rgba(106, 90, 205, 0.4),
+    0 4px 16px rgba(255, 204, 0, 0.2),
+    inset 0 2px 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.ctaButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.3), 
+    transparent);
+  transition: left 0.6s ease;
+}
+
+.ctaButton:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 
+    0 12px 40px rgba(106, 90, 205, 0.5),
+    0 6px 20px rgba(255, 204, 0, 0.3),
+    inset 0 2px 0 rgba(255, 255, 255, 0.3);
+  background: linear-gradient(135deg, 
+    var(--color-primary-dark) 0%,
+    var(--color-primary) 50%,
+    var(--color-secondary-light) 100%);
+}
+
+.ctaButton:hover::before {
+  left: 100%;
+}
+
+.ctaButton:active {
+  transform: translateY(-1px) scale(1.01);
+  box-shadow: 
+    0 6px 20px rgba(106, 90, 205, 0.4),
+    0 3px 10px rgba(255, 204, 0, 0.2),
+    inset 0 2px 0 rgba(255, 255, 255, 0.2);
+}
+
+.ctaButton:focus-visible {
+  outline: 3px solid rgba(106, 90, 205, 0.5);
+  outline-offset: 3px;
+}
+
+/* Dark mode adjustments for CTA button */
+.dark .ctaButton {
+  box-shadow: 
+    0 8px 32px rgba(106, 90, 205, 0.6),
+    0 4px 16px rgba(255, 204, 0, 0.3),
+    inset 0 2px 0 rgba(255, 255, 255, 0.15);
+}
+
+.dark .ctaButton:hover {
+  box-shadow: 
+    0 12px 40px rgba(106, 90, 205, 0.7),
+    0 6px 20px rgba(255, 204, 0, 0.4),
+    inset 0 2px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Animation enhancement for authenticated vs non-authenticated states */
+.ctaButton[data-authenticated="true"] {
+  background: linear-gradient(135deg, 
+    #1e7e34 0%,
+    #28a745 50%,
+    var(--color-secondary) 100%);
+}
+
+.ctaButton[data-authenticated="true"]:hover {
+  background: linear-gradient(135deg, 
+    #155724 0%,
+    #218838 50%,
+    var(--color-secondary-light) 100%);
+}
+
+/* Responsive adjustments for CTA button */
+@media (max-width: 480px) {
+  .ctaButton {
+    font-size: clamp(0.9rem, 2.5vw, 1rem);
+    padding: 0.75rem 1rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .ctaButton {
+    min-width: 200px;
   }
 }
