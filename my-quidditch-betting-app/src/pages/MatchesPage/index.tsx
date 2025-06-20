@@ -5,40 +5,42 @@ import styles from './MatchesPage.module.css'
 
 // Mock data for matches - replace with actual data fetching
 const mockMatches = [
+  // Próximos partidos
   { id: '1', homeTeam: 'Gryffindor', awayTeam: 'Slytherin', date: 'Hoy', time: '19:00', league: 'Liga de Hogwarts', status: 'upcoming' as const },
   { id: '2', homeTeam: 'Hufflepuff', awayTeam: 'Ravenclaw', date: 'Mañana', time: '17:30', league: 'Liga de Hogwarts', status: 'upcoming' as const },
-  { id: '3', homeTeam: 'Chudley Cannons', awayTeam: 'Holyhead Harpies', date: 'Domingo', time: '15:00', league: 'Liga Británica', status: 'upcoming' as const },
-  { id: '4', homeTeam: 'Gryffindor', awayTeam: 'Hufflepuff', date: 'En Curso', time: '35\'', homeScore: 50, awayScore: 70, league: 'Liga de Hogwarts', status: 'live' as const, minute: '35' },
+  { id: '3', homeTeam: 'Ravenclaw', awayTeam: 'Gryffindor', date: 'Mañana', time: '20:00', league: 'Liga de Hogwarts', status: 'upcoming' as const },
+  { id: '4', homeTeam: 'Slytherin', awayTeam: 'Hufflepuff', date: 'Pasado mañana', time: '16:00', league: 'Liga de Hogwarts', status: 'upcoming' as const },
+  { id: '5', homeTeam: 'Gryffindor', awayTeam: 'Hufflepuff', date: 'Viernes', time: '18:30', league: 'Liga de Hogwarts', status: 'upcoming' as const },
+  { id: '6', homeTeam: 'Ravenclaw', awayTeam: 'Slytherin', date: 'Sábado', time: '15:00', league: 'Liga de Hogwarts', status: 'upcoming' as const },
+  
+  // Partidos en vivo
+  { id: '7', homeTeam: 'Hufflepuff', awayTeam: 'Gryffindor', date: 'En Curso', time: '45\'', homeScore: 70, awayScore: 120, league: 'Liga de Hogwarts', status: 'live' as const, minute: '45' },
+  { id: '8', homeTeam: 'Slytherin', awayTeam: 'Ravenclaw', date: 'En Curso', time: '62\'', homeScore: 140, awayScore: 110, league: 'Liga de Hogwarts', status: 'live' as const, minute: '62' },
 ];
 
 const MatchesPage = () => {
-  const [activeTab, setActiveTab] = useState('upcoming') // upcoming, live, finished
+  const [activeTab, setActiveTab] = useState('upcoming') // upcoming, live
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedLeague, setSelectedLeague] = useState('all');
 
   // Filter logic (basic example)
   const filteredMatches = mockMatches.filter(match => {
     const matchesSearch = searchTerm === '' || 
                           match.homeTeam.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           match.awayTeam.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesLeague = selectedLeague === 'all' || match.league === selectedLeague;
     const matchesStatus = activeTab === 'all' || match.status === activeTab;
-    return matchesSearch && matchesLeague && matchesStatus;
+    return matchesSearch && matchesStatus;
   });
   return (
-    <div className={styles.matchesPageContainer}>
-      <section className={styles.heroSection}>
-        <h1 className={styles.heroTitle}>Partidos de Quidditch</h1>
-        <p className={styles.heroSubtitle}>Explora todos los partidos, apuesta y sigue la acción en directo</p>
-      </section>
-
-      <section className={styles.matchesContainerMain}>
+    <div className={styles.matchesPageContainer}>      <section className={styles.heroSection}>
+        <h1 className={styles.heroTitle}>Partidos de la Liga de Hogwarts</h1>
+        <p className={styles.heroSubtitle}>Descubre todos los enfrentamientos entre las casas de Hogwarts y sigue la acción en tiempo real</p>
+      </section><section className={styles.matchesContainerMain}>
         <div className={styles.filtersSection}>
           <div className={styles.searchFilter}>
             <input 
               type="text" 
               id="match-search" 
-              placeholder="Buscar partidos, equipos..." 
+              placeholder="Buscar equipos..." 
               className={styles.searchInput}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -46,27 +48,10 @@ const MatchesPage = () => {
             <Button variant="magical" size="sm">⌕</Button>
           </div>
           <div className={styles.filterOptions}>
-            <Button 
-              variant={selectedLeague === 'all' ? 'primary' : 'outline'} 
-              size="sm" 
-              onClick={() => setSelectedLeague('all')}
-            >
-              Todos
-            </Button>
-            <Button 
-              variant={selectedLeague === 'Liga de Hogwarts' ? 'primary' : 'outline'} 
-              size="sm" 
-              onClick={() => setSelectedLeague('Liga de Hogwarts')}
-            >
-              <span className="hidden sm:inline">Liga de</span> Hogwarts
-            </Button>
-            <Button 
-              variant={selectedLeague === 'Liga Británica' ? 'primary' : 'outline'} 
-              size="sm" 
-              onClick={() => setSelectedLeague('Liga Británica')}
-            >
-              <span className="hidden sm:inline">Liga</span> Británica
-            </Button>
+            <div className="flex items-center gap-2 text-sm text-gray-600 bg-white/80 px-4 py-2 rounded-lg border border-gray-200">
+              <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+              <span className="font-medium">Liga de Hogwarts</span>
+            </div>
           </div>
         </div>
 
@@ -76,21 +61,14 @@ const MatchesPage = () => {
             onClick={() => setActiveTab('upcoming')}
             fullWidth
           >
-            Próximos
+            📅 Próximos Partidos
           </Button>
           <Button 
             variant={activeTab === 'live' ? 'primary' : 'outline'} 
             onClick={() => setActiveTab('live')}
             fullWidth
           >
-            En Vivo
-          </Button>
-          <Button 
-            variant={activeTab === 'finished' ? 'primary' : 'outline'} 
-            onClick={() => setActiveTab('finished')}
-            fullWidth
-          >
-            Finalizados
+            🔴 En Vivo
           </Button>
         </div>
 
