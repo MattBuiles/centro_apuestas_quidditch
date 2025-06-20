@@ -8,12 +8,12 @@ import { teamLogos } from '@/assets/teamLogos';
 import styles from './AccountPage.module.css';
 
 // Icons (you can replace these with actual icon components)
-const UserIcon = () => <span className="text-xl">👤</span>;
-const WalletIcon = () => <span className="text-xl">💰</span>;
-const BetIcon = () => <span className="text-xl">🎯</span>;
-const HistoryIcon = () => <span className="text-xl">📊</span>;
-const SettingsIcon = () => <span className="text-xl">⚙️</span>;
-const TrophyIcon = () => <span className="text-xl">🏆</span>;
+const UserIcon = () => <span className={styles.icon}>👤</span>;
+const WalletIcon = () => <span className={styles.icon}>💰</span>;
+const BetIcon = () => <span className={styles.icon}>🎯</span>;
+const HistoryIcon = () => <span className={styles.icon}>📊</span>;
+const SettingsIcon = () => <span className={styles.icon}>⚙️</span>;
+const TrophyIcon = () => <span className={styles.icon}>🏆</span>;
 
 // Define sub-components for each account section
 const ProfileSection = () => {
@@ -42,39 +42,28 @@ const ProfileSection = () => {
 
     return (
         <div className={styles.sectionContent}>
-            <div className="flex items-center justify-between mb-6">
-                <h2 className="text-3xl font-bold text-primary flex items-center gap-3">
-                    <UserIcon />
-                    Mi Perfil Mágico
-                </h2>
-                <Button 
-                    variant={isEditing ? "outline" : "primary"} 
-                    onClick={() => setIsEditing(!isEditing)}
-                >
-                    {isEditing ? 'Cancelar' : 'Editar Perfil'}
-                </Button>
-            </div>
+            <h2 className={styles.sectionTitle}>
+                <UserIcon />
+                Mi Perfil Mágico
+            </h2>
 
-            <div className="grid md:grid-cols-2 gap-8">
-                <Card className="p-6">
-                    <h3 className="text-xl font-semibold mb-4 text-primary">Información Personal</h3>
+            <div className={styles.contentGrid}>                <Card className={styles.card}>
+                    <h3 className={styles.cardTitle}>Información Personal</h3>
                     {user && (
-                        <form onSubmit={handleSave} className="space-y-4">
-                            <div className="form-group">
-                                <label className="block text-sm font-medium mb-2">Nombre de Usuario:</label>
-                                <input 
+                        <form onSubmit={handleSave} className={styles.form}>
+                            <div className={styles.formGroup}>
+                                <label className={styles.formLabel}>Nombre de Usuario:</label>                                <input 
                                     type="text" 
-                                    className={`w-full p-3 border rounded-lg ${isEditing ? '' : 'bg-gray-100'}`}
+                                    className={`${styles.formInput} ${!isEditing ? styles.disabled : ''}`}
                                     value={formData.username}
                                     onChange={(e) => setFormData({...formData, username: e.target.value})}
                                     readOnly={!isEditing}
                                 />
                             </div>
-                            <div className="form-group">
-                                <label className="block text-sm font-medium mb-2">Correo Electrónico:</label>
-                                <input 
+                            <div className={styles.formGroup}>
+                                <label className={styles.formLabel}>Correo Electrónico:</label>                                <input 
                                     type="email" 
-                                    className={`w-full p-3 border rounded-lg ${isEditing ? '' : 'bg-gray-100'}`}
+                                    className={`${styles.formInput} ${!isEditing ? styles.disabled : ''}`}
                                     value={formData.email}
                                     onChange={(e) => setFormData({...formData, email: e.target.value})}
                                     readOnly={!isEditing}
@@ -82,22 +71,22 @@ const ProfileSection = () => {
                             </div>
                             {isEditing && (
                                 <>
-                                    <div className="form-group">
-                                        <label className="block text-sm font-medium mb-2">Nueva Contraseña:</label>
+                                    <div className={styles.formGroup}>
+                                        <label className={styles.formLabel}>Nueva Contraseña:</label>
                                         <input 
                                             type="password" 
                                             placeholder="Dejar vacío para mantener actual"
-                                            className="w-full p-3 border rounded-lg"
+                                            className={styles.formInput}
                                             value={formData.newPassword}
                                             onChange={(e) => setFormData({...formData, newPassword: e.target.value})}
                                         />
                                     </div>
-                                    <div className="form-group">
-                                        <label className="block text-sm font-medium mb-2">Confirmar Nueva Contraseña:</label>
+                                    <div className={styles.formGroup}>
+                                        <label className={styles.formLabel}>Confirmar Nueva Contraseña:</label>
                                         <input 
                                             type="password" 
                                             placeholder="Confirmar nueva contraseña"
-                                            className="w-full p-3 border rounded-lg"
+                                            className={styles.formInput}
                                             value={formData.confirmPassword}
                                             onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
                                         />
@@ -108,36 +97,40 @@ const ProfileSection = () => {
                                 </>
                             )}
                         </form>
-                    )}
-                </Card>
-
-                <Card className="p-6">
-                    <h3 className="text-xl font-semibold mb-4 text-primary flex items-center gap-2">
+                    )}                    <div className={styles.buttonContainer}>
+                        <Button 
+                            variant={isEditing ? "outline" : "primary"} 
+                            onClick={() => setIsEditing(!isEditing)}
+                        >
+                            {isEditing ? 'Cancelar' : 'Editar Perfil'}
+                        </Button>
+                    </div>
+                </Card>                <Card className={styles.card}>
+                    <h3 className={`${styles.cardTitle} ${styles.titleWithIcon}`}>
                         <TrophyIcon />
                         Estadísticas del Mago
                     </h3>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="text-center p-4 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg border border-yellow-200">
-                            <div className="text-2xl font-bold text-yellow-700">{userStats.totalBets}</div>
-                            <div className="text-sm text-yellow-600">Apuestas Totales</div>
+                    <div className={styles.statsGrid}>
+                        <div className={`${styles.statCard} ${styles.yellow}`}>
+                            <div className={styles.statValue}>{userStats.totalBets}</div>
+                            <div className={styles.statLabel}>Apuestas Totales</div>
                         </div>
-                        <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200">
-                            <div className="text-2xl font-bold text-green-700">{userStats.winRate}%</div>
-                            <div className="text-sm text-green-600">Tasa de Éxito</div>
+                        <div className={`${styles.statCard} ${styles.green}`}>
+                            <div className={styles.statValue}>{userStats.winRate}%</div>
+                            <div className={styles.statLabel}>Tasa de Éxito</div>
                         </div>
-                        <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border border-purple-200">
-                            <div className="text-2xl font-bold text-purple-700">{userStats.totalWinnings}</div>
-                            <div className="text-sm text-purple-600">Galeones Ganados</div>
-                        </div>
-                        <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200">
-                            <div className="flex items-center justify-center gap-2">
+                        <div className={`${styles.statCard} ${styles.purple}`}>
+                            <div className={styles.statValue}>{userStats.totalWinnings}</div>
+                            <div className={styles.statLabel}>Galeones Ganados</div>
+                        </div>                        <div className={`${styles.statCard} ${styles.blue}`}>
+                            <div className={styles.teamFavoriteIcon}>
                                 <img 
                                     src={teamLogos[userStats.favoriteTeam]} 
                                     alt={userStats.favoriteTeam}
-                                    className="w-8 h-8"
+                                    className={styles.teamLogo}
                                 />
-                                <div className="text-sm text-blue-600">Equipo Favorito</div>
                             </div>
+                            <div className={styles.statLabel}>Equipo Favorito</div>
                         </div>
                     </div>
                 </Card>
@@ -169,64 +162,48 @@ const WalletSection = () => {
 
     return (
         <div className={styles.sectionContent}>
-            <h2 className="text-3xl font-bold text-primary mb-6 flex items-center gap-3">
+            <h2 className={styles.sectionTitle}>
                 <WalletIcon />
                 Mi Bóveda de Gringotts
             </h2>
 
             {user && (
-                <div className="mb-8">
-                    <Card className="p-8 text-center bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 text-white relative overflow-hidden">
-                        <div className="relative z-10">
-                            <p className="text-xl opacity-90 mb-2">💰 Saldo Actual</p>
-                            <p className="text-5xl font-bold mb-4">{user.balance}</p>
-                            <p className="text-xl">Galeones Mágicos</p>
-                        </div>
-                        <div className="absolute inset-0 bg-gradient-to-br from-yellow-300/20 to-transparent"></div>
-                        <div className="absolute -top-4 -right-4 text-8xl opacity-10">🏛️</div>
-                    </Card>
+                <div className={styles.walletBalance}>
+                    <div className={styles.balanceLabel}>💰 Saldo Actual</div>
+                    <div className={styles.balanceValue}>{user.balance}</div>
+                    <div className={styles.balanceCurrency}>Galeones Mágicos</div>
                 </div>
             )}
 
-            <div className="grid md:grid-cols-2 gap-6 mb-8">
-                <Button 
-                    className="p-4 h-auto flex flex-col items-center gap-2"
+            <div className={styles.actionButtons}>
+                <button 
+                    className={`${styles.actionButton} ${styles.primary}`}
                     onClick={() => setShowDepositModal(true)}
                 >
-                    <span className="text-2xl">💳</span>
+                    <span>💳</span>
                     <span>Depositar Galeones</span>
-                </Button>
-                <Button 
-                    variant="outline" 
-                    className="p-4 h-auto flex flex-col items-center gap-2"
-                >
-                    <span className="text-2xl">🏦</span>
+                </button>
+                <button className={styles.actionButton}>
+                    <span>🏦</span>
                     <span>Retirar Galeones</span>
-                </Button>
-            </div>
-
-            <Card className="p-6">
-                <h3 className="text-xl font-semibold text-primary mb-4 flex items-center gap-2">
+                </button>
+            </div>            <Card className={styles.card}>
+                <h3 className={`${styles.cardTitle} ${styles.titleWithIcon}`}>
                     <HistoryIcon />
                     Historial de Transacciones
                 </h3>
-                <div className="space-y-3 max-h-96 overflow-y-auto">
+                <div className={styles.transactionList}>
                     {transactions.map((transaction) => (
                         <div 
                             key={transaction.id}
-                            className={`flex items-center justify-between p-4 rounded-lg border-l-4 ${
-                                transaction.type === 'deposit' ? 'bg-green-50 border-green-400' :
-                                transaction.type === 'win' ? 'bg-blue-50 border-blue-400' :
-                                transaction.type === 'withdraw' ? 'bg-purple-50 border-purple-400' :
-                                'bg-red-50 border-red-400'
-                            }`}
+                            className={`${styles.transactionItem} ${styles[transaction.type]}`}
                         >
-                            <div>
-                                <p className="font-medium">{transaction.description}</p>
-                                <p className="text-sm text-gray-600">{transaction.date}</p>
+                            <div className={styles.transactionInfo}>
+                                <p className={styles.transactionDescription}>{transaction.description}</p>
+                                <p className={styles.transactionDate}>{transaction.date}</p>
                             </div>
-                            <div className={`font-bold text-lg ${
-                                transaction.amount > 0 ? 'text-green-600' : 'text-red-600'
+                            <div className={`${styles.transactionAmount} ${
+                                transaction.amount > 0 ? styles.positive : styles.negative
                             }`}>
                                 {transaction.amount > 0 ? '+' : ''}{transaction.amount} G
                             </div>
@@ -236,22 +213,21 @@ const WalletSection = () => {
             </Card>
 
             {showDepositModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <Card className="p-6 max-w-md w-full mx-4">
-                        <h3 className="text-xl font-bold mb-4">Depositar Galeones</h3>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium mb-2">Cantidad a depositar:</label>
+                <div className={styles.modal}>
+                    <Card className={styles.modalContent}>
+                        <h3 className={styles.modalTitle}>💰 Depositar Galeones</h3>                        <div className={styles.modalBody}>
+                            <div className={styles.formGroup}>
+                                <label className={styles.formLabel}>Cantidad a depositar:</label>
                                 <input
                                     type="number"
                                     value={depositAmount}
                                     onChange={(e) => setDepositAmount(e.target.value)}
-                                    className="w-full p-3 border rounded-lg"
+                                    className={styles.formInput}
                                     placeholder="Ej: 500"
                                     min="1"
                                 />
                             </div>
-                            <div className="flex gap-3">
+                            <div className={styles.modalButtons}>
                                 <Button onClick={handleDeposit} fullWidth>
                                     Depositar
                                 </Button>
@@ -334,108 +310,102 @@ const BetsSection = () => {
 
     return (
         <div className={styles.sectionContent}>
-            <h2 className="text-3xl font-bold text-primary mb-6 flex items-center gap-3">
+            <h2 className={styles.sectionTitle}>
                 <BetIcon />
                 Mis Profecías de Quidditch
             </h2>
 
-            <div className="flex gap-4 mb-6">
-                <Button
-                    variant={activeTab === 'active' ? 'primary' : 'outline'}
+            <div className={styles.betTabs}>
+                <button
+                    className={`${styles.betTab} ${activeTab === 'active' ? styles.active : ''}`}
                     onClick={() => setActiveTab('active')}
                 >
                     Apuestas Activas ({activeBets.length})
-                </Button>
-                <Button
-                    variant={activeTab === 'history' ? 'primary' : 'outline'}
+                </button>
+                <button
+                    className={`${styles.betTab} ${activeTab === 'history' ? styles.active : ''}`}
                     onClick={() => setActiveTab('history')}
                 >
                     Historial ({betHistory.length})
-                </Button>
-            </div>
-
-            {activeTab === 'active' && (
-                <div className="space-y-4">
+                </button>
+            </div>            {activeTab === 'active' && (
+                <div className={styles.betsContainer}>
                     {activeBets.length > 0 ? (
                         activeBets.map((bet) => (
-                            <Card key={bet.id} className="p-6 border-l-4 border-blue-400">
-                                <div className="flex items-center justify-between mb-4">
-                                    <h3 className="text-lg font-semibold text-primary">{bet.match}</h3>
-                                    <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                            <div key={bet.id} className={`${styles.betCard} ${styles.active}`}>
+                                <div className={styles.betHeader}>
+                                    <h3 className={styles.betMatch}>{bet.match}</h3>
+                                    <span className={`${styles.betStatus} ${styles.active}`}>
                                         Activa
                                     </span>
                                 </div>
-                                <div className="grid md:grid-cols-3 gap-4">
-                                    <div>
-                                        <p className="text-sm text-gray-600">Fecha y Hora</p>
-                                        <p className="font-medium">{bet.date} - {bet.time}</p>
+                                <div className={styles.betDetails}>
+                                    <div className={styles.betDetail}>
+                                        <p className={styles.betDetailLabel}>Fecha y Hora</p>
+                                        <p className={styles.betDetailValue}>{bet.date} - {bet.time}</p>
                                     </div>
-                                    <div>
-                                        <p className="text-sm text-gray-600">Tu Predicción</p>
-                                        <p className="font-medium">{bet.option}</p>
+                                    <div className={styles.betDetail}>
+                                        <p className={styles.betDetailLabel}>Tu Predicción</p>
+                                        <p className={styles.betDetailValue}>{bet.option}</p>
                                     </div>
-                                    <div>
-                                        <p className="text-sm text-gray-600">Apuesta</p>
-                                        <p className="font-medium">{bet.amount} G (x{bet.odds})</p>
+                                    <div className={styles.betDetail}>
+                                        <p className={styles.betDetailLabel}>Apuesta</p>
+                                        <p className={styles.betDetailValue}>{bet.amount} G (x{bet.odds})</p>
                                     </div>
                                 </div>
-                                <div className="mt-4 p-3 bg-yellow-50 rounded-lg">
-                                    <p className="text-sm text-yellow-800">
-                                        💰 Ganancia potencial: <span className="font-bold">{bet.potentialWin} Galeones</span>
+                                <div className={styles.potentialWin}>
+                                    <p className={styles.potentialWinText}>
+                                        💰 Ganancia potencial
                                     </p>
+                                    <p className={styles.potentialWinAmount}>{bet.potentialWin} Galeones</p>
                                 </div>
-                            </Card>
+                            </div>
                         ))
                     ) : (
-                        <Card className="p-8 text-center">
-                            <p className="text-gray-500">No tienes apuestas activas en este momento</p>
+                        <div className={styles.emptyState}>
+                            <div className={styles.emptyStateIcon}>🎯</div>
+                            <div className={styles.emptyStateTitle}>No tienes apuestas activas</div>
+                            <p className={styles.emptyStateDescription}>
+                                No tienes apuestas activas en este momento
+                            </p>
                             <Link to="/betting">
                                 <Button className="mt-4">Hacer una Apuesta</Button>
                             </Link>
-                        </Card>
+                        </div>
                     )}
                 </div>
-            )}
-
-            {activeTab === 'history' && (
-                <div className="space-y-4">
+            )}            {activeTab === 'history' && (
+                <div className={styles.betsContainer}>
                     {betHistory.map((bet) => (
-                        <Card key={bet.id} className={`p-6 border-l-4 ${
-                            bet.result === 'win' ? 'border-green-400 bg-green-50' : 'border-red-400 bg-red-50'
-                        }`}>
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-lg font-semibold">{bet.match}</h3>
-                                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                                    bet.result === 'win' 
-                                        ? 'bg-green-100 text-green-800' 
-                                        : 'bg-red-100 text-red-800'
-                                }`}>
+                        <div key={bet.id} className={`${styles.betCard} ${styles[bet.result]}`}>
+                            <div className={styles.betHeader}>
+                                <h3 className={styles.betMatch}>{bet.match}</h3>
+                                <span className={`${styles.betStatus} ${styles[bet.result]}`}>
                                     {bet.result === 'win' ? '🎉 Ganada' : '😞 Perdida'}
                                 </span>
                             </div>
-                            <div className="grid md:grid-cols-4 gap-4">
-                                <div>
-                                    <p className="text-sm text-gray-600">Fecha</p>
-                                    <p className="font-medium">{bet.date}</p>
+                            <div className={styles.betDetails}>
+                                <div className={styles.betDetail}>
+                                    <p className={styles.betDetailLabel}>Fecha</p>
+                                    <p className={styles.betDetailValue}>{bet.date}</p>
                                 </div>
-                                <div>
-                                    <p className="text-sm text-gray-600">Predicción</p>
-                                    <p className="font-medium">{bet.option}</p>
+                                <div className={styles.betDetail}>
+                                    <p className={styles.betDetailLabel}>Predicción</p>
+                                    <p className={styles.betDetailValue}>{bet.option}</p>
                                 </div>
-                                <div>
-                                    <p className="text-sm text-gray-600">Apuesta</p>
-                                    <p className="font-medium">{bet.amount} G (x{bet.odds})</p>
+                                <div className={styles.betDetail}>
+                                    <p className={styles.betDetailLabel}>Apuesta</p>
+                                    <p className={styles.betDetailValue}>{bet.amount} G (x{bet.odds})</p>
                                 </div>
-                                <div>
-                                    <p className="text-sm text-gray-600">Resultado</p>
-                                    <p className={`font-bold ${
-                                        bet.result === 'win' ? 'text-green-600' : 'text-red-600'
+                                <div className={styles.betDetail}>
+                                    <p className={styles.betDetailLabel}>Resultado</p>                                    <p className={`${styles.betDetailValue} ${
+                                        bet.result === 'win' ? styles.winResult : styles.lossResult
                                     }`}>
                                         {bet.result === 'win' ? `+${bet.payout} G` : '0 G'}
                                     </p>
                                 </div>
                             </div>
-                        </Card>
+                        </div>
                     ))}
                 </div>
             )}
@@ -452,29 +422,28 @@ const SettingsSection = () => {
 
     return (
         <div className={styles.sectionContent}>
-            <h2 className="text-3xl font-bold text-primary mb-6 flex items-center gap-3">
+            <h2 className={styles.sectionTitle}>
                 <SettingsIcon />
                 Configuración Mágica
             </h2>
 
-            <div className="grid md:grid-cols-2 gap-8">
-                <Card className="p-6">
-                    <h3 className="text-xl font-semibold text-primary mb-4">Notificaciones</h3>
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <label className="text-sm font-medium">Recordatorios de partidos</label>
-                            <input
+            <div className={styles.settingsGrid}>
+                <Card className={styles.card}>
+                    <h3 className={styles.cardTitle}>Notificaciones</h3>
+                    <div className={styles.settingsGroup}>
+                        <div className={styles.settingItem}>
+                            <label className={styles.settingLabel}>Recordatorios de partidos</label>                            <input
                                 type="checkbox"
                                 checked={notifications.matchReminders}
                                 onChange={(e) => setNotifications({
                                     ...notifications,
                                     matchReminders: e.target.checked
                                 })}
-                                className="w-4 h-4"
+                                className={styles.checkbox}
                             />
                         </div>
-                        <div className="flex items-center justify-between">
-                            <label className="text-sm font-medium">Resultados de apuestas</label>
+                        <div className={styles.settingItem}>
+                            <label className={styles.settingLabel}>Resultados de apuestas</label>
                             <input
                                 type="checkbox"
                                 checked={notifications.betResults}
@@ -482,11 +451,11 @@ const SettingsSection = () => {
                                     ...notifications,
                                     betResults: e.target.checked
                                 })}
-                                className="w-4 h-4"
+                                className={styles.checkbox}
                             />
                         </div>
-                        <div className="flex items-center justify-between">
-                            <label className="text-sm font-medium">Promociones especiales</label>
+                        <div className={styles.settingItem}>
+                            <label className={styles.settingLabel}>Promociones especiales</label>
                             <input
                                 type="checkbox"
                                 checked={notifications.promotions}
@@ -494,26 +463,26 @@ const SettingsSection = () => {
                                     ...notifications,
                                     promotions: e.target.checked
                                 })}
-                                className="w-4 h-4"
+                                className={styles.checkbox}
                             />
                         </div>
                     </div>
                 </Card>
 
-                <Card className="p-6">
-                    <h3 className="text-xl font-semibold text-primary mb-4">Preferencias</h3>
-                    <div className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium mb-2">Tema</label>
-                            <select className="w-full p-3 border rounded-lg">
+                <Card className={styles.card}>
+                    <h3 className={styles.cardTitle}>Preferencias</h3>
+                    <div className={styles.settingsGroup}>
+                        <div className={styles.formGroup}>
+                            <label className={styles.formLabel}>Tema</label>
+                            <select className={styles.select}>
                                 <option>Modo Claro</option>
                                 <option>Modo Oscuro</option>
                                 <option>Automático</option>
                             </select>
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium mb-2">Idioma</label>
-                            <select className="w-full p-3 border rounded-lg">
+                        <div className={styles.formGroup}>
+                            <label className={styles.formLabel}>Idioma</label>
+                            <select className={styles.select}>
                                 <option>Español</option>
                                 <option>English</option>
                                 <option>Français</option>
@@ -523,7 +492,7 @@ const SettingsSection = () => {
                 </Card>
             </div>
 
-            <div className="mt-8">
+            <div className={styles.saveButtonContainer}>
                 <Button>Guardar Configuración</Button>
             </div>
         </div>
@@ -548,14 +517,19 @@ const AccountPage = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="p-8 text-center max-w-md">
-          <h2 className="text-2xl font-bold text-primary mb-4">🪄 Acceso Restringido</h2>
-          <p className="text-gray-600 mb-6">Por favor, inicia sesión para acceder a tu cuenta mágica.</p>
-          <Link to="/login">
-            <Button fullWidth>Iniciar Sesión</Button>
-          </Link>
-        </Card>
+      <div className={styles.accountPageContainer}>
+        <div className={styles.accountLayout}>
+          <Card className={styles.emptyState}>
+            <div className={styles.emptyStateIcon}>🪄</div>
+            <h2 className={styles.emptyStateTitle}>Acceso Restringido</h2>
+            <p className={styles.emptyStateDescription}>
+              Por favor, inicia sesión para acceder a tu cuenta mágica.
+            </p>
+            <Link to="/login">
+              <Button fullWidth>Iniciar Sesión</Button>
+            </Link>
+          </Card>
+        </div>
       </div>
     );
   }
@@ -568,65 +542,60 @@ const AccountPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-yellow-50">
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar */}
-          <aside className="w-full lg:w-1/4">
-            <Card className="p-6 mb-6 text-center bg-gradient-to-br from-white to-purple-50">
-              <div className="w-24 h-24 bg-gradient-to-br from-purple-400 to-blue-500 rounded-full flex items-center justify-center text-3xl font-bold text-white mx-auto mb-4 overflow-hidden shadow-lg">
-                <img 
-                  src={userLogoSrc} 
-                  alt="Usuario" 
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <h3 className="text-xl font-bold text-primary mb-1">🧙‍♂️ {user.username}</h3>
-              <p className="text-sm text-gray-600 mb-2">{user.email}</p>
-              <div className="text-lg font-semibold text-yellow-600 mb-4">
-                💰 {user.balance} Galeones
-              </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={logout} 
-                fullWidth
-                className="border-red-300 text-red-600 hover:bg-red-50"
+    <div className={styles.accountPageContainer}>
+      <div className={styles.accountLayout}>
+        {/* Sidebar */}
+        <aside className={styles.sidebar}>
+          <div className={styles.userProfile}>
+            <div className={styles.userAvatar}>
+              <img 
+                src={userLogoSrc} 
+                alt="Usuario" 
+              />
+            </div>
+            <h3 className={styles.userName}>🧙‍♂️ {user.username}</h3>
+            <p className={styles.userEmail}>{user.email}</p>
+            <div className={styles.userBalance}>
+              {user.balance} Galeones
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={logout} 
+              fullWidth
+              className="border-red-300 text-red-600 hover:bg-red-50"
+            >
+              Cerrar Sesión
+            </Button>
+          </div>
+
+          <nav className={styles.accountNav}>
+            {navItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`${styles.navItem} ${
+                  activeTab === item.tab ? styles.active : ''
+                }`}
               >
-                Cerrar Sesión
-              </Button>
-            </Card>
+                {item.icon}
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        </aside>
 
-            <nav className="space-y-2">
-              {navItems.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`flex items-center gap-3 p-4 rounded-lg font-medium transition-all duration-200 ${
-                    activeTab === item.tab
-                      ? 'bg-primary text-white shadow-md transform scale-105'
-                      : 'bg-white text-gray-700 hover:bg-gray-50 hover:shadow-sm'
-                  }`}
-                >
-                  {item.icon}
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
-          </aside>
-
-          {/* Main Content */}
-          <main className="flex-1">
-            <Routes>
-              <Route index element={<ProfileSection />} />
-              <Route path="wallet" element={<WalletSection />} />
-              <Route path="bets" element={<BetsSection />} />
-              <Route path="settings" element={<SettingsSection />} />
-              <Route path="*" element={<Navigate to="/account" replace />} />
-            </Routes>
-            <Outlet />
-          </main>
-        </div>
+        {/* Main Content */}
+        <main className={styles.mainContent}>
+          <Routes>
+            <Route index element={<ProfileSection />} />
+            <Route path="wallet" element={<WalletSection />} />
+            <Route path="bets" element={<BetsSection />} />
+            <Route path="settings" element={<SettingsSection />} />
+            <Route path="*" element={<Navigate to="/account" replace />} />
+          </Routes>
+          <Outlet />
+        </main>
       </div>
     </div>
   );
