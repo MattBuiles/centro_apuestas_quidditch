@@ -4,7 +4,7 @@ import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import TeamLogo from '@/components/teams/TeamLogo';
-import './ResultsPage.module.css';
+import styles from './ResultsPage.module.css';
 
 interface Result {
   id: string;
@@ -18,8 +18,15 @@ interface Result {
 
 const mockResults: Result[] = [
   { id: 'r1', date: 'Ayer', homeTeam: 'Gryffindor', awayTeam: 'Slytherin', homeScore: 150, awayScore: 40, league: 'Liga de Hogwarts' },
-  { id: 'r2', date: 'Hace una semana', homeTeam: 'Holyhead Harpies', awayTeam: 'Chudley Cannons', homeScore: 210, awayScore: 180, league: 'Liga Británica' },
-  { id: 'r3', date: 'Hace dos semanas', homeTeam: 'Hufflepuff', awayTeam: 'Ravenclaw', homeScore: 130, awayScore: 165, league: 'Liga de Hogwarts' },
+  { id: 'r2', date: 'Hace 2 días', homeTeam: 'Hufflepuff', awayTeam: 'Ravenclaw', homeScore: 130, awayScore: 165, league: 'Liga de Hogwarts' },
+  { id: 'r3', date: 'Hace 3 días', homeTeam: 'Ravenclaw', awayTeam: 'Slytherin', homeScore: 180, awayScore: 160, league: 'Liga de Hogwarts' },
+  { id: 'r4', date: 'Hace una semana', homeTeam: 'Slytherin', awayTeam: 'Hufflepuff', homeScore: 140, awayScore: 90, league: 'Liga de Hogwarts' },
+  { id: 'r5', date: 'Hace una semana', homeTeam: 'Gryffindor', awayTeam: 'Ravenclaw', homeScore: 200, awayScore: 170, league: 'Liga de Hogwarts' },
+  { id: 'r6', date: 'Hace 10 días', homeTeam: 'Hufflepuff', awayTeam: 'Gryffindor', homeScore: 110, awayScore: 190, league: 'Liga de Hogwarts' },
+  { id: 'r7', date: 'Hace 2 semanas', homeTeam: 'Slytherin', awayTeam: 'Ravenclaw', homeScore: 155, awayScore: 120, league: 'Liga de Hogwarts' },
+  { id: 'r8', date: 'Hace 2 semanas', homeTeam: 'Gryffindor', awayTeam: 'Hufflepuff', homeScore: 175, awayScore: 145, league: 'Liga de Hogwarts' },
+  { id: 'r9', date: 'Hace 3 semanas', homeTeam: 'Ravenclaw', awayTeam: 'Gryffindor', homeScore: 130, awayScore: 210, league: 'Liga de Hogwarts' },
+  { id: 'r10', date: 'Hace 3 semanas', homeTeam: 'Hufflepuff', awayTeam: 'Slytherin', homeScore: 95, awayScore: 185, league: 'Liga de Hogwarts' },
 ];
 
 const ResultsPage: React.FC = () => {
@@ -36,9 +43,8 @@ const ResultsPage: React.FC = () => {
   }, []);
 
   if (isLoading) return <LoadingSpinner />;
-
   return (
-    <div className="results-page-container">
+    <div className={styles.resultsPageContainer}>
       <section className="hero-section text-center p-8 mb-8 rounded-lg" style={{ background: 'linear-gradient(135deg, rgba(75, 0, 130, 0.5), rgba(106, 90, 205, 0.2))', color: 'white' }}>
         <h1 className="text-3xl font-bold mb-2 text-white">Resultados de Partidos</h1>
         <p>Consulta los marcadores finales de los partidos ya concluidos.</p>
@@ -69,32 +75,39 @@ const ResultsPage: React.FC = () => {
         </form>
       </Card>
 
-      <section className="results-list space-y-6">
+      <section className={styles.resultsGrid}>
         {results.length > 0 ? (
           results.map(result => (
-            <Card key={result.id} className="result-card p-4">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-gray-500">{result.date} - {result.league}</span>
+            <div key={result.id} className={styles.resultCard}>
+              <div className={styles.matchMeta}>
+                <span className={styles.matchDate}>{result.date} - {result.league}</span>
                 <Link to={`/matches/${result.id}`} className="text-sm text-primary hover:underline">Ver detalles</Link>
-              </div>              <div className="flex items-center justify-around text-center">
-                <div className="team-result flex-1 flex flex-col items-center">
-                  <TeamLogo teamName={result.homeTeam} size="md" />
-                  <h3 className="text-lg font-semibold text-primary mt-2">{result.homeTeam}</h3>
-                  <p className="text-2xl font-bold">{result.homeScore}</p>
-                </div>
-                <span className="text-xl font-bold text-gray-400 mx-4">VS</span>
-                <div className="team-result flex-1 flex flex-col items-center">
-                  <TeamLogo teamName={result.awayTeam} size="md" />
-                  <h3 className="text-lg font-semibold text-primary mt-2">{result.awayTeam}</h3>
-                  <p className="text-2xl font-bold">{result.awayScore}</p>
-                </div>
               </div>
-            </Card>
+              
+              <div className={styles.matchResult}>
+                <div className={styles.teamResult}>
+                  <TeamLogo teamName={result.homeTeam} size="md" />
+                  <h3 className={styles.teamName}>{result.homeTeam}</h3>
+                  <p className={styles.teamScore}>{result.homeScore}</p>
+                </div>
+                
+                <div className={styles.scoreVs}>VS</div>
+                
+                <div className={styles.teamResult}>
+                  <TeamLogo teamName={result.awayTeam} size="md" />
+                  <h3 className={styles.teamName}>{result.awayTeam}</h3>
+                  <p className={styles.teamScore}>{result.awayScore}</p>                </div>
+              </div>
+              
+              <div className={`${styles.matchStatus} ${styles.finished}`}>
+                Finalizado
+              </div>
+            </div>
           ))
         ) : (
-          <Card className="text-center p-6">
-            <p className="text-gray-600">No hay resultados para mostrar según los filtros actuales.</p>
-          </Card>
+          <div className={styles.noResults}>
+            <p>No hay resultados para mostrar según los filtros actuales.</p>
+          </div>
         )}
       </section>
       {/* Pagination can be added here */}
