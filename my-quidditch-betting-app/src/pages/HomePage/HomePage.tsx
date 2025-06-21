@@ -1,12 +1,48 @@
 // filepath: d:\Coding\Projects\centro_apuestas_quidditch\my-quidditch-betting-app\src\pages\HomePage\HomePage.tsx
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import Button from '@/components/common/Button'
 import CTAButton from '@/components/common/CTAButton'
 import TeamLogo from '@/components/teams/TeamLogo'
+import { virtualTimeManager } from '@/services/virtualTimeManager'
+import { Match, Team } from '@/types/league'
 import welcomeLogo from '@/assets/Welcome_Logo.png'
 import styles from './HomePage.module.css'
 
 const HomePage = () => {
+  const [featuredMatches, setFeaturedMatches] = useState<Match[]>([]);
+  const [teams, setTeams] = useState<Team[]>([]);
+  useEffect(() => {
+    // Load featured matches from the virtual time manager
+    // This will automatically initialize a season if none exists
+    const temporadaActiva = virtualTimeManager.getTemporadaActivaOInicializar();
+    
+    // Get next 3 upcoming matches
+    const upcomingMatches = temporadaActiva.partidos
+      .filter(match => match.status === 'scheduled')
+      .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
+      .slice(0, 3);
+    
+    setFeaturedMatches(upcomingMatches);
+    setTeams(temporadaActiva.equipos);
+  }, []);
+
+  const getTeamName = (teamId: string) => {
+    const team = teams.find(t => t.id === teamId);
+    return team?.name || teamId;
+  };
+
+  const getMatchStatus = (match: Match) => {
+    if (match.status === 'live') return 'En Vivo';
+    if (match.status === 'finished') return 'Finalizado';
+    
+    const matchDate = new Date(match.fecha);
+    const now = virtualTimeManager.getFechaVirtualActual();
+    const diffInHours = (matchDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+    
+    if (diffInHours < 24) return 'Próximo';
+    return 'Programado';
+  };
   return (
     <div className={styles.homeContainer}>
       {/* Hero section */}
@@ -151,131 +187,191 @@ const HomePage = () => {
         </div>
 
         <div className={styles.matchesGrid}>
-          {/* Match card 1 */}
-          <div className={styles.matchCard}>
-            <div className={styles.matchBadge}>
-              <span>En Vivo</span>
-            </div>
+          {featuredMatches.length > 0 ? featuredMatches.map((match, index) => {
+            const homeTeamName = getTeamName(match.localId);
+            const awayTeamName = getTeamName(match.visitanteId);
+            const matchStatus = getMatchStatus(match);
             
-            <div className={styles.matchHeader}>
-              <div className={styles.teamLogos}>
-                <div className={styles.teamContainer}>
-                  <TeamLogo teamName="Gryffindor" size="md" className={styles.matchTeamLogo} />
-                  <span className={styles.teamName}>Gryffindor</span>
+            return (
+              <div key={match.id} className={styles.matchCard}>
+                <div className={styles.matchBadge}>
+                  <span>{matchStatus}</span>
                 </div>
-                <div className={styles.vsContainer}>
-                  <span className={styles.vsLabel}>VS</span>
+                
+                <div className={styles.matchHeader}>
+                  <div className={styles.teamLogos}>
+                    <div className={styles.teamContainer}>
+                      <TeamLogo teamName={homeTeamName} size="md" className={styles.matchTeamLogo} />
+                      <span className={styles.teamName}>{homeTeamName}</span>
+                    </div>
+                    <div className={styles.vsContainer}>
+                      <span className={styles.vsLabel}>VS</span>
+                    </div>
+                    <div className={styles.teamContainer}>
+                      <TeamLogo teamName={awayTeamName} size="md" className={styles.matchTeamLogo} />
+                      <span className={styles.teamName}>{awayTeamName}</span>
+                    </div>
+                  </div>
                 </div>
-                <div className={styles.teamContainer}>
-                  <TeamLogo teamName="Slytherin" size="md" className={styles.matchTeamLogo} />
-                  <span className={styles.teamName}>Slytherin</span>
-                </div>
-              </div>
-            </div>
 
-            <div className={styles.matchInfo}>
-              <div className={styles.matchMeta}>
-                <div className={styles.matchDate}>
-                  <span className={styles.dateIcon}>📅</span>
-                  <span>Hoy • 19:00</span>
-                </div>
-                <div className={styles.matchOdds}>
-                  <span className={styles.oddsLabel}>Cuotas:</span>
-                  <span className={styles.oddsValue}>2.1x</span>
+                <div className={styles.matchInfo}>
+                  <div className={styles.matchMeta}>
+                    <div className={styles.matchDate}>
+                      <span className={styles.dateIcon}>📅</span>
+                      <span>
+                        {new Date(match.fecha).toLocaleDateString('es-ES')} • {new Date(match.fecha).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                    <div className={styles.matchOdds}>
+                      <span className={styles.oddsLabel}>Cuotas:</span>
+                      <span className={styles.oddsValue}>{(1.5 + Math.random() * 1.5).toFixed(1)}x</span>
+                    </div>
+                  </div>
+                  
+                  <Link to={`/matches/${match.id}`} className={styles.matchAction}>
+                    <Button 
+                      variant={index === 0 ? "magical" : index === 1 ? "secondary" : "outline"} 
+                      size="sm" 
+                      fullWidth
+                    >
+                      <span>
+                        {index === 0 ? "⚡ Apostar Ahora" : index === 1 ? "🔮 Ver Detalles" : "📊 Analizar"}
+                      </span>
+                    </Button>
+                  </Link>
                 </div>
               </div>
-              
-              <Link to="/matches/1" className={styles.matchAction}>
-                <Button variant="magical" size="sm" fullWidth>
-                  <span>⚡ Apostar Ahora</span>
-                </Button>
-              </Link>
-            </div>
-          </div>
+            );
+          }) : (
+            // Fallback to original placeholder content if no matches available
+            <>
+              {/* Match card 1 */}
+              <div className={styles.matchCard}>
+                <div className={styles.matchBadge}>
+                  <span>En Vivo</span>
+                </div>
+                
+                <div className={styles.matchHeader}>
+                  <div className={styles.teamLogos}>
+                    <div className={styles.teamContainer}>
+                      <TeamLogo teamName="Gryffindor" size="md" className={styles.matchTeamLogo} />
+                      <span className={styles.teamName}>Gryffindor</span>
+                    </div>
+                    <div className={styles.vsContainer}>
+                      <span className={styles.vsLabel}>VS</span>
+                    </div>
+                    <div className={styles.teamContainer}>
+                      <TeamLogo teamName="Slytherin" size="md" className={styles.matchTeamLogo} />
+                      <span className={styles.teamName}>Slytherin</span>
+                    </div>
+                  </div>
+                </div>
 
-          {/* Match card 2 */}
-          <div className={styles.matchCard}>
-            <div className={styles.matchBadge}>
-              <span>Próximo</span>
-            </div>
-            
-            <div className={styles.matchHeader}>
-              <div className={styles.teamLogos}>
-                <div className={styles.teamContainer}>
-                  <TeamLogo teamName="Hufflepuff" size="md" className={styles.matchTeamLogo} />
-                  <span className={styles.teamName}>Hufflepuff</span>
-                </div>
-                <div className={styles.vsContainer}>
-                  <span className={styles.vsLabel}>VS</span>
-                </div>
-                <div className={styles.teamContainer}>
-                  <TeamLogo teamName="Ravenclaw" size="md" className={styles.matchTeamLogo} />
-                  <span className={styles.teamName}>Ravenclaw</span>
+                <div className={styles.matchInfo}>
+                  <div className={styles.matchMeta}>
+                    <div className={styles.matchDate}>
+                      <span className={styles.dateIcon}>📅</span>
+                      <span>Hoy • 19:00</span>
+                    </div>
+                    <div className={styles.matchOdds}>
+                      <span className={styles.oddsLabel}>Cuotas:</span>
+                      <span className={styles.oddsValue}>2.1x</span>
+                    </div>
+                  </div>
+                  
+                  <Link to="/matches/1" className={styles.matchAction}>
+                    <Button variant="magical" size="sm" fullWidth>
+                      <span>⚡ Apostar Ahora</span>
+                    </Button>
+                  </Link>
                 </div>
               </div>
-            </div>
 
-            <div className={styles.matchInfo}>
-              <div className={styles.matchMeta}>
-                <div className={styles.matchDate}>
-                  <span className={styles.dateIcon}>📅</span>
-                  <span>Mañana • 17:30</span>
+              {/* Match card 2 */}
+              <div className={styles.matchCard}>
+                <div className={styles.matchBadge}>
+                  <span>Próximo</span>
                 </div>
-                <div className={styles.matchOdds}>
-                  <span className={styles.oddsLabel}>Cuotas:</span>
-                  <span className={styles.oddsValue}>1.8x</span>
+                
+                <div className={styles.matchHeader}>
+                  <div className={styles.teamLogos}>
+                    <div className={styles.teamContainer}>
+                      <TeamLogo teamName="Hufflepuff" size="md" className={styles.matchTeamLogo} />
+                      <span className={styles.teamName}>Hufflepuff</span>
+                    </div>
+                    <div className={styles.vsContainer}>
+                      <span className={styles.vsLabel}>VS</span>
+                    </div>
+                    <div className={styles.teamContainer}>
+                      <TeamLogo teamName="Ravenclaw" size="md" className={styles.matchTeamLogo} />
+                      <span className={styles.teamName}>Ravenclaw</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              
-              <Link to="/matches/2" className={styles.matchAction}>
-                <Button variant="secondary" size="sm" fullWidth>
-                  <span>🔮 Ver Detalles</span>
-                </Button>
-              </Link>
-            </div>
-          </div>
 
-          {/* Match card 3 */}
-          <div className={styles.matchCard}>
-            <div className={styles.matchBadge}>
-              <span>Destacado</span>
-            </div>
-            
-            <div className={styles.matchHeader}>
-              <div className={styles.teamLogos}>
-                <div className={styles.teamContainer}>
-                  <TeamLogo teamName="Chudley Cannons" size="md" className={styles.matchTeamLogo} />
-                  <span className={styles.teamName}>Cannons</span>
-                </div>
-                <div className={styles.vsContainer}>
-                  <span className={styles.vsLabel}>VS</span>
-                </div>
-                <div className={styles.teamContainer}>
-                  <TeamLogo teamName="Holyhead Harpies" size="md" className={styles.matchTeamLogo} />
-                  <span className={styles.teamName}>Harpies</span>
+                <div className={styles.matchInfo}>
+                  <div className={styles.matchMeta}>
+                    <div className={styles.matchDate}>
+                      <span className={styles.dateIcon}>📅</span>
+                      <span>Mañana • 17:30</span>
+                    </div>
+                    <div className={styles.matchOdds}>
+                      <span className={styles.oddsLabel}>Cuotas:</span>
+                      <span className={styles.oddsValue}>1.8x</span>
+                    </div>
+                  </div>
+                  
+                  <Link to="/matches/2" className={styles.matchAction}>
+                    <Button variant="secondary" size="sm" fullWidth>
+                      <span>🔮 Ver Detalles</span>
+                    </Button>
+                  </Link>
                 </div>
               </div>
-            </div>
 
-            <div className={styles.matchInfo}>
-              <div className={styles.matchMeta}>
-                <div className={styles.matchDate}>
-                  <span className={styles.dateIcon}>📅</span>
-                  <span>Domingo • 15:00</span>
+              {/* Match card 3 */}
+              <div className={styles.matchCard}>
+                <div className={styles.matchBadge}>
+                  <span>Destacado</span>
                 </div>
-                <div className={styles.matchOdds}>
-                  <span className={styles.oddsLabel}>Cuotas:</span>
-                  <span className={styles.oddsValue}>2.5x</span>
+                
+                <div className={styles.matchHeader}>
+                  <div className={styles.teamLogos}>
+                    <div className={styles.teamContainer}>
+                      <TeamLogo teamName="Chudley Cannons" size="md" className={styles.matchTeamLogo} />
+                      <span className={styles.teamName}>Cannons</span>
+                    </div>
+                    <div className={styles.vsContainer}>
+                      <span className={styles.vsLabel}>VS</span>
+                    </div>
+                    <div className={styles.teamContainer}>
+                      <TeamLogo teamName="Holyhead Harpies" size="md" className={styles.matchTeamLogo} />
+                      <span className={styles.teamName}>Harpies</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={styles.matchInfo}>
+                  <div className={styles.matchMeta}>
+                    <div className={styles.matchDate}>
+                      <span className={styles.dateIcon}>📅</span>
+                      <span>Domingo • 15:00</span>
+                    </div>
+                    <div className={styles.matchOdds}>
+                      <span className={styles.oddsLabel}>Cuotas:</span>
+                      <span className={styles.oddsValue}>2.5x</span>
+                    </div>
+                  </div>
+                  
+                  <Link to="/matches/3" className={styles.matchAction}>
+                    <Button variant="outline" size="sm" fullWidth>
+                      <span>📊 Analizar</span>
+                    </Button>
+                  </Link>
                 </div>
               </div>
-              
-              <Link to="/matches/3" className={styles.matchAction}>
-                <Button variant="outline" size="sm" fullWidth>
-                  <span>� Analizar</span>
-                </Button>
-              </Link>
-            </div>
-          </div>
+            </>
+          )}
         </div>
 
         <div className={styles.sectionAction}>

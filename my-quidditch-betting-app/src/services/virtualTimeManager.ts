@@ -1,6 +1,7 @@
 import { Season, Match, MatchState, Team } from '@/types/league';
 import { quidditchSimulator } from './quidditchSimulator';
 import { liveMatchSimulator } from './liveMatchSimulator';
+import { quidditchLeagueManager } from './quidditchLeagueManager';
 
 /**
  * Virtual Time Manager
@@ -37,10 +38,24 @@ export interface TimeAdvanceOptions {
 
 export class VirtualTimeManager {
   private state: VirtualTimeState;
-  private readonly STORAGE_KEY = 'quidditch_virtual_time_state';
-
-  constructor() {
+  private readonly STORAGE_KEY = 'quidditch_virtual_time_state';  constructor() {
+    console.log('🔧 VirtualTimeManager: Inicializando constructor...');
     this.state = this.loadState();
+    console.log('🔧 VirtualTimeManager: Estado cargado:', {
+      temporadaActiva: this.state.temporadaActiva ? 'SÍ' : 'NO',
+      fechaVirtual: this.state.fechaVirtualActual
+    });
+    
+    // Si no hay temporada activa, crear una automáticamente
+    // Usamos setTimeout para asegurar que todos los módulos estén cargados
+    if (!this.state.temporadaActiva) {
+      console.log('🔧 VirtualTimeManager: No hay temporada activa, programando inicialización...');
+      setTimeout(() => {
+        this.inicializarTemporadaInicial();
+      }, 100);
+    } else {
+      console.log('🔧 VirtualTimeManager: Temporada ya existe:', this.state.temporadaActiva.name);
+    }
   }
 
   /**
@@ -531,11 +546,9 @@ export class VirtualTimeManager {
       }
     } catch (error) {
       console.error('Error loading virtual time state:', error);
-    }
-
-    // Estado por defecto - empieza en julio 2025
+    }    // Estado por defecto - empieza en junio 2025, antes del inicio de temporada
     return {
-      fechaVirtualActual: new Date('2025-07-01T10:00:00'),
+      fechaVirtualActual: new Date('2025-06-15T10:00:00'),
       temporadaActiva: null,
       partidosSimulados: new Set(),
       partidosEnVivo: new Map(),
@@ -567,7 +580,136 @@ export class VirtualTimeManager {
       console.error('Error saving virtual time state:', error);
     }
   }
+  /**
+   * Inicializa automáticamente una temporada cuando se inicia el sistema
+   * y no hay ninguna temporada activa
+   */
+  private inicializarTemporadaInicial(): void {
+    try {
+      console.log('🚀 Inicializando temporada inicial automáticamente...');
+      
+      // Crear una temporada demo con todos los partidos programados
+      const temporadaDemo = quidditchLeagueManager.createDemoSeason();
+      
+      // Establecer la temporada como activa
+      this.setTemporadaActiva(temporadaDemo);
+      
+      console.log(`✅ Temporada inicial creada exitosamente:`, {
+        nombre: temporadaDemo.name,
+        equipos: temporadaDemo.equipos.length,
+        partidos: temporadaDemo.partidos.length,
+        fechaInicio: temporadaDemo.startDate.toISOString().split('T')[0],
+        fechaFin: temporadaDemo.endDate.toISOString().split('T')[0],
+        fechaVirtualActual: this.state.fechaVirtualActual.toISOString().split('T')[0]
+      });
+
+      // Log de los primeros 3 partidos próximos
+      const proximosPartidos = temporadaDemo.partidos
+        .filter(p => p.status === 'scheduled')
+        .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
+        .slice(0, 3);
+
+      console.log('📅 Próximos partidos programados:', proximosPartidos.map(p => {
+        const homeTeam = temporadaDemo.equipos.find(t => t.id === p.localId);
+        const awayTeam = temporadaDemo.equipos.find(t => t.id === p.visitanteId);
+        return `${homeTeam?.name || p.localId} vs ${awayTeam?.name || p.visitanteId} - ${p.fecha.toISOString().split('T')[0]}`;
+      }));
+      
+    } catch (error) {
+      console.error('❌ Error inicializando temporada inicial:', error);
+    }
+  }  /**
+   * Obtiene la temporada activa, inicializando una si no existe
+   */
+  getTemporadaActivaOInicializar(): Season {
+    console.log('🔍 getTemporadaActivaOInicializar: Verificando temporada activa...');
+    if (!this.state.temporadaActiva) {
+      console.log('🔍 getTemporadaActivaOInicializar: No hay temporada, inicializando ahora...');
+      this.inicializarTemporadaInicial();
+    } else {
+      console.log('🔍 getTemporadaActivaOInicializar: Temporada encontrada:', this.state.temporadaActiva.name);
+    }
+    return this.state.temporadaActiva!;
+  }  /**
+   * Método de debugging para limpiar el localStorage y forzar reinicialización
+   */
+  public limpiarYReinicializar(): void {
+    console.log('🧹 Limpiando localStorage y reinicializando...');
+    localStorage.removeItem(this.STORAGE_KEY);
+    this.state = this.loadState();
+    
+    if (!this.state.temporadaActiva) {
+      this.inicializarTemporadaInicial();
+    }
+    
+    console.log('✅ Reinicialización completada');
+    console.log('📅 Nueva fecha virtual:', this.state.fechaVirtualActual);
+    console.log('🏟️ Temporada activa:', this.state.temporadaActiva?.name);
+  }
+  /**
+   * Limpia completamente el localStorage y reinicia el sistema
+   */
+  public resetCompleto(): void {
+    console.log('🔄 Realizando reset completo del sistema...');
+    
+    // Limpiar todos los localStorage keys relacionados
+    const keysToRemove = [
+      this.STORAGE_KEY,
+      'quidditch_predictions',
+      'quidditch_mock_predictions',
+      'quidditch_auth',
+      'quidditch_user'
+    ];
+    
+    keysToRemove.forEach(key => {
+      localStorage.removeItem(key);
+      console.log(`🗑️ Removido: ${key}`);
+    });
+    
+    // Reinicializar estado
+    this.state = this.loadState();
+    
+    // Forzar creación de temporada
+    this.inicializarTemporadaInicial();
+    
+    console.log('✅ Reset completo finalizado');
+  }
 }
 
 // Export singleton instance
 export const virtualTimeManager = new VirtualTimeManager();
+
+// Expose to window for debugging
+if (typeof window !== 'undefined') {
+  (window as unknown as { virtualTimeManager: VirtualTimeManager }).virtualTimeManager = virtualTimeManager;
+  (window as unknown as { 
+    debugQuidditch: {
+      limpiarYReinicializar: () => void;
+      resetCompleto: () => void;
+      getState: () => VirtualTimeState;
+      createNewSeason: () => Season;
+      checkInit: () => void;
+    }
+  }).debugQuidditch = {
+    limpiarYReinicializar: () => virtualTimeManager.limpiarYReinicializar(),
+    resetCompleto: () => virtualTimeManager.resetCompleto(),
+    getState: () => virtualTimeManager.getState(),
+    createNewSeason: () => {
+      const newSeason = quidditchLeagueManager.createDemoSeason();
+      virtualTimeManager.setTemporadaActiva(newSeason);
+      return newSeason;
+    },
+    checkInit: () => {
+      const state = virtualTimeManager.getState();
+      console.log('🔍 Estado actual:', {
+        temporadaActiva: !!state.temporadaActiva,
+        nombreTemporada: state.temporadaActiva?.name,
+        equipos: state.temporadaActiva?.equipos?.length,
+        partidos: state.temporadaActiva?.partidos?.length,
+        fechaVirtual: state.fechaVirtualActual
+      });
+    }
+  };
+  console.log('🐛 Debug tools available: window.debugQuidditch');
+  console.log('🐛 Commands: resetCompleto(), checkInit(), getState()');
+}

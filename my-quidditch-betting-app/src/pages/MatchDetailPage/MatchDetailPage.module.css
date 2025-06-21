@@ -1115,19 +1115,175 @@
   box-shadow: var(--glassmorphism-shadow-hover);
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .predictionOptions {
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .actions {
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .relatedMatchesGrid {
-    grid-template-columns: 1fr;
-  }
+/* Prediction system styles */
+.predictionButtons {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 1rem 0;
+}
+
+.predictionButtons button {
+  min-width: 120px;
+}
+
+.userPredictionResult {
+  background: var(--success-color-light);
+  border: 1px solid var(--success-color);
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+  color: var(--text-color);
+}
+
+.noPrediction {
+  background: var(--warning-color-light);
+  border: 1px solid var(--warning-color);
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+  text-align: center;
+}
+
+.communityPredictions {
+  margin: 2rem 0;
+}
+
+.predictionStats {
+  background: var(--glassmorphism-bg);
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid var(--glassmorphism-border);
+}
+
+.predictionBar {
+  display: flex;
+  height: 40px;
+  border-radius: 20px;
+  overflow: hidden;
+  margin: 1rem 0;
+  background: var(--surface-color);
+}
+
+.predictionBarItem {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  transition: all 0.3s ease;
+}
+
+.predictionBarItem:nth-child(1) {
+  background: var(--primary-color);
+}
+
+.predictionBarItem:nth-child(2) {
+  background: var(--warning-color);
+}
+
+.predictionBarItem:nth-child(3) {
+  background: var(--secondary-color);
+}
+
+.matchResult {
+  background: var(--surface-color);
+  border-radius: 12px;
+  padding: 2rem;
+  margin: 2rem 0;
+  text-align: center;
+}
+
+.finalScore {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin: 1rem 0;
+}
+
+.predictionResult {
+  background: var(--glassmorphism-bg);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  border: 1px solid var(--glassmorphism-border);
+}
+
+.correctPrediction {
+  color: var(--success-color);
+  font-weight: 600;
+}
+
+.incorrectPrediction {
+  color: var(--error-color);
+  font-weight: 600;
+}
+
+.noPredictionResult {
+  background: var(--surface-color);
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+  text-align: center;
+  color: var(--text-color-muted);
+}
+
+.matchCommentary {
+  background: var(--glassmorphism-bg);
+  border-radius: 12px;
+  padding: 2rem;
+  margin: 2rem 0;
+  border: 1px solid var(--glassmorphism-border);
+}
+
+.relatedMatchCard {
+  display: block;
+  background: var(--glassmorphism-bg);
+  border: 1px solid var(--glassmorphism-border);
+  border-radius: 12px;
+  padding: 1rem;
+  margin: 0.5rem 0;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.3s ease;
+}
+
+.relatedMatchCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  border-color: var(--primary-color);
+}
+
+.relatedMatchTeams {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.relatedMatchVs {
+  color: var(--text-color-muted);
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.relatedMatchInfo {
+  text-align: center;
+}
+
+.relatedMatchName {
+  display: block;
+  font-weight: 600;
+  color: var(--text-color);
+  margin-bottom: 0.25rem;
+}
+
+.relatedMatchDate {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--text-color-muted);
 }

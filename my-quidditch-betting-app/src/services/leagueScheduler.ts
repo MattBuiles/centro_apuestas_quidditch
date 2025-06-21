@@ -1,9 +1,8 @@
 import { Team, Match, Season, ScheduleConfig } from '@/types/league';
 
-export class LeagueScheduler {
-  private readonly DEFAULT_CONFIG: ScheduleConfig = {
-    seasonStart: new Date('2024-09-01'),
-    seasonEnd: new Date('2025-05-31'),
+export class LeagueScheduler {  private readonly DEFAULT_CONFIG: ScheduleConfig = {
+    seasonStart: new Date('2025-07-01'),
+    seasonEnd: new Date('2026-05-31'),
     matchesPerWeek: 2,
     daysBetweenRounds: 14,
     preferredMatchDays: [5, 6], // Friday and Saturday

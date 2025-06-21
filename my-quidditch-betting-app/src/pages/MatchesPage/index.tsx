@@ -3,7 +3,6 @@ import MatchCard from '@/components/matches/MatchCard'
 import VirtualTimeControl from '@/components/matches/VirtualTimeControl'
 import Button from '@/components/common/Button'
 import Card from '@/components/common/Card'
-import { QuidditchSystem } from '@/services/quidditchSystem'
 import { virtualTimeManager } from '@/services/virtualTimeManager'
 import { Season, Match } from '@/types/league'
 import styles from './MatchesPage.module.css'
@@ -17,24 +16,14 @@ const MatchesPage = () => {
 
   useEffect(() => {
     initializeSeason();
-  }, []);
-
-  const initializeSeason = async () => {
+  }, []);  const initializeSeason = async () => {
     setIsLoading(true);
     setError(null);
     
     try {
-      // Check if there's an active season in virtual time manager
-      const timeState = virtualTimeManager.getState();
-      
-      if (timeState.temporadaActiva) {
-        setSeason(timeState.temporadaActiva);
-      } else {
-        // Create a new professional season
-        const newSeason = QuidditchSystem.createProfessionalLeague();
-        virtualTimeManager.setTemporadaActiva(newSeason);
-        setSeason(newSeason);
-      }
+      // This will automatically initialize a season if none exists
+      const temporadaActiva = virtualTimeManager.getTemporadaActivaOInicializar();
+      setSeason(temporadaActiva);
     } catch (err) {
       setError('Error inicializando la temporada: ' + (err instanceof Error ? err.message : 'Error desconocido'));
     } finally {
@@ -56,9 +45,10 @@ const MatchesPage = () => {
   const handleSeasonReset = () => {
     // Reset season when virtual time is reset
     initializeSeason();
-  };
-  const getFilteredMatches = () => {
-    if (!season) return [];
+  };  const getFilteredMatches = () => {
+    if (!season) {
+      return [];
+    }
 
     const partidos = season.partidos || [];
     const fechaVirtual = virtualTimeManager.getFechaVirtualActual();
@@ -79,7 +69,8 @@ const MatchesPage = () => {
         });
         // Limit to only 5 closest upcoming matches
         filteredMatches = filteredMatches.slice(0, 5);
-        break;      case 'live':
+        break;
+      case 'live':
         filteredMatches = partidos.filter(match => match.status === 'live');
         break;
       case 'today': {
@@ -198,8 +189,7 @@ const MatchesPage = () => {
   const tabCounts = getTabCounts();
 
   return (
-    <div className={styles.matchesPageContainer}>
-      <section className={styles.heroSection}>
+    <div className={styles.matchesPageContainer}>      <section className={styles.heroSection}>
         <h1 className={styles.heroTitle}>Centro de Control de Liga</h1>
         <p className={styles.heroSubtitle}>
           Gestiona el tiempo virtual, simula partidos y sigue la evolución de la liga

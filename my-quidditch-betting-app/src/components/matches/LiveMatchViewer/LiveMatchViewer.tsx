@@ -24,7 +24,7 @@ const LiveMatchViewer: React.FC<LiveMatchViewerProps> = ({
   homeTeam,
   awayTeam,
   autoRefresh = true,
-  refreshInterval = 1, // 1 second updates for live matches
+  refreshInterval = 3, // 3 second updates for better UX during live matches
   onMatchEnd
 }) => {
   const [matchState, setMatchState] = useState<MatchState | null>(null);

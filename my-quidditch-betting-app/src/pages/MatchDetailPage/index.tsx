@@ -6,8 +6,9 @@ import TeamLogo from '@/components/teams/TeamLogo';
 import LiveMatchViewer from '@/components/matches/LiveMatchViewer';
 import { Team, Match } from '@/types/league';
 import { virtualTimeManager } from '@/services/virtualTimeManager';
+import { PredictionsService, MatchPredictionStats, Prediction } from '@/services/predictionsService';
 import styles from './MatchDetailPage.module.css';
-// import { useAuth } from '@/context/AuthContext'; // If needed for predictions
+import { useAuth } from '@/context/AuthContext';
 
 // Mock data - replace with actual data fetching
 interface MatchDetails {
@@ -72,15 +73,23 @@ const mockMatchDetail: MatchDetails = {
 
 const MatchDetailPage = () => {
   const { matchId } = useParams<{ matchId: string }>();
-  const [match, setMatch] = useState<MatchDetails | null>(null);  const [realMatch, setRealMatch] = useState<Match | null>(null);
+  const { isAuthenticated } = useAuth();
+  const [match, setMatch] = useState<MatchDetails | null>(null);
+  const [realMatch, setRealMatch] = useState<Match | null>(null);
   const [homeTeam, setHomeTeam] = useState<Team | null>(null);
-  const [awayTeam, setAwayTeam] = useState<Team | null>(null);  const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('live'); // live, stats, lineups, h2h, betting, predictions
+  const [awayTeam, setAwayTeam] = useState<Team | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('overview'); // overview, stats, lineups, h2h, betting, predictions
   const [showLiveSimulation, setShowLiveSimulation] = useState(false);
-  // const [matchState, setMatchState] = useState<MatchState | null>(null); // Reserved for future use
   const [isStartingMatch, setIsStartingMatch] = useState(false);
-  // const { isAuthenticated } = useAuth(); // If needed for predictions
-  useEffect(() => {
+    // Predictions state
+  const [predictionsService] = useState(() => new PredictionsService());
+  const [predictionStats, setPredictionStats] = useState<MatchPredictionStats | null>(null);
+  const [userPrediction, setUserPrediction] = useState<Prediction | null>(null);
+  const [isPredicting, setIsPredicting] = useState(false);
+  
+  // Related matches state
+  const [relatedMatches, setRelatedMatches] = useState<Match[]>([]);useEffect(() => {
     // Get the real match from virtual time manager
     setIsLoading(true);
     
@@ -115,14 +124,35 @@ const MatchDetailPage = () => {
         };
         
         setMatch(matchDetails);
-          // Check if match is already in live simulation
+        
+        // Load prediction data
+        const stats = predictionsService.getMatchPredictionStats(foundMatch.id);
+        setPredictionStats(stats);
+        setUserPrediction(stats.userPrediction || null);
+        
+        // Set default tab based on match status
+        if (foundMatch.status === 'scheduled') {
+          setActiveTab('overview'); // Show predictions and overview for upcoming matches
+        } else if (foundMatch.status === 'live') {
+          setActiveTab('live'); // Show live tab for live matches
+        } else {
+          setActiveTab('overview'); // Show overview with results for finished matches
+        }
+        
+        // Check if match is already in live simulation
         if (foundMatch.status === 'live') {
           const liveState = virtualTimeManager.getEstadoPartidoEnVivo(foundMatch.id);
           if (liveState) {
-            // setMatchState(liveState); // Reserved for future use
             setShowLiveSimulation(true);
           }
         }
+          // Get related matches (next 2 upcoming matches)
+        const upcomingMatches = timeState.temporadaActiva.partidos
+          .filter(p => p.status === 'scheduled' && p.id !== foundMatch.id)
+          .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
+          .slice(0, 2);
+        setRelatedMatches(upcomingMatches);
+        
       } else {
         // Fallback to mock data if match not found
         setMatch(mockMatchDetail);
@@ -137,18 +167,41 @@ const MatchDetailPage = () => {
     }
     
     setIsLoading(false);
-  }, [matchId]);
-  const handleTabClick = (tabName: string) => {
+  }, [matchId, predictionsService]);  const handleTabClick = (tabName: string) => {
     setActiveTab(tabName);
   };
 
+  const handlePrediction = async (winner: 'home' | 'away' | 'draw') => {
+    if (!match || !isAuthenticated) return;
+    
+    setIsPredicting(true);
+    try {
+      const prediction = predictionsService.createPrediction(match.id, winner);
+      setUserPrediction(prediction);
+        // Update prediction stats
+      const updatedStats = predictionsService.getMatchPredictionStats(match.id);
+      setPredictionStats(updatedStats);
+    } catch (error) {
+      console.error('Error creating prediction:', error);
+    } finally {
+      setIsPredicting(false);
+    }
+  };
+
+  const canPredict = () => {
+    return match && (match.status === 'upcoming' || (match.status === 'live' && !showLiveSimulation));
+  };
+
+  const canBet = () => {
+    return match && (match.status === 'upcoming' || match.status === 'live');
+  };
   const handleStartMatch = async () => {
     if (!realMatch || realMatch.status !== 'live') return;
     
-    setIsStartingMatch(true);    try {
+    setIsStartingMatch(true);
+    try {
       const liveState = await virtualTimeManager.comenzarPartidoEnVivo(realMatch.id);
       if (liveState) {
-        // setMatchState(liveState); // Reserved for future use
         setShowLiveSimulation(true);
       }
     } catch (error) {
@@ -156,10 +209,6 @@ const MatchDetailPage = () => {
     } finally {
       setIsStartingMatch(false);
     }
-  };
-
-  const toggleLiveSimulation = () => {
-    setShowLiveSimulation(prev => !prev);
   };
 
   if (isLoading) {
@@ -202,80 +251,216 @@ const MatchDetailPage = () => {
         </div>        <div className={`${styles.team} ${styles.awayTeam}`}>
           <TeamLogo teamName={match.awayTeam} size="lg" className={styles.teamLogo} />
           <div className={styles.teamName}>{match.awayTeam}</div>
+        </div>      </div>
+      
+      {/* Betting Actions */}
+      {canBet() && (
+        <div className={styles.actions}>
+          <Link to={`/betting/${match.id}`}>
+            <Button className={styles.ctaButton}>Apostar en este Partido</Button>
+          </Link>
+          <Button variant="secondary">Ver Estadísticas Avanzadas</Button>
         </div>
-      </div>      
-      {/* Inline Prediction Section (Simplified) */}
-      <div className={`${styles.predictionSection} ${styles.card}`}>
-        <h3 className={styles.predictionTitle}>¿Quién ganará este partido?</h3>
-        <div className={styles.predictionOptions}>
-          <Button variant="outline" size="sm">{match.homeTeam} Gana</Button>
-          <Button variant="outline" size="sm">Empate</Button>
-          <Button variant="outline" size="sm">{match.awayTeam} Gana</Button>
-        </div>
-        <div className={styles.predictionActions}>
-          <Button size="sm">Confirmar Predicción</Button>
-        </div>
-      </div>
-
-      <div className={styles.actions}>
-        <Link to={`/betting/${match.id}`}>
-          <Button className={styles.ctaButton}>Apostar en este Partido</Button>
-        </Link>
-        <Button variant="secondary">Ver Estadísticas Avanzadas</Button>
-      </div>
-
-      <div className={styles.tabs}>
-        <button className={`${styles.tabButton} ${activeTab === 'live' ? styles.active : ''}`} onClick={() => handleTabClick('live')}>En Vivo</button>
+      )}<div className={styles.tabs}>
+        <button className={`${styles.tabButton} ${activeTab === 'overview' ? styles.active : ''}`} onClick={() => handleTabClick('overview')}>
+          {match.status === 'upcoming' ? 'Predicciones' : match.status === 'live' ? 'En Vivo' : 'Resumen'}
+        </button>
         <button className={`${styles.tabButton} ${activeTab === 'stats' ? styles.active : ''}`} onClick={() => handleTabClick('stats')}>Estadísticas</button>
         <button className={`${styles.tabButton} ${activeTab === 'lineups' ? styles.active : ''}`} onClick={() => handleTabClick('lineups')}>Alineaciones</button>
         <button className={`${styles.tabButton} ${activeTab === 'h2h' ? styles.active : ''}`} onClick={() => handleTabClick('h2h')}>Cara a Cara</button>
-        <button className={`${styles.tabButton} ${activeTab === 'betting' ? styles.active : ''}`} onClick={() => handleTabClick('betting')}>Mercados</button>
-        <button className={`${styles.tabButton} ${activeTab === 'predictions' ? styles.active : ''}`} onClick={() => handleTabClick('predictions')}>Predicciones</button>
-      </div>      <div className={`${styles.tabContent} ${activeTab === 'live' ? '' : styles.hidden}`}>
-        <h2 className={styles.tabTitle}>Comentarios en Vivo</h2>
-        
-        {/* Partido listo para comenzar */}
-        {realMatch && realMatch.status === 'live' && !showLiveSimulation && (
-          <div className={styles.matchReadyCard}>
-            <h3>🔴 Partido Listo para Comenzar</h3>
-            <p>Este partido está programado para comenzar ahora. Haz clic para iniciar la simulación en vivo.</p>
-            <div className="mt-4">
-              <Button 
-                onClick={handleStartMatch} 
-                variant="primary" 
-                isLoading={isStartingMatch}
-                disabled={isStartingMatch}
-              >
-                {isStartingMatch ? 'Iniciando...' : '🚀 Comenzar Partido'}
-              </Button>
+        {canBet() && (
+          <button className={`${styles.tabButton} ${activeTab === 'betting' ? styles.active : ''}`} onClick={() => handleTabClick('betting')}>Mercados</button>
+        )}
+      </div>      <div className={`${styles.tabContent} ${activeTab === 'overview' ? '' : styles.hidden}`}>
+        {/* UPCOMING MATCHES: Show predictions */}
+        {match.status === 'upcoming' && (
+          <>
+            <h2 className={styles.tabTitle}>Predicciones del Partido</h2>
+            
+            {/* User prediction section */}
+            <div className={styles.predictionSection}>
+              <h3>Tu Predicción</h3>
+              {userPrediction ? (
+                <div className={styles.userPredictionResult}>
+                  <p>Has predicho que ganará: <strong>{
+                    userPrediction.predictedWinner === 'home' ? match.homeTeam :
+                    userPrediction.predictedWinner === 'away' ? match.awayTeam :
+                    'Empate'
+                  }</strong></p>
+                  <p>Confianza: {userPrediction.confidence}/5</p>
+                </div>
+              ) : (
+                <div className={styles.noPrediction}>
+                  <p>No has hecho ninguna predicción para este partido.</p>
+                  {isAuthenticated && canPredict() && (
+                    <div className={styles.predictionOptions}>
+                      <h4>¿Quién crees que ganará?</h4>
+                      <div className={styles.predictionButtons}>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => handlePrediction('home')}
+                          disabled={isPredicting}
+                        >
+                          {match.homeTeam}
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => handlePrediction('draw')}
+                          disabled={isPredicting}
+                        >
+                          Empate
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => handlePrediction('away')}
+                          disabled={isPredicting}
+                        >
+                          {match.awayTeam}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  {!isAuthenticated && (
+                    <p><Link to="/login">Inicia sesión</Link> para hacer predicciones.</p>
+                  )}
+                </div>
+              )}
             </div>
-          </div>
+
+            {/* Community predictions */}
+            {predictionStats && (
+              <div className={styles.communityPredictions}>
+                <h3>Predicciones de la Comunidad</h3>
+                <div className={styles.predictionStats}>
+                  <div className={styles.predictionBar}>
+                    <div className={styles.predictionBarItem} style={{width: `${predictionStats.homeWinPercentage}%`}}>
+                      {match.homeTeam}: {predictionStats.homeWinPercentage.toFixed(1)}%
+                    </div>
+                    <div className={styles.predictionBarItem} style={{width: `${predictionStats.drawPercentage}%`}}>
+                      Empate: {predictionStats.drawPercentage.toFixed(1)}%
+                    </div>
+                    <div className={styles.predictionBarItem} style={{width: `${predictionStats.awayWinPercentage}%`}}>
+                      {match.awayTeam}: {predictionStats.awayWinPercentage.toFixed(1)}%
+                    </div>
+                  </div>
+                  <p>Total de predicciones: {predictionStats.totalPredictions}</p>
+                </div>
+              </div>
+            )}
+          </>
         )}
-        
-        {/* Simulación en vivo activa */}
-        {realMatch && homeTeam && awayTeam && showLiveSimulation ? (
-          <div className="mb-4">
-            <LiveMatchViewer 
-              match={realMatch} 
-              homeTeam={homeTeam} 
-              awayTeam={awayTeam}              onMatchEnd={(endedMatchState) => {
-                console.log('Match ended:', endedMatchState);
-                virtualTimeManager.finalizarPartidoEnVivo(realMatch.id);
-                setShowLiveSimulation(false);
-                // setMatchState(null); // Reserved for future use
-                // Reload match data
-                window.location.reload();
-              }}
-            />
-          </div>
-        ) : null}
-          {/* Estado por defecto */}
-        {(!realMatch || realMatch.status === 'scheduled') && (
-          <p>Los comentarios en vivo aparecerán cuando el partido comience...</p>
+
+        {/* LIVE MATCHES: Show live action */}
+        {match.status === 'live' && (
+          <>
+            <h2 className={styles.tabTitle}>Partido en Vivo</h2>
+            
+            {/* Prediction section for live matches (before simulation starts) */}
+            {!showLiveSimulation && canPredict() && (
+              <div className={styles.predictionSection}>
+                <h3>Predicción Rápida</h3>
+                <p>El partido está a punto de comenzar. ¡Haz tu predicción ahora!</p>
+                {!userPrediction && isAuthenticated && (
+                  <div className={styles.predictionButtons}>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => handlePrediction('home')}
+                      disabled={isPredicting}
+                      size="sm"
+                    >
+                      {match.homeTeam}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => handlePrediction('away')}
+                      disabled={isPredicting}
+                      size="sm"
+                    >
+                      {match.awayTeam}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {/* Partido listo para comenzar */}
+            {realMatch && !showLiveSimulation && (
+              <div className={styles.matchReadyCard}>
+                <h3>🔴 Partido Listo para Comenzar</h3>
+                <p>Este partido está programado para comenzar ahora. Haz clic para iniciar la simulación en vivo.</p>
+                <div className="mt-4">
+                  <Button 
+                    onClick={handleStartMatch} 
+                    variant="primary" 
+                    isLoading={isStartingMatch}
+                    disabled={isStartingMatch}
+                  >
+                    {isStartingMatch ? 'Iniciando...' : '🚀 Comenzar Partido'}
+                  </Button>
+                </div>
+              </div>
+            )}
+            
+            {/* Simulación en vivo activa */}
+            {realMatch && homeTeam && awayTeam && showLiveSimulation && (
+              <div className="mb-4">
+                <LiveMatchViewer 
+                  match={realMatch} 
+                  homeTeam={homeTeam} 
+                  awayTeam={awayTeam}
+                  refreshInterval={3} // Slower refresh for better UX
+                  onMatchEnd={(endedMatchState) => {
+                    console.log('Match ended:', endedMatchState);
+                    virtualTimeManager.finalizarPartidoEnVivo(realMatch.id);
+                    setShowLiveSimulation(false);
+                    // Reload match data
+                    window.location.reload();
+                  }}
+                />
+              </div>
+            )}
+          </>
         )}
-        
-        {realMatch && realMatch.status === 'finished' && (
-          <p>Este partido ha finalizado. Puedes ver el resumen de eventos en la pestaña de Estadísticas.</p>
+
+        {/* FINISHED MATCHES: Show results and commentary */}
+        {match.status === 'finished' && (
+          <>
+            <h2 className={styles.tabTitle}>Resumen del Partido</h2>
+            
+            {/* Final result */}
+            <div className={styles.matchResult}>
+              <h3>Resultado Final</h3>
+              <div className={styles.finalScore}>
+                <span>{match.homeTeam} {match.homeScore} - {match.awayScore} {match.awayTeam}</span>
+              </div>
+            </div>
+
+            {/* User prediction result */}
+            {userPrediction && (
+              <div className={styles.predictionResult}>
+                <h3>Tu Predicción</h3>
+                <p>Predijiste que ganaría: <strong>{
+                  userPrediction.predictedWinner === 'home' ? match.homeTeam :
+                  userPrediction.predictedWinner === 'away' ? match.awayTeam :
+                  'Empate'
+                }</strong></p>
+                <p className={userPrediction.isCorrect ? styles.correctPrediction : styles.incorrectPrediction}>
+                  {userPrediction.isCorrect ? '✅ ¡Predicción correcta!' : '❌ Predicción incorrecta'}
+                </p>
+              </div>
+            )}
+            {!userPrediction && (
+              <div className={styles.noPredictionResult}>
+                <p>No hiciste ninguna predicción para este partido.</p>
+              </div>
+            )}
+
+            {/* Match commentary */}
+            <div className={styles.matchCommentary}>
+              <h3>Comentarios del Partido</h3>
+              <p>El resumen y comentarios del partido aparecerán aquí...</p>
+            </div>
+          </>
         )}
       </div>
 
@@ -290,48 +475,45 @@ const MatchDetailPage = () => {
         <p>Las alineaciones de los equipos aparecerán aquí...</p>
         {/* Placeholder for lineups display */}
       </div>
-      
-      <div className={`${styles.tabContent} ${activeTab === 'h2h' ? '' : styles.hidden}`}>
+        <div className={`${styles.tabContent} ${activeTab === 'h2h' ? '' : styles.hidden}`}>
         <h2 className={styles.tabTitle}>Historial de Enfrentamientos</h2>
         <p>El historial cara a cara entre los equipos aparecerá aquí...</p>
       </div>
 
-      <div className={`${styles.tabContent} ${activeTab === 'betting' ? '' : styles.hidden}`}>
-        <h2 className={styles.tabTitle}>Mercados de Apuestas</h2>
-        <p>Los diferentes mercados de apuestas para este partido aparecerán aquí...</p>
-      </div>
-
-      <div className={`${styles.tabContent} ${activeTab === 'predictions' ? '' : styles.hidden}`}>
-        <h2 className={styles.tabTitle}>Predicciones de la Comunidad</h2>
-        <p>Las predicciones de otros usuarios aparecerán aquí...</p>
-      </div>      {/* Live Simulation Section */}
-      {realMatch && (
-        <div className={styles.liveSimulationSection}>
-          <h2 className={styles.tabTitle}>Simulación en Vivo</h2>
-          <Button onClick={toggleLiveSimulation} className="mb-4">
-            {showLiveSimulation ? 'Ocultar Simulación' : 'Ver Simulación en Vivo'}
-          </Button>
-          {showLiveSimulation && (
-            <LiveMatchViewer 
-              match={realMatch} 
-              homeTeam={mockHomeTeam} 
-              awayTeam={mockAwayTeam}
-              onMatchEnd={(matchState) => {
-                console.log('Match ended:', matchState);
-                setShowLiveSimulation(false);
-              }}
-            />
-          )}
+      {activeTab === 'betting' && canBet() && (
+        <div className={styles.tabContent}>
+          <h2 className={styles.tabTitle}>Mercados de Apuestas</h2>
+          <p>Los diferentes mercados de apuestas para este partido aparecerán aquí...</p>
         </div>
-      )}
-
-      {/* Related Matches Section (Simplified) */}
+      )}{/* Related Matches Section - Real upcoming matches */}
       <section className={`${styles.relatedMatches} ${styles.card}`}>
         <h2 className={styles.tabTitle}>Otros partidos que te pueden interesar</h2>
         <div className={styles.relatedMatchesGrid}>
-          {/* Placeholder for related match cards */}
-          <div className={styles.relatedMatchCard}>Partido Relacionado 1</div>
-          <div className={styles.relatedMatchCard}>Partido Relacionado 2</div>
+          {relatedMatches.length > 0 ? relatedMatches.map((relatedMatch) => {
+            const homeTeamName = homeTeam && relatedMatch.localId === homeTeam.id ? homeTeam.name : relatedMatch.localId;
+            const awayTeamName = awayTeam && relatedMatch.visitanteId === awayTeam.id ? awayTeam.name : relatedMatch.visitanteId;
+            return (
+              <Link 
+                key={relatedMatch.id} 
+                to={`/matches/${relatedMatch.id}`} 
+                className={styles.relatedMatchCard}
+              >
+                <div className={styles.relatedMatchTeams}>
+                  <TeamLogo teamName={homeTeamName} size="sm" />
+                  <span className={styles.relatedMatchVs}>vs</span>
+                  <TeamLogo teamName={awayTeamName} size="sm" />
+                </div>
+                <div className={styles.relatedMatchInfo}>
+                  <span className={styles.relatedMatchName}>{homeTeamName} vs {awayTeamName}</span>
+                  <span className={styles.relatedMatchDate}>
+                    {new Date(relatedMatch.fecha).toLocaleDateString('es-ES')}
+                  </span>
+                </div>
+              </Link>
+            );
+          }) : (
+            <p>No hay más partidos próximos disponibles.</p>
+          )}
         </div>
       </section>
     </div>
