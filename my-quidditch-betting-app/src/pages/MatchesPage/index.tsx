@@ -9,7 +9,7 @@ import { Season, Match } from '@/types/league'
 import styles from './MatchesPage.module.css'
 
 const MatchesPage = () => {
-  const [activeTab, setActiveTab] = useState('upcoming') // upcoming, live, results
+  const [activeTab, setActiveTab] = useState('upcoming') // upcoming, live, today
   const [searchTerm, setSearchTerm] = useState('');
   const [season, setSeason] = useState<Season | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -72,13 +72,10 @@ const MatchesPage = () => {
           const matchDate = new Date(match.fecha);
           return matchDate > fechaVirtual && match.status === 'scheduled';
         });
-        break;
-      case 'live':
+        break;      case 'live':
         filteredMatches = partidos.filter(match => match.status === 'live');
         break;
-      case 'results':
-        filteredMatches = partidos.filter(match => match.status === 'finished');
-        break;      case 'today': {
+      case 'today': {
         const today = new Date(fechaVirtual);
         const startOfDay = new Date(today);
         startOfDay.setHours(0, 0, 0, 0);
@@ -103,15 +100,11 @@ const MatchesPage = () => {
         return homeTeam.toLowerCase().includes(searchTerm.toLowerCase()) ||
                awayTeam.toLowerCase().includes(searchTerm.toLowerCase());
       });
-    }
-
-    // Sort by date
+    }    // Sort by date
     return filteredMatches.sort((a, b) => {
       const dateA = new Date(a.fecha);
       const dateB = new Date(b.fecha);
-      return activeTab === 'results' 
-        ? dateB.getTime() - dateA.getTime() // Recent first for results
-        : dateA.getTime() - dateB.getTime(); // Chronological for upcoming
+      return dateA.getTime() - dateB.getTime(); // Chronological order
     });
   };
   const formatMatchForCard = (match: Match) => {
@@ -136,9 +129,8 @@ const MatchesPage = () => {
       minute: match.currentMinute?.toString()
     };
   };
-
   const getTabCounts = () => {
-    if (!season) return { upcoming: 0, live: 0, results: 0, today: 0 };
+    if (!season) return { upcoming: 0, live: 0, today: 0 };
 
     const partidos = season.partidos || [];
     const fechaVirtual = virtualTimeManager.getFechaVirtualActual();
@@ -152,7 +144,6 @@ const MatchesPage = () => {
     return {
       upcoming: partidos.filter(m => new Date(m.fecha) > fechaVirtual && m.status === 'scheduled').length,
       live: partidos.filter(m => m.status === 'live').length,
-      results: partidos.filter(m => m.status === 'finished').length,
       today: partidos.filter(m => {
         const matchDate = new Date(m.fecha);
         return matchDate >= startOfDay && matchDate <= endOfDay;
@@ -251,14 +242,7 @@ const MatchesPage = () => {
             size="sm"
           >
             🔴 En Vivo ({tabCounts.live})
-          </Button>
-          <Button 
-            variant={activeTab === 'results' ? 'primary' : 'outline'} 
-            onClick={() => setActiveTab('results')}
-            size="sm"
-          >
-            📊 Resultados ({tabCounts.results})
-          </Button>        </div>
+          </Button></div>
 
         {/* Grid for matches */}
         <div className={styles.upcomingMatchesGrid}>
@@ -268,17 +252,14 @@ const MatchesPage = () => {
             ))
           ) : (
             <div className={styles.noMatchesContainer}>
-              <Card className="p-8 text-center">
-                <h3 className="text-lg font-semibold mb-2">
+              <Card className="p-8 text-center">                <h3 className="text-lg font-semibold mb-2">
                   {activeTab === 'upcoming' && 'No hay partidos próximos'}
                   {activeTab === 'live' && 'No hay partidos en vivo'}
-                  {activeTab === 'results' && 'No hay resultados disponibles'}
                   {activeTab === 'today' && 'No hay partidos hoy'}
                 </h3>
                 <p className="text-gray-600 mb-4">
                   {activeTab === 'upcoming' && 'Avanza el tiempo virtual para generar más partidos.'}
                   {activeTab === 'live' && 'Inicia la simulación de un partido para verlo en vivo.'}
-                  {activeTab === 'results' && 'Simula algunos partidos para ver resultados.'}
                   {activeTab === 'today' && 'Avanza el tiempo hasta el día de un partido.'}
                 </p>
                 {searchTerm && (
