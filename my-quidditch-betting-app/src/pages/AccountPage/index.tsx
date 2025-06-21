@@ -15,6 +15,15 @@ const HistoryIcon = () => <span className={styles.icon}>📊</span>;
 const SettingsIcon = () => <span className={styles.icon}>⚙️</span>;
 const TrophyIcon = () => <span className={styles.icon}>🏆</span>;
 
+// Define types for better TypeScript support
+interface Transaction {
+    id: number;
+    type: 'deposit' | 'withdraw' | 'bet' | 'win';
+    amount: number;
+    date: string;
+    description: string;
+}
+
 // Define sub-components for each account section
 const ProfileSection = () => {
     const { user } = useAuth();
@@ -140,23 +149,120 @@ const ProfileSection = () => {
 };
 
 const WalletSection = () => {
-    const { user } = useAuth();
+    const { user, updateUserBalance } = useAuth();
     const [showDepositModal, setShowDepositModal] = useState(false);
+    const [showWithdrawModal, setShowWithdrawModal] = useState(false);
     const [depositAmount, setDepositAmount] = useState('');
+    const [withdrawAmount, setWithdrawAmount] = useState('');
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [showNotification, setShowNotification] = useState(false);
+    const [notificationMessage, setNotificationMessage] = useState('');
+    const [balanceUpdated, setBalanceUpdated] = useState(false);
+      // Cargar transacciones del localStorage o usar datos por defecto
+    const [transactions, setTransactions] = useState<Transaction[]>(() => {
+        const savedTransactions = localStorage.getItem('userTransactions');
+        if (savedTransactions) {
+            return JSON.parse(savedTransactions);
+        }
+        return [
+            { id: 1, type: 'deposit', amount: 500, date: '2025-06-15', description: 'Depósito inicial' },
+            { id: 2, type: 'bet', amount: -50, date: '2025-06-16', description: 'Apuesta: Gryffindor vs Slytherin' },
+            { id: 3, type: 'win', amount: 100, date: '2025-06-16', description: 'Ganancia: Gryffindor vs Slytherin' },
+            { id: 4, type: 'bet', amount: -30, date: '2025-06-17', description: 'Apuesta: Hufflepuff vs Ravenclaw' },
+            { id: 5, type: 'withdraw', amount: -200, date: '2025-06-17', description: 'Retiro a cuenta Gringotts' }
+        ];
+    });
 
-    const transactions = [
-        { id: 1, type: 'deposit', amount: 500, date: '2025-06-15', description: 'Depósito inicial' },
-        { id: 2, type: 'bet', amount: -50, date: '2025-06-16', description: 'Apuesta: Gryffindor vs Slytherin' },
-        { id: 3, type: 'win', amount: 100, date: '2025-06-16', description: 'Ganancia: Gryffindor vs Slytherin' },
-        { id: 4, type: 'bet', amount: -30, date: '2025-06-17', description: 'Apuesta: Hufflepuff vs Ravenclaw' },
-        { id: 5, type: 'withdraw', amount: -200, date: '2025-06-17', description: 'Retiro a cuenta Gringotts' }
-    ];
+    // Guardar transacciones en localStorage cuando cambien
+    const saveTransactions = (newTransactions: Transaction[]) => {
+        setTransactions(newTransactions);
+        localStorage.setItem('userTransactions', JSON.stringify(newTransactions));
+    };    const showSuccessNotification = (message: string) => {
+        setNotificationMessage(message);
+        setShowNotification(true);
+        setBalanceUpdated(true);
+        setTimeout(() => setShowNotification(false), 4000);
+        setTimeout(() => setBalanceUpdated(false), 600);
+    };
 
-    const handleDeposit = () => {
+    const handleDeposit = async () => {
         if (depositAmount && Number(depositAmount) > 0) {
-            console.log('Depositing:', depositAmount);
+            setIsProcessing(true);
+            
+            // Simular delay de procesamiento
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
+            const amount = Number(depositAmount);
+            const currentDate = new Date().toISOString().split('T')[0];
+            
+            // Crear nueva transacción
+            const newTransaction = {
+                id: Date.now(), // Usar timestamp para ID único
+                type: 'deposit' as const,
+                amount: amount,
+                date: currentDate,
+                description: `Depósito de ${amount} galeones`
+            };
+            
+            // Actualizar balance del usuario
+            if (updateUserBalance && user) {
+                updateUserBalance(user.balance + amount);
+            }
+            
+            // Agregar transacción al historial
+            const updatedTransactions = [newTransaction, ...transactions];
+            saveTransactions(updatedTransactions);
+            
             setShowDepositModal(false);
             setDepositAmount('');
+            setIsProcessing(false);
+            
+            // Mostrar notificación de éxito
+            showSuccessNotification(`✨ ¡Depósito exitoso! +${amount} galeones añadidos a tu bóveda`);
+        }
+    };
+
+    const handleWithdraw = async () => {
+        if (withdrawAmount && Number(withdrawAmount) > 0) {
+            const amount = Number(withdrawAmount);
+            
+            // Verificar que hay suficiente saldo
+            if (amount > (user?.balance || 0)) {
+                alert('🚫 ¡No tienes suficientes galeones para este retiro!');
+                return;
+            }
+            
+            setIsProcessing(true);
+            
+            // Simular delay de procesamiento
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
+            const currentDate = new Date().toISOString().split('T')[0];
+            
+            // Crear nueva transacción
+            const newTransaction = {
+                id: Date.now(), // Usar timestamp para ID único
+                type: 'withdraw' as const,
+                amount: -amount,
+                date: currentDate,
+                description: `Retiro de ${amount} galeones a Gringotts`
+            };
+            
+            // Actualizar balance del usuario
+            if (updateUserBalance && user) {
+                updateUserBalance(user.balance - amount);
+            }
+            
+            // Agregar transacción al historial
+            const updatedTransactions = [newTransaction, ...transactions];
+            saveTransactions(updatedTransactions);
+            
+            setShowWithdrawModal(false);
+            setWithdrawAmount('');
+            setIsProcessing(false);
+            
+            // Mostrar notificación de éxito
+            showSuccessNotification(`🏦 ¡Retiro exitoso! ${amount} galeones transferidos a Gringotts`);
         }
     };
 
@@ -165,29 +271,30 @@ const WalletSection = () => {
             <h2 className={styles.sectionTitle}>
                 <WalletIcon />
                 Mi Bóveda de Gringotts
-            </h2>
-
-            {user && (
-                <div className={styles.walletBalance}>
+            </h2>            {user && (
+                <div className={`${styles.walletBalance} ${balanceUpdated ? styles.balanceUpdate : ''}`}>
                     <div className={styles.balanceLabel}>💰 Saldo Actual</div>
                     <div className={styles.balanceValue}>{user.balance}</div>
                     <div className={styles.balanceCurrency}>Galeones Mágicos</div>
                 </div>
-            )}
-
-            <div className={styles.actionButtons}>
+            )}<div className={styles.actionButtons}>
                 <button 
                     className={`${styles.actionButton} ${styles.primary}`}
                     onClick={() => setShowDepositModal(true)}
+                    disabled={isProcessing}
                 >
                     <span>💳</span>
                     <span>Depositar Galeones</span>
                 </button>
-                <button className={styles.actionButton}>
+                <button 
+                    className={styles.actionButton}
+                    onClick={() => setShowWithdrawModal(true)}
+                    disabled={isProcessing}
+                >
                     <span>🏦</span>
                     <span>Retirar Galeones</span>
                 </button>
-            </div>            <Card className={styles.card}>
+            </div><Card className={styles.card}>
                 <h3 className={`${styles.cardTitle} ${styles.titleWithIcon}`}>
                     <HistoryIcon />
                     Historial de Transacciones
@@ -210,12 +317,11 @@ const WalletSection = () => {
                         </div>
                     ))}
                 </div>
-            </Card>
-
-            {showDepositModal && (
+            </Card>            {showDepositModal && (
                 <div className={styles.modal}>
                     <Card className={styles.modalContent}>
-                        <h3 className={styles.modalTitle}>💰 Depositar Galeones</h3>                        <div className={styles.modalBody}>
+                        <h3 className={styles.modalTitle}>💰 Depositar Galeones</h3>
+                        <div className={styles.modalBody}>
                             <div className={styles.formGroup}>
                                 <label className={styles.formLabel}>Cantidad a depositar:</label>
                                 <input
@@ -225,22 +331,94 @@ const WalletSection = () => {
                                     className={styles.formInput}
                                     placeholder="Ej: 500"
                                     min="1"
+                                    disabled={isProcessing}
                                 />
+                                <small className={styles.formHelp}>
+                                    💡 Los galeones se añadirán instantáneamente a tu bóveda
+                                </small>
                             </div>
                             <div className={styles.modalButtons}>
-                                <Button onClick={handleDeposit} fullWidth>
-                                    Depositar
+                                <Button 
+                                    onClick={handleDeposit} 
+                                    fullWidth
+                                    isLoading={isProcessing}
+                                    disabled={!depositAmount || Number(depositAmount) <= 0}
+                                >
+                                    {isProcessing ? (
+                                        <>
+                                            <span className={styles.processingSpinner}></span>
+                                            Procesando...
+                                        </>
+                                    ) : 'Depositar'}
                                 </Button>
                                 <Button 
                                     variant="outline" 
                                     onClick={() => setShowDepositModal(false)}
                                     fullWidth
+                                    disabled={isProcessing}
                                 >
                                     Cancelar
                                 </Button>
                             </div>
                         </div>
                     </Card>
+                </div>
+            )}{showWithdrawModal && (
+                <div className={styles.modal}>
+                    <Card className={styles.modalContent}>
+                        <h3 className={styles.modalTitle}>🏦 Retirar Galeones</h3>
+                        <div className={styles.modalBody}>
+                            <div className={styles.currentBalance}>
+                                <p>💰 Saldo disponible: <strong>{user?.balance || 0} G</strong></p>
+                            </div>
+                            <div className={styles.formGroup}>
+                                <label className={styles.formLabel}>Cantidad a retirar:</label>
+                                <input
+                                    type="number"
+                                    value={withdrawAmount}
+                                    onChange={(e) => setWithdrawAmount(e.target.value)}
+                                    className={styles.formInput}
+                                    placeholder="Ej: 200"
+                                    min="1"
+                                    max={user?.balance || 0}
+                                    disabled={isProcessing}
+                                />
+                                <small className={styles.formHelp}>
+                                    🏛️ Los galeones se transferirán a tu cuenta de Gringotts
+                                </small>
+                            </div>
+                            <div className={styles.modalButtons}>
+                                <Button 
+                                    onClick={handleWithdraw} 
+                                    fullWidth
+                                    isLoading={isProcessing}
+                                    disabled={!withdrawAmount || Number(withdrawAmount) <= 0 || Number(withdrawAmount) > (user?.balance || 0)}
+                                >
+                                    {isProcessing ? (
+                                        <>
+                                            <span className={styles.processingSpinner}></span>
+                                            Procesando...
+                                        </>
+                                    ) : 'Retirar'}
+                                </Button>
+                                <Button 
+                                    variant="outline" 
+                                    onClick={() => setShowWithdrawModal(false)}
+                                    fullWidth
+                                    disabled={isProcessing}
+                                >
+                                    Cancelar
+                                </Button>
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+            )}
+
+            {/* Notificación de éxito */}
+            {showNotification && (
+                <div className={styles.successNotification}>
+                    <p>{notificationMessage}</p>
                 </div>
             )}
         </div>
