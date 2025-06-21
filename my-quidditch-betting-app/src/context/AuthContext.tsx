@@ -15,6 +15,7 @@ interface AuthContextType {
   login: (email: string, password: string, remember?: boolean) => Promise<void>;
   register: (username: string, email: string, password: string, birthdate: string) => Promise<void>;
   logout: () => void;
+  updateUserBalance: (newBalance: number) => void;
   error: string | null;
 }
 
@@ -101,7 +102,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setIsLoading(false);
     }
   };
-
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
@@ -109,6 +109,23 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     navigate('/login');
   };
 
+  const updateUserBalance = (newBalance: number) => {
+    if (user) {
+      const updatedUser = { ...user, balance: newBalance };
+      setUser(updatedUser);
+      
+      // Update the stored user data
+      const storedInLocal = localStorage.getItem('user');
+      const storedInSession = sessionStorage.getItem('user');
+      
+      if (storedInLocal) {
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+      }
+      if (storedInSession) {
+        sessionStorage.setItem('user', JSON.stringify(updatedUser));
+      }
+    }
+  };
   return (
     <AuthContext.Provider
       value={{
@@ -118,6 +135,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         login,
         register,
         logout,
+        updateUserBalance,
         error,
       }}
     >

@@ -1952,7 +1952,7 @@
   }
   
   .balanceValue {
-    font-size: clamp(2rem, 10vw, 3rem);
+    font-size: clamp(2rem, 8vw, 3rem);
   }
 }
 
@@ -2074,6 +2074,7 @@
   .walletBalance {
     padding: var(--spacing-3);
   }
+  
   
   .statCard {
     padding: var(--spacing-2);
@@ -2352,446 +2353,6 @@
   transform: translateY(-2px);
 }
 
-/* Responsive sizes for team logo */
-@media (max-width: 479px) {
-  .teamLogo {
-    width: clamp(35px, 10vw, 45px);
-    height: clamp(35px, 10vw, 45px);
-  }
-  
-  .teamFavoriteIcon {
-    padding: var(--spacing-1);
-    margin-bottom: var(--spacing-1);
-  }
-}
-
-@media (min-width: 480px) and (max-width: 767px) {
-  .teamLogo {
-    width: clamp(40px, 9vw, 50px);
-    height: clamp(40px, 9vw, 50px);
-  }
-}
-
-@media (min-width: 768px) {
-  .teamLogo {
-    width: clamp(45px, 7vw, 60px);
-    height: clamp(45px, 7vw, 60px);
-  }
-}
-
-@media (min-width: 1024px) {
-  .teamLogo {
-    width: clamp(50px, 6vw, 65px);
-    height: clamp(50px, 6vw, 65px);
-  }
-}
-
-/* ===== MODAL BODY ===== */
-.modalBody {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-4);
-}
-
-/* ===== CONTENEDORES DE APUESTAS ===== */
-.betsContainer {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-4);
-}
-
-/* ===== RESULTADOS DE APUESTAS ===== */
-.winResult {
-  color: var(--color-success);
-  font-weight: bold;
-}
-
-.lossResult {
-  color: var(--color-danger);
-  font-weight: bold;
-}
-
-/* ===== CONFIGURACIONES ===== */
-.settingsGrid {
-  display: grid;
-  gap: var(--spacing-8);
-}
-
-@media (min-width: 768px) {
-  .settingsGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-.settingsGroup {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-4);
-}
-
-.settingItem {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--spacing-3) 0;
-  border-bottom: 1px solid var(--color-gray-200);
-}
-
-.settingItem:last-child {
-  border-bottom: none;
-}
-
-.settingLabel {
-  font-size: var(--text-sm);
-  font-weight: 500;
-  color: var(--color-gray-700);
-}
-
-.checkbox {
-  width: 1rem;
-  height: 1rem;
-  accent-color: var(--color-primary);
-  cursor: pointer;
-}
-
-.select {
-  width: 100%;
-  padding: var(--spacing-3);
-  border: 2px solid var(--color-gray-300);
-  border-radius: var(--radius-lg);
-  font-size: var(--text-base);
-  background-color: white;
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-
-.select:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(75, 0, 130, 0.1);
-}
-
-.select:hover {
-  border-color: var(--color-primary-light);
-}
-
-/* ===== FORMULARIOS MEJORADOS ===== */
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-4);
-}
-
-.cardTitle {
-  font-size: var(--text-xl);
-  font-weight: 600;
-  margin-bottom: var(--spacing-4);
-  color: var(--color-primary);
-  font-family: var(--font-primary);
-}
-
-/* Mejoras para inputs con animaciones mágicas */
-.formInput:hover {
-  border-color: var(--color-primary-light);
-  box-shadow: 
-    0 4px 12px rgba(75, 0, 130, 0.08),
-    0 2px 6px rgba(0, 0, 0, 0.05);
-  transform: translateY(-1px);
-}
-
-.formInput::placeholder {
-  color: var(--color-gray-400);
-  transition: color 0.3s ease;
-}
-
-.formInput:focus::placeholder {
-  color: var(--color-gray-300);
-}
-
-/* Efectos mágicos para elementos interactivos */
-.checkbox:checked {
-  transform: scale(1.1);
-}
-
-.select option {
-  padding: var(--spacing-2);
-  background-color: white;
-  color: var(--color-gray-700);
-}
-
-.select option:hover {
-  background-color: var(--color-primary-light);
-  color: white;
-}
-
-/* ===== ANIMACIONES Y EFECTOS ADICIONALES PARA ESTADÍSTICAS ===== */
-
-/* Efecto de entrada escalonada para las tarjetas */
-.statCard:nth-child(1) {
-  animation: slideInUp 0.6s ease-out 0.1s both;
-}
-
-.statCard:nth-child(2) {
-  animation: slideInUp 0.6s ease-out 0.2s both;
-}
-
-.statCard:nth-child(3) {
-  animation: slideInUp 0.6s ease-out 0.3s both;
-}
-
-.statCard:nth-child(4) {
-  animation: slideInUp 0.6s ease-out 0.4s both;
-}
-
-@keyframes slideInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* Efecto de brillo sutil en las tarjetas */
-.statCard::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg, 
-    transparent, 
-    rgba(255, 255, 255, 0.2), 
-    transparent
-  );
-  transition: left 0.8s ease;
-  z-index: 1;
-  pointer-events: none;
-}
-
-.statCard:hover::after {
-  left: 100%;
-}
-
-/* Asegurar que el contenido esté por encima del brillo */
-.statValue, .statLabel, .teamFavoriteIcon {
-  position: relative;
-  z-index: 2;
-}
-
-/* Efectos de pulsación sutil para los valores */
-@keyframes pulseValue {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.02);
-  }
-}
-
-.statCard:hover .statValue {
-  animation: pulseValue 2s ease-in-out infinite;
-}
-
-/* Mejoras adicionales para la accesibilidad */
-.statCard:focus {
-  outline: 3px solid var(--color-primary);
-  outline-offset: 2px;
-}
-
-/* Reducir animaciones en dispositivos que prefieren menos movimiento */
-@media (prefers-reduced-motion: reduce) {
-  .statCard {
-    animation: none;
-    transition: box-shadow 0.2s ease, transform 0.2s ease;
-  }
-  
-  .statCard:hover {
-    transform: translateY(-2px);
-  }
-  
-  .statCard::after {
-    display: none;
-  }
-  
-  .statCard:hover .statValue {
-    animation: none;
-    transform: scale(1.03);
-  }
-}
-
-/* ===== MEJORAS ESPECÍFICAS PARA CONTENIDO LARGO ===== */
-
-/* Para números muy largos */
-.statValue[data-long="true"] {
-  font-size: clamp(1.1rem, 4vw, 1.6rem);
-  letter-spacing: -0.03em;
-}
-
-/* Para etiquetas muy largas */
-.statLabel[data-long="true"] {
-  font-size: clamp(0.65rem, 2vw, 0.75rem);
-  line-height: 1.2;
-  letter-spacing: 0.3px;
-}
-
-/* ===== ESTADO DE CARGA PARA LAS TARJETAS ===== */
-.statCard.loading {
-  position: relative;
-  overflow: hidden;
-}
-
-.statCard.loading::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(106, 90, 205, 0.1),
-    transparent
-  );
-  animation: shimmerLoad 1.5s ease-in-out infinite;
-  z-index: 3;
-}
-
-@keyframes shimmerLoad {
-  0% {
-    left: -100%;
-  }
-  100% {
-    left: 100%;
-  }
-}
-
-/* ===== MEJORAS PARA LA TARJETA DEL EQUIPO FAVORITO ===== */
-.statCard.blue .teamFavoriteIcon {
-  position: relative;
-}
-
-.statCard.blue .teamFavoriteIcon::before {
-  content: '';
-  position: absolute;
-  inset: -8px;
-  background: linear-gradient(45deg, transparent, rgba(59, 130, 246, 0.1), transparent);
-  border-radius: var(--radius-full);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.statCard.blue:hover .teamFavoriteIcon::before {
-  opacity: 1;
-  animation: rotateGlow 3s ease-in-out infinite;
-}
-
-@keyframes rotateGlow {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  50% {
-    transform: rotate(180deg);
-  }
-}
-
-/* ===== BREAKPOINTS ADICIONALES PARA MEJOR RESPONSIVIDAD ===== */
-
-/* Pantallas extra pequeñas (menos de 360px) */
-@media (max-width: 359px) {
-  .statsGrid {
-    grid-template-columns: 1fr;
-    gap: var(--spacing-3);
-  }
-  
-  .statCard {
-    min-height: 140px;
-    padding: var(--spacing-3);
-    gap: var(--spacing-2);
-  }
-  
-  .statValue {
-    font-size: clamp(0.9rem, 6vw, 1.2rem);
-    width: 100%;
-    text-align: left;
-  }
-  
-  .statLabel {
-    font-size: clamp(0.6rem, 2.8vw, 0.75rem);
-    line-height: 1.1;
-    white-space: normal;
-    width: 100%;
-    padding: 0;
-    text-align: left;
-  }
-  
-  .teamLogo {
-    width: clamp(2rem, 12vw, 2.5rem);
-    height: clamp(2rem, 12vw, 2.5rem);
-  }
-}
-
-/* Pantallas ultra anchas (más de 1400px) */
-@media (min-width: 1400px) {
-  .statsGrid {
-    max-width: 1200px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-  
-  .statCard {
-    max-height: 200px;
-  }
-  
-  .statValue {
-    font-size: clamp(1.6rem, 2.5vw, 2.4rem);
-  }
-  
-  .statLabel {
-    font-size: clamp(0.75rem, 1.2vw, 0.9rem);
-  }
-  
-  .teamLogo {
-    width: clamp(4rem, 5vw, 5rem);
-    height: clamp(4rem, 5vw, 5rem);
-  }
-}
-
-/* Ajustes para orientación landscape en móviles */
-@media (max-height: 500px) and (orientation: landscape) {
-  .statCard {
-    min-height: clamp(120px, 18vh, 160px);
-    padding: var(--spacing-3);
-    gap: var(--spacing-2);
-  }
-  
-  .statValue {
-    font-size: clamp(0.9rem, 4vh, 1.3rem);
-    width: 100%;
-    text-align: left;
-  }
-  
-  .statLabel {
-    font-size: clamp(0.6rem, 2.2vh, 0.8rem);
-    margin-top: var(--spacing-1);
-    white-space: normal;
-    line-height: 1.1;
-    width: 100%;
-    padding: 0;
-    text-align: left;
-  }
-  
-  .teamLogo {
-    width: clamp(2rem, 10vh, 2.8rem);
-    height: clamp(2rem, 10vh, 2.8rem);
-  }
-}
-
 /* ===== MEJORAS DE ACCESIBILIDAD Y UX ===== */
 
 /* Mejorar focus states para navegación por teclado */
@@ -2837,6 +2398,185 @@
   
   .statLabel {
     color: var(--color-gray-700);
+  }
+}
+
+/* ===== ESTILOS MEJORADOS PARA MONEDERO Y NOTIFICACIONES ===== */
+
+/* Indicador de saldo actualizado */
+.balanceUpdate {
+  animation: balanceGlow 0.6s ease-in-out;
+}
+
+@keyframes balanceGlow {
+  0% { 
+    transform: scale(1);
+    box-shadow: 0 0 0 rgba(255, 204, 0, 0);
+  }
+  50% { 
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(255, 204, 0, 0.6);
+  }
+  100% { 
+    transform: scale(1);
+    box-shadow: 0 0 0 rgba(255, 204, 0, 0);
+  }
+}
+
+/* Estilo para el balance disponible en el modal */
+.currentBalance {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 1px solid #bae6fd;
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-3);
+  margin-bottom: var(--spacing-4);
+  text-align: center;
+}
+
+.currentBalance p {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+}
+
+/* Botones de acción mejorados con estados disabled */
+.actionButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.actionButton:disabled:hover {
+  transform: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Spinner de carga para procesamiento */
+.processingSpinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #ffffff;
+  animation: spin 1s ease-in-out infinite;
+  margin-right: var(--spacing-2);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Notificación de éxito para transacciones */
+.successNotification {
+  position: fixed;
+  top: var(--spacing-4);
+  right: var(--spacing-4);
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  padding: var(--spacing-4);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+  z-index: 1000;
+  animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Mejoras en los iconos de transacciones */
+.transactionItem::after {
+  content: '';
+  position: absolute;
+  left: var(--spacing-3);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.transactionItem.deposit::after {
+  background: var(--color-success);
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+}
+
+.transactionItem.withdraw::after {
+  background: var(--color-warning);
+  box-shadow: 0 0 8px rgba(251, 146, 60, 0.5);
+}
+
+.transactionItem.bet::after {
+  background: var(--color-primary);
+  box-shadow: 0 0 8px rgba(139, 92, 246, 0.5);
+}
+
+.transactionItem.win::after {
+  background: var(--color-success);
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+}
+
+/* Efectos de hover mejorados para transacciones */
+.transactionItem:hover .transactionAmount {
+  font-weight: 600;
+  transform: scale(1.02);
+}
+
+/* Validación visual para formularios en modales */
+.formInput:invalid {
+  border-color: var(--color-danger);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.formInput:valid {
+  border-color: var(--color-success);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+}
+
+/* Estados de botones en modales */
+.modalButtons button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.modalButtons button:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+/* ===== RESPONSIVE IMPROVEMENTS FOR WALLET ===== */
+@media (max-width: 480px) {
+  .walletBalance {
+    text-align: center;
+    padding: var(--spacing-4);
+  }
+  
+  .balanceValue {
+    font-size: clamp(2rem, 8vw, 3rem);
+  }
+  
+  .actionButtons {
+    flex-direction: column;
+    gap: var(--spacing-3);
+  }
+  
+  .actionButton {
+    justify-content: center;
+    padding: var(--spacing-4);
+  }
+  
+  .modalContent {
+    margin: var(--spacing-2);
+    max-height: 90vh;
+    overflow-y: auto;
   }
 }
 /* Fin del archivo CSS - Diseño completo y optimizado */
