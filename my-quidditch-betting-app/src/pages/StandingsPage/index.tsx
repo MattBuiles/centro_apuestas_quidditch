@@ -17,25 +17,20 @@ const StandingsPage = () => {
   useEffect(() => {
     loadStandingsFromSimulation();
   }, []);
-
   const loadStandingsFromSimulation = () => {
     setIsLoading(true);
     
-    const timeState = virtualTimeManager.getState();
-    if (timeState.temporadaActiva) {
-      setSeason(timeState.temporadaActiva);
-      
-      // Calculate standings from finished matches
-      const calculatedStandings = standingsCalculator.calculateStandings(
-        timeState.temporadaActiva.equipos,
-        timeState.temporadaActiva.partidos.filter(match => match.status === 'finished')
-      );
-      
-      setStandings(calculatedStandings);
-    } else {
-      setStandings([]);
-    }
+    // This will automatically initialize a season if none exists
+    const temporadaActiva = virtualTimeManager.getTemporadaActivaOInicializar();
+    setSeason(temporadaActiva);
     
+    // Calculate standings from finished matches
+    const calculatedStandings = standingsCalculator.calculateStandings(
+      temporadaActiva.equipos,
+      temporadaActiva.partidos.filter(match => match.status === 'finished')
+    );
+    
+    setStandings(calculatedStandings);
     setIsLoading(false);
   };
 

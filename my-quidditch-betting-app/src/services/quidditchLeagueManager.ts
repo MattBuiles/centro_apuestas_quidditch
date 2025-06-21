@@ -238,20 +238,19 @@ export class QuidditchLeagueManager {
       }
     ];
   }
-
   /**
    * Creates a demo season with sample teams
    */
   createDemoSeason(): Season {
     const teams = this.createSampleTeams();
     const config: Partial<ScheduleConfig> = {
-      seasonStart: new Date('2024-09-01'),
-      seasonEnd: new Date('2025-05-31'),
+      seasonStart: new Date('2025-07-01'),
+      seasonEnd: new Date('2026-05-31'),
       preferredMatchDays: [5, 6], // Friday and Saturday
       matchTimes: ['14:00', '16:30', '19:00']
     };
 
-    return this.createSeason(teams, 'Liga Mágica de Quidditch', 2024, config);
+    return this.createSeason(teams, 'Liga Mágica de Quidditch', 2025, config);
   }
 
   /**

@@ -30,43 +30,36 @@ const ResultsPage: React.FC = () => {
   useEffect(() => {
     loadResultsFromSimulation();
   }, []);
-
   const loadResultsFromSimulation = () => {
     setIsLoading(true);
     
-    const timeState = virtualTimeManager.getState();
-    if (timeState.temporadaActiva) {
-      setSeason(timeState.temporadaActiva);
-      
-      // Get finished matches from simulation
-      const finishedMatches = virtualTimeManager.getResultadosRecientes(20);
-      
-      const simulationResults: Result[] = finishedMatches.map(match => {
-        const homeTeam = timeState.temporadaActiva!.equipos.find(t => t.id === match.localId);
-        const awayTeam = timeState.temporadaActiva!.equipos.find(t => t.id === match.visitanteId);
-        
-        return {
-          id: match.id,
-          date: new Date(match.fecha).toLocaleDateString('es-ES', {
-            month: 'short',
-            day: 'numeric'
-          }),
-          homeTeam: homeTeam?.name || match.localId,
-          awayTeam: awayTeam?.name || match.visitanteId,
-          homeScore: match.homeScore || 0,
-          awayScore: match.awayScore || 0,
-          league: timeState.temporadaActiva?.name || 'Liga Profesional Quidditch',
-          snitchCaught: match.snitchCaught || false,
-          events: match.events?.length || 0
-        };
-      });
-      
-      setResults(simulationResults);
-    } else {
-      // No simulation data, use empty array
-      setResults([]);
-    }
+    // This will automatically initialize a season if none exists
+    const temporadaActiva = virtualTimeManager.getTemporadaActivaOInicializar();
+    setSeason(temporadaActiva);
     
+    // Get finished matches from simulation
+    const finishedMatches = virtualTimeManager.getResultadosRecientes(20);
+    
+    const simulationResults: Result[] = finishedMatches.map(match => {
+      const homeTeam = temporadaActiva.equipos.find(t => t.id === match.localId);
+      const awayTeam = temporadaActiva.equipos.find(t => t.id === match.visitanteId);
+      
+      return {
+        id: match.id,
+        date: new Date(match.fecha).toLocaleDateString('es-ES', {
+          month: 'short',
+          day: 'numeric'
+        }),
+        homeTeam: homeTeam?.name || match.localId,
+        awayTeam: awayTeam?.name || match.visitanteId,
+        homeScore: match.homeScore || 0,
+        awayScore: match.awayScore || 0,        league: temporadaActiva.name || 'Liga Profesional Quidditch',
+        snitchCaught: match.snitchCaught || false,
+        events: match.events?.length || 0
+      };
+    });
+    
+    setResults(simulationResults);
     setIsLoading(false);
   };
   const handleFilterSubmit = (e: React.FormEvent) => {
