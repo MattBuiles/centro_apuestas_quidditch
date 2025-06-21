@@ -982,3 +982,111 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
+
+/* Additional classes for complete JSX coverage */
+.predictionSection {
+  background: var(--glassmorphism-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glassmorphism-border);
+  border-radius: 16px;
+  padding: 2rem;
+  margin: 2rem 0;
+  box-shadow: var(--glassmorphism-shadow);
+}
+
+.predictionTitle {
+  color: var(--primary-color);
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.predictionOptions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.predictionActions {
+  display: flex;
+  justify-content: center;
+}
+
+.actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin: 2rem 0;
+  flex-wrap: wrap;
+}
+
+.ctaButton {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(106, 13, 173, 0.3);
+}
+
+.ctaButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(106, 13, 173, 0.4);
+}
+
+.liveSimulationSection {
+  background: var(--glassmorphism-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glassmorphism-border);
+  border-radius: 16px;
+  padding: 2rem;
+  margin: 2rem 0;
+  box-shadow: var(--glassmorphism-shadow);
+}
+
+.relatedMatches {
+  margin-top: 3rem;
+}
+
+.relatedMatchesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.relatedMatchCard {
+  background: var(--glassmorphism-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--glassmorphism-border);
+  border-radius: 12px;
+  padding: 1rem;
+  transition: all 0.3s ease;
+}
+
+.relatedMatchCard:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--glassmorphism-shadow-hover);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .predictionOptions {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .actions {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .relatedMatchesGrid {
+    grid-template-columns: 1fr;
+  }
+}
