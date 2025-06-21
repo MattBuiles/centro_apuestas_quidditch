@@ -5,6 +5,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 import TeamLogo from '@/components/teams/TeamLogo';
 import LiveMatchViewer from '@/components/matches/LiveMatchViewer';
 import { Team, Match } from '@/types/league';
+import { virtualTimeManager } from '@/services/virtualTimeManager';
 // import { useAuth } from '@/context/AuthContext'; // If needed for predictions
 
 // Mock data - replace with actual data fetching
@@ -54,26 +55,6 @@ const mockAwayTeam: Team = {
   venue: 'Slytherin Dungeon Pitch'
 };
 
-const mockMatch: Match = {
-  id: '1',
-  localId: 'gryffindor',
-  visitanteId: 'slytherin',
-  homeTeamId: 'gryffindor',
-  awayTeamId: 'slytherin',
-  fecha: new Date(),
-  date: new Date(),
-  eventos: [],
-  events: [],
-  status: 'scheduled',
-  homeScore: 0,
-  awayScore: 0,
-  duration: 0,
-  round: 1,
-  matchday: 1,
-  venue: 'Campo de Quidditch de Hogwarts',
-  snitchCaught: false
-};
-
 const mockMatchDetail: MatchDetails = {
   id: '1',
   homeTeam: 'Gryffindor',
@@ -91,23 +72,54 @@ const mockMatchDetail: MatchDetails = {
 const MatchDetailPage = () => {
   const { matchId } = useParams<{ matchId: string }>();
   const [match, setMatch] = useState<MatchDetails | null>(null);
+  const [realMatch, setRealMatch] = useState<Match | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('live'); // live, stats, lineups, h2h, betting, predictions
   const [showLiveSimulation, setShowLiveSimulation] = useState(false);
   // const { isAuthenticated } = useAuth(); // If needed for predictions
 
   useEffect(() => {
-    // Simulate API call
+    // Get the real match from virtual time manager
     setIsLoading(true);
-    setTimeout(() => {
-      // In a real app, fetch match details based on matchId
-      if (matchId === mockMatchDetail.id) { // Simple check for mock
-        setMatch(mockMatchDetail);
+    
+    const timeState = virtualTimeManager.getState();
+    if (timeState.temporadaActiva && matchId) {
+      const foundMatch = timeState.temporadaActiva.partidos.find(p => p.id === matchId);
+      
+      if (foundMatch) {
+        setRealMatch(foundMatch);
+        
+        // Find team names
+        const homeTeam = timeState.temporadaActiva.equipos.find(t => t.id === foundMatch.localId);
+        const awayTeam = timeState.temporadaActiva.equipos.find(t => t.id === foundMatch.visitanteId);
+        
+        // Convert to MatchDetails format
+        const matchDetails: MatchDetails = {
+          id: foundMatch.id,
+          homeTeam: homeTeam?.name || foundMatch.localId,
+          awayTeam: awayTeam?.name || foundMatch.visitanteId,
+          homeScore: foundMatch.homeScore || 0,
+          awayScore: foundMatch.awayScore || 0,
+          status: foundMatch.status === 'scheduled' ? 'upcoming' : 
+                 foundMatch.status === 'live' ? 'live' : 'finished',
+          minute: foundMatch.currentMinute?.toString(),
+          date: new Date(foundMatch.fecha).toLocaleDateString('es-ES'),
+          time: new Date(foundMatch.fecha).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+          league: timeState.temporadaActiva.name || 'Liga Quidditch',
+          location: foundMatch.venue || 'Campo de Quidditch',
+        };
+        
+        setMatch(matchDetails);
       } else {
-        setMatch(null); // Or a different mock match
+        // Fallback to mock data if match not found
+        setMatch(mockMatchDetail);
       }
-      setIsLoading(false);
-    }, 1000);
+    } else {
+      // Fallback to mock data
+      setMatch(mockMatchDetail);
+    }
+    
+    setIsLoading(false);
   }, [matchId]);
 
   const handleTabClick = (tabName: string) => {
@@ -189,12 +201,30 @@ const MatchDetailPage = () => {
         <button className={`tab-button ${activeTab === 'h2h' ? 'active' : ''}`} onClick={() => handleTabClick('h2h')}>Cara a Cara</button>
         <button className={`tab-button ${activeTab === 'betting' ? 'active' : ''}`} onClick={() => handleTabClick('betting')}>Mercados</button>
         <button className={`tab-button ${activeTab === 'predictions' ? 'active' : ''}`} onClick={() => handleTabClick('predictions')}>Predicciones</button>
-      </div>
-
-      <div id="live-updates" className={`tab-content ${activeTab === 'live' ? '' : 'hidden'}`}>
+      </div>      <div id="live-updates" className={`tab-content ${activeTab === 'live' ? '' : 'hidden'}`}>
         <h2 className="text-xl font-bold text-primary mb-4">Comentarios en Vivo</h2>
-        <p>Los comentarios en vivo aparecerán aquí...</p>
-        {/* Placeholder for live commentary feed */}
+        {realMatch && showLiveSimulation ? (
+          <div className="mb-4">
+            <LiveMatchViewer 
+              match={realMatch} 
+              homeTeam={mockHomeTeam} 
+              awayTeam={mockAwayTeam}
+              onMatchEnd={(matchState) => {
+                console.log('Match ended:', matchState);
+                setShowLiveSimulation(false);
+              }}
+            />
+          </div>
+        ) : (
+          <>
+            <p>Los comentarios en vivo aparecerán aquí...</p>
+            <div className="mt-4">
+              <Button onClick={toggleLiveSimulation} variant="primary">
+                {showLiveSimulation ? 'Ocultar Simulación' : 'Iniciar Simulación en Vivo'}
+              </Button>
+            </div>
+          </>
+        )}
       </div>
 
       <div id="stats" className={`tab-content ${activeTab === 'stats' ? '' : 'hidden'}`}>
@@ -222,17 +252,16 @@ const MatchDetailPage = () => {
       <div id="predictions-tab" className={`tab-content ${activeTab === 'predictions' ? '' : 'hidden'}`}>
         <h2 className="text-xl font-bold text-primary mb-4">Predicciones de la Comunidad</h2>
         <p>Las predicciones de otros usuarios aparecerán aquí...</p>
-      </div>
-
-      {/* Live Simulation Section */}
-      {match.status === 'live' && (
+      </div>      {/* Live Simulation Section */}
+      {realMatch && (
         <div className="live-simulation-section mt-8">
           <h2 className="text-xl font-bold text-primary mb-4">Simulación en Vivo</h2>
           <Button onClick={toggleLiveSimulation} className="mb-4">
             {showLiveSimulation ? 'Ocultar Simulación' : 'Ver Simulación en Vivo'}
-          </Button>          {showLiveSimulation && (
+          </Button>
+          {showLiveSimulation && (
             <LiveMatchViewer 
-              match={mockMatch} 
+              match={realMatch} 
               homeTeam={mockHomeTeam} 
               awayTeam={mockAwayTeam}
               onMatchEnd={(matchState) => {
