@@ -745,35 +745,6 @@
   }
 }
 
-/* ===== DARK MODE SUPPORT ===== */
-@media (prefers-color-scheme: dark) {
-  .bettingPageContainer {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-  }
-  
-  .heroContent,
-  .bettingFormCard {
-    background: rgba(31, 41, 55, 0.95) !important;
-    color: #f9fafb;
-    border-color: rgba(75, 85, 99, 0.3);
-  }
-  
-  .formSelect,
-  .formInput,
-  .betTypeLabel,
-  .teamButton {
-    background: rgba(55, 65, 81, 0.8);
-    color: #f9fafb;
-    border-color: rgba(75, 85, 99, 0.4);
-  }
-  
-  .summaryCard,
-  .selectedMatchCard {
-    background: rgba(55, 65, 81, 0.6);
-    border-color: rgba(75, 85, 99, 0.4);
-  }
-}
-
 /* ===== ANIMACIONES Y EFECTOS ===== */
 @keyframes shimmer {
   0% { transform: translateX(-100%); }
