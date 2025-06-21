@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Button from '@/components/common/Button';
+import Card from '@/components/common/Card';
 import TeamLogo from '@/components/teams/TeamLogo';
 import styles from './StandingsPage.module.css';
 
@@ -101,97 +102,109 @@ const StandingsPage = () => {  const [filter, setFilter] = useState('all'); // '
     if (filter === 'british') return team.league === 'Liga Británica e Irlandesa';
     return true;
   });
-
   return (
     <div className={styles.standingsPageContainer}>
+      {/* Hero Header Section */}
       <section className={styles.pageHeader}>
-        <h1 className={styles.pageTitle}>Clasificación de la Liga</h1>
-        <p className={styles.pageDescription}>
-          Consulta la tabla de posiciones actualizada con estadísticas detalladas de todos los equipos
-        </p>
+        <Card className={styles.heroCard}>
+          <h1 className={styles.pageTitle}>
+            <span className={styles.titleIcon}>🏆</span>
+            Clasificación de la Liga
+          </h1>
+          <p className={styles.pageDescription}>
+            Consulta la tabla de posiciones actualizada con estadísticas detalladas de todos los equipos
+          </p>
+        </Card>
       </section>
       
       <section className={styles.standingsSection}>
-        <div className={styles.standingsFilters}>
-          <Button 
-            variant={filter === 'all' ? 'primary' : 'outline'} 
-            onClick={() => setFilter('all')}
-            className={styles.filterButton}
-          >
-            Todas las Ligas
-          </Button>
-          <Button 
-            variant={filter === 'hogwarts' ? 'primary' : 'outline'} 
-            onClick={() => setFilter('hogwarts')}
-            className={styles.filterButton}
-          >
-            Liga de Hogwarts
-          </Button>
-          <Button 
-            variant={filter === 'british' ? 'primary' : 'outline'} 
-            onClick={() => setFilter('british')}
-            className={styles.filterButton}
-          >
-            Liga Británica
-          </Button>
-        </div>
+        {/* Filters Section */}
+        <Card className={styles.filtersCard}>
+          <div className={styles.standingsFilters}>
+            <Button 
+              variant={filter === 'all' ? 'primary' : 'outline'} 
+              onClick={() => setFilter('all')}
+              className={styles.filterButton}
+            >
+              Todas las Ligas
+            </Button>
+            <Button 
+              variant={filter === 'hogwarts' ? 'primary' : 'outline'} 
+              onClick={() => setFilter('hogwarts')}
+              className={styles.filterButton}
+            >
+              Liga de Hogwarts
+            </Button>
+            <Button 
+              variant={filter === 'british' ? 'primary' : 'outline'} 
+              onClick={() => setFilter('british')}
+              className={styles.filterButton}
+            >
+              Liga Británica
+            </Button>
+          </div>
+        </Card>
         
         {filteredStandings.length > 0 ? (
           <>
             {/* Desktop Table View */}
-            <div className={styles.tableContainer}>
-              <table className={styles.standingsTable}>
-                <thead className={styles.tableHeader}>
-                  <tr>
-                    <th className={styles.tableHeaderCell}>Pos</th>
-                    <th className={styles.tableHeaderCell}>Equipo</th>
-                    <th className={`${styles.tableHeaderCell} ${styles.center}`}>PJ</th>
-                    <th className={`${styles.tableHeaderCell} ${styles.center}`}>PG</th>
-                    <th className={`${styles.tableHeaderCell} ${styles.center}`}>PE</th>
-                    <th className={`${styles.tableHeaderCell} ${styles.center}`}>PP</th>
-                    <th className={`${styles.tableHeaderCell} ${styles.center}`}>GF</th>
-                    <th className={`${styles.tableHeaderCell} ${styles.center}`}>GC</th>
-                    <th className={`${styles.tableHeaderCell} ${styles.center}`}>Puntos</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredStandings.map((team) => (
-                    <tr key={team.teamId} className={styles.standingRow}>
-                      <td className={`${styles.tableCell} ${styles.positionCell}`}>
-                        <div className={`${styles.positionBadge} ${styles[getPositionBadgeClass(team.position)]}`}>
-                          {team.position}
-                        </div>
-                      </td>                      <td className={styles.tableCell}>
-                        <div className={styles.teamInfo}>
-                          <TeamLogo 
-                            teamName={team.teamName} 
-                            size="sm" 
-                            className={styles.teamLogoInTable}
-                          />
-                          <Link to={`/teams/${team.teamId}`} className={styles.teamName}>
-                            {team.teamName}
-                          </Link>
-                        </div>
-                      </td>
-                      <td className={`${styles.tableCell} ${styles.center}`}>{team.played}</td>
-                      <td className={`${styles.tableCell} ${styles.center}`}>{team.won}</td>
-                      <td className={`${styles.tableCell} ${styles.center}`}>{team.drawn}</td>
-                      <td className={`${styles.tableCell} ${styles.center}`}>{team.lost}</td>
-                      <td className={`${styles.tableCell} ${styles.center}`}>{team.goalsFor}</td>
-                      <td className={`${styles.tableCell} ${styles.center}`}>{team.goalsAgainst}</td>
-                      <td className={`${styles.tableCell} ${styles.center} ${styles.bold}`}>{team.points}</td>
+            <Card className={styles.tableCard}>
+              <div className={styles.tableContainer}>
+                <table className={styles.standingsTable}>
+                  <thead className={styles.tableHeader}>
+                    <tr>
+                      <th className={styles.tableHeaderCell}>Pos</th>
+                      <th className={styles.tableHeaderCell}>Equipo</th>
+                      <th className={`${styles.tableHeaderCell} ${styles.center}`}>PJ</th>
+                      <th className={`${styles.tableHeaderCell} ${styles.center}`}>PG</th>
+                      <th className={`${styles.tableHeaderCell} ${styles.center}`}>PE</th>
+                      <th className={`${styles.tableHeaderCell} ${styles.center}`}>PP</th>
+                      <th className={`${styles.tableHeaderCell} ${styles.center}`}>GF</th>
+                      <th className={`${styles.tableHeaderCell} ${styles.center}`}>GC</th>
+                      <th className={`${styles.tableHeaderCell} ${styles.center}`}>Puntos</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {filteredStandings.map((team) => (
+                      <tr key={team.teamId} className={styles.standingRow}>
+                        <td className={`${styles.tableCell} ${styles.positionCell}`}>
+                          <div className={`${styles.positionBadge} ${styles[getPositionBadgeClass(team.position)]}`}>
+                            {team.position}
+                          </div>
+                        </td>
+                        <td className={styles.tableCell}>
+                          <div className={styles.teamInfo}>
+                            <TeamLogo 
+                              teamName={team.teamName} 
+                              size="sm" 
+                              className={styles.teamLogoInTable}
+                            />
+                            <Link to={`/teams/${team.teamId}`} className={styles.teamName}>
+                              {team.teamName}
+                            </Link>
+                          </div>
+                        </td>
+                        <td className={`${styles.tableCell} ${styles.center}`}>{team.played}</td>
+                        <td className={`${styles.tableCell} ${styles.center}`}>{team.won}</td>
+                        <td className={`${styles.tableCell} ${styles.center}`}>{team.drawn}</td>
+                        <td className={`${styles.tableCell} ${styles.center}`}>{team.lost}</td>
+                        <td className={`${styles.tableCell} ${styles.center}`}>{team.goalsFor}</td>
+                        <td className={`${styles.tableCell} ${styles.center}`}>{team.goalsAgainst}</td>
+                        <td className={`${styles.tableCell} ${styles.center} ${styles.bold}`}>{team.points}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
 
             {/* Mobile Cards View */}
             <div className={styles.mobileView}>
               {filteredStandings.map((team) => (
                 <div key={team.teamId} className={styles.standingCard}>
                   <div className={styles.cardHeader}>
-                    <div className={styles.cardTeamInfo}>                      <div className={`${styles.positionBadge} ${styles[getPositionBadgeClass(team.position)]}`}>
+                    <div className={styles.cardTeamInfo}>
+                      <div className={`${styles.positionBadge} ${styles[getPositionBadgeClass(team.position)]}`}>
                         {team.position}
                       </div>
                       <TeamLogo 
@@ -245,7 +258,7 @@ const StandingsPage = () => {  const [filter, setFilter] = useState('all'); // '
             <Button 
               variant="outline" 
               onClick={() => setFilter('all')}
-              style={{ marginTop: 'var(--spacing-md)' }}
+              style={{ marginTop: 'var(--spacing-4)' }}
             >
               Ver todos los equipos
             </Button>
