@@ -95,7 +95,7 @@
 
 .heroImagePlaceholder {
   position: relative;
-  height: clamp(180px, 25vw, 250px);
+  height: clamp(200px, 30vw, 280px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -106,14 +106,14 @@
 
 @media (min-width: 768px) {
   .heroImagePlaceholder {
-    height: clamp(280px, 35vw, 350px);
+    height: clamp(350px, 40vw, 450px);
     margin-top: 0;
   }
 }
 
 @media (min-width: 1024px) {
   .heroImagePlaceholder {
-    height: clamp(320px, 30vw, 400px);
+    height: clamp(400px, 35vw, 500px);
   }
 }
 
@@ -148,8 +148,8 @@
 
 .heroImageSymbol {
   position: relative;
-  width: clamp(150px, 20vw, 200px);
-  height: clamp(150px, 20vw, 200px);
+  width: clamp(180px, 25vw, 240px);
+  height: clamp(180px, 25vw, 240px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -158,15 +158,15 @@
 
 @media (min-width: 768px) {
   .heroImageSymbol {
-    width: clamp(180px, 15vw, 250px);
-    height: clamp(180px, 15vw, 250px);
+    width: clamp(220px, 20vw, 320px);
+    height: clamp(220px, 20vw, 320px);
   }
 }
 
 @media (min-width: 1024px) {
   .heroImageSymbol {
-    width: clamp(200px, 12vw, 280px);
-    height: clamp(200px, 12vw, 280px);
+    width: clamp(280px, 18vw, 380px);
+    height: clamp(280px, 18vw, 380px);
   }
 }
 
