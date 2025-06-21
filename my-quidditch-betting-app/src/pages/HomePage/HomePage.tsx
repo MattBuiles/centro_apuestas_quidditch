@@ -8,148 +8,305 @@ import styles from './HomePage.module.css'
 
 const HomePage = () => {
   return (
-    <div className="home-page-container space-y-8 md:space-y-16 py-4 md:py-8">
+    <div className={styles.homeContainer}>
       {/* Hero section */}
-      <section className={styles.heroSection}> 
-        <div className="flex flex-col md:flex-row md:gap-12 items-center">
-          <div className={`flex-1 space-y-4 md:space-y-6 ${styles.heroContent}`}>            <h2 className={styles.heroTitle}>
-              La Magia de las Apuestas de Quidditch
-            </h2>
+      <section className={styles.heroSection}>
+        <div className={styles.heroBackground}>
+          <div className={styles.magicalParticles}></div>
+          <div className={styles.heroStars}></div>
+        </div>
+        
+        <div className={styles.heroContent}>
+          <div className={styles.heroText}>
+            <div className={styles.heroBadge}>
+              <span className={styles.badgeIcon}>⚡</span>
+              <span>Centro Oficial de Apuestas</span>
+            </div>
+            
+            <h1 className={styles.heroTitle}>
+              La Magia de las <br />
+              <span className={styles.titleHighlight}>Apuestas de Quidditch</span>
+            </h1>
+            
             <p className={styles.heroDescription}>
-              Explora partidos en tiempo virtual, simula temporadas completas y disfruta de la emoción del juego más mágico del mundo.
-            </p>            <div className="pt-4 md:pt-6 flex flex-col sm:flex-row gap-4">
+              Sumérgete en el mundo mágico del Quidditch. Simula temporadas completas, 
+              experimenta partidos épicos en tiempo real y vive la emoción de apostar en 
+              el deporte más fascinante del mundo mágico.
+            </p>
+            
+            <div className={styles.heroStats}>
+              <div className={styles.statItem}>
+                <span className={styles.statNumber}>100+</span>
+                <span className={styles.statLabel}>Partidos Simulados</span>
+              </div>
+              <div className={styles.statItem}>
+                <span className={styles.statNumber}>8</span>
+                <span className={styles.statLabel}>Equipos Épicos</span>
+              </div>
+              <div className={styles.statItem}>
+                <span className={styles.statNumber}>24/7</span>
+                <span className={styles.statLabel}>Acción Mágica</span>
+              </div>
+            </div>
+
+            <div className={styles.heroActions}>
               <CTAButton 
-                size="lg" 
-                className="w-full sm:w-auto"
-              />
-              <Link to="/matches">
-                <Button variant="outline" size="lg" className="w-full sm:w-auto">
-                  🏆 Ver Liga Interactiva
+                size="xl" 
+                className={styles.primaryCTA}
+              />              <Link to="/matches" className={styles.secondaryAction}>
+                <Button variant="outline" size="lg" className={styles.secondaryButton}>
+                  <span className={styles.buttonIcon}>🏆</span>
+                  <span>Explorar Liga</span>
                 </Button>
               </Link>
             </div>
-          </div>          <div className={`flex-1 ${styles.heroImagePlaceholder}`}>
-            <div className={styles.heroImageInner}>
-              <div className={styles.heroImageSymbol}>
-                <img 
-                  src={welcomeLogo} 
-                  alt="Centro de Apuestas Quidditch - Logo de Bienvenida" 
-                  className={styles.welcomeLogo}
-                />
-              </div>
+          </div>
+
+          <div className={styles.heroVisual}>
+            <div className={styles.logoContainer}>
+              <div className={styles.logoGlow}></div>
+              <img 
+                src={welcomeLogo} 
+                alt="Centro de Apuestas Quidditch - Logo de Bienvenida" 
+                className={styles.welcomeLogo}
+              />
+            </div>
+            
+            <div className={styles.floatingElements}>
+              <div className={styles.floatingSnitch}>🏅</div>
+              <div className={styles.floatingWand}>🪄</div>
+              <div className={styles.floatingBroom}>🧹</div>
             </div>
           </div>
-        </div>      </section>
+        </div>
+      </section>      {/* Features section */}
+      <section className={styles.featuresSection}>
+        <div className={styles.featuresHeader}>
+          <h2 className={styles.featuresTitle}>
+            Experiencias Mágicas que te Esperan
+          </h2>
+          <p className={styles.featuresSubtitle}>
+            Descubre todas las funcionalidades épicas de nuestro centro de apuestas
+          </p>
+        </div>
+
+        <div className={styles.featuresGrid}>
+          <div className={styles.featureCard}>
+            <div className={styles.featureIcon}>
+              <span>⏰</span>
+            </div>
+            <h3 className={styles.featureTitle}>Control del Tiempo Virtual</h3>
+            <p className={styles.featureDescription}>
+              Avanza el tiempo día por día, simula partidos bajo demanda y observa 
+              como se desarrolla toda una temporada de Quidditch a tu ritmo.
+            </p>
+            <div className={styles.featureBenefits}>
+              <span className={styles.benefit}>✨ Simulación en tiempo real</span>
+              <span className={styles.benefit}>⚡ Control total de temporadas</span>
+            </div>
+          </div>
+
+          <div className={styles.featureCard}>
+            <div className={styles.featureIcon}>
+              <span>🏆</span>
+            </div>
+            <h3 className={styles.featureTitle}>Partidos Épicos en Vivo</h3>
+            <p className={styles.featureDescription}>
+              Experimenta la emoción de partidos generados dinámicamente con eventos 
+              minuto a minuto, desde goles hasta la captura de la Snitch Dorada.
+            </p>
+            <div className={styles.featureBenefits}>
+              <span className={styles.benefit}>🎯 Eventos dinámicos</span>
+              <span className={styles.benefit}>🔥 Acción minuto a minuto</span>
+            </div>
+          </div>
+
+          <div className={styles.featureCard}>
+            <div className={styles.featureIcon}>
+              <span>💎</span>
+            </div>
+            <h3 className={styles.featureTitle}>Apuestas Inteligentes</h3>
+            <p className={styles.featureDescription}>
+              Haz tus predicciones en una liga completamente simulada, sigue la 
+              evolución de los equipos y multiplica tus ganancias con cada victoria épica.
+            </p>
+            <div className={styles.featureBenefits}>
+              <span className={styles.benefit}>💰 Galeones virtuales</span>
+              <span className={styles.benefit}>📊 Estadísticas detalladas</span>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Featured matches section */}
-      <section className={styles.featuredSection}>
-        <h3 className={styles.sectionTitle}>
-          Partidos Destacados
-        </h3>
-        <div className={styles.matchesGrid}>
-          {/* Match card 1 - Enhanced styling */}
-          <div className={styles.matchCard}>            <div className={styles.matchHeader}>              <div className={styles.teamLogos}>
-                <TeamLogo teamName="Gryffindor" size="md" className={styles.matchTeamLogo} />
-                <div className={styles.vsLabel}>VS</div>
-                <TeamLogo teamName="Slytherin" size="md" className={styles.matchTeamLogo} />
-              </div>
-            </div>            <div className={styles.matchInfo}>
-              <h4 className={styles.matchTitle}>Gryffindor vs Slytherin</h4>
-              <div className={styles.matchDate}>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <p>Hoy • 19:00</p>
-              </div>
-              <Link to="/matches/1">
-                <Button variant="secondary" size="sm" fullWidth>
-                  Apostar
-                </Button>
-              </Link>
-            </div>
-          </div>
-
-          {/* Match card 2 - Enhanced styling */}
-          <div className={styles.matchCard}>            <div className={styles.matchHeader}>              <div className={styles.teamLogos}>
-                <TeamLogo teamName="Hufflepuff" size="md" className={styles.matchTeamLogo} />
-                <div className={styles.vsLabel}>VS</div>
-                <TeamLogo teamName="Ravenclaw" size="md" className={styles.matchTeamLogo} />
-              </div>
-            </div>            <div className={styles.matchInfo}>
-              <h4 className={styles.matchTitle}>Hufflepuff vs Ravenclaw</h4>
-              <div className={styles.matchDate}>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <p>Mañana • 17:30</p>
-              </div>
-              <Link to="/matches/2">
-                <Button variant="secondary" size="sm" fullWidth>
-                  Apostar
-                </Button>
-              </Link>
-            </div>
-          </div>
-
-          {/* Match card 3 - Enhanced styling */}
-          <div className={styles.matchCard}> 
-            <div className={styles.matchHeader}>              <div className={styles.teamLogos}>
-                <TeamLogo teamName="Chudley Cannons" size="md" className={styles.matchTeamLogo} />
-                <div className={styles.vsLabel}>VS</div>
-                <TeamLogo teamName="Holyhead Harpies" size="md" className={styles.matchTeamLogo} />
-              </div>
-            </div>            <div className={styles.matchInfo}>
-              <h4 className={styles.matchTitle}>Chudley Cannons vs Holyhead Harpies</h4>
-              <div className={styles.matchDate}>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <p>Domingo • 15:00</p>
-              </div>
-              <Link to="/matches/3">
-                <Button variant="secondary" size="sm" fullWidth>
-                  Apostar
-                </Button>
-              </Link>
-            </div>          </div>
+      <section className={styles.matchesSection}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>
+            <span className={styles.titleIcon}>⚡</span>
+            Partidos Destacados
+          </h2>
+          <p className={styles.sectionSubtitle}>
+            Los enfrentamientos más emocionantes te esperan
+          </p>
         </div>
-        <div className="text-center">
+
+        <div className={styles.matchesGrid}>
+          {/* Match card 1 */}
+          <div className={styles.matchCard}>
+            <div className={styles.matchBadge}>
+              <span>En Vivo</span>
+            </div>
+            
+            <div className={styles.matchHeader}>
+              <div className={styles.teamLogos}>
+                <div className={styles.teamContainer}>
+                  <TeamLogo teamName="Gryffindor" size="md" className={styles.matchTeamLogo} />
+                  <span className={styles.teamName}>Gryffindor</span>
+                </div>
+                <div className={styles.vsContainer}>
+                  <span className={styles.vsLabel}>VS</span>
+                </div>
+                <div className={styles.teamContainer}>
+                  <TeamLogo teamName="Slytherin" size="md" className={styles.matchTeamLogo} />
+                  <span className={styles.teamName}>Slytherin</span>
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.matchInfo}>
+              <div className={styles.matchMeta}>
+                <div className={styles.matchDate}>
+                  <span className={styles.dateIcon}>📅</span>
+                  <span>Hoy • 19:00</span>
+                </div>
+                <div className={styles.matchOdds}>
+                  <span className={styles.oddsLabel}>Cuotas:</span>
+                  <span className={styles.oddsValue}>2.1x</span>
+                </div>
+              </div>
+              
+              <Link to="/matches/1" className={styles.matchAction}>
+                <Button variant="magical" size="sm" fullWidth>
+                  <span>⚡ Apostar Ahora</span>
+                </Button>
+              </Link>
+            </div>
+          </div>
+
+          {/* Match card 2 */}
+          <div className={styles.matchCard}>
+            <div className={styles.matchBadge}>
+              <span>Próximo</span>
+            </div>
+            
+            <div className={styles.matchHeader}>
+              <div className={styles.teamLogos}>
+                <div className={styles.teamContainer}>
+                  <TeamLogo teamName="Hufflepuff" size="md" className={styles.matchTeamLogo} />
+                  <span className={styles.teamName}>Hufflepuff</span>
+                </div>
+                <div className={styles.vsContainer}>
+                  <span className={styles.vsLabel}>VS</span>
+                </div>
+                <div className={styles.teamContainer}>
+                  <TeamLogo teamName="Ravenclaw" size="md" className={styles.matchTeamLogo} />
+                  <span className={styles.teamName}>Ravenclaw</span>
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.matchInfo}>
+              <div className={styles.matchMeta}>
+                <div className={styles.matchDate}>
+                  <span className={styles.dateIcon}>📅</span>
+                  <span>Mañana • 17:30</span>
+                </div>
+                <div className={styles.matchOdds}>
+                  <span className={styles.oddsLabel}>Cuotas:</span>
+                  <span className={styles.oddsValue}>1.8x</span>
+                </div>
+              </div>
+              
+              <Link to="/matches/2" className={styles.matchAction}>
+                <Button variant="secondary" size="sm" fullWidth>
+                  <span>🔮 Ver Detalles</span>
+                </Button>
+              </Link>
+            </div>
+          </div>
+
+          {/* Match card 3 */}
+          <div className={styles.matchCard}>
+            <div className={styles.matchBadge}>
+              <span>Destacado</span>
+            </div>
+            
+            <div className={styles.matchHeader}>
+              <div className={styles.teamLogos}>
+                <div className={styles.teamContainer}>
+                  <TeamLogo teamName="Chudley Cannons" size="md" className={styles.matchTeamLogo} />
+                  <span className={styles.teamName}>Cannons</span>
+                </div>
+                <div className={styles.vsContainer}>
+                  <span className={styles.vsLabel}>VS</span>
+                </div>
+                <div className={styles.teamContainer}>
+                  <TeamLogo teamName="Holyhead Harpies" size="md" className={styles.matchTeamLogo} />
+                  <span className={styles.teamName}>Harpies</span>
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.matchInfo}>
+              <div className={styles.matchMeta}>
+                <div className={styles.matchDate}>
+                  <span className={styles.dateIcon}>📅</span>
+                  <span>Domingo • 15:00</span>
+                </div>
+                <div className={styles.matchOdds}>
+                  <span className={styles.oddsLabel}>Cuotas:</span>
+                  <span className={styles.oddsValue}>2.5x</span>
+                </div>
+              </div>
+              
+              <Link to="/matches/3" className={styles.matchAction}>
+                <Button variant="outline" size="sm" fullWidth>
+                  <span>� Analizar</span>
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        <div className={styles.sectionAction}>
           <Link to="/matches" className={styles.viewAllLink}>
-            <span>Ver todos los partidos</span>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
+            <span className={styles.linkText}>Ver todos los partidos</span>
+            <span className={styles.linkIcon}>→</span>
           </Link>
         </div>
       </section>
 
-      {/* How it works section - enhanced with cards and gradients */}
-      <section className={styles.howItWorksSection}>
-        <h3 className={styles.howItWorksTitle}>
-          Cómo Funciona la Magia
-        </h3>
-        <div className={styles.stepsGrid}>          <div className={styles.stepCard}>
-            <div className={styles.stepIcon}>
-              <span>⏰</span>
-            </div>
-            <h4 className={styles.stepTitle}>Controla el Tiempo Virtual</h4>
-            <p className={styles.stepDescription}>Avanza el tiempo día por día, simula partidos bajo demanda y observa como se desarrolla toda una temporada de Quidditch a tu ritmo.</p>
-          </div>
-
-          <div className={styles.stepCard}>
-            <div className={styles.stepIcon}>
-              <span>🏆</span>
-            </div>
-            <h4 className={styles.stepTitle}>Simula Partidos en Vivo</h4>
-            <p className={styles.stepDescription}>Experimenta la emoción de partidos generados dinámicamente con eventos minuto a minuto, desde goles hasta la captura de la Snitch Dorada.</p>
-          </div>
-
-          <div className={styles.stepCard}>
-            <div className={styles.stepIcon}>
-              <span>⚡</span>
-            </div>
-            <h4 className={styles.stepTitle}>Apuesta en Tiempo Real</h4>
-            <p className={styles.stepDescription}>Haz tus predicciones en una liga completamente simulada, sigue la evolución de los equipos y multiplica tus ganancias con cada victoria épica.</p>
+      {/* Call to action section */}
+      <section className={styles.ctaSection}>
+        <div className={styles.ctaBackground}>
+          <div className={styles.ctaStars}></div>
+        </div>
+        
+        <div className={styles.ctaContent}>
+          <h2 className={styles.ctaTitle}>
+            ¿Listo para la Aventura Mágica?
+          </h2>
+          <p className={styles.ctaDescription}>
+            Únete a miles de magos que ya disfrutan de la emoción del Quidditch. 
+            ¡Tu próxima gran apuesta te espera!
+          </p>
+          
+          <div className={styles.ctaActions}>
+            <CTAButton size="xl" className={styles.ctaButton} />
+            <Link to="/teams" className={styles.ctaSecondary}>
+              <span>Conocer Equipos</span>
+              <span className={styles.ctaIcon}>🏆</span>
+            </Link>
           </div>
         </div>
       </section>
