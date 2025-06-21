@@ -1,102 +1,62 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
 import TeamLogo from '@/components/teams/TeamLogo';
+import { virtualTimeManager } from '@/services/virtualTimeManager';
+import { standingsCalculator } from '@/services/standingsCalculator';
+import { Season, Standing } from '@/types/league';
 import styles from './StandingsPage.module.css';
 
-// Mock standings data - updated to match teams from TeamsPage
-const mockStandings = [
-  { 
-    position: 1, 
-    teamId: 'gryffindor',
-    teamName: 'Gryffindor', 
-    played: 12, 
-    won: 10, 
-    drawn: 1, 
-    lost: 1, 
-    points: 31, 
-    goalsFor: 245,
-    goalsAgainst: 156,
-    league: 'Liga de Hogwarts'
-  },
-  { 
-    position: 2, 
-    teamId: 'ravenclaw',
-    teamName: 'Ravenclaw', 
-    played: 12, 
-    won: 8, 
-    drawn: 2, 
-    lost: 2, 
-    points: 26, 
-    goalsFor: 198,
-    goalsAgainst: 134,
-    league: 'Liga de Hogwarts'
-  },
-  { 
-    position: 3, 
-    teamId: 'slytherin',
-    teamName: 'Slytherin', 
-    played: 12, 
-    won: 7, 
-    drawn: 2, 
-    lost: 3, 
-    points: 23, 
-    goalsFor: 187,
-    goalsAgainst: 145,
-    league: 'Liga de Hogwarts'
-  },
-  { 
-    position: 4, 
-    teamId: 'hufflepuff',
-    teamName: 'Hufflepuff', 
-    played: 12, 
-    won: 5, 
-    drawn: 3, 
-    lost: 4, 
-    points: 18, 
-    goalsFor: 156,
-    goalsAgainst: 167,
-    league: 'Liga de Hogwarts'
-  },
-  { 
-    position: 5, 
-    teamId: 'chudley_cannons',
-    teamName: 'Chudley Cannons', 
-    played: 12, 
-    won: 3, 
-    drawn: 2, 
-    lost: 7, 
-    points: 11, 
-    goalsFor: 123,
-    goalsAgainst: 198,
-    league: 'Liga Británica e Irlandesa'
-  },
-  { 
-    position: 6, 
-    teamId: 'holyhead_harpies',
-    teamName: 'Holyhead Harpies', 
-    played: 12, 
-    won: 2, 
-    drawn: 1, 
-    lost: 9, 
-    points: 7, 
-    goalsFor: 98,
-    goalsAgainst: 207,
-    league: 'Liga Británica e Irlandesa'
-  },
-];
+const StandingsPage = () => {
+  const [standings, setStandings] = useState<Standing[]>([]);
+  const [season, setSeason] = useState<Season | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [filter, setFilter] = useState('all'); // 'all', 'hogwarts', 'british'
 
-const StandingsPage = () => {  const [filter, setFilter] = useState('all'); // 'all', 'hogwarts', 'british'
+  useEffect(() => {
+    loadStandingsFromSimulation();
+  }, []);
+
+  const loadStandingsFromSimulation = () => {
+    setIsLoading(true);
+    
+    const timeState = virtualTimeManager.getState();
+    if (timeState.temporadaActiva) {
+      setSeason(timeState.temporadaActiva);
+      
+      // Calculate standings from finished matches
+      const calculatedStandings = standingsCalculator.calculateStandings(
+        timeState.temporadaActiva.equipos,
+        timeState.temporadaActiva.partidos.filter(match => match.status === 'finished')
+      );
+      
+      setStandings(calculatedStandings);
+    } else {
+      setStandings([]);
+    }
+    
+    setIsLoading(false);
+  };
 
   const getPositionBadgeClass = (position: number) => {
     if (position === 1) return 'first';
     if (position === 2) return 'second';
     if (position === 3) return 'third';
     return 'default';
-  };
-
-  const filteredStandings = mockStandings.filter(team => {
+  };  const filteredStandings = standings.map((standing, index) => ({
+    position: standing.position || (index + 1),
+    teamId: standing.teamId,
+    teamName: standing.team.name,
+    played: standing.matchesPlayed,
+    won: standing.wins,
+    drawn: standing.draws,
+    lost: standing.losses,
+    points: standing.points,
+    goalsFor: standing.goalsFor,
+    goalsAgainst: standing.goalsAgainst,
+    league: season?.name || 'Liga Profesional Quidditch'
+  })).filter(team => {
     if (filter === 'all') return true;
     if (filter === 'hogwarts') return team.league === 'Liga de Hogwarts';
     if (filter === 'british') return team.league === 'Liga Británica e Irlandesa';
@@ -110,10 +70,19 @@ const StandingsPage = () => {  const [filter, setFilter] = useState('all'); // '
           <h1 className={styles.pageTitle}>
             <span className={styles.titleIcon}>🏆</span>
             Clasificación de la Liga
-          </h1>
-          <p className={styles.pageDescription}>
+          </h1>          <p className={styles.pageDescription}>
             Consulta la tabla de posiciones actualizada con estadísticas detalladas de todos los equipos
           </p>
+          {season && (
+            <div className={styles.seasonInfo}>
+              📊 {season.name} - {standings.length} equipos • {standings.reduce((acc, s) => acc + s.matchesPlayed, 0)} partidos jugados
+            </div>
+          )}
+          {!season && (
+            <div className={styles.noDataInfo}>
+              🏆 Inicia una temporada en la página de Partidos para ver las clasificaciones en vivo
+            </div>
+          )}
         </Card>
       </section>
       
@@ -144,8 +113,7 @@ const StandingsPage = () => {  const [filter, setFilter] = useState('all'); // '
             </Button>
           </div>
         </Card>
-        
-        {filteredStandings.length > 0 ? (
+          {filteredStandings.length > 0 ? (
           <>
             {/* Desktop Table View */}
             <Card className={styles.tableCard}>
