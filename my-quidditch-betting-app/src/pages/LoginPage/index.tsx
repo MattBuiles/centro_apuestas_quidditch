@@ -1,21 +1,23 @@
-import Card from '@/components/common/Card'
 import LoginForm from '@/components/auth/LoginForm'
+import styles from './LoginPage.module.css'
 
 const LoginPage = () => {
   return (
-    <div className="container max-w-md mx-auto px-4">
-      <Card className="mt-4 md:mt-8">
-        <div className="text-center mb-4 md:mb-6">
-          <h2 className="text-xl md:text-2xl font-bold text-primary">
-            Bienvenido de vuelta, mago apostador
-          </h2>
-          <p className="text-sm md:text-base text-gray-600 mt-2">
-            Inicia sesión para continuar apostando en los partidos de Quidditch
-          </p>
+    <div className={styles.loginPageContainer}>
+      <div className={styles.loginFormContainer}>
+        <div className={styles.loginCard}>
+          <div className={styles.loginHeader}>
+            <h1 className={styles.loginTitle}>
+              ¡Bienvenido de vuelta!
+            </h1>
+            <p className={styles.loginSubtitle}>
+              Inicia sesión para continuar apostando en los partidos más emocionantes de Quidditch y vive la magia del deporte
+            </p>
+          </div>
+          
+          <LoginForm />
         </div>
-        
-        <LoginForm />
-      </Card>
+      </div>
     </div>
   )
 }

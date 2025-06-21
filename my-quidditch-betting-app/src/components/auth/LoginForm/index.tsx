@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
-import Button from '@/components/common/Button'
+import styles from '@/pages/LoginPage/LoginPage.module.css'
 
 const LoginForm = () => {
   const [email, setEmail] = useState('')
@@ -11,70 +11,85 @@ const LoginForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    await login(email, password, remember) // Keep the original logic for now
+    await login(email, password, remember)
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className={styles.loginForm}>
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
+        <div className={styles.errorMessage}>
           {error}
         </div>
       )}
       
-      <div className="form-group">
-        <label htmlFor="email" className="form-label">Correo electrónico:</label>
+      <div className={styles.formGroup}>
+        <label htmlFor="email" className={styles.formLabel}>Correo electrónico</label>
         <input
           id="email"
           type="email"
-          className="form-input"
+          name="email"
+          className={styles.formInput}
+          placeholder="tu.correo@hogwarts.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
         />
+        <small className={styles.formHint}>
+          📧 El correo que usaste para registrarte en el mundo mágico
+        </small>
       </div>
       
-      <div className="form-group">
-        <label htmlFor="password" className="form-label">Contraseña:</label>
+      <div className={styles.formGroup}>
+        <label htmlFor="password" className={styles.formLabel}>Contraseña</label>
         <input
           id="password"
           type="password"
-          className="form-input"
+          name="password"
+          className={styles.formInput}
+          placeholder="Tu contraseña secreta"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
         />
+        <small className={styles.formHint}>
+          🔒 La contraseña que protege tu cuenta de apuestas mágicas
+        </small>
       </div>
       
-      <div className="form-group flex items-center">
+      <div className={styles.rememberGroup}>
         <input
           id="remember"
           type="checkbox"
-          className="h-4 w-4 text-primary focus:ring-primary-light border-gray-300 rounded"
+          name="remember"
+          className={styles.rememberCheckbox}
           checked={remember}
           onChange={(e) => setRemember(e.target.checked)}
         />
-        <label htmlFor="remember" className="ml-2 block text-sm text-gray-700">
-          Mantener sesión iniciada
+        <label htmlFor="remember" className={styles.rememberLabel}>
+          Mantener sesión iniciada por más tiempo
         </label>
       </div>
       
-      <Button type="submit" fullWidth isLoading={isLoading}>
-        Iniciar Sesión
-      </Button>
+      <button 
+        type="submit" 
+        className={styles.submitButton}
+        disabled={isLoading}
+        data-loading={isLoading}
+      >
+        {isLoading ? 'Accediendo al mundo mágico...' : '⚡ Iniciar Sesión Mágica'}
+      </button>
       
-      <div className="text-center space-y-4 mt-6">
-        <div>
-          <Link to="/recovery" className="text-primary hover:text-primary-dark text-sm">
-            ¿Olvidaste tu contraseña?
+      <div className={styles.authLinks}>
+        <Link to="/recovery" className={styles.recoveryLink}>
+          ¿Olvidaste tu contraseña mágica?
+        </Link>
+        
+        <p className={styles.authLinksText}>
+          ¿Aún no formas parte del mundo mágico?{' '}
+          <Link to="/register" className={styles.authLink}>
+            ✨ Regístrate aquí
           </Link>
-        </div>
-        <div className="text-sm text-gray-600">
-          ¿No tienes una cuenta?{' '}
-          <Link to="/register" className="text-primary hover:text-primary-dark font-medium">
-            Regístrate ahora
-          </Link>
-        </div>
+        </p>
       </div>
     </form>
   )
