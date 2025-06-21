@@ -57,7 +57,6 @@ const MatchesPage = () => {
     // Reset season when virtual time is reset
     initializeSeason();
   };
-
   const getFilteredMatches = () => {
     if (!season) return [];
 
@@ -72,6 +71,14 @@ const MatchesPage = () => {
           const matchDate = new Date(match.fecha);
           return matchDate > fechaVirtual && match.status === 'scheduled';
         });
+        // Sort by date first to get the closest matches
+        filteredMatches.sort((a, b) => {
+          const dateA = new Date(a.fecha);
+          const dateB = new Date(b.fecha);
+          return dateA.getTime() - dateB.getTime(); // Chronological order
+        });
+        // Limit to only 5 closest upcoming matches
+        filteredMatches = filteredMatches.slice(0, 5);
         break;      case 'live':
         filteredMatches = partidos.filter(match => match.status === 'live');
         break;
@@ -92,20 +99,26 @@ const MatchesPage = () => {
         filteredMatches = partidos;
     }
 
-    // Apply search filter
-    if (searchTerm.trim()) {
+    // Apply search filter (except for upcoming tab since we already limited it)
+    if (searchTerm.trim() && activeTab !== 'upcoming') {
       filteredMatches = filteredMatches.filter(match => {
         const homeTeam = season.equipos.find(t => t.id === match.localId)?.name || '';
         const awayTeam = season.equipos.find(t => t.id === match.visitanteId)?.name || '';
         return homeTeam.toLowerCase().includes(searchTerm.toLowerCase()) ||
                awayTeam.toLowerCase().includes(searchTerm.toLowerCase());
       });
-    }    // Sort by date
-    return filteredMatches.sort((a, b) => {
-      const dateA = new Date(a.fecha);
-      const dateB = new Date(b.fecha);
-      return dateA.getTime() - dateB.getTime(); // Chronological order
-    });
+    }
+
+    // Sort by date (except for upcoming since it's already sorted and limited)
+    if (activeTab !== 'upcoming') {
+      return filteredMatches.sort((a, b) => {
+        const dateA = new Date(a.fecha);
+        const dateB = new Date(b.fecha);
+        return dateA.getTime() - dateB.getTime(); // Chronological order
+      });
+    }
+
+    return filteredMatches;
   };
   const formatMatchForCard = (match: Match) => {
     const homeTeam = season?.equipos.find(t => t.id === match.localId);
@@ -128,8 +141,7 @@ const MatchesPage = () => {
       awayScore: match.awayScore,
       minute: match.currentMinute?.toString()
     };
-  };
-  const getTabCounts = () => {
+  };  const getTabCounts = () => {
     if (!season) return { upcoming: 0, live: 0, today: 0 };
 
     const partidos = season.partidos || [];
@@ -141,8 +153,12 @@ const MatchesPage = () => {
     const endOfDay = new Date(today);
     endOfDay.setHours(23, 59, 59, 999);
 
+    // For upcoming matches, get all but limit the count to show only up to 5
+    const upcomingMatches = partidos.filter(m => new Date(m.fecha) > fechaVirtual && m.status === 'scheduled');
+    const upcomingCount = Math.min(upcomingMatches.length, 5);
+
     return {
-      upcoming: partidos.filter(m => new Date(m.fecha) > fechaVirtual && m.status === 'scheduled').length,
+      upcoming: upcomingCount,
       live: partidos.filter(m => m.status === 'live').length,
       today: partidos.filter(m => {
         const matchDate = new Date(m.fecha);
@@ -258,7 +274,7 @@ const MatchesPage = () => {
                   {activeTab === 'today' && 'No hay partidos hoy'}
                 </h3>
                 <p className="text-gray-600 mb-4">
-                  {activeTab === 'upcoming' && 'Avanza el tiempo virtual para generar más partidos.'}
+                  {activeTab === 'upcoming' && 'Avanza el tiempo virtual para generar los próximos 5 partidos más cercanos.'}
                   {activeTab === 'live' && 'Inicia la simulación de un partido para verlo en vivo.'}
                   {activeTab === 'today' && 'Avanza el tiempo hasta el día de un partido.'}
                 </p>
