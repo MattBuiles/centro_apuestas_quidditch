@@ -1,8 +1,7 @@
-// filepath: d:\Coding\Projects\centro_apuestas_quidditch\my-quidditch-betting-app\src\components\auth\RegisterForm\index.tsx
-import { useState, FormEvent } from 'react' // Added FormEvent
+import { useState, FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
-import Button from '@/components/common/Button'
+import styles from '@/pages/RegisterPage/RegisterPage.module.css'
 
 const RegisterForm = () => {
   const [username, setUsername] = useState('')
@@ -13,9 +12,9 @@ const RegisterForm = () => {
   const [terms, setTerms] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   
-  const { register, isLoading, error: authError } = useAuth() // Renamed error to authError
+  const { register, isLoading, error: authError } = useAuth()
 
-  const handleSubmit = async (e: FormEvent) => { // Typed event
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setFormError(null)
 
@@ -55,119 +54,130 @@ const RegisterForm = () => {
   }
 
   return (
-    // auth-form class from wireframe
-    <form onSubmit={handleSubmit} className="auth-form space-y-4"> {/* Reduced space-y for closer match */}
+    <form onSubmit={handleSubmit} className={styles.registerForm}>
       {(authError || formError) && (
-        // message-container class from wireframe
-        <div className="message-container bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
+        <div className={styles.errorMessage}>
           {authError || formError}
         </div>
       )}
       
-      <div className="form-group">
-        <label htmlFor="username" className="form-label">Nombre de usuario:</label>
+      <div className={styles.formGroup}>
+        <label htmlFor="username" className={styles.formLabel}>Nombre de usuario</label>
         <input
           id="username"
           type="text"
-          name="username" // Added name attribute
-          className="form-input"
+          name="username"
+          className={styles.formInput}
+          placeholder="Elige tu nombre de mago/bruja"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           required
         />
       </div>
-      
-      <div className="form-group">
-        <label htmlFor="email" className="form-label">Correo electrónico:</label>
+        <div className={styles.formGroup}>
+        <label htmlFor="email" className={styles.formLabel}>Correo electrónico</label>
         <input
           id="email"
           type="email"
-          name="email" // Added name attribute
-          className="form-input"
+          name="email"
+          className={styles.formInput}
+          placeholder="tu.correo@ejemplo.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
         />
+        <small className={styles.formHint}>
+          📧 Debe ser un correo válido (ej: mago@hogwarts.com) para recibir notificaciones mágicas
+        </small>
       </div>
       
-      <div className="form-group">
-        <label htmlFor="password" className="form-label">Contraseña:</label>
+      <div className={styles.formGroup}>
+        <label htmlFor="password" className={styles.formLabel}>Contraseña</label>
         <input
           id="password"
           type="password"
-          name="password" // Added name attribute
-          className="form-input"
+          name="password"
+          className={styles.formInput}
+          placeholder="Crea una contraseña segura"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
           minLength={8}
         />
-        <small className="text-xs text-gray-500 mt-1 block">La contraseña debe tener al menos 8 caracteres, incluyendo letras y números</small>
+        <small className={styles.formHint}>
+          🔒 Mínimo 8 caracteres con letras y números para proteger tu cuenta mágica
+        </small>
       </div>
       
-      <div className="form-group">
-        <label htmlFor="confirm-password" className="form-label">Confirmar contraseña:</label>
+      <div className={styles.formGroup}>
+        <label htmlFor="confirm-password" className={styles.formLabel}>Confirmar contraseña</label>
         <input
           id="confirm-password"
           type="password"
-          name="confirm-password" // Added name attribute
-          className="form-input"
+          name="confirm-password"
+          className={styles.formInput}
+          placeholder="Repite tu contraseña"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           required
         />
       </div>
       
-      <div className="form-group">
-        <label htmlFor="birthdate" className="form-label">Fecha de nacimiento:</label>
+      <div className={styles.formGroup}>
+        <label htmlFor="birthdate" className={styles.formLabel}>Fecha de nacimiento</label>
         <input
           id="birthdate"
           type="date"
-          name="birthdate" // Added name attribute
-          className="form-input"
+          name="birthdate"
+          className={styles.formInput}
           value={birthdate}
           onChange={(e) => setBirthdate(e.target.value)}
           required
         />
-        <small className="text-xs text-gray-500 mt-1 block">Debes ser mayor de 18 años para registrarte</small>
+        <small className={styles.formHint}>
+          🎂 Debes ser mayor de 18 años para apostar en el mundo mágico
+        </small>
       </div>
       
-      {/* terms-and-conditions class from wireframe */}
-      <div className="form-group terms-and-conditions flex items-start">
+      <div className={styles.termsGroup}>
         <input
           id="terms"
           type="checkbox"
-          name="terms" // Added name attribute
-          className="h-4 w-4 mt-1 mr-2" // Adjusted for alignment
+          name="terms"
+          className={styles.termsCheckbox}
           checked={terms}
           onChange={(e) => setTerms(e.target.checked)}
           required
         />
-        <label htmlFor="terms" className="text-sm text-gray-700">
+        <label htmlFor="terms" className={styles.termsLabel}>
           He leído y acepto los{' '}
-          <Link to="/terms" className="text-primary hover:underline">
+          <Link to="/terms" className={styles.termsLink}>
             Términos y Condiciones
           </Link>{' '}
           y la{' '}
-          <Link to="/privacy" className="text-primary hover:underline">
+          <Link to="/privacy" className={styles.termsLink}>
             Política de Privacidad
-          </Link>
+          </Link>{' '}
+          del mundo mágico de las apuestas
         </label>
       </div>
       
-      {/* cta-button class from wireframe */}
-      <Button type="submit" fullWidth isLoading={isLoading} className="cta-button">
-        Crear Cuenta
-      </Button>
+      <button 
+        type="submit" 
+        className={styles.submitButton}
+        disabled={isLoading}
+        data-loading={isLoading}
+      >
+        {isLoading ? 'Creando tu cuenta mágica...' : '🚀 Crear Cuenta Mágica'}
+      </button>
       
-      {/* auth-links class from wireframe */}
-      <div className="auth-links text-center mt-4">
-        <p className="text-sm text-gray-600">
-          ¿Ya tienes una cuenta?{' '}
-          <Link to="/login" className="text-primary hover:underline font-medium">
-            Inicia sesión
-          </Link>
+      <div className={styles.authLinks}>
+        <p className={styles.authLinksText}>
+          ¿Ya tienes una cuenta en nuestro mundo mágico?
         </p>
+        <Link to="/login" className={styles.authLink}>
+          ✨ Inicia sesión aquí
+        </Link>
       </div>
     </form>
   )
