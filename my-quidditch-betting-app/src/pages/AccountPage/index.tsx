@@ -503,13 +503,13 @@ const SettingsSection = () => {
 const AccountPage = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
-
   // Determine active tab based on URL, default to profile
   const getActiveTab = () => {
     const path = location.pathname;
-    if (path.includes('/wallet')) return 'wallet';
-    if (path.includes('/bets')) return 'bets';
-    if (path.includes('/settings')) return 'settings';
+    if (path === '/account/wallet') return 'wallet';
+    if (path === '/account/bets') return 'bets';
+    if (path === '/account/settings') return 'settings';
+    if (path === '/account' || path === '/account/') return 'profile';
     return 'profile';
   };
   
@@ -533,12 +533,11 @@ const AccountPage = () => {
       </div>
     );
   }
-
   const navItems = [
-    { path: '', label: 'Mi Perfil', icon: <UserIcon />, tab: 'profile' },
-    { path: 'wallet', label: 'Monedero', icon: <WalletIcon />, tab: 'wallet' },
-    { path: 'bets', label: 'Mis Apuestas', icon: <BetIcon />, tab: 'bets' },
-    { path: 'settings', label: 'Configuración', icon: <SettingsIcon />, tab: 'settings' }
+    { path: '/account', label: 'Mi Perfil', icon: <UserIcon />, tab: 'profile' },
+    { path: '/account/wallet', label: 'Monedero', icon: <WalletIcon />, tab: 'wallet' },
+    { path: '/account/bets', label: 'Mis Apuestas', icon: <BetIcon />, tab: 'bets' },
+    { path: '/account/settings', label: 'Configuración', icon: <SettingsIcon />, tab: 'settings' }
   ];
 
   return (
@@ -567,9 +566,7 @@ const AccountPage = () => {
             >
               Cerrar Sesión
             </Button>
-          </div>
-
-          <nav className={styles.accountNav}>
+          </div>          <nav className={styles.accountNav}>
             {navItems.map((item) => (
               <Link
                 key={item.path}
