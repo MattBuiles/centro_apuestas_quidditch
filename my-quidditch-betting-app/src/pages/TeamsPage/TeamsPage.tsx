@@ -1,21 +1,67 @@
 import React, { useState } from 'react';
-import TeamCard from '@/components/teams/TeamCard';
+import { Link } from 'react-router-dom';
 import Button from '@/components/common/Button';
+import Card from '@/components/common/Card';
+import { getTeamLogo, getTeamInitial } from '@/assets/teamLogos';
+import styles from './TeamsPage.module.css';
 
 // Mock data for teams
 interface TeamData {
   id: string;
   name: string;
   league: string;
+  logoChar?: string;
+  stats?: {
+    wins: number;
+    losses: number;
+    draws: number;
+    points: number;
+  };
 }
 
 const mockTeams: TeamData[] = [
-  { id: 'gryffindor', name: 'Gryffindor', league: 'Liga de Hogwarts' },
-  { id: 'slytherin', name: 'Slytherin', league: 'Liga de Hogwarts' },
-  { id: 'ravenclaw', name: 'Ravenclaw', league: 'Liga de Hogwarts' },
-  { id: 'hufflepuff', name: 'Hufflepuff', league: 'Liga de Hogwarts' },
-  { id: 'chudley_cannons', name: 'Chudley Cannons', league: 'Liga Británica e Irlandesa' },
-  { id: 'holyhead_harpies', name: 'Holyhead Harpies', league: 'Liga Británica e Irlandesa' },
+  { 
+    id: 'gryffindor', 
+    name: 'Gryffindor', 
+    league: 'Liga de Hogwarts',
+    logoChar: 'G',
+    stats: { wins: 12, losses: 3, draws: 2, points: 38 }
+  },
+  { 
+    id: 'slytherin', 
+    name: 'Slytherin', 
+    league: 'Liga de Hogwarts',
+    logoChar: 'S',
+    stats: { wins: 11, losses: 4, draws: 2, points: 35 }
+  },
+  { 
+    id: 'ravenclaw', 
+    name: 'Ravenclaw', 
+    league: 'Liga de Hogwarts',
+    logoChar: 'R',
+    stats: { wins: 9, losses: 6, draws: 2, points: 29 }
+  },
+  { 
+    id: 'hufflepuff', 
+    name: 'Hufflepuff', 
+    league: 'Liga de Hogwarts',
+    logoChar: 'H',
+    stats: { wins: 8, losses: 7, draws: 2, points: 26 }
+  },
+  { 
+    id: 'chudley_cannons', 
+    name: 'Chudley Cannons', 
+    league: 'Liga Británica e Irlandesa',
+    logoChar: 'C',
+    stats: { wins: 15, losses: 8, draws: 1, points: 46 }
+  },
+  { 
+    id: 'holyhead_harpies', 
+    name: 'Holyhead Harpies', 
+    league: 'Liga Británica e Irlandesa',
+    logoChar: 'H',
+    stats: { wins: 13, losses: 9, draws: 2, points: 41 }
+  },
 ];
 
 const TeamsPage: React.FC = () => {
@@ -28,78 +74,150 @@ const TeamsPage: React.FC = () => {
     return matchesSearch && matchesLeague;
   });
 
+  const handleClearFilters = () => {
+    setSearchTerm('');
+    setSelectedLeague('all');
+  };
+
   return (
-    <div className="teams-page-container space-y-6 md:space-y-8">
+    <div className={styles.teamsPageContainer}>
       {/* Hero Section */}
-      <section className="hero-section text-center py-8 md:py-12 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-white">
-        <h1 className="text-2xl md:text-4xl font-bold mb-2 md:mb-4">Equipos de Quidditch</h1>
-        <p className="text-sm md:text-lg opacity-90">
-          Descubre todos los equipos mágicos y sus estadísticas
-        </p>
+      <section className={styles.heroSection}>
+        <Card className={styles.heroCard}>
+          <h1 className={styles.pageTitle}>
+            <span className={styles.titleIcon}>⚡</span>
+            Equipos de Quidditch
+          </h1>
+          <p className={styles.pageDescription}>
+            Descubre todos los equipos mágicos, sus estadísticas y trayectorias legendarias
+          </p>
+        </Card>
       </section>
 
       {/* Filters Section */}
-      <section className="filters-section card p-4 md:p-6">
-        <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
-          <div className="search-filter flex items-center gap-2 flex-grow md:max-w-md">
-            <input
-              type="text"
-              placeholder="Buscar equipos..."
-              className="form-input flex-grow px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 min-h-[2.5rem]"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <Button size="sm">🔍</Button>
+      <section className={styles.filtersSection}>
+        <Card className={styles.filtersCard}>
+          <div className={styles.filtersContent}>
+            <div className={styles.searchContainer}>
+              <input
+                type="text"
+                placeholder="Buscar equipos mágicos..."
+                className={styles.searchInput}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <Button 
+                size="sm" 
+                className={styles.searchButton}
+                aria-label="Buscar"
+              >
+                🔍
+              </Button>
+            </div>
+            
+            <div className={styles.filterButtons}>
+              <Button 
+                variant={selectedLeague === 'all' ? 'primary' : 'outline'} 
+                size="sm" 
+                onClick={() => setSelectedLeague('all')}
+                className={`${styles.filterButton} ${selectedLeague === 'all' ? styles.active : ''}`}
+              >
+                Todas las Ligas
+              </Button>
+              <Button 
+                variant={selectedLeague === 'Liga de Hogwarts' ? 'primary' : 'outline'} 
+                size="sm" 
+                onClick={() => setSelectedLeague('Liga de Hogwarts')}
+                className={`${styles.filterButton} ${selectedLeague === 'Liga de Hogwarts' ? styles.active : ''}`}
+              >
+                Liga de Hogwarts
+              </Button>
+              <Button 
+                variant={selectedLeague === 'Liga Británica e Irlandesa' ? 'primary' : 'outline'} 
+                size="sm" 
+                onClick={() => setSelectedLeague('Liga Británica e Irlandesa')}
+                className={`${styles.filterButton} ${selectedLeague === 'Liga Británica e Irlandesa' ? styles.active : ''}`}
+              >
+                Liga Británica
+              </Button>
+            </div>
           </div>
-          
-          <div className="filter-options flex flex-wrap gap-2 justify-center md:justify-end">
-            <Button 
-              variant={selectedLeague === 'all' ? 'primary' : 'outline'} 
-              size="sm" 
-              onClick={() => setSelectedLeague('all')}
-            >
-              Todas
-            </Button>
-            <Button 
-              variant={selectedLeague === 'Liga de Hogwarts' ? 'primary' : 'outline'} 
-              size="sm" 
-              onClick={() => setSelectedLeague('Liga de Hogwarts')}
-            >
-              Hogwarts
-            </Button>
-            <Button 
-              variant={selectedLeague === 'Liga Británica e Irlandesa' ? 'primary' : 'outline'} 
-              size="sm" 
-              onClick={() => setSelectedLeague('Liga Británica e Irlandesa')}
-            >
-              <span className="hidden sm:inline">Liga</span> Británica
-            </Button>
-          </div>
-        </div>
+        </Card>
       </section>
 
       {/* Teams Grid */}
-      <section className="teams-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-        {filteredTeams.length > 0 ? (
-          filteredTeams.map(team => (
-            <TeamCard key={team.id} team={team} />
-          ))
-        ) : (
-          <div className="col-span-full text-center py-12">
-            <p className="text-gray-600 text-lg mb-4">
-              No se encontraron equipos que coincidan con los filtros.
-            </p>
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                setSearchTerm('');
-                setSelectedLeague('all');
-              }}
-            >
-              Limpiar filtros
-            </Button>
-          </div>
-        )}
+      <section className={styles.teamsSection}>
+        <div className={styles.teamsGrid}>
+          {filteredTeams.length > 0 ? (
+            filteredTeams.map(team => (              <Link 
+                key={team.id} 
+                to={`/teams/${team.id}`}
+                className={styles.teamCard}
+                aria-label={`Ver detalles de ${team.name}`}
+              >
+                {/* Team Card Header */}
+                <div className={styles.teamCardHeader}>
+                  <div className={styles.teamLogo}>
+                    {getTeamLogo(team.name) ? (
+                      <img 
+                        src={getTeamLogo(team.name)!} 
+                        alt={`Logo de ${team.name}`}
+                        className={styles.teamLogoImage}
+                      />
+                    ) : (
+                      <span className={styles.teamLogoText}>
+                        {getTeamInitial(team.name)}
+                      </span>
+                    )}
+                  </div>
+                  <h3 className={styles.teamName}>{team.name}</h3>
+                </div>
+
+                {/* Team Card Body */}
+                <div className={styles.teamCardBody}>
+                  <div className={styles.teamLeague}>
+                    <span className={styles.leagueIcon}>🏰</span>
+                    {team.league}
+                  </div>
+
+                  {team.stats && (
+                    <div className={styles.teamStats}>
+                      <div className={styles.statItem}>
+                        <div className={styles.statValue}>{team.stats.wins}</div>
+                        <div className={styles.statLabel}>Victorias</div>
+                      </div>
+                      <div className={styles.statItem}>
+                        <div className={styles.statValue}>{team.stats.losses}</div>
+                        <div className={styles.statLabel}>Derrotas</div>
+                      </div>
+                      <div className={styles.statItem}>
+                        <div className={styles.statValue}>{team.stats.draws}</div>
+                        <div className={styles.statLabel}>Empates</div>
+                      </div>
+                      <div className={styles.statItem}>
+                        <div className={styles.statValue}>{team.stats.points}</div>
+                        <div className={styles.statLabel}>Puntos</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </Link>
+            ))
+          ) : (
+            <div className={styles.emptyState}>
+              <h3>🔍 No se encontraron equipos</h3>
+              <p>
+                No hay equipos que coincidan con los filtros aplicados. 
+                Intenta con otros términos de búsqueda o liga.
+              </p>              <Button 
+                variant="outline" 
+                onClick={handleClearFilters}
+              >
+                Limpiar filtros
+              </Button>
+            </div>
+          )}
+        </div>
       </section>
     </div>
   );
