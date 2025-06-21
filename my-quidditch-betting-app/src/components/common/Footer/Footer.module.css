@@ -1,0 +1,550 @@
+/* =================================================================
+   FOOTER - DISEÑO MÁGICO PROFESIONAL
+   Footer moderno con elementos del universo Quidditch
+   ================================================================= */
+
+/* Container principal del footer */
+.footer {
+  background: linear-gradient(135deg, 
+    #f8f4ff 0%, 
+    #ede7f6 15%, 
+    #e1f5fe 30%, 
+    #f3e8ff 50%, 
+    #e1f5fe 70%, 
+    #ede7f6 85%, 
+    #f8f4ff 100%);
+  color: #1f2937;
+  border-top: 2px solid transparent;
+  border-image: linear-gradient(90deg, #6a0dad, #ffd700, #6a0dad) 1;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Elementos mágicos de fondo */
+.footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 10% 20%, rgba(106, 13, 173, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 90% 80%, rgba(255, 215, 0, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(106, 13, 173, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Partículas mágicas flotantes */
+.footer::after {
+  content: '⚡ 🏆 ⭐ 🔮 ⚡ 🏆 ⭐ 🔮 ⚡ 🏆 ⭐ 🔮';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  font-size: 1rem;
+  opacity: 0.1;
+  pointer-events: none;
+  z-index: 1;
+  animation: magicalFooterFloat 20s linear infinite;
+  line-height: 120px;
+  letter-spacing: 80px;
+  color: #ffd700;
+}
+
+/* Container principal de contenido */
+.footerContainer {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  position: relative;
+  z-index: 2;
+}
+
+/* Sección principal del footer */
+.mainSection {
+  padding: 3rem 0;
+}
+
+/* Grid principal */
+.mainGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+@media (min-width: 768px) {
+  .mainGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .mainGrid {
+    grid-template-columns: 7fr 5fr;
+    gap: 4rem;
+  }
+}
+
+/* Sección de marca */
+.brandSection {
+  position: relative;
+}
+
+.brandContainer {
+  margin-bottom: 2rem;
+}
+
+.brandTitle {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 800;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, #6a0dad 0%, #9370db 30%, #ffd700 60%, #6a0dad 100%);
+  background-size: 300% 300%;
+  animation: magicalGradient 4s ease-in-out infinite;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 20px rgba(106, 13, 173, 0.5);
+  position: relative;
+}
+
+.brandTitle::after {
+  content: '🏆';
+  position: absolute;
+  top: -0.3rem;
+  right: -1rem;
+  font-size: 0.6em;
+  opacity: 0.8;
+  animation: trophySpin 6s ease-in-out infinite;
+}
+
+.brandDescription {
+  color: #64748b;
+  font-size: 1rem;
+  line-height: 1.6;
+  max-width: 32rem;
+  margin-bottom: 0;
+}
+
+/* Indicadores de confianza */
+.trustIndicators {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  max-width: 64rem;
+}
+
+@media (min-width: 640px) {
+  .trustIndicators {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .trustIndicators {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.trustItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(106, 13, 173, 0.1);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(106, 13, 173, 0.1);
+}
+
+.trustItem::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(106, 13, 173, 0.1), 
+    transparent);
+  transition: left 0.5s ease;
+}
+
+.trustItem:hover {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(106, 13, 173, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(106, 13, 173, 0.2);
+}
+
+.trustItem:hover::before {
+  left: 100%;
+}
+
+.trustIndicator {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 10px currentColor;
+}
+
+.trustIndicator.green {
+  background-color: #10b981;
+  color: #10b981;
+}
+
+.trustIndicator.blue {
+  background-color: #3b82f6;
+  color: #3b82f6;
+}
+
+.trustIndicator.purple {
+  background-color: #6a0dad;
+  color: #6a0dad;
+}
+
+.trustContent h4 {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-bottom: 0.125rem;
+}
+
+.trustContent p {
+  font-size: 0.875rem;
+  color: #1f2937;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* Sección legal y soporte */
+.legalSection {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.legalGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+@media (min-width: 768px) {
+  .legalGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.linksSection h4 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: #1f2937;
+  position: relative;
+}
+
+.linksSection h4::before {
+  content: '📜';
+  margin-right: 0.5rem;
+  opacity: 0.8;
+}
+
+.linksList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.footerLink {
+  color: #64748b;
+  text-decoration: none;
+  font-size: 0.875rem;
+  padding: 0.5rem 0;
+  transition: all 0.3s ease;
+  position: relative;
+  border-radius: 0.25rem;
+  padding-left: 1rem;
+}
+
+.footerLink::before {
+  content: '⚡';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.75rem;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.footerLink:hover {
+  color: #1f2937;
+  background: rgba(106, 13, 173, 0.1);
+  padding-left: 1.5rem;
+  transform: translateX(0.25rem);
+}
+
+.footerLink:hover::before {
+  opacity: 1;
+  color: #ffd700;
+}
+
+/* Aviso de responsabilidad */
+.responsibilityNotice {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, 
+    rgba(245, 158, 11, 0.1) 0%, 
+    rgba(239, 68, 68, 0.08) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  height: fit-content;
+  position: relative;
+  overflow: hidden;
+}
+
+.responsibilityNotice::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #f59e0b, #ef4444, #f59e0b);
+  background-size: 200% 100%;
+  animation: warningShimmer 3s ease-in-out infinite;
+}
+
+.responsibilityTitle {
+  font-size: 0.75rem;
+  color: #fbbf24;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.responsibilityTitle::before {
+  content: '⚠️';
+  font-size: 0.875rem;
+}
+
+.responsibilityText {
+  font-size: 0.75rem;
+  color: #64748b;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* Sección inferior */
+.bottomSection {
+  border-top: 1px solid rgba(106, 13, 173, 0.2);
+  padding: 1.5rem 0;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.bottomContent {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .bottomContent {
+    flex-direction: row;
+    justify-content: space-between;
+    text-align: left;
+  }
+}
+
+.copyrightSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+}
+
+@media (min-width: 768px) {
+  .copyrightSection {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.copyrightText {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.separator {
+  width: 0.25rem;
+  height: 0.25rem;
+  background-color: #94a3b8;
+  border-radius: 50%;
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .separator {
+    display: block;
+  }
+}
+
+.licenseText {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.developerSection {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.developerText {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* ===== ANIMACIONES ===== */
+@keyframes magicalFooterFloat {
+  0%, 100% { 
+    transform: translateY(0px) translateX(0px) rotate(0deg); 
+    opacity: 0.1;
+  }
+  25% { 
+    transform: translateY(-10px) translateX(5px) rotate(2deg); 
+    opacity: 0.15;
+  }
+  50% { 
+    transform: translateY(0px) translateX(10px) rotate(0deg); 
+    opacity: 0.1;
+  }
+  75% { 
+    transform: translateY(-5px) translateX(5px) rotate(-2deg); 
+    opacity: 0.15;
+  }
+}
+
+@keyframes magicalGradient {
+  0%, 100% { 
+    background-position: 0% 50%; 
+  }
+  50% { 
+    background-position: 100% 50%; 
+  }
+}
+
+@keyframes trophySpin {
+  0%, 100% { 
+    transform: rotate(0deg) scale(1); 
+  }
+  25% { 
+    transform: rotate(10deg) scale(1.1); 
+  }
+  50% { 
+    transform: rotate(0deg) scale(1); 
+  }
+  75% { 
+    transform: rotate(-10deg) scale(1.1); 
+  }
+}
+
+@keyframes warningShimmer {
+  0%, 100% { 
+    background-position: 0% 50%; 
+  }
+  50% { 
+    background-position: 100% 50%; 
+  }
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+/* Mobile pequeño */
+@media (max-width: 480px) {
+  .footerContainer {
+    padding: 0 0.75rem;
+  }
+  
+  .mainSection {
+    padding: 2rem 0;
+  }
+  
+  .brandTitle {
+    font-size: 1.5rem;
+  }
+  
+  .brandTitle::after {
+    display: none;
+  }
+  
+  .trustIndicators {
+    grid-template-columns: 1fr;
+  }
+  
+  .legalGrid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+/* ===== MEJORAS DE ACCESIBILIDAD ===== */
+@media (prefers-reduced-motion: reduce) {
+  .footer::after,
+  .brandTitle,
+  .trustItem,
+  .footerLink {
+    animation: none;
+  }
+  
+  .trustItem:hover,
+  .footerLink:hover {
+    transform: none;
+  }
+}
+
+/* Estados de focus para navegación por teclado */
+.footerLink:focus-visible {
+  outline: 2px solid #6a0dad;
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
+/* Contraste mejorado para accesibilidad */
+@media (prefers-contrast: high) {
+  .footer {
+    background: #ffffff;
+  }
+  
+  .copyrightText,
+  .licenseText,
+  .developerText {
+    color: #1f2937;
+  }
+  
+  .footerLink {
+    color: #1f2937;
+  }
+}
