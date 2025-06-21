@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Button from '@/components/common/Button';
-import Card from '@/components/common/Card';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import TeamLogo from '@/components/teams/TeamLogo';
 import styles from './ResultsPage.module.css';
@@ -32,7 +31,9 @@ const mockResults: Result[] = [
 const ResultsPage: React.FC = () => {
   const [results, setResults] = useState<Result[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  // Add filter states here if needed: dateFrom, dateTo, teamFilter
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [teamFilter, setTeamFilter] = useState('');
 
   useEffect(() => {
     setIsLoading(true);
@@ -42,46 +43,106 @@ const ResultsPage: React.FC = () => {
     }, 500);
   }, []);
 
-  if (isLoading) return <LoadingSpinner />;
+  const handleFilterSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Aquí iría la lógica de filtrado
+    console.log('Aplicando filtros:', { dateFrom, dateTo, teamFilter });
+  };
+
+  const handleFilterReset = () => {
+    setDateFrom('');
+    setDateTo('');
+    setTeamFilter('');
+    setResults(mockResults);
+  };
+
+  if (isLoading) {
+    return (
+      <div className={styles.resultsPageContainer}>
+        <div className={styles.loadingContainer}>
+          <LoadingSpinner />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.resultsPageContainer}>
-      <section className="hero-section text-center p-8 mb-8 rounded-lg" style={{ background: 'linear-gradient(135deg, rgba(75, 0, 130, 0.5), rgba(106, 90, 205, 0.2))', color: 'white' }}>
-        <h1 className="text-3xl font-bold mb-2 text-white">Resultados de Partidos</h1>
-        <p>Consulta los marcadores finales de los partidos ya concluidos.</p>
+      {/* Hero Section */}
+      <section className={styles.heroSection}>
+        <h1 className={styles.heroTitle}>
+          <span className={styles.titleIcon}>🏆</span>
+          Resultados de Partidos
+        </h1>
+        <p className={styles.heroDescription}>
+          Consulta los marcadores finales y revive la emoción de los partidos más épicos del mundo mágico del Quidditch
+        </p>
       </section>
 
-      <Card className="filters-section mb-8 p-4">
-        <h2 className="text-xl font-semibold text-primary mb-4">Filtrar Resultados</h2>
-        <form className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-          <div className="form-group">
-            <label htmlFor="date-from" className="form-label">Desde:</label>
-            <input type="date" id="date-from" className="form-input" />
+      {/* Filters Section */}
+      <div className={styles.filtersCard}>
+        <h2 className={styles.filtersTitle}>Filtrar Resultados</h2>
+        <form onSubmit={handleFilterSubmit}>
+          <div className={styles.filtersGrid}>
+            <div className={styles.formGroup}>
+              <label htmlFor="date-from" className={styles.formLabel}>Desde</label>
+              <input
+                type="date"
+                id="date-from"
+                className={styles.formInput}
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label htmlFor="date-to" className={styles.formLabel}>Hasta</label>
+              <input
+                type="date"
+                id="date-to"
+                className={styles.formInput}
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label htmlFor="team-filter" className={styles.formLabel}>Equipo</label>
+              <select
+                id="team-filter"
+                className={styles.formSelect}
+                value={teamFilter}
+                onChange={(e) => setTeamFilter(e.target.value)}
+              >
+                <option value="">Todos los equipos</option>
+                <option value="Gryffindor">Gryffindor</option>
+                <option value="Slytherin">Slytherin</option>
+                <option value="Hufflepuff">Hufflepuff</option>
+                <option value="Ravenclaw">Ravenclaw</option>
+              </select>
+            </div>
           </div>
-          <div className="form-group">
-            <label htmlFor="date-to" className="form-label">Hasta:</label>
-            <input type="date" id="date-to" className="form-input" />
-          </div>
-          <div className="form-group">
-            <label htmlFor="team-filter" className="form-label">Equipo:</label>
-            <select id="team-filter" className="form-input">
-              <option value="">Todos los equipos</option>
-              {/* Populate with team names */}
-            </select>
-          </div>
-          <div className="md:col-span-3 flex justify-end gap-2 mt-2">
-            <Button type="reset" variant="outline">Limpiar</Button>
-            <Button type="submit">Aplicar Filtros</Button>
+          <div className={styles.filtersActions}>
+            <Button type="button" variant="outline" onClick={handleFilterReset}>
+              Limpiar
+            </Button>
+            <Button type="submit">
+              Aplicar Filtros
+            </Button>
           </div>
         </form>
-      </Card>
+      </div>
 
+      {/* Results Grid */}
       <section className={styles.resultsGrid}>
         {results.length > 0 ? (
           results.map(result => (
             <div key={result.id} className={styles.resultCard}>
               <div className={styles.matchMeta}>
-                <span className={styles.matchDate}>{result.date} - {result.league}</span>
-                <Link to={`/matches/${result.id}`} className="text-sm text-primary hover:underline">Ver detalles</Link>
+                <span className={styles.matchDate}>
+                  {result.date} - {result.league}
+                </span>
+                <Link to={`/matches/${result.id}`} className={styles.matchDetailsLink}>
+                  Ver detalles
+                </Link>
               </div>
               
               <div className={styles.matchResult}>
@@ -96,7 +157,8 @@ const ResultsPage: React.FC = () => {
                 <div className={styles.teamResult}>
                   <TeamLogo teamName={result.awayTeam} size="md" />
                   <h3 className={styles.teamName}>{result.awayTeam}</h3>
-                  <p className={styles.teamScore}>{result.awayScore}</p>                </div>
+                  <p className={styles.teamScore}>{result.awayScore}</p>
+                </div>
               </div>
               
               <div className={`${styles.matchStatus} ${styles.finished}`}>
@@ -110,7 +172,6 @@ const ResultsPage: React.FC = () => {
           </div>
         )}
       </section>
-      {/* Pagination can be added here */}
     </div>
   );
 };
