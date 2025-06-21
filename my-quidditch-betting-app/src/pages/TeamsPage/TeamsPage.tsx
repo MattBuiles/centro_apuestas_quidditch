@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
 import { getTeamLogo, getTeamInitial } from '@/assets/teamLogos';
+import { virtualTimeManager } from '@/services/virtualTimeManager';
+import { standingsCalculator } from '@/services/standingsCalculator';
+import { Season } from '@/types/league';
 import styles from './TeamsPage.module.css';
 
-// Mock data for teams
+// Team data interface
 interface TeamData {
   id: string;
   name: string;
@@ -16,59 +19,121 @@ interface TeamData {
     losses: number;
     draws: number;
     points: number;
+    played: number;
+    goalsFor: number;
+    goalsAgainst: number;
   };
 }
 
+// Fallback mock data for teams (only used when no simulation data available)
 const mockTeams: TeamData[] = [
   { 
     id: 'gryffindor', 
     name: 'Gryffindor', 
     league: 'Liga de Hogwarts',
     logoChar: 'G',
-    stats: { wins: 12, losses: 3, draws: 2, points: 38 }
+    stats: { wins: 12, losses: 3, draws: 2, points: 38, played: 17, goalsFor: 45, goalsAgainst: 25 }
   },
   { 
     id: 'slytherin', 
     name: 'Slytherin', 
     league: 'Liga de Hogwarts',
     logoChar: 'S',
-    stats: { wins: 11, losses: 4, draws: 2, points: 35 }
+    stats: { wins: 11, losses: 4, draws: 2, points: 35, played: 17, goalsFor: 42, goalsAgainst: 28 }
   },
   { 
     id: 'ravenclaw', 
     name: 'Ravenclaw', 
     league: 'Liga de Hogwarts',
     logoChar: 'R',
-    stats: { wins: 9, losses: 6, draws: 2, points: 29 }
+    stats: { wins: 9, losses: 6, draws: 2, points: 29, played: 17, goalsFor: 38, goalsAgainst: 35 }
   },
   { 
     id: 'hufflepuff', 
     name: 'Hufflepuff', 
     league: 'Liga de Hogwarts',
     logoChar: 'H',
-    stats: { wins: 8, losses: 7, draws: 2, points: 26 }
+    stats: { wins: 8, losses: 7, draws: 2, points: 26, played: 17, goalsFor: 35, goalsAgainst: 38 }
   },
   { 
     id: 'chudley_cannons', 
     name: 'Chudley Cannons', 
     league: 'Liga Británica e Irlandesa',
     logoChar: 'C',
-    stats: { wins: 15, losses: 8, draws: 1, points: 46 }
+    stats: { wins: 15, losses: 8, draws: 1, points: 46, played: 24, goalsFor: 65, goalsAgainst: 45 }
   },
   { 
     id: 'holyhead_harpies', 
     name: 'Holyhead Harpies', 
     league: 'Liga Británica e Irlandesa',
     logoChar: 'H',
-    stats: { wins: 13, losses: 9, draws: 2, points: 41 }
+    stats: { wins: 13, losses: 9, draws: 2, points: 41, played: 24, goalsFor: 58, goalsAgainst: 52 }
   },
 ];
 
 const TeamsPage: React.FC = () => {
+  const [teams, setTeams] = useState<TeamData[]>([]);
+  const [season, setSeason] = useState<Season | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLeague, setSelectedLeague] = useState('all');
 
-  const filteredTeams = mockTeams.filter(team => {
+  useEffect(() => {
+    loadTeamsFromSimulation();
+  }, []);
+
+  const loadTeamsFromSimulation = () => {
+    setIsLoading(true);
+    
+    const timeState = virtualTimeManager.getState();
+    if (timeState.temporadaActiva) {
+      setSeason(timeState.temporadaActiva);
+      
+      // Calculate standings to get team stats
+      const standings = standingsCalculator.calculateStandings(
+        timeState.temporadaActiva.equipos,
+        timeState.temporadaActiva.partidos.filter(match => match.status === 'finished')
+      );
+      
+      // Convert teams to TeamData format
+      const teamsData: TeamData[] = timeState.temporadaActiva.equipos.map(team => {
+        const standing = standings.find(s => s.teamId === team.id);
+        
+        return {
+          id: team.id,
+          name: team.name,
+          league: timeState.temporadaActiva?.name || 'Liga Profesional Quidditch',
+          logoChar: team.name.charAt(0).toUpperCase(),
+          stats: standing ? {
+            wins: standing.wins,
+            losses: standing.losses,
+            draws: standing.draws,
+            points: standing.points,
+            played: standing.matchesPlayed,
+            goalsFor: standing.goalsFor,
+            goalsAgainst: standing.goalsAgainst
+          } : {
+            wins: 0,
+            losses: 0,
+            draws: 0,
+            points: 0,
+            played: 0,
+            goalsFor: 0,
+            goalsAgainst: 0
+          }
+        };
+      });
+      
+      setTeams(teamsData);
+    } else {
+      // Fallback to mock data if no simulation
+      setTeams(mockTeams);
+    }
+    
+    setIsLoading(false);
+  };
+
+  const filteredTeams = teams.filter(team => {
     const matchesSearch = searchTerm === '' || team.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesLeague = selectedLeague === 'all' || team.league === selectedLeague;
     return matchesSearch && matchesLeague;
@@ -87,10 +152,19 @@ const TeamsPage: React.FC = () => {
           <h1 className={styles.pageTitle}>
             <span className={styles.titleIcon}>⚡</span>
             Equipos de Quidditch
-          </h1>
-          <p className={styles.pageDescription}>
+          </h1>          <p className={styles.pageDescription}>
             Descubre todos los equipos mágicos, sus estadísticas y trayectorias legendarias
           </p>
+          {season && (
+            <div className={styles.seasonInfo}>
+              📊 {season.name} - {teams.length} equipos participando
+            </div>
+          )}
+          {!season && !isLoading && (
+            <div className={styles.noDataInfo}>
+              ⚡ Inicia una temporada en la página de Partidos para ver equipos en vivo
+            </div>
+          )}
         </Card>
       </section>
 
@@ -178,10 +252,12 @@ const TeamsPage: React.FC = () => {
                   <div className={styles.teamLeague}>
                     <span className={styles.leagueIcon}>🏰</span>
                     {team.league}
-                  </div>
-
-                  {team.stats && (
+                  </div>                  {team.stats && (
                     <div className={styles.teamStats}>
+                      <div className={styles.statItem}>
+                        <div className={styles.statValue}>{team.stats.played}</div>
+                        <div className={styles.statLabel}>Jugados</div>
+                      </div>
                       <div className={styles.statItem}>
                         <div className={styles.statValue}>{team.stats.wins}</div>
                         <div className={styles.statLabel}>Victorias</div>
@@ -189,10 +265,6 @@ const TeamsPage: React.FC = () => {
                       <div className={styles.statItem}>
                         <div className={styles.statValue}>{team.stats.losses}</div>
                         <div className={styles.statLabel}>Derrotas</div>
-                      </div>
-                      <div className={styles.statItem}>
-                        <div className={styles.statValue}>{team.stats.draws}</div>
-                        <div className={styles.statLabel}>Empates</div>
                       </div>
                       <div className={styles.statItem}>
                         <div className={styles.statValue}>{team.stats.points}</div>
