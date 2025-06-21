@@ -78,19 +78,20 @@ const VirtualTimeControl: React.FC<VirtualTimeControlProps> = ({
       setIsAdvancing(false);
     }
   };
-
   const handleAvanceHastaProximoPartido = async () => {
     setIsAdvancing(true);
     try {
-      const resultado = await virtualTimeManager.avanzarTiempo({
-        hastaProximoPartido: true,
-        simularPartidosPendientes: true
-      });
+      const resultado = await virtualTimeManager.avanzarHastaProximoPartidoEnVivo();
 
       setLastAdvanceResult({
         partidosSimulados: resultado.partidosSimulados,
         nuevaFecha: resultado.nuevaFecha
       });
+
+      // Mostrar información del partido que quedó en vivo
+      if (resultado.partidoEnVivo) {
+        console.log(`🔴 Partido listo para comenzar: ${resultado.partidoEnVivo.id}`);
+      }
 
       updateTimeState();
       onTimeAdvanced?.(resultado.nuevaFecha, resultado.partidosSimulados);
@@ -121,12 +122,18 @@ const VirtualTimeControl: React.FC<VirtualTimeControlProps> = ({
       setIsAdvancing(false);
     }
   };
-
-  const handleReiniciarTempo = () => {
-    virtualTimeManager.reiniciarTiempo();
-    setLastAdvanceResult(null);
-    updateTimeState();
-    onSeasonReset?.();
+  const handleSiguienteTemporada = async () => {
+    setIsAdvancing(true);
+    try {
+      await virtualTimeManager.siguienteTemporada();
+      setLastAdvanceResult(null);
+      updateTimeState();
+      onSeasonReset?.();
+    } catch (error) {
+      console.error('Error creando siguiente temporada:', error);
+    } finally {
+      setIsAdvancing(false);
+    }
   };
 
   const formatFecha = (fecha: Date) => {
@@ -152,6 +159,7 @@ const VirtualTimeControl: React.FC<VirtualTimeControlProps> = ({
   }
 
   const proximosPartidos = getProximosPartidos();
+  const partidosEnVivo = virtualTimeManager.getPartidosEnVivo();
   const partidosHoy = virtualTimeManager.getPartidosHoy();
   const totalPartidos = timeState.temporadaActiva.partidos.length;
   const partidosSimulados = timeState.partidosSimulados.size;
@@ -208,16 +216,14 @@ const VirtualTimeControl: React.FC<VirtualTimeControlProps> = ({
             disabled={isAdvancing}
           >
             📅 Avanzar 1 Semana
-          </Button>
-
-          <Button
+          </Button>          <Button
             variant="secondary"
             size="sm"
             onClick={handleAvanceHastaProximoPartido}
             isLoading={isAdvancing}
             disabled={isAdvancing || proximosPartidos.length === 0}
           >
-            ⚡ Hasta Próximo Partido
+            🔴 Preparar Próximo Partido
           </Button>
 
           <Button
@@ -228,21 +234,43 @@ const VirtualTimeControl: React.FC<VirtualTimeControlProps> = ({
             disabled={isAdvancing || proximosPartidos.length === 0}
           >
             🏆 Simular Temporada Completa
-          </Button>
-
-          <Button
+          </Button>          <Button
             variant="outline"
             size="sm"
-            onClick={handleReiniciarTempo}
+            onClick={handleSiguienteTemporada}
             disabled={isAdvancing}
           >
-            🔄 Reiniciar Temporada
+            � Siguiente Temporada
           </Button>
         </div>
-      </div>
-
-      {/* Información de partidos */}
+      </div>      {/* Información de partidos */}
       <div className={styles.matchesInfo}>
+        {/* Partidos en vivo */}
+        {partidosEnVivo.length > 0 && (
+          <div className={styles.liveMatches}>
+            <h5>🔴 Partidos Listos para Comenzar ({partidosEnVivo.length})</h5>
+            <div className={styles.matchesList}>
+              {partidosEnVivo.map(partido => (
+                <div key={partido.id} className={styles.matchItem}>
+                  <span className={styles.teams}>
+                    {timeState.temporadaActiva?.equipos.find(t => t.id === partido.localId)?.name} vs{' '}
+                    {timeState.temporadaActiva?.equipos.find(t => t.id === partido.visitanteId)?.name}
+                  </span>
+                  <span className={styles.time}>
+                    {new Date(partido.fecha).toLocaleTimeString('es-ES', { 
+                      hour: '2-digit', 
+                      minute: '2-digit' 
+                    })}
+                  </span>
+                  <span className={`${styles.status} ${styles.live}`}>
+                    🔴 Listo
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Partidos de hoy */}
         {partidosHoy.length > 0 && (
           <div className={styles.todayMatches}>

@@ -1,4 +1,4 @@
-import { Season, Match, MatchState } from '@/types/league';
+import { Season, Match, MatchState, Team } from '@/types/league';
 import { quidditchSimulator } from './quidditchSimulator';
 import { liveMatchSimulator } from './liveMatchSimulator';
 
@@ -7,6 +7,17 @@ import { liveMatchSimulator } from './liveMatchSimulator';
  * Handles the virtual time system for controlled match simulation
  * Following the interactive mode approach: user controls when matches happen
  */
+
+export interface SeasonHistory {
+  id: string;
+  name: string;
+  numeroTemporada: number;
+  fechaCompletada: string;
+  startDate: Date;
+  endDate: Date;
+  equipos: Team[];
+  partidos: Match[];
+}
 
 export interface VirtualTimeState {
   fechaVirtualActual: Date;
@@ -173,10 +184,55 @@ export class VirtualTimeManager {
 
     return proximoPartido ? new Date(proximoPartido.fecha) : new Date(this.state.fechaVirtualActual);
   }
-
   /**
-   * Obtiene partidos próximos basados en el tiempo virtual
+   * Avanza hasta el próximo partido y lo pone en estado "live" listo para simular
    */
+  async avanzarHastaProximoPartidoEnVivo(): Promise<{
+    nuevaFecha: Date;
+    partidoEnVivo: Match | null;
+    partidosSimulados: Match[];
+  }> {
+    if (!this.state.temporadaActiva) {
+      throw new Error('No hay temporada activa');
+    }
+
+    const fechaAnterior = new Date(this.state.fechaVirtualActual);
+    const nuevaFecha = this.calcularFechaProximoPartido();
+
+    // Obtear partido que debe ponerse en vivo
+    const proximoPartido = this.state.temporadaActiva.partidos.find(partido => {
+      const fechaPartido = new Date(partido.fecha);
+      return fechaPartido.getTime() === nuevaFecha.getTime() && 
+             !this.state.partidosSimulados.has(partido.id) &&
+             partido.status === 'scheduled';
+    });
+
+    // Simular partidos anteriores si los hay
+    const partidosParaSimular = this.obtenerPartidosPendientes(fechaAnterior, nuevaFecha);
+    const partidosSimulados = partidosParaSimular.filter(p => p.id !== proximoPartido?.id);
+    
+    await this.simularPartidosPendientes(partidosSimulados);
+
+    // Actualizar fecha virtual
+    this.state.fechaVirtualActual = nuevaFecha;
+
+    // Poner el próximo partido en estado "live" si existe
+    if (proximoPartido) {
+      proximoPartido.status = 'live';
+      proximoPartido.currentMinute = 0;
+      proximoPartido.homeScore = 0;
+      proximoPartido.awayScore = 0;
+      proximoPartido.events = [];
+    }
+
+    this.saveState();
+
+    return {
+      nuevaFecha,
+      partidoEnVivo: proximoPartido || null,
+      partidosSimulados
+    };
+  }
   getPartidosProximos(limite: number = 5): Match[] {
     if (!this.state.temporadaActiva) return [];
 
@@ -218,20 +274,21 @@ export class VirtualTimeManager {
       .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
       .slice(0, limite);
   }
-
   /**
-   * Inicia simulación en vivo de un partido
+   * Comienza la simulación en vivo de un partido que está listo
    */
-  async iniciarPartidoEnVivo(partidoId: string): Promise<MatchState | null> {
+  async comenzarPartidoEnVivo(partidoId: string): Promise<MatchState | null> {
     if (!this.state.temporadaActiva) return null;
 
     const partido = this.state.temporadaActiva.partidos.find(p => p.id === partidoId);
-    if (!partido) return null;
+    if (!partido || partido.status !== 'live') return null;
 
     const equipoLocal = this.state.temporadaActiva.equipos.find(t => t.id === partido.localId);
     const equipoVisitante = this.state.temporadaActiva.equipos.find(t => t.id === partido.visitanteId);
 
-    if (!equipoLocal || !equipoVisitante) return null;    // Iniciar simulación en vivo
+    if (!equipoLocal || !equipoVisitante) return null;
+
+    // Iniciar simulación en vivo
     const estadoPartido = liveMatchSimulator.startLiveMatch(
       partido, 
       equipoLocal, 
@@ -240,8 +297,52 @@ export class VirtualTimeManager {
     );
 
     this.state.partidosEnVivo.set(partidoId, estadoPartido);
+    this.saveState();
     
     return estadoPartido;
+  }
+  /**
+   * Finaliza un partido que estaba en estado live y lo marca como terminado
+   */
+  finalizarPartidoEnVivo(partidoId: string): void {
+    const estado = this.state.partidosEnVivo.get(partidoId);
+    if (!estado || !this.state.temporadaActiva) return;
+
+    const partido = this.state.temporadaActiva.partidos.find(p => p.id === partidoId);
+    if (!partido) return;
+
+    // Actualizar partido con resultados finales
+    partido.status = 'finished';
+    partido.homeScore = estado.golesLocal;
+    partido.awayScore = estado.golesVisitante;
+    partido.events = estado.eventos;
+    partido.currentMinute = estado.minuto;
+    partido.snitchCaught = estado.snitchCaught;
+
+    // Limpiar estado en vivo
+    liveMatchSimulator.stopMatch(partidoId);
+    this.state.partidosEnVivo.delete(partidoId);
+    this.state.partidosSimulados.add(partidoId);
+    
+    this.saveState();
+  }
+
+  /**
+   * Obtiene el estado actual de un partido en vivo
+   */
+  getEstadoPartidoEnVivo(partidoId: string): MatchState | null {
+    return this.state.partidosEnVivo.get(partidoId) || null;
+  }
+
+  /**
+   * Obtiene todos los partidos actualmente en estado "live"
+   */
+  getPartidosEnVivo(): Match[] {
+    if (!this.state.temporadaActiva) return [];
+
+    return this.state.temporadaActiva.partidos.filter(partido => 
+      partido.status === 'live'
+    );
   }
 
   /**
@@ -288,7 +389,6 @@ export class VirtualTimeManager {
       fechaFinal
     };
   }
-
   /**
    * Reinicia el tiempo virtual
    */
@@ -305,12 +405,89 @@ export class VirtualTimeManager {
         partido.status = 'scheduled';
         partido.homeScore = 0;
         partido.awayScore = 0;
-        partido.eventos = [];
+        partido.events = [];
         partido.snitchCaught = false;
       });
     }
 
     this.saveState();
+  }  /**
+   * Avanza a la siguiente temporada manteniendo historial
+   */
+  async siguienteTemporada(): Promise<void> {
+    // Guardar temporada actual en historial si existe
+    if (this.state.temporadaActiva) {
+      const historialKey = `${this.STORAGE_KEY}_historial`;
+      try {
+        const historial = JSON.parse(localStorage.getItem(historialKey) || '[]');
+        historial.push({
+          ...this.state.temporadaActiva,
+          fechaCompletada: new Date().toISOString(),
+          numeroTemporada: historial.length + 1
+        });
+        localStorage.setItem(historialKey, JSON.stringify(historial));
+      } catch (error) {
+        console.error('Error saving season to history:', error);
+      }
+    }    // Crear nueva temporada
+    const { QuidditchSystem } = await import('./quidditchSystem');
+    const nuevaTemporada = QuidditchSystem.createProfessionalLeague();
+    
+    // Obtener el año actual del tiempo virtual para la nueva temporada
+    const currentDate = new Date(this.state.fechaVirtualActual);
+    const nextYear = currentDate.getFullYear() + 1;
+    
+    // La nueva temporada siempre empieza en julio del año siguiente
+    const inicioNuevaTemporada = new Date(`${nextYear}-07-01T10:00:00`);
+    
+    // Actualizar fechas de todos los partidos
+    const diferenciaDias = inicioNuevaTemporada.getTime() - new Date(nuevaTemporada.startDate).getTime();
+    nuevaTemporada.partidos.forEach((partido: Match) => {
+      const nuevaFecha = new Date(partido.fecha.getTime() + diferenciaDias);
+      partido.fecha = nuevaFecha;
+    });
+    
+    nuevaTemporada.startDate = inicioNuevaTemporada;
+    const finTemporada = new Date(inicioNuevaTemporada);
+    finTemporada.setMonth(finTemporada.getMonth() + 10); // 10 meses de temporada
+    nuevaTemporada.endDate = finTemporada;
+    
+    // Actualizar nombre de temporada
+    const numeroTemporada = this.getNumeroSiguienteTemporada();
+    nuevaTemporada.name = `Liga Profesional de Quidditch - Temporada ${numeroTemporada}`;
+    nuevaTemporada.id = `season-${numeroTemporada}`;
+
+    // Establecer nueva temporada
+    this.state.temporadaActiva = nuevaTemporada;
+    this.state.fechaVirtualActual = inicioNuevaTemporada;
+    this.state.partidosSimulados.clear();
+    this.state.partidosEnVivo.clear();
+
+    this.saveState();
+  }
+
+  /**
+   * Obtiene el número de la siguiente temporada
+   */
+  private getNumeroSiguienteTemporada(): number {
+    try {
+      const historialKey = `${this.STORAGE_KEY}_historial`;
+      const historial = JSON.parse(localStorage.getItem(historialKey) || '[]');
+      return historial.length + 1;
+    } catch {
+      return 1;
+    }
+  }
+  /**
+   * Obtiene historial de temporadas completadas
+   */
+  getHistorialTemporadas(): SeasonHistory[] {
+    try {
+      const historialKey = `${this.STORAGE_KEY}_historial`;
+      return JSON.parse(localStorage.getItem(historialKey) || '[]');
+    } catch {
+      return [];
+    }
   }
 
   /**
@@ -328,7 +505,6 @@ export class VirtualTimeManager {
     this.state.modoAutomatico = automatico;
     this.saveState();
   }
-
   /**
    * Carga el estado desde localStorage
    */
@@ -357,9 +533,9 @@ export class VirtualTimeManager {
       console.error('Error loading virtual time state:', error);
     }
 
-    // Estado por defecto
+    // Estado por defecto - empieza en julio 2025
     return {
-      fechaVirtualActual: new Date(),
+      fechaVirtualActual: new Date('2025-07-01T10:00:00'),
       temporadaActiva: null,
       partidosSimulados: new Set(),
       partidosEnVivo: new Map(),
