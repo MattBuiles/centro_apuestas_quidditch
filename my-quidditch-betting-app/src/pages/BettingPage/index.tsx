@@ -3,6 +3,8 @@ import { useParams } from 'react-router-dom';
 import styles from './BettingPage.module.css';
 import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
+import { virtualTimeManager } from '@/services/virtualTimeManager';
+import { Match, Season } from '@/types/league';
 
 // Types for betting system
 interface BetOption {
@@ -21,6 +23,15 @@ interface CombinedBet {
   potentialWin: number;
 }
 
+interface BettingMatch {
+  id: string;
+  name: string;
+  date: string;
+  homeTeam: string;
+  awayTeam: string;
+  status: 'upcoming' | 'live' | 'finished';
+}
+
 const BettingPage: React.FC = () => {
   const { matchId: paramMatchId } = useParams<{ matchId?: string }>();
   // const { user } = useAuth(); // Get user for balance
@@ -31,6 +42,9 @@ const BettingPage: React.FC = () => {
   const [betAmount, setBetAmount] = useState(0);
   const [scoreHome, setScoreHome] = useState(70);
   const [scoreAway, setScoreAway] = useState(60);
+  const [matches, setMatches] = useState<BettingMatch[]>([]);
+  const [season, setSeason] = useState<Season | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const totalSteps = 3;
 
@@ -38,7 +52,49 @@ const BettingPage: React.FC = () => {
     if (paramMatchId) {
         setSelectedMatch(paramMatchId);
     }
+    loadMatchesFromSimulation();
   }, [paramMatchId]);
+
+  const loadMatchesFromSimulation = () => {
+    setIsLoading(true);
+    
+    const timeState = virtualTimeManager.getState();
+    if (timeState.temporadaActiva) {
+      setSeason(timeState.temporadaActiva);
+      
+      // Get upcoming and live matches that can be bet on
+      const bettableMatches = timeState.temporadaActiva.partidos
+        .filter(match => match.status === 'scheduled' || match.status === 'live')
+        .map((match: Match) => {
+          const homeTeam = timeState.temporadaActiva!.equipos.find(t => t.id === match.localId);
+          const awayTeam = timeState.temporadaActiva!.equipos.find(t => t.id === match.visitanteId);
+          
+          return {
+            id: match.id,
+            name: `${homeTeam?.name || match.localId} vs ${awayTeam?.name || match.visitanteId}`,
+            date: new Date(match.fecha).toLocaleDateString('es-ES', {
+              month: 'short',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            }),
+            homeTeam: homeTeam?.name || match.localId,
+            awayTeam: awayTeam?.name || match.visitanteId,
+            status: match.status === 'live' ? 'live' : 'upcoming'
+          } as BettingMatch;
+        });
+      
+      setMatches(bettableMatches);
+    } else {      // Fallback to mock data
+      const mockAsBettingMatches: BettingMatch[] = mockMatchesForBetting.map(mock => ({
+        ...mock,
+        status: 'upcoming' as const
+      }));
+      setMatches(mockAsBettingMatches);
+    }
+    
+    setIsLoading(false);
+  };
 
   // Calculate combined odds and potential winnings
   const calculateCombinedOdds = () => {
@@ -113,7 +169,7 @@ const BettingPage: React.FC = () => {
       setCurrentStep(currentStep - 1);
     }
   };
-    const getMatchNameById = (id: string) => mockMatchesForBetting.find(m => m.id === id)?.name || 'Partido Desconocido';
+  const getMatchNameById = (id: string) => matches.find(m => m.id === id)?.name || 'Partido Desconocido';
   return (
     <div className={styles.bettingPageContainer}>
       {/* Hero Header Section */}
@@ -122,10 +178,19 @@ const BettingPage: React.FC = () => {
           <h1 className={styles.heroTitle}>
             <span className={styles.titleIcon}>🏆</span>
             Realizar Apuesta Mágica
-          </h1>
-          <p className={styles.heroDescription}>
+          </h1>          <p className={styles.heroDescription}>
             Coloca tu apuesta en los emocionantes partidos de Quidditch y gana Galeones
           </p>
+          {season && (
+            <div className={styles.seasonInfo}>
+              🏆 {season.name} - {matches.length} partidos disponibles para apuestas
+            </div>
+          )}
+          {!season && !isLoading && (
+            <div className={styles.noDataInfo}>
+              ⚡ Inicia una temporada en la página de Partidos para apostar en partidos en vivo
+            </div>
+          )}
           <div className={styles.userBalance}>
             <span className={styles.balanceLabel}>Saldo disponible:</span>
             <span className={styles.balanceAmount}>150 Galeones</span>
@@ -177,9 +242,8 @@ const BettingPage: React.FC = () => {
                     className={styles.formSelect}
                     value={selectedMatch}
                     onChange={(e) => setSelectedMatch(e.target.value)}
-                  >
-                    <option value="" disabled>Elige un partido...</option>
-                    {mockMatchesForBetting.map(match => (
+                  >                    <option value="" disabled>Elige un partido...</option>
+                    {matches.map(match => (
                       <option key={match.id} value={match.id}>
                         {match.name} ({match.date})
                       </option>
@@ -222,10 +286,8 @@ const BettingPage: React.FC = () => {
               <p className={styles.selectionSubtitle}>
                 Selecciona una o más opciones. Las cuotas se combinarán automáticamente.
               </p>
-            </div>
-
-            {(() => {
-              const match = mockMatchesForBetting.find(m => m.id === selectedMatch);
+            </div>            {(() => {
+              const match = matches.find(m => m.id === selectedMatch);
               if (!match) return null;
 
               return (

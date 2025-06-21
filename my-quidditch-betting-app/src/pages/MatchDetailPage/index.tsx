@@ -72,13 +72,14 @@ const mockMatchDetail: MatchDetails = {
 
 const MatchDetailPage = () => {
   const { matchId } = useParams<{ matchId: string }>();
-  const [match, setMatch] = useState<MatchDetails | null>(null);
-  const [realMatch, setRealMatch] = useState<Match | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [match, setMatch] = useState<MatchDetails | null>(null);  const [realMatch, setRealMatch] = useState<Match | null>(null);
+  const [homeTeam, setHomeTeam] = useState<Team | null>(null);
+  const [awayTeam, setAwayTeam] = useState<Team | null>(null);  const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('live'); // live, stats, lineups, h2h, betting, predictions
   const [showLiveSimulation, setShowLiveSimulation] = useState(false);
+  // const [matchState, setMatchState] = useState<MatchState | null>(null); // Reserved for future use
+  const [isStartingMatch, setIsStartingMatch] = useState(false);
   // const { isAuthenticated } = useAuth(); // If needed for predictions
-
   useEffect(() => {
     // Get the real match from virtual time manager
     setIsLoading(true);
@@ -90,15 +91,18 @@ const MatchDetailPage = () => {
       if (foundMatch) {
         setRealMatch(foundMatch);
         
-        // Find team names
-        const homeTeam = timeState.temporadaActiva.equipos.find(t => t.id === foundMatch.localId);
-        const awayTeam = timeState.temporadaActiva.equipos.find(t => t.id === foundMatch.visitanteId);
+        // Find teams
+        const foundHomeTeam = timeState.temporadaActiva.equipos.find(t => t.id === foundMatch.localId);
+        const foundAwayTeam = timeState.temporadaActiva.equipos.find(t => t.id === foundMatch.visitanteId);
+        
+        setHomeTeam(foundHomeTeam || mockHomeTeam);
+        setAwayTeam(foundAwayTeam || mockAwayTeam);
         
         // Convert to MatchDetails format
         const matchDetails: MatchDetails = {
           id: foundMatch.id,
-          homeTeam: homeTeam?.name || foundMatch.localId,
-          awayTeam: awayTeam?.name || foundMatch.visitanteId,
+          homeTeam: foundHomeTeam?.name || foundMatch.localId,
+          awayTeam: foundAwayTeam?.name || foundMatch.visitanteId,
           homeScore: foundMatch.homeScore || 0,
           awayScore: foundMatch.awayScore || 0,
           status: foundMatch.status === 'scheduled' ? 'upcoming' : 
@@ -111,20 +115,47 @@ const MatchDetailPage = () => {
         };
         
         setMatch(matchDetails);
+          // Check if match is already in live simulation
+        if (foundMatch.status === 'live') {
+          const liveState = virtualTimeManager.getEstadoPartidoEnVivo(foundMatch.id);
+          if (liveState) {
+            // setMatchState(liveState); // Reserved for future use
+            setShowLiveSimulation(true);
+          }
+        }
       } else {
         // Fallback to mock data if match not found
         setMatch(mockMatchDetail);
+        setHomeTeam(mockHomeTeam);
+        setAwayTeam(mockAwayTeam);
       }
     } else {
       // Fallback to mock data
       setMatch(mockMatchDetail);
+      setHomeTeam(mockHomeTeam);
+      setAwayTeam(mockAwayTeam);
     }
     
     setIsLoading(false);
   }, [matchId]);
-
   const handleTabClick = (tabName: string) => {
     setActiveTab(tabName);
+  };
+
+  const handleStartMatch = async () => {
+    if (!realMatch || realMatch.status !== 'live') return;
+    
+    setIsStartingMatch(true);    try {
+      const liveState = await virtualTimeManager.comenzarPartidoEnVivo(realMatch.id);
+      if (liveState) {
+        // setMatchState(liveState); // Reserved for future use
+        setShowLiveSimulation(true);
+      }
+    } catch (error) {
+      console.error('Error starting match:', error);
+    } finally {
+      setIsStartingMatch(false);
+    }
   };
 
   const toggleLiveSimulation = () => {
@@ -202,26 +233,49 @@ const MatchDetailPage = () => {
         <button className={`${styles.tabButton} ${activeTab === 'predictions' ? styles.active : ''}`} onClick={() => handleTabClick('predictions')}>Predicciones</button>
       </div>      <div className={`${styles.tabContent} ${activeTab === 'live' ? '' : styles.hidden}`}>
         <h2 className={styles.tabTitle}>Comentarios en Vivo</h2>
-        {realMatch && showLiveSimulation ? (
+        
+        {/* Partido listo para comenzar */}
+        {realMatch && realMatch.status === 'live' && !showLiveSimulation && (
+          <div className={styles.matchReadyCard}>
+            <h3>🔴 Partido Listo para Comenzar</h3>
+            <p>Este partido está programado para comenzar ahora. Haz clic para iniciar la simulación en vivo.</p>
+            <div className="mt-4">
+              <Button 
+                onClick={handleStartMatch} 
+                variant="primary" 
+                isLoading={isStartingMatch}
+                disabled={isStartingMatch}
+              >
+                {isStartingMatch ? 'Iniciando...' : '🚀 Comenzar Partido'}
+              </Button>
+            </div>
+          </div>
+        )}
+        
+        {/* Simulación en vivo activa */}
+        {realMatch && homeTeam && awayTeam && showLiveSimulation ? (
           <div className="mb-4">
             <LiveMatchViewer 
               match={realMatch} 
-              homeTeam={mockHomeTeam} 
-              awayTeam={mockAwayTeam}
-              onMatchEnd={(matchState) => {
-                console.log('Match ended:', matchState);
+              homeTeam={homeTeam} 
+              awayTeam={awayTeam}              onMatchEnd={(endedMatchState) => {
+                console.log('Match ended:', endedMatchState);
+                virtualTimeManager.finalizarPartidoEnVivo(realMatch.id);
                 setShowLiveSimulation(false);
+                // setMatchState(null); // Reserved for future use
+                // Reload match data
+                window.location.reload();
               }}
             />
           </div>
-        ) : (
-          <>
-            <p>Los comentarios en vivo aparecerán aquí...</p>            <div className="mt-4">
-              <Button onClick={toggleLiveSimulation} variant="primary">
-                {showLiveSimulation ? 'Ocultar Simulación' : 'Iniciar Simulación en Vivo'}
-              </Button>
-            </div>
-          </>
+        ) : null}
+          {/* Estado por defecto */}
+        {(!realMatch || realMatch.status === 'scheduled') && (
+          <p>Los comentarios en vivo aparecerán cuando el partido comience...</p>
+        )}
+        
+        {realMatch && realMatch.status === 'finished' && (
+          <p>Este partido ha finalizado. Puedes ver el resumen de eventos en la pestaña de Estadísticas.</p>
         )}
       </div>
 
