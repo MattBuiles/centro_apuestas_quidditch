@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import MatchCard from '@/components/matches/MatchCard'
-import UpcomingMatches from '@/components/matches/UpcomingMatches'
 import VirtualTimeControl from '@/components/matches/VirtualTimeControl'
 import Button from '@/components/common/Button'
 import Card from '@/components/common/Card'
@@ -259,19 +258,7 @@ const MatchesPage = () => {
             size="sm"
           >
             📊 Resultados ({tabCounts.results})
-          </Button>
-        </div>
-
-        {/* Upcoming Matches Component (when viewing upcoming) */}
-        {activeTab === 'upcoming' && season && (
-          <div className={styles.upcomingMatchesSection}>
-            <UpcomingMatches 
-              seasonId={season.id}
-              limit={10}
-              autoRefresh={false} // Managed by virtual time instead
-            />
-          </div>
-        )}
+          </Button>        </div>
 
         {/* Grid for matches */}
         <div className={styles.upcomingMatchesGrid}>
