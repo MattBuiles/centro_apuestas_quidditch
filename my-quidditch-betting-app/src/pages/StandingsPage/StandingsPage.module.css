@@ -1,53 +1,591 @@
+/* ===== STANDINGS PAGE - DISEÑO MÁGICO PROFESIONAL ===== */
+
+/* Container principal */
 .standingsPageContainer {
-    padding: var(--container-padding-y) var(--container-padding-x);
-    max-width: var(--container-max-width);
-    margin: 0 auto;
-    min-height: 100vh;
+  min-height: 100vh;
+  background: linear-gradient(135deg, 
+    #f0e6f6 0%, 
+    #e6d7f0 25%, 
+    #d9c9e8 50%, 
+    #e8ddf2 75%, 
+    #f8fafc 100%
+  );
+  padding: clamp(var(--spacing-4), 4vw, var(--spacing-8));
+  position: relative;
+  overflow-x: hidden;
 }
 
+.standingsPageContainer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(75, 0, 130, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 204, 0, 0.08) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ===== HERO HEADER ===== */
 .pageHeader {
-    text-align: center;
-    margin-bottom: var(--spacing-xl);
-    padding: var(--spacing-xl);
-    background: rgba(255, 255, 255, 0.9);
-    border-radius: var(--border-radius-lg);
-    box-shadow: var(--shadow-card);
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  margin-bottom: clamp(var(--spacing-6), 4vw, var(--spacing-8));
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.heroCard {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: clamp(var(--radius-lg), 2vw, var(--radius-xl));
+  padding: clamp(var(--spacing-6), 4vw, var(--spacing-8)) clamp(var(--spacing-4), 3vw, var(--spacing-6));
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.1),
+    0 8px 16px rgba(75, 0, 130, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  position: relative;
+  overflow: hidden;
+}
+
+.heroCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%236a5acd' fill-opacity='0.08' fill-rule='evenodd'/%3E%3C/svg%3E");
+  opacity: 0.4;
+  z-index: 0;
 }
 
 .pageTitle {
-    font-size: clamp(1.5rem, 5vw, 2.5rem);
-    font-weight: 700;
-    color: var(--primary-color);
-    margin-bottom: var(--spacing-sm);
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-primary);
+  font-size: clamp(var(--text-2xl), 5vw, var(--text-4xl));
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: clamp(var(--spacing-3), 2vw, var(--spacing-4));
+  line-height: 1.2;
+  text-shadow: 0 2px 4px rgba(75, 0, 130, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-3);
+  flex-wrap: wrap;
+}
+
+.titleIcon {
+  font-size: clamp(var(--text-xl), 4vw, var(--text-3xl));
+  filter: drop-shadow(0 2px 4px rgba(255, 204, 0, 0.3));
 }
 
 .pageDescription {
-    font-size: var(--font-size-base);
-    color: var(--text-color-light);
-    max-width: 600px;
-    margin: 0 auto;
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-body);
+  font-size: clamp(var(--text-base), 3vw, var(--text-lg));
+  color: var(--color-gray-700);
+  line-height: 1.6;
+  max-width: 700px;
+  margin: 0 auto;
+  opacity: 0.9;
 }
 
+/* ===== FILTERS SECTION ===== */
 .standingsSection {
-    background: rgba(255, 255, 255, 0.9);
-    border-radius: var(--border-radius-lg);
-    padding: var(--spacing-xl);
-    box-shadow: var(--shadow-card);
-    margin-bottom: var(--spacing-xl);
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.filtersCard {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  margin-bottom: clamp(var(--spacing-4), 3vw, var(--spacing-6)) !important;
+  box-shadow: 
+    0 12px 24px rgba(0, 0, 0, 0.08),
+    0 4px 8px rgba(75, 0, 130, 0.1);
 }
 
 .standingsFilters {
-    display: flex;
-    gap: var(--spacing-md);
-    margin-bottom: var(--spacing-xl);
-    flex-wrap: wrap;
-    justify-content: center;
+  display: flex;
+  gap: clamp(var(--spacing-2), 2vw, var(--spacing-4));
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: clamp(var(--spacing-4), 3vw, var(--spacing-5));
 }
 
 .filterButton {
-    min-height: 44px;
-    min-width: 120px;
+  min-height: clamp(44px, 8vw, 48px) !important;
+  min-width: clamp(120px, 20vw, 160px);
+  font-size: clamp(var(--text-sm), 2.5vw, var(--text-base)) !important;
+  font-weight: 600 !important;
+  padding: clamp(var(--spacing-2), 2vw, var(--spacing-3)) clamp(var(--spacing-4), 3vw, var(--spacing-5)) !important;
+  border-radius: var(--radius-lg) !important;
+  transition: all 0.3s ease !important;
 }
+
+/* ===== TABLE STYLES ===== */
+.tableCard {
+  background: rgba(255, 255, 255, 0.98) !important;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: clamp(var(--radius-lg), 2vw, var(--radius-xl)) !important;
+  overflow: hidden;
+  box-shadow: 
+    0 25px 50px rgba(0, 0, 0, 0.1),
+    0 12px 25px rgba(75, 0, 130, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.tableContainer {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(75, 0, 130, 0.3) transparent;
+}
+
+.tableContainer::-webkit-scrollbar {
+  height: 6px;
+}
+
+.tableContainer::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: var(--radius-sm);
+}
+
+.tableContainer::-webkit-scrollbar-thumb {
+  background: rgba(75, 0, 130, 0.3);
+  border-radius: var(--radius-sm);
+}
+
+.tableContainer::-webkit-scrollbar-thumb:hover {
+  background: rgba(75, 0, 130, 0.5);
+}
+
+.standingsTable {
+  width: 100%;
+  border-collapse: collapse;
+  background: transparent;
+  min-width: 700px;
+  font-family: var(--font-body);
+}
+
+.tableHeader {
+  background: linear-gradient(135deg, rgba(75, 0, 130, 0.12), rgba(106, 90, 205, 0.08));
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.tableHeaderCell {
+  padding: clamp(var(--spacing-3), 2.5vw, var(--spacing-4)) clamp(var(--spacing-2), 2vw, var(--spacing-3));
+  font-family: var(--font-secondary);
+  font-size: clamp(var(--text-xs), 2.2vw, var(--text-sm));
+  font-weight: 700;
+  color: var(--color-primary);
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid rgba(75, 0, 130, 0.2);
+  white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(75, 0, 130, 0.1);
+  position: relative;
+}
+
+.tableHeaderCell.center {
+  text-align: center;
+}
+
+.tableHeaderCell::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(75, 0, 130, 0.3), transparent);
+}
+
+/* ===== TABLE ROWS ===== */
+.standingRow {
+  border-bottom: 1px solid rgba(75, 0, 130, 0.1);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.standingRow:hover {
+  background: linear-gradient(135deg, rgba(75, 0, 130, 0.05), rgba(106, 90, 205, 0.03));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(75, 0, 130, 0.1);
+}
+
+.standingRow:nth-child(odd) {
+  background: rgba(248, 250, 252, 0.5);
+}
+
+.standingRow:nth-child(odd):hover {
+  background: linear-gradient(135deg, rgba(75, 0, 130, 0.08), rgba(106, 90, 205, 0.04));
+}
+
+.tableCell {
+  padding: clamp(var(--spacing-3), 2.5vw, var(--spacing-4)) clamp(var(--spacing-2), 2vw, var(--spacing-3));
+  color: var(--color-gray-800);
+  font-size: clamp(var(--text-sm), 2.5vw, var(--text-base));
+  font-weight: 500;
+  vertical-align: middle;
+  transition: color 0.3s ease;
+}
+
+.tableCell.center {
+  text-align: center;
+}
+
+.tableCell.bold {
+  font-weight: 700;
+  color: var(--color-primary);
+  font-size: clamp(var(--text-base), 3vw, var(--text-lg));
+}
+
+.positionCell {
+  width: clamp(60px, 8vw, 80px);
+  text-align: center;
+}
+
+.teamInfo {
+  display: flex;
+  align-items: center;
+  gap: clamp(var(--spacing-2), 2vw, var(--spacing-3));
+  min-width: clamp(200px, 25vw, 280px);
+}
+
+.teamLogoInTable {
+  flex-shrink: 0;
+  width: clamp(2rem, 4vw, 2.5rem);
+  height: clamp(2rem, 4vw, 2.5rem);
+  transition: transform 0.3s ease;
+}
+
+.standingRow:hover .teamLogoInTable {
+  transform: scale(1.1);
+}
+
+.teamName {
+  font-family: var(--font-secondary);
+  font-weight: 600;
+  color: var(--color-gray-800);
+  text-decoration: none;
+  transition: color 0.3s ease;
+  line-height: 1.2;
+  min-width: 0;
+  flex: 1;
+}
+
+.teamName:hover {
+  color: var(--color-primary);
+}
+
+/* ===== POSITION BADGES ===== */
+.positionBadge {
+  width: clamp(1.8rem, 4vw, 2.2rem);
+  height: clamp(1.8rem, 4vw, 2.2rem);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: clamp(var(--text-xs), 2.5vw, var(--text-sm));
+  color: white;
+  margin: 0 auto;
+  transition: all 0.3s ease;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.positionBadge.first {
+  background: linear-gradient(135deg, #ffd700, #ffb700);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+}
+
+.positionBadge.second {
+  background: linear-gradient(135deg, #c0c0c0, #a0a0a0);
+  box-shadow: 0 4px 12px rgba(192, 192, 192, 0.4);
+}
+
+.positionBadge.third {
+  background: linear-gradient(135deg, #cd7f32, #b8860b);
+  box-shadow: 0 4px 12px rgba(205, 127, 50, 0.4);
+}
+
+.positionBadge.default {
+  background: linear-gradient(135deg, var(--color-gray-500), var(--color-gray-600));
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.standingRow:hover .positionBadge {
+  transform: scale(1.1);
+}
+
+/* ===== MOBILE CARDS VIEW ===== */
+.mobileView {
+  display: none;
+  gap: clamp(var(--spacing-4), 3vw, var(--spacing-5));
+}
+
+.standingCard {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: clamp(var(--radius-lg), 2vw, var(--radius-xl));
+  padding: clamp(var(--spacing-4), 3vw, var(--spacing-6));
+  box-shadow: 
+    0 8px 20px rgba(0, 0, 0, 0.08),
+    0 4px 8px rgba(75, 0, 130, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border-left: 4px solid var(--color-primary);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  position: relative;
+  overflow: hidden;
+}
+
+.standingCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.standingCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 
+    0 16px 32px rgba(0, 0, 0, 0.12),
+    0 8px 16px rgba(75, 0, 130, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.cardHeader {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: clamp(var(--spacing-4), 3vw, var(--spacing-5));
+  padding-bottom: clamp(var(--spacing-3), 2vw, var(--spacing-4));
+  border-bottom: 2px dashed rgba(75, 0, 130, 0.2);
+}
+
+.cardTeamInfo {
+  display: flex;
+  align-items: center;
+  gap: clamp(var(--spacing-3), 2vw, var(--spacing-4));
+  flex: 1;
+  min-width: 0;
+}
+
+.teamLogoInCard {
+  flex-shrink: 0;
+  width: clamp(2.5rem, 6vw, 3rem);
+  height: clamp(2.5rem, 6vw, 3rem);
+  transition: transform 0.3s ease;
+}
+
+.standingCard:hover .teamLogoInCard {
+  transform: scale(1.1);
+}
+
+.cardPosition {
+  font-family: var(--font-secondary);
+  font-size: clamp(var(--text-lg), 4vw, var(--text-xl));
+  font-weight: 700;
+  color: var(--color-primary);
+  text-shadow: 0 1px 2px rgba(75, 0, 130, 0.1);
+  flex-shrink: 0;
+}
+
+.cardStats {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(var(--spacing-3), 2vw, var(--spacing-4));
+  text-align: center;
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: clamp(var(--spacing-2), 2vw, var(--spacing-3));
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: var(--radius-md);
+  transition: all 0.3s ease;
+}
+
+.statItem:hover {
+  background: rgba(255, 255, 255, 0.8);
+  transform: translateY(-2px);
+}
+
+.statValue {
+  font-family: var(--font-secondary);
+  font-size: clamp(var(--text-base), 3.5vw, var(--text-lg));
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-1);
+  text-shadow: 0 1px 2px rgba(75, 0, 130, 0.1);
+}
+
+.statLabel {
+  font-size: clamp(var(--text-xs), 2vw, var(--text-sm));
+  color: var(--color-gray-600);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+/* ===== EMPTY STATE ===== */
+.emptyState {
+  text-align: center;
+  padding: clamp(var(--spacing-8), 6vw, var(--spacing-12));
+  color: var(--color-gray-600);
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: clamp(var(--radius-lg), 2vw, var(--radius-xl));
+  box-shadow: 
+    0 8px 20px rgba(0, 0, 0, 0.08),
+    0 4px 8px rgba(75, 0, 130, 0.1);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.emptyState h3 {
+  font-family: var(--font-secondary);
+  font-size: clamp(var(--text-lg), 4vw, var(--text-xl));
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-3);
+}
+
+.emptyState p {
+  font-size: clamp(var(--text-base), 3vw, var(--text-lg));
+  line-height: 1.6;
+  margin-bottom: var(--spacing-5);
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .standingsPageContainer {
+    padding: clamp(var(--spacing-3), 4vw, var(--spacing-4));
+  }
+  
+  .heroCard {
+    padding: clamp(var(--spacing-4), 4vw, var(--spacing-5));
+  }
+  
+  .pageTitle {
+    flex-direction: column;
+    gap: var(--spacing-2);
+  }
+  
+  .standingsFilters {
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-3);
+  }
+  
+  .filterButton {
+    width: 100%;
+    max-width: 280px;
+  }
+  
+  /* Switch to mobile cards view */
+  .tableCard {
+    display: none !important;
+  }
+  
+  .mobileView {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .cardStats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-2);
+  }
+}
+
+@media (max-width: 480px) {
+  .standingsPageContainer {
+    padding: var(--spacing-3);
+  }
+  
+  .heroCard {
+    padding: var(--spacing-4);
+  }
+  
+  .standingCard {
+    padding: var(--spacing-4);
+  }
+  
+  .cardStats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-2);
+  }
+  
+  .statItem {
+    padding: var(--spacing-2);
+  }
+  
+  .cardTeamInfo {
+    gap: var(--spacing-2);
+  }
+}
+
+/* ===== ANIMACIONES ===== */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.standingsTable,
+.mobileView {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.standingRow {
+  animation: fadeInUp 0.4s ease-out;
+  animation-fill-mode: both;
+}
+
+.standingRow:nth-child(1) { animation-delay: 0.1s; }
+.standingRow:nth-child(2) { animation-delay: 0.15s; }
+.standingRow:nth-child(3) { animation-delay: 0.2s; }
+.standingRow:nth-child(4) { animation-delay: 0.25s; }
+.standingRow:nth-child(5) { animation-delay: 0.3s; }
+.standingRow:nth-child(6) { animation-delay: 0.35s; }
 
 /* Responsive Table */
 .tableContainer {
