@@ -1,0 +1,489 @@
+/* =================================================================
+   CONTACT PAGE - MÓDULO CSS
+   Diseño mágico, moderno y responsivo para la página de contacto
+   ================================================================= */
+
+/* Variables específicas del contacto */
+.contactPage {
+  --contact-primary: #6A0DAD;
+  --contact-secondary: #8A2BE2;
+  --contact-accent: #FF6B6B;
+  --contact-success: #10B981;
+  --contact-warning: #F59E0B;
+  --contact-light: #F8FAFC;
+  --contact-glass: rgba(255, 255, 255, 0.25);
+  --contact-glass-border: rgba(255, 255, 255, 0.4);
+  --contact-shadow: 0 8px 32px rgba(106, 13, 173, 0.15);
+  --contact-glow: 0 0 20px rgba(106, 13, 173, 0.3);
+}
+
+/* Contenedor principal */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  min-height: 100vh;
+  background: linear-gradient(135deg, 
+    rgba(106, 13, 173, 0.05) 0%, 
+    rgba(138, 43, 226, 0.08) 25%,
+    rgba(255, 107, 107, 0.05) 50%,
+    rgba(106, 13, 173, 0.08) 75%,
+    rgba(138, 43, 226, 0.05) 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Elementos mágicos de fondo */
+.container::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at 20% 80%, rgba(106, 13, 173, 0.1) 0%, transparent 50%),
+              radial-gradient(circle at 80% 20%, rgba(138, 43, 226, 0.1) 0%, transparent 50%),
+              radial-gradient(circle at 40% 40%, rgba(255, 107, 107, 0.05) 0%, transparent 50%);
+  animation: magicalFloat 20s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Header principal */
+.header {
+  text-align: center;
+  margin-bottom: 3rem;
+  position: relative;
+  z-index: 1;
+}
+
+.mainTitle {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--contact-primary), var(--contact-secondary), var(--contact-accent));
+  background-size: 300% 300%;
+  animation: gradientShift 4s ease-in-out infinite;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 1rem;
+  text-shadow: 0 0 30px rgba(106, 13, 173, 0.3);
+  font-family: 'Playfair Display', serif;
+}
+
+.subtitle {
+  font-size: 1.2rem;
+  color: #64748B;
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* Grid principal */
+.mainGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+@media (min-width: 768px) {
+  .mainGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+  }
+}
+
+/* Cards base */
+.card {
+  background: var(--contact-glass);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--contact-glass-border);
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: var(--contact-shadow);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--contact-primary), var(--contact-secondary), var(--contact-accent));
+  background-size: 300% 100%;
+  animation: gradientShift 3s ease-in-out infinite;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--contact-glow), var(--contact-shadow);
+}
+
+/* Información de contacto */
+.contactInfo {
+  order: 2;
+}
+
+@media (min-width: 768px) {
+  .contactInfo {
+    order: 1;
+  }
+}
+
+.contactTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--contact-primary);
+  margin-bottom: 1.5rem;
+  font-family: 'Playfair Display', serif;
+  position: relative;
+}
+
+.contactTitle::after {
+  content: '✨';
+  margin-left: 0.5rem;
+  animation: sparkle 2s ease-in-out infinite;
+}
+
+.contactDescription {
+  color: #64748B;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+  font-size: 1.1rem;
+}
+
+.contactList {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.contactItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.contactItem:hover {
+  background: rgba(255, 255, 255, 0.7);
+  transform: translateX(5px);
+}
+
+.iconWrapper {
+  width: 3rem;
+  height: 3rem;
+  background: linear-gradient(135deg, var(--contact-primary), var(--contact-secondary));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: white;
+  flex-shrink: 0;
+  box-shadow: 0 4px 15px rgba(106, 13, 173, 0.3);
+  animation: gentlePulse 3s ease-in-out infinite;
+}
+
+.contactItemContent h3 {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.25rem;
+  font-size: 1rem;
+}
+
+.contactItemContent p {
+  color: #64748B;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* Highlight especial */
+.prioritySupport {
+  background: linear-gradient(135deg, 
+    rgba(106, 13, 173, 0.1), 
+    rgba(255, 107, 107, 0.1));
+  border: 1px solid rgba(106, 13, 173, 0.2);
+  border-radius: 12px;
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.prioritySupport::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(106, 13, 173, 0.1), 
+    transparent);
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+.priorityTitle {
+  font-weight: 600;
+  color: var(--contact-primary);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Formulario de contacto */
+.contactForm {
+  order: 1;
+}
+
+@media (min-width: 768px) {
+  .contactForm {
+    order: 2;
+  }
+}
+
+.formTitle {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #374151;
+  margin-bottom: 1.5rem;
+  font-family: 'Playfair Display', serif;
+}
+
+/* Estado de éxito */
+.successState {
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.successIcon {
+  width: 4rem;
+  height: 4rem;
+  background: linear-gradient(135deg, var(--contact-success), #34D399);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  font-size: 1.5rem;
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+  animation: successPulse 2s ease-in-out infinite;
+}
+
+.successTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--contact-success);
+  margin-bottom: 0.5rem;
+}
+
+.successMessage {
+  color: #64748B;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+/* Formulario */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label {
+  font-weight: 500;
+  color: #374151;
+  font-size: 0.95rem;
+}
+
+.required {
+  color: var(--contact-accent);
+}
+
+.textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #E5E7EB;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  resize: none;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: var(--contact-primary);
+  box-shadow: 0 0 0 3px rgba(106, 13, 173, 0.1);
+}
+
+.submitInfo {
+  font-size: 0.8rem;
+  color: #9CA3AF;
+  text-align: center;
+  margin-top: 0.5rem;
+}
+
+/* Sección FAQ */
+.faqSection {
+  margin-top: 3rem;
+  position: relative;
+  z-index: 1;
+}
+
+.faqTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #374151;
+  text-align: center;
+  margin-bottom: 2rem;
+  font-family: 'Playfair Display', serif;
+}
+
+.faqGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .faqGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.faqItem {
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  transition: all 0.3s ease;
+}
+
+.faqItem:hover {
+  background: rgba(255, 255, 255, 0.8);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(106, 13, 173, 0.1);
+}
+
+.faqQuestion {
+  font-weight: 600;
+  color: var(--contact-primary);
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+.faqAnswer {
+  color: #64748B;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Animaciones */
+@keyframes magicalFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-10px) rotate(0.5deg); }
+  50% { transform: translateY(0) rotate(0deg); }
+  75% { transform: translateY(-5px) rotate(-0.5deg); }
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes sparkle {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  50% { transform: scale(1.2) rotate(180deg); opacity: 0.8; }
+}
+
+@keyframes gentlePulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 4px 15px rgba(106, 13, 173, 0.3); }
+  50% { transform: scale(1.05); box-shadow: 0 6px 20px rgba(106, 13, 173, 0.4); }
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+@keyframes successPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* Responsive */
+@media (max-width: 767px) {
+  .container {
+    padding: 1rem;
+  }
+  
+  .card {
+    padding: 1.5rem;
+  }
+  
+  .contactItem {
+    padding: 0.75rem;
+  }
+  
+  .iconWrapper {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1rem;
+  }
+  
+  .prioritySupport {
+    padding: 1rem;
+  }
+}
+
+/* Estados de carga y hover para mejor UX */
+.card:focus-within {
+  box-shadow: var(--contact-glow), var(--contact-shadow);
+}
+
+/* Mejoras de accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+  .container::before,
+  .iconWrapper,
+  .successIcon,
+  .mainTitle {
+    animation: none;
+  }
+  
+  .card,
+  .contactItem,
+  .faqItem {
+    transition: none;
+  }
+}
+
+/* Focus visible para mejor navegación por teclado */
+.textarea:focus-visible,
+.card:focus-visible {
+  outline: 2px solid var(--contact-primary);
+  outline-offset: 2px;
+}

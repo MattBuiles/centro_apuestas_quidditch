@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import Card from '@/components/common/Card'
 import Button from '@/components/common/Button'
 import FormInput from '@/components/common/FormInput'
+import styles from './ContactPage.module.css'
 
 const ContactPage = () => {
   const [formData, setFormData] = useState({
@@ -31,30 +31,40 @@ const ContactPage = () => {
       [e.target.name]: e.target.value
     }))
   }
-
   return (
-    <div className="container max-w-4xl mx-auto px-4 py-8">
-      <div className="grid md:grid-cols-2 gap-8">
+    <div className={`${styles.contactPage} ${styles.container}`}>
+      {/* Header principal */}
+      <div className={styles.header}>
+        <h1 className={styles.mainTitle}>
+          Contáctanos
+        </h1>
+        <p className={styles.subtitle}>
+          ¿Tienes alguna pregunta, sugerencia o necesitas ayuda? Nuestro equipo de magos especializados 
+          está aquí para asistirte las 24 horas del día.
+        </p>
+      </div>
+
+      {/* Grid principal */}
+      <div className={styles.mainGrid}>
         
         {/* Contact Information */}
-        <Card className="p-6 md:p-8">
-          <h1 className="text-3xl font-bold font-playfair mb-6 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-            Contáctanos
-          </h1>
+        <div className={`${styles.card} ${styles.contactInfo}`}>
+          <h2 className={styles.contactTitle}>
+            Información de Contacto
+          </h2>
           
-          <p className="text-gray-600 mb-8">
-            ¿Tienes alguna pregunta, sugerencia o necesitas ayuda? Nuestro equipo de magos especializados 
-            está aquí para asistirte las 24 horas del día.
+          <p className={styles.contactDescription}>
+            Conecta con nosotros a través de cualquiera de nuestros canales mágicos disponibles.
           </p>
 
-          <div className="space-y-6">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-purple-600">📍</span>
+          <div className={styles.contactList}>
+            <div className={styles.contactItem}>
+              <div className={styles.iconWrapper}>
+                <span>📍</span>
               </div>
-              <div>
-                <h3 className="font-semibold text-gray-800 mb-1">Oficina Principal</h3>
-                <p className="text-gray-600 text-sm">
+              <div className={styles.contactItemContent}>
+                <h3>Oficina Principal</h3>
+                <p>
                   Callejón Diagon #93<br />
                   Londres, Reino Unido<br />
                   Mundo Mágico
@@ -62,36 +72,36 @@ const ContactPage = () => {
               </div>
             </div>
 
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-purple-600">📧</span>
+            <div className={styles.contactItem}>
+              <div className={styles.iconWrapper}>
+                <span>📧</span>
               </div>
-              <div>
-                <h3 className="font-semibold text-gray-800 mb-1">Email</h3>
-                <p className="text-gray-600 text-sm">soporte@atrapalSnitch.com</p>
+              <div className={styles.contactItemContent}>
+                <h3>Email</h3>
+                <p>soporte@atrapalSnitch.com</p>
               </div>
             </div>
 
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-purple-600">🦉</span>
+            <div className={styles.contactItem}>
+              <div className={styles.iconWrapper}>
+                <span>🦉</span>
               </div>
-              <div>
-                <h3 className="font-semibold text-gray-800 mb-1">Lechuza Postal</h3>
-                <p className="text-gray-600 text-sm">
+              <div className={styles.contactItemContent}>
+                <h3>Lechuza Postal</h3>
+                <p>
                   Servicio 24/7<br />
                   Respuesta garantizada en 2 horas
                 </p>
               </div>
             </div>
 
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-purple-600">📞</span>
+            <div className={styles.contactItem}>
+              <div className={styles.iconWrapper}>
+                <span>📞</span>
               </div>
-              <div>
-                <h3 className="font-semibold text-gray-800 mb-1">Red Flu</h3>
-                <p className="text-gray-600 text-sm">
+              <div className={styles.contactItemContent}>
+                <h3>Red Flu</h3>
+                <p>
                   "Atrapa la Snitch Soporte"<br />
                   Disponible las 24 horas
                 </p>
@@ -99,40 +109,39 @@ const ContactPage = () => {
             </div>
           </div>
 
-          <div className="mt-8 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg">
-            <h3 className="font-semibold text-purple-700 mb-2">🚀 Soporte Prioritario</h3>
-            <p className="text-sm text-gray-600">
+          <div className={styles.prioritySupport}>
+            <h3 className={styles.priorityTitle}>🚀 Soporte Prioritario</h3>
+            <p>
               ¿Eres usuario VIP? Accede a nuestro soporte prioritario mediante la Chimenea Dorada 
               para atención inmediata con nuestros mejores magos especialistas.
             </p>
           </div>
-        </Card>
+        </div>
 
         {/* Contact Form */}
-        <Card className="p-6 md:p-8">
-          <h2 className="text-2xl font-bold font-playfair mb-6 text-gray-800">
+        <div className={`${styles.card} ${styles.contactForm}`}>
+          <h2 className={styles.formTitle}>
             Envíanos un Mensaje
           </h2>
 
           {submitted ? (
-            <div className="text-center py-8">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">✨</span>
+            <div className={styles.successState}>
+              <div className={styles.successIcon}>
+                <span>✨</span>
               </div>
-              <h3 className="text-xl font-semibold text-green-700 mb-2">¡Mensaje Enviado!</h3>
-              <p className="text-gray-600">
+              <h3 className={styles.successTitle}>¡Mensaje Enviado!</h3>
+              <p className={styles.successMessage}>
                 Tu mensaje ha sido enviado exitosamente. Nuestro equipo te responderá pronto.
               </p>
               <Button 
                 onClick={() => setSubmitted(false)} 
                 variant="outline" 
-                className="mt-4"
               >
                 Enviar Otro Mensaje
               </Button>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className={styles.form}>
               <FormInput
                 label="Nombre Completo"
                 name="name"
@@ -161,9 +170,9 @@ const ContactPage = () => {
                 placeholder="¿En qué te podemos ayudar?"
               />
 
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Mensaje <span className="text-red-500">*</span>
+              <div className={styles.formGroup}>
+                <label className={styles.label}>
+                  Mensaje <span className={styles.required}>*</span>
                 </label>
                 <textarea
                   name="message"
@@ -171,7 +180,7 @@ const ContactPage = () => {
                   onChange={handleChange}
                   required
                   rows={5}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                  className={styles.textarea}
                   placeholder="Describe tu consulta o problema con detalle..."
                 />
               </div>
@@ -186,54 +195,54 @@ const ContactPage = () => {
                 {isSubmitting ? 'Enviando...' : 'Enviar Mensaje ✨'}
               </Button>
 
-              <p className="text-xs text-gray-500 text-center">
+              <p className={styles.submitInfo}>
                 Tiempo de respuesta promedio: 2-4 horas
               </p>
             </form>
           )}
-        </Card>
+        </div>
       </div>
 
       {/* FAQ Section */}
-      <Card className="mt-8 p-6 md:p-8">
-        <h2 className="text-2xl font-bold font-playfair mb-6 text-center text-gray-800">
+      <div className={`${styles.card} ${styles.faqSection}`}>
+        <h2 className={styles.faqTitle}>
           Preguntas Frecuentes
         </h2>
         
-        <div className="grid md:grid-cols-2 gap-6">
-          <div>
-            <h3 className="font-semibold text-purple-700 mb-2">¿Cómo puedo depositar Galeones?</h3>
-            <p className="text-sm text-gray-600 mb-4">
+        <div className={styles.faqGrid}>
+          <div className={styles.faqItem}>
+            <h3 className={styles.faqQuestion}>¿Cómo puedo depositar Galeones?</h3>
+            <p className={styles.faqAnswer}>
               Puedes depositar mediante transferencia desde tu bóveda de Gringotts o usando 
               el sistema de pago instantáneo con varita verificada.
             </p>
           </div>
           
-          <div>
-            <h3 className="font-semibold text-purple-700 mb-2">¿Cuánto tiempo tardan los retiros?</h3>
-            <p className="text-sm text-gray-600 mb-4">
+          <div className={styles.faqItem}>
+            <h3 className={styles.faqQuestion}>¿Cuánto tiempo tardan los retiros?</h3>
+            <p className={styles.faqAnswer}>
               Los retiros se procesan en 1-3 días hábiles mágicos. Los usuarios VIP tienen 
               acceso a retiros instantáneos.
             </p>
           </div>
           
-          <div>
-            <h3 className="font-semibold text-purple-700 mb-2">¿Es segura la plataforma?</h3>
-            <p className="text-sm text-gray-600 mb-4">
+          <div className={styles.faqItem}>
+            <h3 className={styles.faqQuestion}>¿Es segura la plataforma?</h3>
+            <p className={styles.faqAnswer}>
               Sí, utilizamos encriptación de nivel bancario Gringotts y estamos licenciados 
               por el Ministerio de Magia.
             </p>
           </div>
           
-          <div>
-            <h3 className="font-semibold text-purple-700 mb-2">¿Ofrecen apuestas en vivo?</h3>
-            <p className="text-sm text-gray-600 mb-4">
+          <div className={styles.faqItem}>
+            <h3 className={styles.faqQuestion}>¿Ofrecen apuestas en vivo?</h3>
+            <p className={styles.faqAnswer}>
               ¡Por supuesto! Ofrecemos apuestas en tiempo real con las mejores cuotas 
               del mercado mágico.
             </p>
           </div>
         </div>
-      </Card>
+      </div>
     </div>
   )
 }
