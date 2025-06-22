@@ -127,7 +127,7 @@ const mockMatchDetail: MatchDetails = {
 
 const MatchDetailPage = () => {
   const { matchId } = useParams<{ matchId: string }>();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, canBet: userCanBet } = useAuth();
   const [match, setMatch] = useState<MatchDetails | null>(null);
   const [realMatch, setRealMatch] = useState<Match | null>(null);
   const [homeTeam, setHomeTeam] = useState<Team | null>(null);
@@ -145,9 +145,79 @@ const MatchDetailPage = () => {
   
   // Related matches state
   const [relatedMatches, setRelatedMatches] = useState<Match[]>([]);
-
   // State for finished match data
   const [finishedMatchData, setFinishedMatchData] = useState<FinishedMatchData | null>(null);
+  // Helper function to get team roster data with real player names
+  const getTeamRosterData = (teamName: string) => {
+    const teamMockData: { [key: string]: { roster: { id: string; name: string; position: string; number: number; yearsActive: number; achievements: string[] }[] } } = {
+      'Gryffindor': {
+        roster: [
+          { id: 'hp', name: 'Harry Potter', position: 'Buscador', number: 7, yearsActive: 6, achievements: ["Buscador más joven en un siglo"] },
+          { id: 'kg', name: 'Katie Bell', position: 'Cazadora', number: 6, yearsActive: 4, achievements: ["100+ goles en su carrera"] },
+          { id: 'aw', name: 'Angelina Johnson', position: 'Cazadora', number: 8, yearsActive: 5, achievements: ["Capitana del equipo"] },
+          { id: 'as', name: 'Alicia Spinnet', position: 'Cazadora', number: 12, yearsActive: 4, achievements: ["Especialista en tiros largos"] },
+          { id: 'fw', name: 'Fred Weasley', position: 'Golpeador', number: 5, yearsActive: 4, achievements: ["Mejor golpeador defensivo"] },
+          { id: 'gw', name: 'George Weasley', position: 'Golpeador', number: 4, yearsActive: 4, achievements: ["Mejor golpeador ofensivo"] },
+          { id: 'ow', name: 'Oliver Wood', position: 'Guardián', number: 1, yearsActive: 5, achievements: ["95% efectividad en paradas"] }
+        ]
+      },
+      'Slytherin': {
+        roster: [
+          { id: 'dm', name: 'Draco Malfoy', position: 'Buscador', number: 7, yearsActive: 4, achievements: ["Buscador más estratégico"] },
+          { id: 'mf', name: 'Marcus Flint', position: 'Cazador', number: 9, yearsActive: 6, achievements: ["Capitán más exitoso"] },
+          { id: 'ap', name: 'Adrian Pucey', position: 'Cazador', number: 8, yearsActive: 4, achievements: ["Especialista en goles largos"] },
+          { id: 'gz', name: 'Blaise Zabini', position: 'Cazador', number: 11, yearsActive: 3, achievements: ["Mejor promedio de gol"] },
+          { id: 'cb', name: 'Vincent Crabbe', position: 'Golpeador', number: 3, yearsActive: 3, achievements: ["Golpeador más intimidante"] },
+          { id: 'gg', name: 'Gregory Goyle', position: 'Golpeador', number: 2, yearsActive: 3, achievements: ["Especialista en fuerza"] },
+          { id: 'mp', name: 'Miles Bletchley', position: 'Guardián', number: 1, yearsActive: 3, achievements: ["Guardián más joven"] }
+        ]
+      },      'Ravenclaw': {
+        roster: [
+          { id: 'cc', name: 'Cho Chang', position: 'Buscadora', number: 7, yearsActive: 5, achievements: ["Velocidad récord en captura de Snitch"] },
+          { id: 'rd', name: 'Roger Davies', position: 'Cazador', number: 9, yearsActive: 4, achievements: ["Goleador del año - Liga Escolar"] },
+          { id: 'js', name: 'Jeremy Stretton', position: 'Cazador', number: 6, yearsActive: 3, achievements: ["Pase perfecto - 95% precisión"] },
+          { id: 'rb', name: 'Randolph Burrow', position: 'Cazador', number: 12, yearsActive: 2, achievements: ["Promesa del año - Mejor novato"] },
+          { id: 'jq', name: 'Jason Samuels', position: 'Golpeador', number: 4, yearsActive: 4, achievements: ["Defensor implacable del aire"] },
+          { id: 'ag', name: 'Anthony Goldstein', position: 'Golpeador', number: 3, yearsActive: 3, achievements: ["Jugada defensiva del año"] },
+          { id: 'gb', name: 'Grant Page', position: 'Guardián', number: 1, yearsActive: 4, achievements: ["Portero del año - 89% paradas"] }
+        ]
+      },
+      'Hufflepuff': {
+        roster: [
+          { id: 'cd', name: 'Cedric Diggory', position: 'Buscador', number: 7, yearsActive: 5, achievements: ["Leyenda viviente de Hufflepuff"] },
+          { id: 'zs', name: 'Zacharias Smith', position: 'Cazador', number: 9, yearsActive: 3, achievements: ["Anotador más consistente del equipo"] },
+          { id: 'hm', name: 'Heidi Macavoy', position: 'Cazadora', number: 8, yearsActive: 4, achievements: ["Mejor jugadora femenina - 3 años"] },
+          { id: 'tm', name: 'Tamsin Applebee', position: 'Cazadora', number: 6, yearsActive: 3, achievements: ["Especialista en corners y tiros libres"] },
+          { id: 'mc', name: 'Malcolm Preece', position: 'Golpeador', number: 4, yearsActive: 4, achievements: ["Golpeador más técnico y preciso"] },
+          { id: 'ac', name: 'Andrew Kirke', position: 'Golpeador', number: 3, yearsActive: 2, achievements: ["Revelación del año - Mejor debutante"] },          { id: 'hs', name: 'Herbert Fleet', position: 'Guardián', number: 1, yearsActive: 5, achievements: ["Guardián más confiable - 92% paradas"] }
+        ]
+      },
+      'Chudley Cannons': {
+        roster: [
+          { id: 'rw', name: 'Ron Weasley', position: 'Guardián', number: 1, yearsActive: 2, achievements: ["Guardián estrella en ascenso"] },
+          { id: 'bc1', name: 'Barry Ryan', position: 'Cazador', number: 9, yearsActive: 8, achievements: ["Veterano del equipo - 200+ partidos"] },
+          { id: 'bc2', name: 'Joey Jenkins', position: 'Cazador', number: 7, yearsActive: 6, achievements: ["Especialista en jugadas rápidas"] },
+          { id: 'bc3', name: 'Galvin Gudgeon', position: 'Cazador', number: 11, yearsActive: 4, achievements: ["Mejor anotador de la temporada"] },
+          { id: 'bb1', name: 'Roderick Plumpton', position: 'Golpeador', number: 4, yearsActive: 7, achievements: ["Defensor más temido de la liga"] },
+          { id: 'bb2', name: 'Dragomir Gorgovitch', position: 'Golpeador', number: 3, yearsActive: 5, achievements: ["Mejor golpeador defensivo"] },
+          { id: 'bs', name: 'Cho Chang Jr.', position: 'Buscadora', number: 8, yearsActive: 3, achievements: ["Promesa más brillante del equipo"] }
+        ]
+      },
+      'Holyhead Harpies': {
+        roster: [
+          { id: 'gw', name: 'Ginny Weasley', position: 'Cazadora', number: 7, yearsActive: 4, achievements: ["Estrella emergente del Quidditch"] },
+          { id: 'hh1', name: 'Wilda Griffiths', position: 'Cazadora', number: 9, yearsActive: 9, achievements: ["Capitana y líder histórica"] },
+          { id: 'hh2', name: 'Valmai Morgan', position: 'Cazadora', number: 6, yearsActive: 7, achievements: ["Anotadora más precisa del equipo"] },
+          { id: 'hh3', name: 'Gwendolyn Morgan', position: 'Golpeadora', number: 4, yearsActive: 6, achievements: ["Hermana legendaria"] },
+          { id: 'hh4', name: 'Gwenog Jones', position: 'Golpeadora', number: 2, yearsActive: 10, achievements: ["Capitana legendaria retirada"] },
+          { id: 'hh5', name: 'Glynnis Griffiths', position: 'Guardiana', number: 1, yearsActive: 8, achievements: ["Portera más confiable de la liga"] },
+          { id: 'hh6', name: 'Artemis Fido', position: 'Buscadora', number: 3, yearsActive: 5, achievements: ["Velocidad supersónica certificada"] }
+        ]
+      }
+    };
+
+    return teamMockData[teamName] || { roster: [] };
+  };
 
   useEffect(() => {
     // Get the real match from virtual time manager
@@ -301,9 +371,7 @@ const MatchDetailPage = () => {
 
   const canPredict = () => {
     return match && (match.status === 'upcoming' || (match.status === 'live' && !showLiveSimulation));
-  };
-  const canBet = () => {
-    const { canBet: userCanBet } = useAuth();
+  };  const canBet = () => {
     return userCanBet && match && (match.status === 'upcoming' || match.status === 'live');
   };
 
@@ -973,65 +1041,118 @@ const MatchDetailPage = () => {
                         <span className={styles.teamType}>Equipo Local</span>
                       </div>
                       <div className={styles.positionsList}>
-                        <div className={styles.positionGroup}>
-                          <h4 className={styles.positionTitle}>
-                            <span className={styles.positionIcon}>🥅</span>
-                            Guardián
-                          </h4>
-                          <div className={styles.playerCard}>
-                            <div className={styles.playerName}>Guardián de {homeTeam.name}</div>
-                            <div className={styles.playerStats}>
-                              <span className={styles.playerStat}>Habilidad: {homeTeam.keeperSkill}</span>
-                              <span className={styles.playerStat}>Especialidad: Paradas Mágicas</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className={styles.positionGroup}>
-                          <h4 className={styles.positionTitle}>
-                            <span className={styles.positionIcon}>⚡</span>
-                            Cazadores
-                          </h4>
-                          {[1, 2, 3].map(i => (
-                            <div key={i} className={styles.playerCard}>
-                              <div className={styles.playerName}>Cazador {i} de {homeTeam.name}</div>
-                              <div className={styles.playerStats}>
-                                <span className={styles.playerStat}>Habilidad: {homeTeam.chaserSkill}</span>
-                                <span className={styles.playerStat}>Especialidad: Anotación</span>
+                        {(() => {
+                          const rosterData = getTeamRosterData(homeTeam.name);
+                          const roster = rosterData.roster;
+                          
+                          return (
+                            <>
+                              {/* Guardián */}
+                              <div className={styles.positionGroup}>
+                                <h4 className={styles.positionTitle}>
+                                  <span className={styles.positionIcon}>🥅</span>
+                                  Guardián
+                                </h4>
+                                {roster.filter(player => player.position === 'Guardián').map(player => (
+                                  <div key={player.id} className={styles.playerCard}>
+                                    <div className={styles.playerHeader}>
+                                      <div className={styles.playerName}>{player.name}</div>
+                                      <div className={styles.playerNumber}>#{player.number}</div>
+                                    </div>
+                                    <div className={styles.playerStats}>
+                                      <span className={styles.playerStat}>Habilidad: {homeTeam.keeperSkill}</span>
+                                      <span className={styles.playerStat}>Años activo: {player.yearsActive}</span>
+                                      <span className={styles.playerStat}>Especialidad: Paradas Mágicas</span>
+                                    </div>
+                                    {player.achievements.length > 0 && (
+                                      <div className={styles.playerAchievements}>
+                                        <span className={styles.achievementLabel}>🏆 {player.achievements[0]}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
                               </div>
-                            </div>
-                          ))}
-                        </div>
 
-                        <div className={styles.positionGroup}>
-                          <h4 className={styles.positionTitle}>
-                            <span className={styles.positionIcon}>🏏</span>
-                            Golpeadores
-                          </h4>
-                          {[1, 2].map(i => (
-                            <div key={i} className={styles.playerCard}>
-                              <div className={styles.playerName}>Golpeador {i} de {homeTeam.name}</div>
-                              <div className={styles.playerStats}>
-                                <span className={styles.playerStat}>Habilidad: {homeTeam.beaterSkill}</span>
-                                <span className={styles.playerStat}>Especialidad: Defensa</span>
+                              {/* Cazadores */}
+                              <div className={styles.positionGroup}>
+                                <h4 className={styles.positionTitle}>
+                                  <span className={styles.positionIcon}>⚡</span>
+                                  Cazadores
+                                </h4>
+                                {roster.filter(player => player.position === 'Cazador' || player.position === 'Cazadora').map(player => (
+                                  <div key={player.id} className={styles.playerCard}>
+                                    <div className={styles.playerHeader}>
+                                      <div className={styles.playerName}>{player.name}</div>
+                                      <div className={styles.playerNumber}>#{player.number}</div>
+                                    </div>
+                                    <div className={styles.playerStats}>
+                                      <span className={styles.playerStat}>Habilidad: {homeTeam.chaserSkill}</span>
+                                      <span className={styles.playerStat}>Años activo: {player.yearsActive}</span>
+                                      <span className={styles.playerStat}>Especialidad: Anotación</span>
+                                    </div>
+                                    {player.achievements.length > 0 && (
+                                      <div className={styles.playerAchievements}>
+                                        <span className={styles.achievementLabel}>🏆 {player.achievements[0]}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
                               </div>
-                            </div>
-                          ))}
-                        </div>
 
-                        <div className={styles.positionGroup}>
-                          <h4 className={styles.positionTitle}>
-                            <span className={styles.positionIcon}>🟡</span>
-                            Buscador
-                          </h4>
-                          <div className={styles.playerCard}>
-                            <div className={styles.playerName}>Buscador de {homeTeam.name}</div>
-                            <div className={styles.playerStats}>
-                              <span className={styles.playerStat}>Habilidad: {homeTeam.seekerSkill}</span>
-                              <span className={styles.playerStat}>Especialidad: Captura de Snitch</span>
-                            </div>
-                          </div>
-                        </div>
+                              {/* Golpeadores */}
+                              <div className={styles.positionGroup}>
+                                <h4 className={styles.positionTitle}>
+                                  <span className={styles.positionIcon}>🏏</span>
+                                  Golpeadores
+                                </h4>
+                                {roster.filter(player => player.position === 'Golpeador').map(player => (
+                                  <div key={player.id} className={styles.playerCard}>
+                                    <div className={styles.playerHeader}>
+                                      <div className={styles.playerName}>{player.name}</div>
+                                      <div className={styles.playerNumber}>#{player.number}</div>
+                                    </div>
+                                    <div className={styles.playerStats}>
+                                      <span className={styles.playerStat}>Habilidad: {homeTeam.beaterSkill}</span>
+                                      <span className={styles.playerStat}>Años activo: {player.yearsActive}</span>
+                                      <span className={styles.playerStat}>Especialidad: Defensa</span>
+                                    </div>
+                                    {player.achievements.length > 0 && (
+                                      <div className={styles.playerAchievements}>
+                                        <span className={styles.achievementLabel}>🏆 {player.achievements[0]}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+
+                              {/* Buscador */}
+                              <div className={styles.positionGroup}>
+                                <h4 className={styles.positionTitle}>
+                                  <span className={styles.positionIcon}>🟡</span>
+                                  Buscador
+                                </h4>
+                                {roster.filter(player => player.position === 'Buscador' || player.position === 'Buscadora').map(player => (
+                                  <div key={player.id} className={styles.playerCard}>
+                                    <div className={styles.playerHeader}>
+                                      <div className={styles.playerName}>{player.name}</div>
+                                      <div className={styles.playerNumber}>#{player.number}</div>
+                                    </div>
+                                    <div className={styles.playerStats}>
+                                      <span className={styles.playerStat}>Habilidad: {homeTeam.seekerSkill}</span>
+                                      <span className={styles.playerStat}>Años activo: {player.yearsActive}</span>
+                                      <span className={styles.playerStat}>Especialidad: Captura de Snitch</span>
+                                    </div>
+                                    {player.achievements.length > 0 && (
+                                      <div className={styles.playerAchievements}>
+                                        <span className={styles.achievementLabel}>🏆 {player.achievements[0]}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </>
+                          );
+                        })()}
                       </div>
                     </div>
 
@@ -1057,65 +1178,118 @@ const MatchDetailPage = () => {
                         <span className={styles.teamType}>Equipo Visitante</span>
                       </div>
                       <div className={styles.positionsList}>
-                        <div className={styles.positionGroup}>
-                          <h4 className={styles.positionTitle}>
-                            <span className={styles.positionIcon}>🥅</span>
-                            Guardián
-                          </h4>
-                          <div className={styles.playerCard}>
-                            <div className={styles.playerName}>Guardián de {awayTeam.name}</div>
-                            <div className={styles.playerStats}>
-                              <span className={styles.playerStat}>Habilidad: {awayTeam.keeperSkill}</span>
-                              <span className={styles.playerStat}>Especialidad: Paradas Mágicas</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className={styles.positionGroup}>
-                          <h4 className={styles.positionTitle}>
-                            <span className={styles.positionIcon}>⚡</span>
-                            Cazadores
-                          </h4>
-                          {[1, 2, 3].map(i => (
-                            <div key={i} className={styles.playerCard}>
-                              <div className={styles.playerName}>Cazador {i} de {awayTeam.name}</div>
-                              <div className={styles.playerStats}>
-                                <span className={styles.playerStat}>Habilidad: {awayTeam.chaserSkill}</span>
-                                <span className={styles.playerStat}>Especialidad: Anotación</span>
+                        {(() => {
+                          const rosterData = getTeamRosterData(awayTeam.name);
+                          const roster = rosterData.roster;
+                          
+                          return (
+                            <>
+                              {/* Guardián */}
+                              <div className={styles.positionGroup}>
+                                <h4 className={styles.positionTitle}>
+                                  <span className={styles.positionIcon}>🥅</span>
+                                  Guardián
+                                </h4>
+                                {roster.filter(player => player.position === 'Guardián').map(player => (
+                                  <div key={player.id} className={styles.playerCard}>
+                                    <div className={styles.playerHeader}>
+                                      <div className={styles.playerName}>{player.name}</div>
+                                      <div className={styles.playerNumber}>#{player.number}</div>
+                                    </div>
+                                    <div className={styles.playerStats}>
+                                      <span className={styles.playerStat}>Habilidad: {awayTeam.keeperSkill}</span>
+                                      <span className={styles.playerStat}>Años activo: {player.yearsActive}</span>
+                                      <span className={styles.playerStat}>Especialidad: Paradas Mágicas</span>
+                                    </div>
+                                    {player.achievements.length > 0 && (
+                                      <div className={styles.playerAchievements}>
+                                        <span className={styles.achievementLabel}>🏆 {player.achievements[0]}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
                               </div>
-                            </div>
-                          ))}
-                        </div>
 
-                        <div className={styles.positionGroup}>
-                          <h4 className={styles.positionTitle}>
-                            <span className={styles.positionIcon}>🏏</span>
-                            Golpeadores
-                          </h4>
-                          {[1, 2].map(i => (
-                            <div key={i} className={styles.playerCard}>
-                              <div className={styles.playerName}>Golpeador {i} de {awayTeam.name}</div>
-                              <div className={styles.playerStats}>
-                                <span className={styles.playerStat}>Habilidad: {awayTeam.beaterSkill}</span>
-                                <span className={styles.playerStat}>Especialidad: Defensa</span>
+                              {/* Cazadores */}
+                              <div className={styles.positionGroup}>
+                                <h4 className={styles.positionTitle}>
+                                  <span className={styles.positionIcon}>⚡</span>
+                                  Cazadores
+                                </h4>
+                                {roster.filter(player => player.position === 'Cazador' || player.position === 'Cazadora').map(player => (
+                                  <div key={player.id} className={styles.playerCard}>
+                                    <div className={styles.playerHeader}>
+                                      <div className={styles.playerName}>{player.name}</div>
+                                      <div className={styles.playerNumber}>#{player.number}</div>
+                                    </div>
+                                    <div className={styles.playerStats}>
+                                      <span className={styles.playerStat}>Habilidad: {awayTeam.chaserSkill}</span>
+                                      <span className={styles.playerStat}>Años activo: {player.yearsActive}</span>
+                                      <span className={styles.playerStat}>Especialidad: Anotación</span>
+                                    </div>
+                                    {player.achievements.length > 0 && (
+                                      <div className={styles.playerAchievements}>
+                                        <span className={styles.achievementLabel}>🏆 {player.achievements[0]}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
                               </div>
-                            </div>
-                          ))}
-                        </div>
 
-                        <div className={styles.positionGroup}>
-                          <h4 className={styles.positionTitle}>
-                            <span className={styles.positionIcon}>🟡</span>
-                            Buscador
-                          </h4>
-                          <div className={styles.playerCard}>
-                            <div className={styles.playerName}>Buscador de {awayTeam.name}</div>
-                            <div className={styles.playerStats}>
-                              <span className={styles.playerStat}>Habilidad: {awayTeam.seekerSkill}</span>
-                              <span className={styles.playerStat}>Especialidad: Captura de Snitch</span>
-                            </div>
-                          </div>
-                        </div>
+                              {/* Golpeadores */}
+                              <div className={styles.positionGroup}>
+                                <h4 className={styles.positionTitle}>
+                                  <span className={styles.positionIcon}>🏏</span>
+                                  Golpeadores
+                                </h4>
+                                {roster.filter(player => player.position === 'Golpeador').map(player => (
+                                  <div key={player.id} className={styles.playerCard}>
+                                    <div className={styles.playerHeader}>
+                                      <div className={styles.playerName}>{player.name}</div>
+                                      <div className={styles.playerNumber}>#{player.number}</div>
+                                    </div>
+                                    <div className={styles.playerStats}>
+                                      <span className={styles.playerStat}>Habilidad: {awayTeam.beaterSkill}</span>
+                                      <span className={styles.playerStat}>Años activo: {player.yearsActive}</span>
+                                      <span className={styles.playerStat}>Especialidad: Defensa</span>
+                                    </div>
+                                    {player.achievements.length > 0 && (
+                                      <div className={styles.playerAchievements}>
+                                        <span className={styles.achievementLabel}>🏆 {player.achievements[0]}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+
+                              {/* Buscador */}
+                              <div className={styles.positionGroup}>
+                                <h4 className={styles.positionTitle}>
+                                  <span className={styles.positionIcon}>🟡</span>
+                                  Buscador
+                                </h4>
+                                {roster.filter(player => player.position === 'Buscador' || player.position === 'Buscadora').map(player => (
+                                  <div key={player.id} className={styles.playerCard}>
+                                    <div className={styles.playerHeader}>
+                                      <div className={styles.playerName}>{player.name}</div>
+                                      <div className={styles.playerNumber}>#{player.number}</div>
+                                    </div>
+                                    <div className={styles.playerStats}>
+                                      <span className={styles.playerStat}>Habilidad: {awayTeam.seekerSkill}</span>
+                                      <span className={styles.playerStat}>Años activo: {player.yearsActive}</span>
+                                      <span className={styles.playerStat}>Especialidad: Captura de Snitch</span>
+                                    </div>
+                                    {player.achievements.length > 0 && (
+                                      <div className={styles.playerAchievements}>
+                                        <span className={styles.achievementLabel}>🏆 {player.achievements[0]}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </>
+                          );
+                        })()}
                       </div>
                     </div>
                   </div>
@@ -1129,7 +1303,7 @@ const MatchDetailPage = () => {
               </div>
             </div>
           </div>
-        )}        {activeTab === 'head-to-head' && (
+        )}{activeTab === 'head-to-head' && (
           <div className={styles.headToHeadTab}>
             <div className={styles.sectionCard}>
               <h2 className={styles.sectionTitle}>
