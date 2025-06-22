@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import styles from './BettingPage.module.css';
 import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
+import AdminMessage from '@/components/common/AdminMessage';
 import { virtualTimeManager } from '@/services/virtualTimeManager';
 import { Match, Season } from '@/types/league';
 import { useAuth } from '@/context/AuthContext';
@@ -35,7 +36,19 @@ interface BettingMatch {
 
 const BettingPage: React.FC = () => {
   const { matchId: paramMatchId } = useParams<{ matchId?: string }>();
-  const { user } = useAuth(); // Get user for balance
+  const { user, canBet } = useAuth(); // Get user for balance and betting permissions
+  // Show admin message if user cannot bet
+  if (!canBet) {
+    return (
+      <AdminMessage 
+        title="Funcionalidad Restringida"
+        message="Los administradores no pueden realizar apuestas. Tu rol está destinado a la gestión y supervisión del sistema de apuestas de Quidditch."
+        redirectTo="/account"
+        redirectLabel="Ir al Panel de Administración"
+        icon="⚡"
+      />
+    );
+  }
 
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedMatch, setSelectedMatch] = useState<string | undefined>(paramMatchId || '');

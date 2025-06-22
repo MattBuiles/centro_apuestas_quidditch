@@ -302,9 +302,9 @@ const MatchDetailPage = () => {
   const canPredict = () => {
     return match && (match.status === 'upcoming' || (match.status === 'live' && !showLiveSimulation));
   };
-
   const canBet = () => {
-    return match && (match.status === 'upcoming' || match.status === 'live');
+    const { canBet: userCanBet } = useAuth();
+    return userCanBet && match && (match.status === 'upcoming' || match.status === 'live');
   };
 
   // Get available tabs based on match status and user permissions
@@ -1322,10 +1322,13 @@ const MatchDetailPage = () => {
             <span className={styles.sectionIcon}>⚡</span>
             Próximos Duelos Mágicos
           </h2>
-          <div className={styles.relatedMatchesGrid}>
-            {relatedMatches.map((relatedMatch) => {
-              const homeTeamName = homeTeam && relatedMatch.localId === homeTeam.id ? homeTeam.name : relatedMatch.localId;
-              const awayTeamName = awayTeam && relatedMatch.visitanteId === awayTeam.id ? awayTeam.name : relatedMatch.visitanteId;
+          <div className={styles.relatedMatchesGrid}>            {relatedMatches.map((relatedMatch) => {
+              // Get the season data to resolve team IDs to team names
+              const timeState = virtualTimeManager.getState();
+              const homeTeamData = timeState.temporadaActiva?.equipos.find(t => t.id === relatedMatch.localId);
+              const awayTeamData = timeState.temporadaActiva?.equipos.find(t => t.id === relatedMatch.visitanteId);
+              const homeTeamName = homeTeamData?.name || relatedMatch.localId;
+              const awayTeamName = awayTeamData?.name || relatedMatch.visitanteId;
               return (
                 <Link 
                   key={relatedMatch.id} 

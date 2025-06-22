@@ -13,6 +13,8 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isAdmin: boolean;
+  canBet: boolean;
   login: (email: string, password: string, remember?: boolean) => Promise<void>;
   register: (username: string, email: string, password: string, birthdate: string) => Promise<void>;
   logout: () => void;
@@ -147,13 +149,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         sessionStorage.setItem('user', JSON.stringify(updatedUser));
       }
     }
-  };
-  return (
+  };  return (
     <AuthContext.Provider
       value={{
         user,
         isAuthenticated: !!user,
         isLoading,
+        isAdmin: user?.role === 'admin',
+        canBet: !!user && user.role !== 'admin',
         login,
         register,
         logout,
