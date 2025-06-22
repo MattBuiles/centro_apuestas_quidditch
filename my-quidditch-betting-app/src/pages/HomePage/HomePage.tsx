@@ -74,9 +74,8 @@ const HomePage = () => {
               <div className={styles.statItem}>
                 <span className={styles.statNumber}>100+</span>
                 <span className={styles.statLabel}>Partidos Simulados</span>
-              </div>
-              <div className={styles.statItem}>
-                <span className={styles.statNumber}>8</span>
+              </div>              <div className={styles.statItem}>
+                <span className={styles.statNumber}>6</span>
                 <span className={styles.statLabel}>Equipos Épicos</span>
               </div>
               <div className={styles.statItem}>
