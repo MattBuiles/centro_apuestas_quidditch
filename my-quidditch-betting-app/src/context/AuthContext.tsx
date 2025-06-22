@@ -7,6 +7,7 @@ interface User {
   email: string;
   balance: number;
   role: 'user' | 'admin';
+  avatar?: string;
 }
 
 interface AuthContextType {
@@ -19,7 +20,7 @@ interface AuthContextType {
   register: (username: string, email: string, password: string, birthdate: string) => Promise<void>;
   logout: () => void;
   updateUserBalance: (newBalance: number) => void;
-  updateUserProfile: (userData: Partial<Pick<User, 'username' | 'email'>>) => void;
+  updateUserProfile: (userData: Partial<Pick<User, 'username' | 'email' | 'avatar'>>) => void;
   error: string | null;
 }
 
@@ -56,13 +57,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setError(null);
     try {
       // Check for admin credentials
-      if (email === 'admin@example.com' && password === 'admin123') {
-        const adminUser: User = {
+      if (email === 'admin@example.com' && password === 'admin123') {        const adminUser: User = {
           id: 'admin',
           username: 'Administrador',
           email,
           balance: 0,
           role: 'admin',
+          avatar: '/src/assets/User_Logo.png',
         };
 
         setUser(adminUser);
@@ -75,15 +76,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
         navigate('/account');
         return;
-      }
-
-      // Regular user login
+      }      // Regular user login
       const mockUser: User = {
         id: '1',
         username: 'MagoApostador123',
         email,
         balance: 150,
         role: 'user',
+        avatar: '/src/assets/User_Logo.png',
       };
 
       setUser(mockUser);
@@ -102,8 +102,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     } finally {
       setIsLoading(false);
     }
-  };
-  const register = async (username: string, email: string, password: string, birthdate: string) => {
+  };  const register = async (username: string, email: string, password: string, birthdate: string) => {
     setIsLoading(true);
     setError(null);
     try {
@@ -115,6 +114,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         email,
         balance: 150, // Starting balance for new users
         role: 'user',
+        avatar: '/src/assets/User_Logo.png',
       };
 
       setUser(mockUser);
@@ -151,7 +151,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  const updateUserProfile = (userData: Partial<Pick<User, 'username' | 'email'>>) => {
+  const updateUserProfile = (userData: Partial<Pick<User, 'username' | 'email' | 'avatar'>>) => {
     if (user) {
       const updatedUser = { ...user, ...userData };
       setUser(updatedUser);

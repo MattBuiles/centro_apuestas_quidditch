@@ -81,15 +81,14 @@ const Header = () => {
           {/* Desktop Auth Buttons */}
           <div className={styles.authButtons}>
             {isAuthenticated ? (
-              <div className={styles.userControls}>
-                {user && (
+              <div className={styles.userControls}>                {user && (
                   <div className={styles.userBalance}>
                     <span className={styles.balanceText}>
                       {user.balance}G
                     </span>
                     <div className={styles.userAvatar}>
                       <img 
-                        src={userLogoSrc} 
+                        src={user.avatar || userLogoSrc} 
                         alt="Usuario" 
                         className={styles.userAvatarImage}
                       />
@@ -122,15 +121,14 @@ const Header = () => {
           </div>
 
           {/* Mobile Controls */}
-          <div className={styles.mobileControls}>
-            {isAuthenticated && user && (
+          <div className={styles.mobileControls}>            {isAuthenticated && user && (
               <div className={styles.userBalance}>
                 <span className={styles.balanceText}>
                   {user.balance}G
                 </span>
                 <div className={styles.userAvatar}>
                   <img 
-                    src={userLogoSrc} 
+                    src={user.avatar || userLogoSrc} 
                     alt="Usuario" 
                     className={styles.userAvatarImage}
                   />

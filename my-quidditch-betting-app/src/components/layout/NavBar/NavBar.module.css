@@ -28,6 +28,18 @@
     text-decoration: none;
 }
 
+.brandLink {
+    text-decoration: none;
+    color: var(--primary-color);
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    transition: all 0.2s ease;
+}
+
+.brandLink:hover {
+    color: var(--primary-color-dark, #8B1A1A);
+}
+
 .navList {
     list-style: none;
     padding: 0;
@@ -83,6 +95,43 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-md);
+}
+
+.userAvatar {
+    display: flex;
+    align-items: center;
+    margin-right: var(--spacing-sm);
+}
+
+.avatarImage {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--primary-color);
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.avatarImage:hover {
+    border-color: var(--primary-color-dark, #8B1A1A);
+    transform: scale(1.05);
+}
+
+.accountLink {
+    text-decoration: none;
+    color: var(--text-color);
+    font-weight: 500;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--border-radius);
+    transition: all 0.2s ease;
+    border: 1px solid var(--border-color);
+}
+
+.accountLink:hover {
+    color: var(--primary-color);
+    background: rgba(var(--primary-color-rgb), 0.1);
+    border-color: var(--primary-color);
 }
 
 .mobileMenuButton {
@@ -187,6 +236,29 @@
     .navActions {
         gap: var(--spacing-sm);
     }
+    
+    .userAvatar {
+        margin-right: var(--spacing-xs);
+    }
+    
+    .avatarImage {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .accountLink {
+        padding: var(--spacing-xs) var(--spacing-sm);
+        font-size: var(--font-size-sm);
+    }
+    
+    .authLinks {
+        gap: var(--spacing-xs);
+    }
+    
+    .authLinks .navLink {
+        padding: var(--spacing-xs);
+        font-size: var(--font-size-xs);
+    }
 }
 
 @media (max-width: 480px) {
@@ -200,6 +272,19 @@
     
     .mobileNavList {
         padding: 0 var(--spacing-md);
+    }
+    
+    .avatarImage {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .accountLink {
+        font-size: var(--font-size-xs);
+    }
+    
+    .authLinks .navLink {
+        min-width: auto;
     }
 }
 
