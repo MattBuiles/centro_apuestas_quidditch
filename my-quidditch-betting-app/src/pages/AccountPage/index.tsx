@@ -291,27 +291,43 @@ const WalletSection = () => {
     const [isProcessing, setIsProcessing] = useState(false);
     const [showNotification, setShowNotification] = useState(false);
     const [notificationMessage, setNotificationMessage] = useState('');
-    const [balanceUpdated, setBalanceUpdated] = useState(false);
-      // Cargar transacciones del localStorage o usar datos por defecto
+    const [balanceUpdated, setBalanceUpdated] = useState(false);      // Cargar transacciones del localStorage o usar datos por defecto
     const [transactions, setTransactions] = useState<Transaction[]>(() => {
         const savedTransactions = localStorage.getItem('userTransactions');
         if (savedTransactions) {
-            return JSON.parse(savedTransactions);
+            const parsed = JSON.parse(savedTransactions);
+            // Ordenar por fecha descendente (más reciente primero)
+            return parsed.sort((a: Transaction, b: Transaction) => 
+                new Date(b.date).getTime() - new Date(a.date).getTime()
+            );
         }
         return [
-            { id: 1, type: 'deposit', amount: 500, date: '2025-06-15', description: 'Depósito inicial' },
-            { id: 2, type: 'bet', amount: -50, date: '2025-06-16', description: 'Apuesta: Gryffindor vs Slytherin' },
-            { id: 3, type: 'win', amount: 100, date: '2025-06-16', description: 'Ganancia: Gryffindor vs Slytherin' },
-            { id: 4, type: 'bet', amount: -30, date: '2025-06-17', description: 'Apuesta: Hufflepuff vs Ravenclaw' },
-            { id: 5, type: 'withdraw', amount: -200, date: '2025-06-17', description: 'Retiro a cuenta Gringotts' }
+            { id: 5, type: 'withdraw', amount: -12, date: '2025-06-22', description: 'Retiro de 12 galeones a Gringotts' },
+            { id: 4, type: 'withdraw', amount: -200, date: '2025-06-17', description: 'Retiro a cuenta Gringotts' },
+            { id: 3, type: 'bet', amount: -30, date: '2025-06-17', description: 'Apuesta: Hufflepuff vs Ravenclaw' },
+            { id: 2, type: 'win', amount: 100, date: '2025-06-16', description: 'Ganancia: Gryffindor vs Slytherin' },
+            { id: 1, type: 'bet', amount: -50, date: '2025-06-16', description: 'Apuesta: Gryffindor vs Slytherin' },
+            { id: 0, type: 'deposit', amount: 500, date: '2025-06-15', description: 'Depósito inicial' }
         ];
-    });
-
-    // Guardar transacciones en localStorage cuando cambien
+    });    // Guardar transacciones en localStorage cuando cambien
     const saveTransactions = (newTransactions: Transaction[]) => {
-        setTransactions(newTransactions);
-        localStorage.setItem('userTransactions', JSON.stringify(newTransactions));
-    };    const showSuccessNotification = (message: string) => {
+        // Ordenar por fecha descendente (más reciente primero) y por ID si las fechas son iguales
+        const sortedTransactions = newTransactions.sort((a, b) => {
+            const dateA = new Date(a.date).getTime();
+            const dateB = new Date(b.date).getTime();
+            
+            // Si las fechas son diferentes, ordenar por fecha descendente
+            if (dateA !== dateB) {
+                return dateB - dateA;
+            }
+            
+            // Si las fechas son iguales, ordenar por ID descendente (más reciente primero)
+            return b.id - a.id;
+        });
+        
+        setTransactions(sortedTransactions);
+        localStorage.setItem('userTransactions', JSON.stringify(sortedTransactions));
+    };const showSuccessNotification = (message: string) => {
         setNotificationMessage(message);
         setShowNotification(true);
         setBalanceUpdated(true);
@@ -337,14 +353,13 @@ const WalletSection = () => {
                 date: currentDate,
                 description: `Depósito de ${amount} galeones`
             };
-            
-            // Actualizar balance del usuario
+              // Actualizar balance del usuario
             if (updateUserBalance && user) {
                 updateUserBalance(user.balance + amount);
             }
             
             // Agregar transacción al historial
-            const updatedTransactions = [newTransaction, ...transactions];
+            const updatedTransactions = [...transactions, newTransaction];
             saveTransactions(updatedTransactions);
             
             setShowDepositModal(false);
@@ -381,14 +396,13 @@ const WalletSection = () => {
                 date: currentDate,
                 description: `Retiro de ${amount} galeones a Gringotts`
             };
-            
-            // Actualizar balance del usuario
+              // Actualizar balance del usuario
             if (updateUserBalance && user) {
                 updateUserBalance(user.balance - amount);
             }
             
             // Agregar transacción al historial
-            const updatedTransactions = [newTransaction, ...transactions];
+            const updatedTransactions = [...transactions, newTransaction];
             saveTransactions(updatedTransactions);
             
             setShowWithdrawModal(false);
