@@ -5,6 +5,7 @@ import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
 import { virtualTimeManager } from '@/services/virtualTimeManager';
 import { Match, Season } from '@/types/league';
+import { useAuth } from '@/context/AuthContext';
 
 // Types for betting system
 interface BetOption {
@@ -34,7 +35,7 @@ interface BettingMatch {
 
 const BettingPage: React.FC = () => {
   const { matchId: paramMatchId } = useParams<{ matchId?: string }>();
-  // const { user } = useAuth(); // Get user for balance
+  const { user } = useAuth(); // Get user for balance
 
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedMatch, setSelectedMatch] = useState<string | undefined>(paramMatchId || '');
@@ -147,11 +148,16 @@ const BettingPage: React.FC = () => {
     
     handleBetSelection(scoreOption);
   };
-
   const handleNextStep = () => {
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     } else {
+      // Validate user has sufficient balance
+      if (!user || betAmount > (user.balance || 0)) {
+        alert('Saldo insuficiente para realizar esta apuesta.');
+        return;
+      }
+      
       // Handle bet submission
       const combinedBet: CombinedBet = {
         options: selectedBets,
@@ -190,10 +196,9 @@ const BettingPage: React.FC = () => {
             <div className={styles.noDataInfo}>
               ⚡ Inicia una temporada en la página de Partidos para apostar en partidos en vivo
             </div>
-          )}
-          <div className={styles.userBalance}>
+          )}          <div className={styles.userBalance}>
             <span className={styles.balanceLabel}>Saldo disponible:</span>
-            <span className={styles.balanceAmount}>150 Galeones</span>
+            <span className={styles.balanceAmount}>{user?.balance || 0} Galeones</span>
           </div>
         </div>
       </section>
@@ -564,30 +569,33 @@ const BettingPage: React.FC = () => {
                 </div>
               </div>
             </div>
-            
-            <div className={styles.formGroup}>
-              <label htmlFor="amount-input" className={styles.formLabel}>
-                <span className={styles.labelIcon}>💰</span>
-                Monto a Apostar (Galeones):
-              </label>
-              <div className={styles.amountInputWrapper}>
-                <div className={styles.inputWrapper}>
-                  <input
-                    type="number"
-                    id="amount-input"
-                    className={styles.formInput}
-                    value={betAmount}
-                    onChange={(e) => setBetAmount(Number(e.target.value))}
-                    min="1"
-                    max="150"
-                    placeholder="Ingresa el monto"
-                  />
-                  <span className={styles.inputSuffix}>G</span>
-                </div>
-                <div className={styles.quickAmountButtons}>
+                <div className={styles.formGroup}>
+                <label htmlFor="amount-input" className={styles.formLabel}>
+                  <span className={styles.labelIcon}>💰</span>
+                  Monto a Apostar (Galeones):
+                </label>
+                <div className={styles.amountInputWrapper}>
+                  <div className={styles.inputWrapper}>
+                    <input
+                      type="number"
+                      id="amount-input"
+                      className={`${styles.formInput} ${betAmount > (user?.balance || 0) ? styles.inputError : ''}`}
+                      value={betAmount}
+                      onChange={(e) => setBetAmount(Number(e.target.value))}
+                      min="1"
+                      max={user?.balance || 0}
+                      placeholder="Ingresa el monto"
+                    />
+                    <span className={styles.inputSuffix}>G</span>
+                  </div>
+                  {betAmount > (user?.balance || 0) && (
+                    <div className={styles.errorMessage}>
+                      ⚠️ Saldo insuficiente. Tu saldo actual es {user?.balance || 0} Galeones.
+                    </div>
+                  )}                <div className={styles.quickAmountButtons}>
                   <span className={styles.quickAmountLabel}>Montos rápidos:</span>
                   <div className={styles.quickAmountGrid}>
-                    {[5, 10, 25, 50].map(amount => (
+                    {[5, 10, 25, 50].filter(amount => amount <= (user?.balance || 0)).map(amount => (
                       <button
                         key={amount}
                         type="button"
@@ -644,7 +652,7 @@ const BettingPage: React.FC = () => {
               disabled={
                 !selectedMatch || 
                 (currentStep === 2 && selectedBets.length === 0) || 
-                (currentStep === 3 && betAmount <= 0)
+                (currentStep === 3 && (betAmount <= 0 || betAmount > (user?.balance || 0)))
               }
               className={styles.navButton}
             >
