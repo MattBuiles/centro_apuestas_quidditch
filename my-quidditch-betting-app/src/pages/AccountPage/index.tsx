@@ -248,7 +248,7 @@ const ProfileSection = () => {
                             </Button>
                         </div>
                     )}
-                </Card>                <Card className={styles.card}>
+                </Card>                <Card className={`${styles.card} ${styles.statsCard}`}>
                     <h3 className={`${styles.cardTitle} ${styles.titleWithIcon}`}>
                         <TrophyIcon />
                         Estadísticas del Mago
