@@ -4,6 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
 import userLogoSrc from '@/assets/User_Logo.png';
+import user2LogoSrc from '@/assets/User2_Logo.png';
 import { teamLogos } from '@/assets/teamLogos';
 import AdminDashboard from '@/components/admin/AdminDashboard';
 import AdminBetsHistory from '@/components/admin/AdminBetsHistory';
@@ -31,12 +32,23 @@ interface Transaction {
 const ProfileSection = () => {
     const { user, updateUserProfile } = useAuth();
     const [isEditing, setIsEditing] = useState(false);
+    const [isChangingAvatar, setIsChangingAvatar] = useState(false);
     const [formData, setFormData] = useState({
         username: user?.username || '',
         email: user?.email || '',
         newPassword: '',
         confirmPassword: ''
-    });    // Update form data when user changes (important for real-time sync)
+    });    // Available avatar options
+    const avatarOptions = [
+        { id: 'wizard1', src: userLogoSrc, name: 'Mago Clásico' },
+        { id: 'wizard2', src: user2LogoSrc, name: 'Mago Moderno' },
+        { id: 'gryffindor', src: '/src/assets/Gryffindor_Logo.png', name: 'Gryffindor' },
+        { id: 'slytherin', src: '/src/assets/Slytherin_Logo.png', name: 'Slytherin' },
+        { id: 'ravenclaw', src: '/src/assets/Ravenclaw_Logo.png', name: 'Ravenclaw' },
+        { id: 'hufflepuff', src: '/src/assets/Hufflepuff_Logo.png', name: 'Hufflepuff' },
+        { id: 'cannons', src: '/src/assets/Chudley Cannons_Logo.png', name: 'Chudley Cannons' },
+        { id: 'harpies', src: '/src/assets/Holyhead Harpies_Logo.png', name: 'Holyhead Harpies' },
+    ];// Update form data when user changes (important for real-time sync)
     useEffect(() => {
         if (user) {
             setFormData(prev => ({
@@ -46,6 +58,11 @@ const ProfileSection = () => {
             }));
         }
     }, [user]);
+
+    const handleAvatarChange = (avatarSrc: string) => {
+        updateUserProfile({ avatar: avatarSrc });
+        setIsChangingAvatar(false);
+    };
 
     const handleSave = (e: React.FormEvent) => {
         e.preventDefault();
@@ -108,7 +125,65 @@ const ProfileSection = () => {
                 Mi Perfil Mágico
             </h2>
 
-            <div className={styles.contentGrid}>                <Card className={styles.card}>
+            <div className={styles.contentGrid}>
+                {/* Avatar Section */}
+                <Card className={styles.card}>
+                    <h3 className={styles.cardTitle}>
+                        📸 Foto de Perfil
+                    </h3>
+                    <div className={styles.avatarSection}>
+                        <div className={styles.currentAvatar}>
+                            <img 
+                                src={user?.avatar || userLogoSrc} 
+                                alt="Avatar actual"
+                                className={styles.avatarPreview}
+                            />
+                            <p className={styles.avatarLabel}>Avatar Actual</p>
+                        </div>
+                        
+                        {!isChangingAvatar ? (
+                            <div className={styles.buttonContainer}>
+                                <Button 
+                                    variant="primary" 
+                                    onClick={() => setIsChangingAvatar(true)}
+                                    fullWidth
+                                >
+                                    🎭 Cambiar Avatar
+                                </Button>
+                            </div>
+                        ) : (
+                            <div className={styles.avatarSelector}>
+                                <h4 className={styles.selectorTitle}>Elige tu nuevo avatar:</h4>
+                                <div className={styles.avatarGrid}>
+                                    {avatarOptions.map((avatar) => (
+                                        <div 
+                                            key={avatar.id}
+                                            className={styles.avatarOption}
+                                            onClick={() => handleAvatarChange(avatar.src)}
+                                        >
+                                            <img 
+                                                src={avatar.src} 
+                                                alt={avatar.name}
+                                                className={styles.avatarThumbnail}
+                                            />
+                                            <span className={styles.avatarName}>{avatar.name}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className={styles.buttonGroup}>
+                                    <Button 
+                                        variant="outline" 
+                                        onClick={() => setIsChangingAvatar(false)}
+                                    >
+                                        ❌ Cancelar
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </Card>
+
+                <Card className={styles.card}>
                     <h3 className={styles.cardTitle}>Información Personal</h3>
                     {user && (
                         <form onSubmit={handleSave} className={styles.form}>
@@ -809,9 +884,8 @@ const AdminAccountPage = ({ user, logout }: { user: any; logout: () => void }) =
       <div className={styles.accountLayout}>
         {/* Admin Sidebar */}
         <aside className={styles.sidebar}>
-          <div className={styles.userProfile}>
-            <div className={styles.userAvatar}>
-              <img src={userLogoSrc} alt="Administrator" />
+          <div className={styles.userProfile}>            <div className={styles.userAvatar}>
+              <img src={user.avatar || userLogoSrc} alt="Administrator" />
             </div>
             <h3 className={styles.userName}>👑 {user.username}</h3>
             <p className={styles.userEmail}>{user.email}</p>
@@ -888,10 +962,9 @@ const RegularAccountPage = ({ user, logout }: { user: any; logout: () => void })
       <div className={styles.accountLayout}>
         {/* Sidebar */}
         <aside className={styles.sidebar}>
-          <div className={styles.userProfile}>
-            <div className={styles.userAvatar}>
+          <div className={styles.userProfile}>            <div className={styles.userAvatar}>
               <img 
-                src={userLogoSrc} 
+                src={user.avatar || userLogoSrc} 
                 alt="Usuario" 
               />
             </div>
