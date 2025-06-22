@@ -669,134 +669,226 @@
 .statsGrid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: clamp(var(--spacing-3), 3vw, var(--spacing-4));
-  margin: var(--spacing-6) 0;
-  padding: 0;
+  gap: clamp(var(--spacing-3), 2vw, var(--spacing-4));
+  margin: clamp(var(--spacing-4), 3vw, var(--spacing-6)) 0;
+  padding: 0 clamp(var(--spacing-1), 1vw, var(--spacing-2));
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
+  overflow: visible;
+  min-height: auto;
 }
 
-/* Mobile landscape (480px+) */
-@media (min-width: 480px) {
+/* Pantallas extra pequeñas (0-320px) */
+@media (max-width: 320px) {
   .statsGrid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: clamp(var(--spacing-3), 2.5vw, var(--spacing-4));
+    grid-template-columns: 1fr;
+    gap: var(--spacing-2);
+    margin: var(--spacing-3) 0;
+    padding: 0 var(--spacing-1);
   }
 }
 
-/* Tablets pequeñas (600px+) */
-@media (min-width: 600px) {
+/* Móviles pequeños (321px-479px) */
+@media (min-width: 321px) and (max-width: 479px) {
   .statsGrid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
+    gap: var(--spacing-3);
+    margin: var(--spacing-4) 0;
+    padding: 0 var(--spacing-1);
+  }
+}
+
+/* Móviles landscape (480px-599px) */
+@media (min-width: 480px) and (max-width: 599px) {
+  .statsGrid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-3);
+    margin: var(--spacing-5) 0;
+    padding: 0 var(--spacing-2);
+  }
+}
+
+/* Tablets pequeñas (600px-767px) */
+@media (min-width: 600px) and (max-width: 767px) {
+  .statsGrid {
+    grid-template-columns: 1fr;
     gap: var(--spacing-4);
-    max-width: 100%;
+    margin: var(--spacing-6) 0;
+    padding: 0 var(--spacing-2);
   }
 }
 
-/* Tablets medianas (768px+) */
-@media (min-width: 768px) {
+/* Tablets medianas (768px-899px) */
+@media (min-width: 768px) and (max-width: 899px) {
   .statsGrid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--spacing-5);
-    max-width: 100%;
-  }
-}
-
-/* Tablets grandes (900px+) */
-@media (min-width: 900px) {
-  .statsGrid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: 1fr;
     gap: var(--spacing-4);
+    margin: var(--spacing-6) 0;
+    padding: 0 var(--spacing-2);
   }
 }
 
-/* Desktop (1024px+) */
-@media (min-width: 1024px) {
+/* Tablets grandes (900px-1023px) */
+@media (min-width: 900px) and (max-width: 1023px) {
   .statsGrid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: 1fr;
+    gap: var(--spacing-4);
+    margin: var(--spacing-6) 0;
+    padding: 0 var(--spacing-2);
+  }
+}
+
+/* Desktop (1024px-1199px) */
+@media (min-width: 1024px) and (max-width: 1199px) {
+  .statsGrid {
+    grid-template-columns: 1fr;
     gap: var(--spacing-5);
+    margin: var(--spacing-6) 0;
+    padding: 0 var(--spacing-2);
   }
 }
 
 /* Desktop grande (1200px+) */
 @media (min-width: 1200px) {
   .statsGrid {
+    grid-template-columns: 1fr;
     gap: var(--spacing-6);
+    margin: var(--spacing-8) 0;
+    padding: 0 var(--spacing-3);
   }
 }
 
 .statCard {
   text-align: center;
-  padding: clamp(var(--spacing-3), 3vw, var(--spacing-5));
+  padding: clamp(var(--spacing-3), 2.5vw, var(--spacing-5));
   border-radius: var(--radius-xl);
   transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   border: 2px solid transparent;
   cursor: pointer;
-  min-height: clamp(160px, 20vw, 200px);
+  min-height: clamp(120px, 18vw, 200px);
   max-height: none;
   display: flex;
   flex-direction: column;
+  flex-wrap: wrap;
   justify-content: center;
   align-items: center;
   backdrop-filter: blur(15px);
   width: 100%;
+  max-width: 100%;
   box-sizing: border-box;
   box-shadow: 
     0 8px 20px rgba(0, 0, 0, 0.08),
     0 4px 12px rgba(0, 0, 0, 0.05),
     inset 0 1px 0 rgba(255, 255, 255, 0.7);
-  gap: clamp(var(--spacing-2), 2vw, var(--spacing-3));
+  gap: clamp(var(--spacing-1), 1.5vw, var(--spacing-3));
+  flex-shrink: 0;
+  margin: 0 auto;
 }
 
-/* Responsive adjustments for different screen sizes */
-@media (max-width: 479px) {
+/* Pantallas extra pequeñas (0-320px) */
+@media (max-width: 320px) {
   .statCard {
-    min-height: clamp(160px, 24vw, 180px);
-    padding: clamp(var(--spacing-3), 3vw, var(--spacing-4));
-    gap: var(--spacing-2);
+    min-height: 100px;
+    max-height: 140px;
+    padding: var(--spacing-2) var(--spacing-1);
+    gap: var(--spacing-1);
+    margin: 0;
+    width: 100%;
+    max-width: calc(100% - var(--spacing-2));
   }
 }
 
+/* Móviles pequeños (321px-479px) */
+@media (min-width: 321px) and (max-width: 479px) {
+  .statCard {
+    min-height: 110px;
+    max-height: 160px;
+    padding: var(--spacing-3) var(--spacing-2);
+    gap: var(--spacing-1);
+    margin: 0;
+    width: 100%;
+    max-width: calc(100% - var(--spacing-2));
+  }
+}
+
+/* Móviles landscape (480px-599px) */
 @media (min-width: 480px) and (max-width: 599px) {
   .statCard {
-    min-height: clamp(170px, 22vw, 190px);
-    padding: clamp(var(--spacing-4), 3.5vw, var(--spacing-5));
-    gap: clamp(var(--spacing-2), 1.5vw, var(--spacing-3));
+    min-height: 130px;
+    max-height: 180px;
+    padding: var(--spacing-4) var(--spacing-3);
+    gap: var(--spacing-2);
+    margin: 0;
+    width: 100%;
+    max-width: calc(100% - var(--spacing-3));
   }
 }
 
+/* Tablets pequeñas (600px-767px) */
 @media (min-width: 600px) and (max-width: 767px) {
   .statCard {
-    min-height: clamp(180px, 20vw, 200px);
-    padding: var(--spacing-5);
-    gap: var(--spacing-3);
+    min-height: 150px;
+    max-height: 200px;
+    padding: var(--spacing-4);
+    gap: var(--spacing-2);
+    margin: 0;
+    width: 100%;
+    max-width: calc(100% - var(--spacing-4));
   }
 }
 
+/* Tablets medianas (768px-899px) */
 @media (min-width: 768px) and (max-width: 899px) {
   .statCard {
-    min-height: clamp(190px, 18vw, 210px);
+    min-height: 160px;
+    max-height: 220px;
     padding: var(--spacing-5) var(--spacing-4);
     gap: var(--spacing-3);
+    margin: 0;
+    width: 100%;
+    max-width: calc(100% - var(--spacing-4));
   }
 }
 
+/* Tablets grandes (900px-1023px) */
 @media (min-width: 900px) and (max-width: 1023px) {
   .statCard {
-    min-height: clamp(170px, 16vw, 190px);
-    padding: var(--spacing-4);
-    gap: clamp(var(--spacing-2), 1.2vw, var(--spacing-3));
+    min-height: 170px;
+    max-height: 230px;
+    padding: var(--spacing-5);
+    gap: var(--spacing-3);
+    margin: 0;
+    width: 100%;
+    max-width: calc(100% - var(--spacing-5));
   }
 }
 
-@media (min-width: 1024px) {
+/* Desktop (1024px-1199px) */
+@media (min-width: 1024px) and (max-width: 1199px) {
   .statCard {
-    min-height: clamp(200px, 16vw, 220px);
+    min-height: 180px;
+    max-height: 240px;
     padding: var(--spacing-6) var(--spacing-5);
     gap: var(--spacing-3);
+    margin: 0;
+    width: 100%;
+    max-width: calc(100% - var(--spacing-6));
+  }
+}
+
+/* Desktop grande (1200px+) */
+@media (min-width: 1200px) {
+  .statCard {
+    min-height: 200px;
+    max-height: 260px;
+    padding: var(--spacing-6);
+    gap: var(--spacing-4);
+    margin: 0;
+    width: 100%;
+    max-width: calc(100% - var(--spacing-8));
   }
 }
 
@@ -828,7 +920,17 @@
 }
 
 /* Reducir efectos hover en móviles para mejor performance y UX */
-@media (max-width: 479px) {
+@media (max-width: 320px) {
+  .statCard:hover {
+    transform: translateY(-2px) scale(1.005);
+    box-shadow: 
+      0 6px 12px rgba(0, 0, 0, 0.08),
+      0 2px 6px rgba(0, 0, 0, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  }
+}
+
+@media (min-width: 321px) and (max-width: 479px) {
   .statCard:hover {
     transform: translateY(-3px) scale(1.01);
     box-shadow: 
@@ -840,10 +942,10 @@
 
 @media (min-width: 480px) and (max-width: 767px) {
   .statCard:hover {
-    transform: translateY(-5px) scale(1.02);
+    transform: translateY(-4px) scale(1.015);
     box-shadow: 
-      0 12px 25px rgba(0, 0, 0, 0.12),
-      0 6px 15px rgba(0, 0, 0, 0.08),
+      0 10px 20px rgba(0, 0, 0, 0.12),
+      0 5px 12px rgba(0, 0, 0, 0.08),
       inset 0 1px 0 rgba(255, 255, 255, 0.8);
   }
 }
@@ -853,6 +955,81 @@
   .statCard:hover {
     transform: translateY(-8px) scale(1.03);
   }
+}
+
+/* ===== ELEMENTOS ESPECIALES COMO EQUIPO FAVORITO ===== */
+.teamFavoriteIcon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: clamp(var(--spacing-1), 1vw, var(--spacing-2));
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.teamLogo {
+  width: clamp(32px, 8vw, 60px);
+  height: clamp(32px, 8vw, 60px);
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive team logo sizes */
+@media (max-width: 320px) {
+  .teamLogo {
+    width: 28px;
+    height: 28px;
+    border-width: 1px;
+  }
+}
+
+@media (min-width: 321px) and (max-width: 479px) {
+  .teamLogo {
+    width: 32px;
+    height: 32px;
+    border-width: 1px;
+  }
+}
+
+@media (min-width: 480px) and (max-width: 599px) {
+  .teamLogo {
+    width: 40px;
+    height: 40px;
+    border-width: 2px;
+  }
+}
+
+@media (min-width: 600px) and (max-width: 767px) {
+  .teamLogo {
+    width: 45px;
+    height: 45px;
+    border-width: 2px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .teamLogo {
+    width: 50px;
+    height: 50px;
+    border-width: 2px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .teamLogo {
+    width: 60px;
+    height: 60px;
+    border-width: 2px;
+  }
+}
+
+.statCard:hover .teamLogo {
+  transform: scale(1.1);
+  border-color: rgba(255, 255, 255, 1);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
 }
 
 /* Estados de colores con mejor contraste responsivo */
@@ -865,6 +1042,7 @@
   box-shadow: 
     0 4px 15px rgba(252, 211, 77, 0.25),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  flex-wrap: wrap;
 }
 
 .statCard.yellow:hover {
@@ -884,6 +1062,7 @@
   box-shadow: 
     0 4px 15px rgba(16, 185, 129, 0.25),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  flex-wrap: wrap;
 }
 
 .statCard.green:hover {
@@ -903,6 +1082,7 @@
   box-shadow: 
     0 4px 15px rgba(139, 92, 246, 0.25),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  flex-wrap: wrap;
 }
 
 .statCard.purple:hover {
@@ -922,6 +1102,7 @@
   box-shadow: 
     0 4px 15px rgba(59, 130, 246, 0.25),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  flex-wrap: wrap;
 }
 
 .statCard.blue:hover {
@@ -934,7 +1115,7 @@
 
 .statValue {
   font-family: var(--font-primary);
-  font-size: clamp(1.2rem, 3.5vw, 2rem);
+  font-size: clamp(0.9rem, 4vw, 2rem);
   font-weight: 800;
   color: #1a1a1a;
   margin-bottom: 0;
@@ -942,61 +1123,98 @@
   line-height: 1.1;
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
   letter-spacing: -0.02em;
-  word-break: break-word;
-  white-space: normal;
-  overflow-wrap: break-word;
-  text-wrap: wrap;
-  hyphens: auto;
+  word-break: keep-all;
+  white-space: nowrap;
   overflow: visible;
-  text-overflow: unset;
-  width: 100%;
+  text-overflow: clip;
+  width: auto;
   max-width: 100%;
   display: block;
   flex-shrink: 0;
+  flex-grow: 0;
+  flex-basis: auto;
   text-align: center;
   box-sizing: border-box;
+  min-height: auto;
 }
 
-/* Responsive font sizes for optimal readability */
-@media (max-width: 479px) {
+/* Pantallas extra pequeñas (0-320px) */
+@media (max-width: 320px) {
   .statValue {
-    font-size: clamp(1rem, 4vw, 1.3rem);
+    font-size: 1rem;
     line-height: 1.1;
+    white-space: nowrap;
+    letter-spacing: -0.01em;
   }
 }
 
+/* Móviles pequeños (321px-479px) */
+@media (min-width: 321px) and (max-width: 479px) {
+  .statValue {
+    font-size: 1.1rem;
+    line-height: 1.1;
+    white-space: nowrap;
+    letter-spacing: -0.01em;
+  }
+}
+
+/* Móviles landscape (480px-599px) */
 @media (min-width: 480px) and (max-width: 599px) {
   .statValue {
-    font-size: clamp(1.1rem, 3.8vw, 1.5rem);
+    font-size: 1.3rem;
     line-height: 1.1;
+    white-space: nowrap;
+    letter-spacing: -0.015em;
   }
 }
 
+/* Tablets pequeñas (600px-767px) */
 @media (min-width: 600px) and (max-width: 767px) {
   .statValue {
-    font-size: clamp(1.2rem, 3.5vw, 1.7rem);
+    font-size: 1.5rem;
     line-height: 1.1;
+    white-space: nowrap;
+    letter-spacing: -0.015em;
   }
 }
 
+/* Tablets medianas (768px-899px) */
 @media (min-width: 768px) and (max-width: 899px) {
   .statValue {
-    font-size: clamp(1.3rem, 3.2vw, 1.8rem);
+    font-size: 1.6rem;
     line-height: 1.1;
+    white-space: nowrap;
+    letter-spacing: -0.02em;
   }
 }
 
+/* Tablets grandes (900px-1023px) */
 @media (min-width: 900px) and (max-width: 1023px) {
   .statValue {
-    font-size: clamp(1.1rem, 2.8vw, 1.4rem);
+    font-size: 1.7rem;
     line-height: 1.1;
+    white-space: nowrap;
+    letter-spacing: -0.02em;
   }
 }
 
-@media (min-width: 1024px) {
+/* Desktop (1024px-1199px) */
+@media (min-width: 1024px) and (max-width: 1199px) {
   .statValue {
-    font-size: clamp(1.4rem, 2.5vw, 2rem);
+    font-size: 1.8rem;
     line-height: 1.1;
+    white-space: nowrap;
+    letter-spacing: -0.02em;
+  }
+}
+
+/* Desktop grande (1200px+) */
+@media (min-width: 1200px) {
+  .statValue {
+    font-size: 2rem;
+    line-height: 1.1;
+    white-space: nowrap;
+    letter-spacing: -0.02em;
   }
 }
 
@@ -1007,106 +1225,123 @@
 }
 
 .statLabel {
-  font-size: clamp(0.65rem, 2vw, 0.8rem);
+  font-size: clamp(0.6rem, 2vw, 0.85rem);
   color: #2d3748;
   text-transform: uppercase;
-  letter-spacing: clamp(0.2px, 0.3vw, 0.4px);
+  letter-spacing: clamp(0.25px, 0.3vw, 0.4px);
   font-weight: 700;
   transition: color 0.3s ease;
   line-height: 1.2;
   text-align: center;
-  word-break: break-word;
-  white-space: normal;
-  overflow-wrap: break-word;
-  text-wrap: wrap;
-  hyphens: auto;
+  word-break: keep-all;
+  white-space: nowrap;
   overflow: visible;
-  text-overflow: unset;
-  width: 100%;
+  text-overflow: clip;
+  width: auto;
   max-width: 100%;
   padding: 0;
   margin: clamp(var(--spacing-1), 1vw, var(--spacing-2)) 0 0 0;
   display: block;
   flex-shrink: 0;
+  flex-grow: 0;
+  flex-basis: auto;
   box-sizing: border-box;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  min-height: auto;
 }
 
-/* Responsive font sizes for optimal readability */
-@media (max-width: 479px) {
+/* Pantallas extra pequeñas (0-320px) */
+@media (max-width: 320px) {
   .statLabel {
-    font-size: clamp(0.6rem, 2.2vw, 0.75rem);
-    letter-spacing: 0.2px;
+    font-size: 0.6rem;
+    letter-spacing: 0.25px;
     line-height: 1.2;
-    padding: 0;
     margin-top: var(--spacing-1);
-    white-space: normal;
-    width: 100%;
+    white-space: nowrap;
     text-align: center;
   }
 }
 
+/* Móviles pequeños (321px-479px) */
+@media (min-width: 321px) and (max-width: 479px) {
+  .statLabel {
+    font-size: 0.65rem;
+    letter-spacing: 0.3px;
+    line-height: 1.2;
+    margin-top: var(--spacing-1);
+    white-space: nowrap;
+    text-align: center;
+  }
+}
+
+/* Móviles landscape (480px-599px) */
 @media (min-width: 480px) and (max-width: 599px) {
   .statLabel {
-    font-size: clamp(0.65rem, 2vw, 0.8rem);
-    letter-spacing: 0.25px;
-    padding: 0;
+    font-size: 0.7rem;
+    letter-spacing: 0.3px;
     line-height: 1.2;
     margin-top: var(--spacing-1);
-    white-space: normal;
-    width: 100%;
+    white-space: nowrap;
     text-align: center;
   }
 }
 
+/* Tablets pequeñas (600px-767px) */
 @media (min-width: 600px) and (max-width: 767px) {
   .statLabel {
-    font-size: clamp(0.7rem, 1.8vw, 0.85rem);
-    letter-spacing: 0.3px;
-    padding: 0;
+    font-size: 0.75rem;
+    letter-spacing: 0.35px;
     line-height: 1.2;
     margin-top: var(--spacing-1);
-    white-space: normal;
-    width: 100%;
+    white-space: nowrap;
     text-align: center;
   }
 }
 
+/* Tablets medianas (768px-899px) */
 @media (min-width: 768px) and (max-width: 899px) {
   .statLabel {
-    font-size: clamp(0.65rem, 1.6vw, 0.8rem);
-    letter-spacing: 0.3px;
-    padding: 0;
+    font-size: 0.8rem;
+    letter-spacing: 0.35px;
     line-height: 1.2;
-    margin-top: var(--spacing-1);
-    white-space: normal;
-    width: 100%;
+    margin-top: var(--spacing-2);
+    white-space: nowrap;
     text-align: center;
   }
 }
 
+/* Tablets grandes (900px-1023px) */
 @media (min-width: 900px) and (max-width: 1023px) {
   .statLabel {
-    font-size: clamp(0.6rem, 1.4vw, 0.75rem);
-    letter-spacing: 0.25px;
-    padding: 0;
+    font-size: 0.8rem;
+    letter-spacing: 0.4px;
     line-height: 1.2;
-    margin-top: var(--spacing-1);
-    white-space: normal;
-    width: 100%;
+    margin-top: var(--spacing-2);
+    white-space: nowrap;
     text-align: center;
   }
 }
 
-@media (min-width: 1024px) {
+/* Desktop (1024px-1199px) */
+@media (min-width: 1024px) and (max-width: 1199px) {
   .statLabel {
-    font-size: clamp(0.7rem, 1.3vw, 0.85rem);
-    letter-spacing: 0.3px;
-    padding: 0;
+    font-size: 0.8rem;
+    letter-spacing: 0.4px;
     line-height: 1.2;
-    margin-top: var(--spacing-1);
-    white-space: normal;
-    width: 100%;
+    margin-top: var(--spacing-2);
+    white-space: nowrap;
+    text-align: center;
+  }
+}
+
+/* Desktop grande (1200px+) */
+@media (min-width: 1200px) {
+  .statLabel {
+    font-size: 0.85rem;
+    letter-spacing: 0.4px;
+    line-height: 1.2;
+    margin-top: var(--spacing-2);
+    white-space: nowrap;
     text-align: center;
   }
 }
@@ -2113,41 +2348,66 @@
   }
 }
 
-/* ===== ESTILOS ESPECÍFICOS PARA EQUIPO FAVORITO ===== */
-.teamFavoriteIcon {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: var(--spacing-2);
-  padding: clamp(var(--spacing-2), 2vw, var(--spacing-3));
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: var(--radius-lg);
-  transition: all 0.3s ease;
-  box-shadow: 
-    0 4px 12px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  border: 2px solid rgba(255, 255, 255, 0.6);
-  flex: 1;
-  width: 100%;  min-height: 60px;
+/* ===== REGLAS ESPECIALES PARA ESTADÍSTICAS SIEMPRE VISIBLES ===== */
+
+/* Extra small screens (320px-479px) */
+@media (max-width: 320px) {
+  .statsGrid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-2);
+    margin: var(--spacing-4) 0;
+  }
+  
+  .statCard {
+    min-height: 160px;
+    padding: var(--spacing-3);
+    gap: var(--spacing-1);
+    overflow: visible;
+  }
+  
+  .statValue {
+    font-size: 1rem;
+    white-space: nowrap;
+    overflow: visible;
+  }
+  
+  .statLabel {
+    font-size: 0.6rem;
+    white-space: nowrap;
+    overflow: visible;
+  }
 }
 
-.teamLogo {
-  width: clamp(35px, 6vw, 50px);
-  height: clamp(35px, 6vw, 50px);
-  object-fit: contain;
-  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+/* Ultra-wide screens optimization */
+@media (min-width: 1400px) {
+  .statsGrid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-8);
+    max-width: 600px;
+    margin: var(--spacing-8) auto;
+  }
+  
+  .statCard {
+    min-height: 240px;
+    max-width: 100%;
+  }
 }
 
-.statCard:hover .teamLogo {
-  transform: scale(1.1) rotate(5deg);
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
-}
-
-.statCard:hover .teamFavoriteIcon {
-  background: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  transform: translateY(-2px);
+/* Landscape mobile optimization */
+@media (max-height: 500px) and (orientation: landscape) {
+  .statCard {
+    min-height: 140px;
+    padding: var(--spacing-3);
+  }
+  
+  .statValue {
+    font-size: clamp(1rem, 3vw, 1.3rem);
+  }
+  
+  .statLabel {
+    font-size: clamp(0.6rem, 1.8vw, 0.75rem);
+    margin-top: var(--spacing-1);
+  }
 }
 
 /* ===== MEJORAS DE CONTRASTE ADICIONALES ===== */
@@ -2364,14 +2624,20 @@
   border-radius: var(--radius-lg);
   transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  width: auto;
+  height: auto;
+  flex-shrink: 0;
+  overflow: visible;
 }
 
 .teamLogo {
-  width: clamp(40px, 8vw, 60px);
-  height: clamp(40px, 8vw, 60px);
+  width: clamp(45px, 10vw, 70px);
+  height: clamp(45px, 10vw, 70px);
   object-fit: contain;
   transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  flex-shrink: 0;
+  overflow: visible;
 }
 
 .statCard:hover .teamLogo {
