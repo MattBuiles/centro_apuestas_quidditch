@@ -6,6 +6,7 @@ interface User {
   username: string;
   email: string;
   balance: number;
+  role: 'user' | 'admin';
 }
 
 interface AuthContextType {
@@ -47,18 +48,39 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
     setIsLoading(false);
   }, []);
-
   const login = async (email: string, password: string, remember = false) => {
     setIsLoading(true);
     setError(null);
     try {
-      // In a real app, this would be an API call
-      // For this wireframe, we'll just simulate a successful login
+      // Check for admin credentials
+      if (email === 'admin@example.com' && password === 'admin123') {
+        const adminUser: User = {
+          id: 'admin',
+          username: 'Administrador',
+          email,
+          balance: 0,
+          role: 'admin',
+        };
+
+        setUser(adminUser);
+
+        if (remember) {
+          localStorage.setItem('user', JSON.stringify(adminUser));
+        } else {
+          sessionStorage.setItem('user', JSON.stringify(adminUser));
+        }
+
+        navigate('/account');
+        return;
+      }
+
+      // Regular user login
       const mockUser: User = {
         id: '1',
         username: 'MagoApostador123',
         email,
         balance: 150,
+        role: 'user',
       };
 
       setUser(mockUser);
@@ -78,7 +100,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setIsLoading(false);
     }
   };
-
   const register = async (username: string, email: string, password: string, birthdate: string) => {
     setIsLoading(true);
     setError(null);
@@ -90,6 +111,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         username,
         email,
         balance: 150, // Starting balance for new users
+        role: 'user',
       };
 
       setUser(mockUser);
