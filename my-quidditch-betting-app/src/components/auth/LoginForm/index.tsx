@@ -78,10 +78,9 @@ const LoginForm = () => {
       >
         {isLoading ? 'Accediendo al mundo mágico...' : '⚡ Iniciar Sesión Mágica'}
       </button>
-      
-      <div className={styles.authLinks}>
+        <div className={styles.authLinks}>
         <Link to="/recovery" className={styles.recoveryLink}>
-          ¿Olvidaste tu contraseña mágica?
+          🧙‍♀️ ¿Olvidaste tu contraseña? Haz clic aquí para que Madame Pomfrey te ayude a recordarla.
         </Link>
         
         <p className={styles.authLinksText}>
