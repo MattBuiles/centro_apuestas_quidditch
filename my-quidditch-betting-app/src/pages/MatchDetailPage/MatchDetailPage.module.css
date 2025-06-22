@@ -2651,6 +2651,533 @@
   left: 100%;
 }
 
+.headToHeadTab {
+  background: linear-gradient(135deg, 
+    rgba(220, 20, 60, 0.15) 0%,
+    rgba(178, 34, 34, 0.1) 50%,
+    rgba(220, 20, 60, 0.15) 100%);
+  border-radius: 25px;
+  position: relative;
+}
+
+/* History content wrapper */
+.historyContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+/* History header with teams */
+.historyHeader {
+  background: linear-gradient(135deg, 
+    rgba(220, 20, 60, 0.05) 0%,
+    rgba(255, 69, 0, 0.08) 25%,
+    rgba(255, 215, 0, 0.05) 50%,
+    rgba(255, 69, 0, 0.08) 75%,
+    rgba(220, 20, 60, 0.05) 100%);
+  border-radius: 20px;
+  padding: 2rem;
+  border: 2px solid rgba(220, 20, 60, 0.2);
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  box-shadow: 
+    0 8px 32px rgba(220, 20, 60, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.historyHeader::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 40%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.1) 60%,
+    transparent 100%);
+  animation: headerShine 8s ease-in-out infinite;
+}
+
+@keyframes headerShine {
+  0%, 100% { left: -100%; }
+  50% { left: 100%; }
+}
+
+.historyTeams {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.historyTeam {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  min-width: 150px;
+}
+
+.historyTeamName {
+  font-size: 1.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #6A0DAD, #4C6EF5, #FF6B35);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.historyVs {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  flex: 1;
+  max-width: 300px;
+  position: relative;
+}
+
+.historyVsText {
+  font-size: 2rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, #DC143C, #FF4500, #FFD700);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 3px 6px rgba(220, 20, 60, 0.3);
+  position: relative;
+  animation: pulseVs 3s ease-in-out infinite;
+}
+
+@keyframes pulseVs {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.historyRecord {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 15px;
+  padding: 1.5rem;
+  box-shadow: 
+    0 8px 25px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(220, 20, 60, 0.2);
+}
+
+.recordStats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 0.8rem;
+}
+
+.recordStat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.recordNumber {
+  font-size: 2rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, #6A0DAD, #4C6EF5);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 2px 4px rgba(106, 13, 173, 0.2);
+}
+
+.recordLabel {
+  font-size: 0.8rem;
+  color: #666;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.recordSeparator {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #DC143C;
+  opacity: 0.7;
+}
+
+.totalMatches {
+  font-size: 0.9rem;
+  color: #888;
+  text-align: center;
+  font-weight: 500;
+  font-style: italic;
+}
+
+/* History stats section */
+.historyStats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.historyStatCard {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(248, 249, 250, 0.9) 100%);
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 
+    0 10px 40px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(106, 13, 173, 0.1);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s ease;
+}
+
+.historyStatCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #6A0DAD, #4C6EF5, #FF6B35);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.6s ease;
+}
+
+.historyStatCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.historyStatCard:hover::before {
+  transform: scaleX(1);
+}
+
+.historyStatCard h4 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  background: linear-gradient(135deg, #6A0DAD, #4C6EF5);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Recent matches */
+.recentMatches {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.recentMatch {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(106, 13, 173, 0.05);
+  border-radius: 12px;
+  border-left: 4px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.recentMatch:hover {
+  transform: translateX(5px);
+  background: rgba(106, 13, 173, 0.08);
+  border-left-color: #6A0DAD;
+}
+
+.matchResult {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 1.1rem;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  flex-shrink: 0;
+}
+
+.matchResult.win {
+  background: linear-gradient(135deg, #4CAF50, #66BB6A);
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+}
+
+.matchResult.loss {
+  background: linear-gradient(135deg, #F44336, #EF5350);
+  box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3);
+}
+
+.matchDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex: 1;
+}
+
+.matchScore {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.matchDate, .matchVenue {
+  font-size: 0.85rem;
+  color: #666;
+  font-weight: 500;
+}
+
+/* Comparison stats */
+.comparisonStats {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.comparisonStat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.statName {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #555;
+}
+
+.statComparison {
+  position: relative;
+}
+
+.statBar {
+  display: flex;
+  height: 35px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+}
+
+.homeStatBar, .awayStatBar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: all 0.6s ease;
+  position: relative;
+}
+
+.homeStatBar {
+  background: linear-gradient(135deg, #6A0DAD, #4C6EF5);
+  border-radius: 20px 0 0 20px;
+  justify-content: flex-end;
+  padding-right: 1rem;
+}
+
+.awayStatBar {
+  background: linear-gradient(135deg, #DC143C, #FF4500);
+  border-radius: 0 20px 20px 0;
+  justify-content: flex-start;
+  padding-left: 1rem;
+}
+
+/* Legendary matches */
+.legendaryMatches {
+  margin-top: 1rem;
+}
+
+.legendaryMatches h4 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.legendaryMatchesList {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.legendaryMatch {
+  background: linear-gradient(135deg, 
+    rgba(255, 215, 0, 0.1) 0%,
+    rgba(255, 193, 7, 0.05) 50%,
+    rgba(255, 215, 0, 0.1) 100%);
+  border-radius: 15px;
+  padding: 1.5rem;
+  border: 2px solid rgba(255, 215, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s ease;
+}
+
+.legendaryMatch::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, #FFD700, #FFA500, #FFD700);
+  border-radius: 15px;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.legendaryMatch:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 40px rgba(255, 215, 0, 0.2);
+}
+
+.legendaryMatch:hover::before {
+  opacity: 1;
+}
+
+.legendaryMatchHeader {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.legendaryIcon {
+  font-size: 1.5rem;
+  filter: drop-shadow(0 2px 4px rgba(255, 215, 0, 0.3));
+}
+
+.legendaryTitle {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #B8860B;
+  flex: 1;
+  min-width: 200px;
+}
+
+.legendaryDate {
+  font-size: 0.9rem;
+  color: #888;
+  font-weight: 500;
+}
+
+.legendaryMatchDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.legendaryScore {
+  font-size: 1.4rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, #6A0DAD, #4C6EF5);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-align: center;
+}
+
+.legendaryDescription {
+  font-size: 1rem;
+  color: #555;
+  line-height: 1.6;
+  font-style: italic;
+  text-align: center;
+  margin: 0;
+}
+
+/* Head-to-head responsive design */
+@media (max-width: 768px) {
+  .historyTeams {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .historyVs {
+    order: -1;
+    max-width: 100%;
+  }
+  
+  .historyStats {
+    grid-template-columns: 1fr;
+  }
+  
+  .recordStats {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .legendaryMatchHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .statBar {
+    height: 30px;
+  }
+  
+  .homeStatBar, .awayStatBar {
+    font-size: 0.8rem;
+    padding: 0 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .h2hContainer {
+    padding: 1rem;
+  }
+  
+  .historyHeader {
+    padding: 1.5rem;
+  }
+  
+  .historyStatCard {
+    padding: 1.5rem;
+  }
+  
+  .recordNumber {
+    font-size: 1.5rem;
+  }
+  
+  .historyVsText {
+    font-size: 1.5rem;
+  }
+  
+  .legendaryMatch {
+    padding: 1rem;
+  }
+}
+
 /* ========================================
    BETTING TAB - GOLDEN VAULT
    ======================================== */
