@@ -244,6 +244,38 @@
   left: 100%;
 }
 
+/* Admin Badge */
+.adminBadge {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: #7c3aed;
+  padding: var(--spacing-2) var(--spacing-3);
+  background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 50%, #c4b5fd 100%);
+  border-radius: var(--radius-lg);
+  border: 2px solid #8b5cf6;
+  margin-bottom: var(--spacing-4);
+  box-shadow: 
+    0 4px 12px rgba(139, 92, 246, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+  animation: adminGlow 3s ease-in-out infinite;
+}
+
+@keyframes adminGlow {
+  0%, 100% { 
+    box-shadow: 
+      0 4px 12px rgba(139, 92, 246, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  }
+  50% { 
+    box-shadow: 
+      0 6px 20px rgba(139, 92, 246, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  }
+}
+
 /* ===== NAVEGACIÓN - Diseño interactivo mejorado ===== */
 .accountNav {
   display: flex;

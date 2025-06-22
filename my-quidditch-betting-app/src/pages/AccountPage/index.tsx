@@ -5,6 +5,9 @@ import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
 import userLogoSrc from '@/assets/User_Logo.png';
 import { teamLogos } from '@/assets/teamLogos';
+import AdminDashboard from '@/components/admin/AdminDashboard';
+import AdminBetsHistory from '@/components/admin/AdminBetsHistory';
+import AdminUsersManagement from '@/components/admin/AdminUsersManagement';
 import styles from './AccountPage.module.css';
 
 // Icons (you can replace these with actual icon components)
@@ -681,17 +684,6 @@ const SettingsSection = () => {
 const AccountPage = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
-  // Determine active tab based on URL, default to profile
-  const getActiveTab = () => {
-    const path = location.pathname;
-    if (path === '/account/wallet') return 'wallet';
-    if (path === '/account/bets') return 'bets';
-    if (path === '/account/settings') return 'settings';
-    if (path === '/account' || path === '/account/') return 'profile';
-    return 'profile';
-  };
-  
-  const activeTab = getActiveTab();
 
   if (!user) {
     return (
@@ -711,6 +703,123 @@ const AccountPage = () => {
       </div>
     );
   }
+
+  // If user is admin, show admin interface
+  if (user.role === 'admin') {
+    return <AdminAccountPage user={user} logout={logout} />;
+  }
+
+  // Regular user interface
+  return <RegularAccountPage user={user} logout={logout} />;
+};
+
+// Admin Account Interface
+const AdminAccountPage = ({ user, logout }: { user: any; logout: () => void }) => {
+  const location = useLocation();
+  
+  const getActiveTab = () => {
+    const path = location.pathname;
+    if (path === '/account/bets-history') return 'bets-history';
+    if (path === '/account/users-management') return 'users-management';
+    if (path === '/account' || path === '/account/') return 'dashboard';
+    return 'dashboard';
+  };
+  
+  const activeTab = getActiveTab();
+
+  const adminNavItems = [
+    { 
+      path: '/account', 
+      label: 'Panel General', 
+      icon: <span className={styles.icon}>🏰</span>, 
+      tab: 'dashboard' 
+    },
+    { 
+      path: '/account/bets-history', 
+      label: 'Historial de Apuestas', 
+      icon: <span className={styles.icon}>📊</span>, 
+      tab: 'bets-history' 
+    },
+    { 
+      path: '/account/users-management', 
+      label: 'Gestión de Usuarios', 
+      icon: <span className={styles.icon}>👥</span>, 
+      tab: 'users-management' 
+    }
+  ];
+
+  return (
+    <div className={styles.accountPageContainer}>
+      <div className={styles.accountLayout}>
+        {/* Admin Sidebar */}
+        <aside className={styles.sidebar}>
+          <div className={styles.userProfile}>
+            <div className={styles.userAvatar}>
+              <img src={userLogoSrc} alt="Administrator" />
+            </div>
+            <h3 className={styles.userName}>👑 {user.username}</h3>
+            <p className={styles.userEmail}>{user.email}</p>
+            <div className={styles.adminBadge}>
+              🛡️ Administrador
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={logout} 
+              fullWidth
+              className="border-red-300 text-red-600 hover:bg-red-50"
+            >
+              Cerrar Sesión
+            </Button>
+          </div>
+
+          <nav className={styles.accountNav}>
+            {adminNavItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`${styles.navItem} ${
+                  activeTab === item.tab ? styles.active : ''
+                }`}
+              >
+                {item.icon}
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        </aside>
+
+        {/* Admin Main Content */}
+        <main className={styles.mainContent}>
+          <Routes>
+            <Route index element={<AdminDashboard />} />
+            <Route path="bets-history" element={<AdminBetsHistory />} />
+            <Route path="users-management" element={<AdminUsersManagement />} />
+            <Route path="*" element={<Navigate to="/account" replace />} />
+          </Routes>
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  );
+};
+
+// Regular User Account Interface
+const RegularAccountPage = ({ user, logout }: { user: any; logout: () => void }) => {
+  const location = useLocation();
+  
+  // Determine active tab based on URL, default to profile
+  const getActiveTab = () => {
+    const path = location.pathname;
+    if (path === '/account/wallet') return 'wallet';
+    if (path === '/account/bets') return 'bets';
+    if (path === '/account/settings') return 'settings';
+    if (path === '/account' || path === '/account/') return 'profile';
+    return 'profile';
+  };
+  
+  const activeTab = getActiveTab();
+
   const navItems = [
     { path: '/account', label: 'Mi Perfil', icon: <UserIcon />, tab: 'profile' },
     { path: '/account/wallet', label: 'Monedero', icon: <WalletIcon />, tab: 'wallet' },
@@ -744,7 +853,9 @@ const AccountPage = () => {
             >
               Cerrar Sesión
             </Button>
-          </div>          <nav className={styles.accountNav}>
+          </div>
+
+          <nav className={styles.accountNav}>
             {navItems.map((item) => (
               <Link
                 key={item.path}
