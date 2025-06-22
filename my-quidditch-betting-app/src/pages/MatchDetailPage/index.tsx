@@ -5,7 +5,7 @@ import TeamLogo from '@/components/teams/TeamLogo';
 import LiveMatchViewer from '@/components/matches/LiveMatchViewer';
 import { Team, Match } from '@/types/league';
 import { virtualTimeManager } from '@/services/virtualTimeManager';
-import { PredictionsService, MatchPredictionStats, Prediction } from '@/services/predictionsService';
+import { PredictionsService, MatchPredictionStats, Prediction, FinishedMatchData } from '@/services/predictionsService';
 import styles from './MatchDetailPage.module.css';
 import { useAuth } from '@/context/AuthContext';
 
@@ -23,10 +23,10 @@ interface TabConfig {
 const tabs: TabConfig[] = [
   { 
     id: 'overview', 
-    label: 'Resumen', 
+    label: 'Cronología', 
     icon: '📊', 
-    magicalIcon: '✨', 
-    description: 'Vista general del encuentro mágico' 
+    magicalIcon: '⚡', 
+    description: 'Cronología en vivo del encuentro mágico' 
   },
   { 
     id: 'predictions', 
@@ -146,6 +146,9 @@ const MatchDetailPage = () => {
   // Related matches state
   const [relatedMatches, setRelatedMatches] = useState<Match[]>([]);
 
+  // State for finished match data
+  const [finishedMatchData, setFinishedMatchData] = useState<FinishedMatchData | null>(null);
+
   useEffect(() => {
     // Get the real match from virtual time manager
     setIsLoading(true);
@@ -181,19 +184,15 @@ const MatchDetailPage = () => {
         };
         
         setMatch(matchDetails);
-        
-        // Load prediction data
+          // Load prediction data and ensure mock predictions exist
+        predictionsService.addMockPredictionsForMatch(foundMatch.id);
         const stats = predictionsService.getMatchPredictionStats(foundMatch.id);
         setPredictionStats(stats);
-        setUserPrediction(stats.userPrediction || null);
-        
-        // Set default tab based on match status
+        setUserPrediction(stats.userPrediction || null);// Set default tab based on match status
         if (foundMatch.status === 'scheduled') {
           setActiveTab('predictions'); // Show predictions for upcoming matches
-        } else if (foundMatch.status === 'live') {
-          setActiveTab('overview'); // Show overview with live content for live matches
         } else {
-          setActiveTab('overview'); // Show overview with results for finished matches
+          setActiveTab('overview'); // Show timeline for live and finished matches
         }
         
         // Check if match is already in live simulation
@@ -226,6 +225,42 @@ const MatchDetailPage = () => {
     
     setIsLoading(false);
   }, [matchId, predictionsService]);
+
+  // Check if we have saved finished match data
+  useEffect(() => {
+    if (matchId && match && match.status === 'finished') {
+      const savedData = predictionsService.getFinishedMatchData(matchId);
+      if (savedData) {
+        setFinishedMatchData(savedData);
+      } else if (realMatch) {
+        // Save current match data for future reference
+        const timelineEvents = [
+          { minute: 0, event: 'Inicio del partido', score: { home: 0, away: 0 } },
+          { minute: 45, event: 'Final del primer tiempo', score: { home: Math.floor(realMatch.homeScore! / 2), away: Math.floor(realMatch.awayScore! / 2) } },
+          { minute: 90, event: 'Final del partido', score: { home: realMatch.homeScore!, away: realMatch.awayScore! } }
+        ];
+
+        const winner: 'home' | 'away' | 'draw' = 
+          realMatch.homeScore! > realMatch.awayScore! ? 'home' :
+          realMatch.awayScore! > realMatch.homeScore! ? 'away' : 'draw';
+
+        const matchData: FinishedMatchData = {
+          matchId: realMatch.id,
+          finalScore: {
+            home: realMatch.homeScore!,
+            away: realMatch.awayScore!
+          },
+          winner,
+          timeline: timelineEvents,
+          predictions: predictionStats!,
+          finishedAt: new Date()
+        };
+
+        predictionsService.saveFinishedMatchData(matchData);
+        setFinishedMatchData(matchData);
+      }
+    }
+  }, [matchId, match, realMatch, predictionStats, predictionsService]);
 
   const handleTabClick = (tabId: TabType) => {
     setActiveTab(tabId);
@@ -458,121 +493,183 @@ const MatchDetailPage = () => {
       </nav>
 
       {/* Tab Content */}
-      <main className={styles.tabContent}>
-        {activeTab === 'overview' && (
+      <main className={styles.tabContent}>        {activeTab === 'overview' && (
           <div className={styles.overviewTab}>
-            {match.status === 'upcoming' && (
-              <div className={styles.upcomingContent}>
-                <div className={styles.sectionCard}>
-                  <h2 className={styles.sectionTitle}>
-                    <span className={styles.sectionIcon}>✨</span>
-                    Próximo Encuentro Mágico
-                  </h2>
-                  <div className={styles.upcomingDetails}>
-                    <p className={styles.upcomingDescription}>
-                      Un emocionante duelo se avecina entre las casas de {match.homeTeam} y {match.awayTeam}. 
-                      Las escobas están listas, la Snitch Dorada aguarda, y la gloria está al alcance.
-                    </p>
-                    <div className={styles.matchPreview}>
-                      <div className={styles.previewStats}>
-                        <h3>Vista Previa del Encuentro</h3>
-                        <div className={styles.statsGrid}>
-                          <div className={styles.statItem}>
-                            <span className={styles.statLabel}>Encuentros Anteriores</span>
-                            <span className={styles.statValue}>12</span>
-                          </div>
-                          <div className={styles.statItem}>
-                            <span className={styles.statLabel}>Victorias Locales</span>
-                            <span className={styles.statValue}>7</span>
-                          </div>
-                          <div className={styles.statItem}>
-                            <span className={styles.statLabel}>Victorias Visitantes</span>
-                            <span className={styles.statValue}>5</span>
-                          </div>
-                        </div>
-                      </div>
+            <div className={styles.sectionCard}>
+              <h2 className={styles.sectionTitle}>
+                <span className={styles.sectionIcon}>⚡</span>
+                Cronología en Vivo
+              </h2>
+              
+              {match.status === 'upcoming' && (
+                <div className={styles.timelineUnavailable}>
+                  <div className={styles.unavailableIcon}>⏰</div>
+                  <h3>Cronología No Disponible</h3>
+                  <p>
+                    La cronología en vivo estará disponible cuando el duelo mágico comience. 
+                    Mientras tanto, puedes revisar las predicciones y estadísticas de los equipos.
+                  </p>
+                  <div className={styles.upcomingMatchInfo}>
+                    <div className={styles.matchCountdown}>
+                      <span className={styles.countdownLabel}>Inicio programado:</span>
+                      <span className={styles.countdownTime}>{match.date} a las {match.time}</span>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {match.status === 'live' && (
-              <div className={styles.liveContent}>
-                {!showLiveSimulation && realMatch && (
-                  <div className={styles.liveReadyCard}>
-                    <h2 className={styles.sectionTitle}>
-                      <span className={styles.sectionIcon}>🔴</span>
-                      Partido Listo para Comenzar
-                    </h2>
-                    <p>La magia está en el aire. Los equipos están listos. ¡Es hora de que comience el espectáculo!</p>
-                    <Button 
-                      onClick={handleStartMatch} 
-                      className={styles.startMatchButton}
-                      isLoading={isStartingMatch}
-                      disabled={isStartingMatch}
-                    >
-                      <span className={styles.actionIcon}>🚀</span>
-                      {isStartingMatch ? 'Invocando la Magia...' : 'Comenzar Duelo Mágico'}
-                    </Button>
-                  </div>
-                )}
+              {match.status === 'live' && (
+                <div className={styles.liveTimeline}>
+                  {realMatch && homeTeam && awayTeam ? (
+                    <>
+                      {!showLiveSimulation && (
+                        <div className={styles.liveReadyCard}>
+                          <div className={styles.liveReadyIcon}>🔴</div>
+                          <h3>Partido Listo para Comenzar</h3>
+                          <p>La cronología en vivo comenzará cuando inicies la simulación del duelo.</p>
+                          <Button 
+                            onClick={handleStartMatch} 
+                            className={styles.startMatchButton}
+                            isLoading={isStartingMatch}
+                            disabled={isStartingMatch}
+                          >
+                            <span className={styles.actionIcon}>�</span>
+                            {isStartingMatch ? 'Invocando la Magia...' : 'Iniciar Cronología'}
+                          </Button>
+                        </div>
+                      )}
 
-                {realMatch && homeTeam && awayTeam && showLiveSimulation && (
-                  <div className={styles.liveSimulationContainer}>
-                    <LiveMatchViewer 
-                      match={realMatch} 
-                      homeTeam={homeTeam} 
-                      awayTeam={awayTeam}
-                      refreshInterval={3}
-                      onMatchEnd={(endedMatchState) => {
-                        console.log('Match ended:', endedMatchState);
-                        virtualTimeManager.finalizarPartidoEnVivo(realMatch.id);
-                        setShowLiveSimulation(false);
-                        window.location.reload();
-                      }}
-                    />
-                  </div>
-                )}
-              </div>
-            )}
-
-            {match.status === 'finished' && (
-              <div className={styles.finishedContent}>
-                <div className={styles.sectionCard}>
-                  <h2 className={styles.sectionTitle}>
-                    <span className={styles.sectionIcon}>🏆</span>
-                    Duelo Completado
-                  </h2>
-                  <div className={styles.matchResult}>
-                    <div className={styles.finalScoreDisplay}>
-                      <span className={styles.winner}>
-                        {match.homeScore > match.awayScore ? match.homeTeam : match.awayTeam}
-                      </span>
-                      <span className={styles.resultText}>ha triunfado en este épico encuentro</span>
-                    </div>
-                    <div className={styles.scoreBreakdown}>
-                      <span>{match.homeTeam}: {match.homeScore} puntos</span>
-                      <span>{match.awayTeam}: {match.awayScore} puntos</span>
-                    </div>
-                  </div>
-                  
-                  {userPrediction && (
-                    <div className={styles.predictionResult}>
-                      <h3>Tu Predicción</h3>
-                      <div className={userPrediction.isCorrect ? styles.correctPrediction : styles.incorrectPrediction}>
-                        <span className={styles.predictionIcon}>
-                          {userPrediction.isCorrect ? '🎯' : '❌'}
-                        </span>
-                        <span>
-                          {userPrediction.isCorrect ? '¡Predicción acertada!' : 'Predicción incorrecta'}
-                        </span>
-                      </div>
+                      {showLiveSimulation && (
+                        <div className={styles.liveTimelineContainer}>
+                          <div className={styles.timelineHeader}>
+                            <div className={styles.liveIndicator}>
+                              <span className={styles.liveDot}></span>
+                              EN VIVO
+                            </div>
+                            <div className={styles.currentMinute}>
+                              Minuto: {realMatch.currentMinute || 0}'
+                            </div>
+                          </div>
+                          
+                          <LiveMatchViewer 
+                            match={realMatch} 
+                            homeTeam={homeTeam} 
+                            awayTeam={awayTeam}
+                            refreshInterval={3}
+                            onMatchEnd={(endedMatchState) => {
+                              console.log('Match ended:', endedMatchState);
+                              virtualTimeManager.finalizarPartidoEnVivo(realMatch.id);
+                              setShowLiveSimulation(false);
+                              window.location.reload();
+                            }}
+                          />
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className={styles.timelineError}>
+                      <div className={styles.errorIcon}>⚠️</div>
+                      <h3>Error al Cargar Cronología</h3>
+                      <p>No se pudieron cargar los datos del partido en vivo.</p>
                     </div>
                   )}
                 </div>
-              </div>
-            )}
+              )}              {match.status === 'finished' && (
+                <div className={styles.finishedTimeline}>
+                  <div className={styles.timelineHeader}>
+                    <div className={styles.finishedIndicator}>
+                      <span className={styles.finishedIcon}>🏁</span>
+                      FINALIZADO
+                    </div>
+                    <div className={styles.finalScore}>
+                      {match.homeTeam} {match.homeScore} - {match.awayTeam} {match.awayScore}
+                    </div>
+                  </div>
+                  
+                  <div className={styles.matchSummary}>
+                    <div className={styles.summaryCard}>
+                      <h3>Resumen del Duelo</h3>
+                      <div className={styles.matchResult}>
+                        <div className={styles.winner}>
+                          🏆 {match.homeScore > match.awayScore ? match.homeTeam : match.awayTeam}
+                        </div>
+                        <div className={styles.resultDetails}>
+                          <span>Victoria por {Math.abs(match.homeScore - match.awayScore)} puntos</span>
+                        </div>
+                      </div>
+                      
+                      {userPrediction && (
+                        <div className={styles.predictionResult}>
+                          <h4>Tu Predicción</h4>
+                          <div className={userPrediction.isCorrect ? styles.correctPrediction : styles.incorrectPrediction}>
+                            <span className={styles.predictionIcon}>
+                              {userPrediction.isCorrect ? '🎯' : '❌'}
+                            </span>
+                            <span>
+                              {userPrediction.isCorrect ? '¡Predicción acertada!' : 'Predicción incorrecta'}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      {finishedMatchData && (
+                        <div className={styles.communityPredictionsResult}>
+                          <h4>Resultados de Predicciones</h4>
+                          <div className={styles.predictionsStats}>
+                            <p>📊 Total de predicciones: <strong>{finishedMatchData.predictions.totalPredictions}</strong></p>
+                            <p>🎯 Predicciones correctas: <strong>
+                              {finishedMatchData.winner === 'home' ? finishedMatchData.predictions.homeWinPredictions :
+                               finishedMatchData.winner === 'away' ? finishedMatchData.predictions.awayWinPredictions :
+                               finishedMatchData.predictions.drawPredictions}
+                            </strong></p>
+                            <p>✨ Finalizado el: <strong>{new Date(finishedMatchData.finishedAt).toLocaleString('es-ES')}</strong></p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className={styles.timelineHistoryCard}>
+                      <h4>Cronología del Partido</h4>
+                      <div className={styles.timelineHistory}>
+                        {finishedMatchData && finishedMatchData.timeline ? (
+                          finishedMatchData.timeline.map((event, index) => (
+                            <div key={index} className={styles.timelineEvent}>
+                              <span className={styles.eventTime}>{event.minute}'</span>
+                              <span className={styles.eventDescription}>{event.event}</span>
+                              {event.score && (
+                                <span className={styles.eventScore}>
+                                  {event.score.home} - {event.score.away}
+                                </span>
+                              )}
+                            </div>
+                          ))
+                        ) : (
+                          <>
+                            <div className={styles.timelineEvent}>
+                              <span className={styles.eventTime}>0'</span>
+                              <span className={styles.eventDescription}>🏃‍♂️ Inicio del duelo mágico</span>
+                            </div>
+                            <div className={styles.timelineEvent}>
+                              <span className={styles.eventTime}>Final</span>
+                              <span className={styles.eventDescription}>
+                                🟡 Snitch capturada - {match.homeScore > match.awayScore ? match.homeTeam : match.awayTeam} obtiene la victoria
+                              </span>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                      <div className={styles.timelineNote}>
+                        <small>
+                          {finishedMatchData ? 
+                            '✨ Cronología completa guardada del partido simulado' : 
+                            '💡 La cronología detallada estará disponible en futuras simulaciones'}
+                        </small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -706,7 +803,7 @@ const MatchDetailPage = () => {
                                 className={styles.statFill} 
                                 style={{width: `${homeTeam.attackStrength}%`}}
                               ></div>
-                              <span className={styles.statValue}>{homeTeam.attackStrength}</span>
+                              <span className={styles.statBarValue}>{homeTeam.attackStrength}</span>
                             </div>
                           </div>
                           <div className={styles.statItem}>
@@ -715,8 +812,7 @@ const MatchDetailPage = () => {
                               <div 
                                 className={styles.statFill} 
                                 style={{width: `${homeTeam.defenseStrength}%`}}
-                              ></div>
-                              <span className={styles.statValue}>{homeTeam.defenseStrength}</span>
+                              ></div>                              <span className={styles.statBarValue}>{homeTeam.defenseStrength}</span>
                             </div>
                           </div>
                           <div className={styles.statItem}>
@@ -726,7 +822,7 @@ const MatchDetailPage = () => {
                                 className={styles.statFill} 
                                 style={{width: `${homeTeam.seekerSkill}%`}}
                               ></div>
-                              <span className={styles.statValue}>{homeTeam.seekerSkill}</span>
+                              <span className={styles.statBarValue}>{homeTeam.seekerSkill}</span>
                             </div>
                           </div>
                           <div className={styles.statItem}>
@@ -736,7 +832,7 @@ const MatchDetailPage = () => {
                                 className={styles.statFill} 
                                 style={{width: `${homeTeam.chaserSkill}%`}}
                               ></div>
-                              <span className={styles.statValue}>{homeTeam.chaserSkill}</span>
+                              <span className={styles.statBarValue}>{homeTeam.chaserSkill}</span>
                             </div>
                           </div>
                           <div className={styles.statItem}>
@@ -746,7 +842,7 @@ const MatchDetailPage = () => {
                                 className={styles.statFill} 
                                 style={{width: `${homeTeam.keeperSkill}%`}}
                               ></div>
-                              <span className={styles.statValue}>{homeTeam.keeperSkill}</span>
+                              <span className={styles.statBarValue}>{homeTeam.keeperSkill}</span>
                             </div>
                           </div>
                           <div className={styles.statItem}>
@@ -756,7 +852,7 @@ const MatchDetailPage = () => {
                                 className={styles.statFill} 
                                 style={{width: `${homeTeam.beaterSkill}%`}}
                               ></div>
-                              <span className={styles.statValue}>{homeTeam.beaterSkill}</span>
+                              <span className={styles.statBarValue}>{homeTeam.beaterSkill}</span>
                             </div>
                           </div>
                         </div>
@@ -793,8 +889,7 @@ const MatchDetailPage = () => {
                               <div 
                                 className={styles.statFill} 
                                 style={{width: `${awayTeam.attackStrength}%`}}
-                              ></div>
-                              <span className={styles.statValue}>{awayTeam.attackStrength}</span>
+                              ></div>                              <span className={styles.statBarValue}>{awayTeam.attackStrength}</span>
                             </div>
                           </div>
                           <div className={styles.statItem}>
@@ -804,7 +899,7 @@ const MatchDetailPage = () => {
                                 className={styles.statFill} 
                                 style={{width: `${awayTeam.defenseStrength}%`}}
                               ></div>
-                              <span className={styles.statValue}>{awayTeam.defenseStrength}</span>
+                              <span className={styles.statBarValue}>{awayTeam.defenseStrength}</span>
                             </div>
                           </div>
                           <div className={styles.statItem}>
@@ -814,7 +909,7 @@ const MatchDetailPage = () => {
                                 className={styles.statFill} 
                                 style={{width: `${awayTeam.seekerSkill}%`}}
                               ></div>
-                              <span className={styles.statValue}>{awayTeam.seekerSkill}</span>
+                              <span className={styles.statBarValue}>{awayTeam.seekerSkill}</span>
                             </div>
                           </div>
                           <div className={styles.statItem}>
@@ -824,7 +919,7 @@ const MatchDetailPage = () => {
                                 className={styles.statFill} 
                                 style={{width: `${awayTeam.chaserSkill}%`}}
                               ></div>
-                              <span className={styles.statValue}>{awayTeam.chaserSkill}</span>
+                              <span className={styles.statBarValue}>{awayTeam.chaserSkill}</span>
                             </div>
                           </div>
                           <div className={styles.statItem}>
@@ -834,7 +929,7 @@ const MatchDetailPage = () => {
                                 className={styles.statFill} 
                                 style={{width: `${awayTeam.keeperSkill}%`}}
                               ></div>
-                              <span className={styles.statValue}>{awayTeam.keeperSkill}</span>
+                              <span className={styles.statBarValue}>{awayTeam.keeperSkill}</span>
                             </div>
                           </div>
                           <div className={styles.statItem}>
@@ -844,7 +939,7 @@ const MatchDetailPage = () => {
                                 className={styles.statFill} 
                                 style={{width: `${awayTeam.beaterSkill}%`}}
                               ></div>
-                              <span className={styles.statValue}>{awayTeam.beaterSkill}</span>
+                              <span className={styles.statBarValue}>{awayTeam.beaterSkill}</span>
                             </div>
                           </div>
                         </div>

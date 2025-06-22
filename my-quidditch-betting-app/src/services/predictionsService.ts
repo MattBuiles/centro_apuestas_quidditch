@@ -25,9 +25,27 @@ export interface MatchPredictionStats {
   userPrediction?: Prediction;
 }
 
+export interface FinishedMatchData {
+  matchId: string;
+  finalScore: {
+    home: number;
+    away: number;
+  };
+  winner: 'home' | 'away' | 'draw';
+  timeline: Array<{
+    minute: number;
+    event: string;
+    team?: 'home' | 'away';
+    score?: { home: number; away: number };
+  }>;
+  predictions: MatchPredictionStats;
+  finishedAt: Date;
+}
+
 export class PredictionsService {
   private readonly STORAGE_KEY = 'quidditch_predictions';
   private readonly MOCK_PREDICTIONS_KEY = 'quidditch_mock_predictions';
+  private readonly FINISHED_MATCHES_KEY = 'quidditch_finished_matches';
   
   constructor() {
     this.initializeMockPredictions();
@@ -97,6 +115,52 @@ export class PredictionsService {
       prediction.isCorrect = prediction.predictedWinner === actualResult;
       this.savePrediction(prediction);
     }
+  }
+
+  /**
+   * Save finished match data with timeline and predictions
+   */
+  saveFinishedMatchData(matchData: FinishedMatchData): void {
+    try {
+      const finishedMatches = this.getAllFinishedMatches();
+      
+      // Remove existing entry if it exists
+      const filteredMatches = finishedMatches.filter(m => m.matchId !== matchData.matchId);
+      
+      // Add new entry
+      filteredMatches.push(matchData);
+      
+      localStorage.setItem(this.FINISHED_MATCHES_KEY, JSON.stringify(filteredMatches));
+    } catch (error) {
+      console.error('Error saving finished match data:', error);
+    }
+  }
+
+  /**
+   * Get finished match data
+   */
+  getFinishedMatchData(matchId: string): FinishedMatchData | null {
+    const finishedMatches = this.getAllFinishedMatches();
+    return finishedMatches.find(m => m.matchId === matchId) || null;
+  }
+
+  /**
+   * Get all finished matches
+   */
+  private getAllFinishedMatches(): FinishedMatchData[] {
+    try {
+      const stored = localStorage.getItem(this.FINISHED_MATCHES_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * Check if match data is saved
+   */
+  hasFinishedMatchData(matchId: string): boolean {
+    return this.getFinishedMatchData(matchId) !== null;
   }
 
   /**
@@ -188,16 +252,44 @@ export class PredictionsService {
     });
 
     localStorage.setItem(this.MOCK_PREDICTIONS_KEY, JSON.stringify(mockData));
-  }
-  /**
+  }  /**
    * Generate mock predictions for a specific match
    */
   private generateMockPredictionsForMatch(matchId: string): Prediction[] {
     const predictions: Prediction[] = [];
-    const numPredictions = Math.floor(Math.random() * 50) + 20; // 20-70 predictions
+    const numPredictions = Math.floor(Math.random() * 50) + 148; // 148-198 predictions (as requested: 148 additional)
+
+    // List of magical wizard names for more immersive experience
+    const wizardNames = [
+      'Albus_Dumbledore', 'Minerva_McGonagall', 'Severus_Snape', 'Rubeus_Hagrid', 'Hermione_Granger',
+      'Luna_Lovegood', 'Neville_Longbottom', 'Cedric_Diggory', 'Cho_Chang', 'Dean_Thomas',
+      'Seamus_Finnigan', 'Lavender_Brown', 'Parvati_Patil', 'Padma_Patil', 'Lee_Jordan',
+      'Oliver_Wood', 'Marcus_Flint', 'Viktor_Krum', 'Fleur_Delacour', 'Gabrielle_Delacour',
+      'Bill_Weasley', 'Charlie_Weasley', 'Percy_Weasley', 'Fred_Weasley', 'George_Weasley',
+      'Ginny_Weasley', 'Ron_Weasley', 'Arthur_Weasley', 'Molly_Weasley', 'Sirius_Black',
+      'Remus_Lupin', 'Tonks_Lupin', 'Mad_Eye_Moody', 'Kingsley_Shacklebolt', 'Auror_Smith',
+      'Professor_Sprout', 'Professor_Flitwick', 'Professor_Trelawney', 'Professor_Binns', 'Madam_Hooch',
+      'Madam_Pomfrey', 'Madam_Pince', 'Nearly_Headless_Nick', 'Fat_Lady', 'Bloody_Baron',
+      'Grey_Lady', 'Fat_Friar', 'Peeves_Poltergeist', 'Dobby_Elf', 'Winky_Elf',
+      'Kreacher_Elf', 'Griphook_Goblin', 'Firenze_Centaur', 'Bane_Centaur', 'Ronan_Centaur',
+      'Grawp_Giant', 'Aragog_Spider', 'Buckbeak_Hippogriff', 'Norbert_Dragon', 'Fluffy_Dog',
+      'Phoenix_Fawkes', 'Hedwig_Owl', 'Errol_Owl', 'Pigwidgeon_Owl', 'Crookshanks_Cat',
+      'Mrs_Norris_Cat', 'Scabbers_Rat', 'Trevor_Toad', 'Wizard_Alex', 'Sorceress_Maya',
+      'Enchanter_Kai', 'Mystic_Zara', 'Spellcaster_Leo', 'Witch_Iris', 'Warlock_Rex',
+      'Sage_Nova', 'Oracle_Vera', 'Mage_Finn', 'Conjurer_Lux', 'Druid_Sage', 'Rune_Master',
+      'Crystal_Gazer', 'Star_Reader', 'Moon_Whisperer', 'Sun_Caller', 'Storm_Weaver', 
+      'Shadow_Walker', 'Light_Bringer', 'Time_Keeper', 'Dream_Weaver', 'Spirit_Guide',
+      'Ancient_Wizard', 'Young_Apprentice', 'Elder_Sage', 'Wise_Oracle', 'Brave_Auror',
+      'Clever_Ravenclaw', 'Loyal_Hufflepuff', 'Cunning_Slytherin', 'Bold_Gryffindor', 'House_Elf_Helper',
+      'Quidditch_Fan_01', 'Quidditch_Fan_02', 'Quidditch_Fan_03', 'Quidditch_Fan_04', 'Quidditch_Fan_05',
+      'Magical_Analyst', 'Sports_Prophet', 'Game_Seer', 'Match_Oracle', 'Victory_Predictor',
+      'Score_Whisperer', 'Snitch_Tracker', 'Seeker_Expert', 'Chaser_Specialist', 'Keeper_Judge',
+      'Beater_Critic', 'Team_Strategist', 'Magic_Statistician', 'Quidditch_Historian', 'Legendary_Fan'
+    ];
 
     for (let i = 0; i < numPredictions; i++) {
-      const weights = [0.4, 0.4, 0.2]; // Home slight favorite, draw less likely
+      // More realistic distribution: slight home advantage but closer odds
+      const weights = [0.42, 0.38, 0.20]; // Home slight favorite, away close second, draw less likely
       const randomValue = Math.random();
       
       let predictedWinner: 'home' | 'away' | 'draw';
@@ -209,13 +301,16 @@ export class PredictionsService {
         predictedWinner = 'draw';
       }
 
+      // Pick a random wizard name
+      const wizardName = wizardNames[Math.floor(Math.random() * wizardNames.length)];
+      
       predictions.push({
         id: `mock_pred_${matchId}_${i}`,
         matchId,
-        userId: `mock_user_${i}`,
+        userId: `${wizardName}_${i}`,
         predictedWinner,
         confidence: Math.floor(Math.random() * 5) + 1,
-        timestamp: new Date(Date.now() - Math.random() * 86400000 * 7) // Last 7 days
+        timestamp: new Date(Date.now() - Math.random() * 86400000 * 14) // Last 14 days for variety
       });
     }
 
