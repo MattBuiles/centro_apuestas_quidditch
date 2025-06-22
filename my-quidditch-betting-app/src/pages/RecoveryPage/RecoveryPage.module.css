@@ -1,140 +1,769 @@
+/* ===== RECOVERY PAGE - DISEÑO MÁGICO ELEGANTE ===== */
+
+/* Container principal con fondo mágico */
 .recoveryPageContainer {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: var(--container-padding-y) var(--container-padding-x);
-    max-width: 480px;
-    margin: var(--spacing-xl) auto;
-    min-height: 100vh;
-    justify-content: center;
-    animation: fadeInUp 0.7s ease-out forwards;
+  min-height: 100vh;
+  background: linear-gradient(135deg, 
+    #f0e6f6 0%, 
+    #e6d7f0 25%, 
+    #d9c9e8 50%, 
+    #e8ddf2 75%, 
+    #f8fafc 100%
+  );
+  padding: clamp(var(--spacing-4), 4vw, var(--spacing-8));
+  position: relative;
+  overflow-x: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: magicalFadeIn 1.2s ease-out forwards;
 }
 
+/* Efectos mágicos de fondo */
+.recoveryPageContainer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 25% 35%, rgba(75, 0, 130, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 75% 65%, rgba(255, 204, 0, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 50% 85%, rgba(106, 90, 205, 0.06) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+  animation: magicalPulse 4s ease-in-out infinite;
+}
+
+/* Partículas mágicas flotantes */
+.recoveryPageContainer::after {
+  content: '🦉 ✨ 🔮 ⚡ 🌟 📜 🦉 ✨ 🔮 ⚡ 🌟 📜 🦉 ✨ 🔮 ⚡ 🌟 📜';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  opacity: 0.08;
+  pointer-events: none;
+  z-index: 0;
+  font-size: clamp(1rem, 2vw, 1.5rem);
+  line-height: 4;
+  white-space: pre-wrap;
+  overflow: hidden;
+  animation: floatingParticles 20s linear infinite;
+}
+
+/* Título con efecto mágico mejorado */
 .recoveryPageTitle {
-    font-family: var(--font-family-display);
-    font-size: clamp(1.5rem, 5vw, 2rem);
-    color: var(--primary-color);
-    text-align: center;
-    margin-bottom: var(--spacing-sm);
-    font-weight: 700;
+  font-family: var(--font-secondary);
+  font-size: clamp(1.8rem, 5vw, 2.5rem);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 50%, var(--color-secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-align: center;
+  margin-bottom: var(--spacing-4);
+  font-weight: 700;
+  text-shadow: 0 4px 8px rgba(75, 0, 130, 0.15);
+  animation: titleGlow 3s ease-in-out infinite alternate;
+  letter-spacing: 1px;
 }
 
+/* Descripción con estilo elegante */
 .recoveryPageDescription {
-    font-size: var(--font-size-base);
-    color: var(--text-color-light);
-    text-align: center;
-    margin-bottom: var(--spacing-xl);
-    line-height: 1.6;
-    max-width: 400px;
+  font-family: var(--font-primary);
+  font-size: var(--text-lg);
+  color: var(--color-gray-700);
+  text-align: center;
+  margin-bottom: var(--spacing-8);
+  line-height: 1.7;
+  max-width: 450px;
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-/* The Card, Form, Button styles will be inherited from global.css 
-   or their respective component modules if they exist.
-   You can add specific overrides here if needed.
-   For example, if the Card within RecoveryPage needs a different shadow:
-*/
+/* Tarjeta principal con diseño premium */
 .recoveryCard {
-    padding: var(--spacing-xl);
-    box-shadow: var(--shadow-card);
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: var(--border-radius-lg);
-    backdrop-filter: blur(10px);
-    width: 100%;
-    max-width: 400px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius-xl);
+  padding: clamp(var(--spacing-6), 6vw, var(--spacing-12));
+  box-shadow: 
+    0 20px 40px rgba(75, 0, 130, 0.1),
+    0 8px 25px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  width: 100%;
+  max-width: 480px;
+  position: relative;
+  z-index: 10;
+  animation: cardFloat 6s ease-in-out infinite;
+  transition: all 0.4s ease;
 }
 
+.recoveryCard:hover {
+  transform: translateY(-8px);
+  box-shadow: 
+    0 25px 50px rgba(75, 0, 130, 0.15),
+    0 12px 30px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+/* Decoración mágica para la tarjeta */
+.recoveryCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(106, 90, 205, 0.03) 0%, 
+    rgba(255, 204, 0, 0.03) 50%, 
+    rgba(75, 0, 130, 0.03) 100%
+  );
+  border-radius: var(--radius-xl);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Formulario con espaciado mejorado */
+.recoveryForm {
+  position: relative;
+  z-index: 1;
+}
+
+/* Grupos de formulario con mejor espaciado */
 .formGroup {
-    margin-bottom: var(--spacing-lg);
+  margin-bottom: var(--spacing-6);
+  position: relative;
 }
 
+/* Labels con estilo mágico */
 .formLabel {
-    display: block;
-    font-size: var(--font-size-sm);
-    font-weight: 600;
-    color: var(--text-color);
-    margin-bottom: var(--spacing-sm);
+  display: block;
+  font-family: var(--font-primary);
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-gray-800);
+  margin-bottom: var(--spacing-3);
+  position: relative;
+  z-index: 1;
+  letter-spacing: 0.5px;
 }
 
+/* Inputs con diseño premium y efectos mágicos */
 .formInput {
-    width: 100%;
-    padding: var(--spacing-md);
-    border: 2px solid var(--border-color);
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow-sm);
-    font-size: var(--font-size-base);
-    transition: all 0.2s ease;
-    background: rgba(255, 255, 255, 0.9);
+  width: 100%;
+  padding: var(--spacing-4) var(--spacing-5);
+  border: 2px solid rgba(106, 90, 205, 0.2);
+  border-radius: var(--radius-lg);
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  font-size: var(--text-base);
+  font-family: var(--font-body);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--color-gray-800);
+  position: relative;
+  z-index: 1;
+}
+
+.formInput::placeholder {
+  color: var(--color-gray-500);
+  font-style: italic;
+  transition: opacity 0.3s ease;
 }
 
 .formInput:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.1);
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 
+    0 0 0 4px rgba(106, 90, 205, 0.15),
+    0 8px 25px rgba(106, 90, 205, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 1);
 }
 
+.formInput:focus::placeholder {
+  opacity: 0.7;
+}
+
+/* Hints mejorados */
+.formHint {
+  color: var(--color-gray-600);
+  font-size: var(--text-sm);
+  margin-top: var(--spacing-2);
+  display: block;
+  font-style: italic;
+  font-family: var(--font-body);
+  line-height: 1.4;
+  padding-left: var(--spacing-1);
+}
+
+/* Botón principal con diseño premium */
 .submitButton {
-    margin-top: var(--spacing-md);
-    width: 100%;
+  width: 100%;
+  padding: var(--spacing-4) var(--spacing-6);
+  margin-top: var(--spacing-6);
+  background: linear-gradient(135deg, 
+    var(--color-primary) 0%, 
+    var(--color-primary-light) 50%, 
+    var(--color-primary) 100%
+  );
+  border: none;
+  border-radius: var(--radius-lg);
+  color: white;
+  font-family: var(--font-primary);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 8px 20px rgba(106, 90, 205, 0.3),
+    0 4px 12px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  z-index: 1;
 }
 
+/* Efecto de brillo deslizante */
+.submitButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.4), 
+    transparent
+  );
+  transition: left 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1;
+}
+
+.submitButton:hover::before {
+  left: 100%;
+}
+
+.submitButton:hover {
+  transform: translateY(-3px);
+  box-shadow: 
+    0 12px 30px rgba(106, 90, 205, 0.4),
+    0 6px 20px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  background: linear-gradient(135deg, 
+    var(--color-primary-light) 0%, 
+    var(--color-primary) 50%, 
+    var(--color-primary-light) 100%
+  );
+}
+
+.submitButton:active {
+  transform: translateY(-1px);
+}
+
+.submitButton:disabled {
+  background: linear-gradient(135deg, 
+    var(--color-gray-400) 0%, 
+    var(--color-gray-500) 100%
+  );
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Enlaces de autenticación con estilo mejorado */
 .authLinks {
-    text-align: center;
-    margin-top: var(--spacing-xl);
+  text-align: center;
+  margin-top: var(--spacing-8);
+  padding-top: var(--spacing-6);
+  border-top: 1px solid rgba(106, 90, 205, 0.1);
 }
 
-.authLinks p,
-.authLinks a {
-    font-size: var(--font-size-sm);
+.authLinks p {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--color-gray-700);
+  margin: 0;
 }
 
-.authLinks a {
-    font-weight: 600;
-    color: var(--primary-color);
-    text-decoration: none;
-    transition: color 0.2s ease;
+.authLink {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-family: var(--font-primary);
+  font-weight: 600;
+  font-size: var(--text-base);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  display: inline-block;
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--radius-md);
 }
 
-.authLinks a:hover {
-    color: var(--primary-color-dark);
+.authLink::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateX(-50%);
 }
 
+.authLink:hover {
+  color: var(--color-primary-light);
+  transform: translateY(-2px);
+  background: rgba(106, 90, 205, 0.05);
+}
+
+.authLink:hover::before {
+  width: 100%;
+}
+
+/* Mensajes de estado con diseño mejorado */
 .message {
-    padding: var(--spacing-md);
-    border-radius: var(--border-radius);
-    font-size: var(--font-size-sm);
-    margin-bottom: var(--spacing-md);
-    border-width: 2px;
-    border-style: solid;
-    animation: fadeIn 0.3s ease;
+  padding: var(--spacing-4) var(--spacing-5);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 500;
+  margin-bottom: var(--spacing-6);
+  border-width: 1px;
+  border-style: solid;
+  position: relative;
+  animation: messageSlideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .messageSuccess {
-    background-color: rgba(40, 167, 69, 0.1);
-    border-color: #28a745;
-    color: #155724;
+  background: linear-gradient(135deg, 
+    rgba(46, 204, 113, 0.1) 0%, 
+    rgba(39, 174, 96, 0.05) 100%
+  );
+  border-color: #2ecc71;
+  color: #155724;
+  box-shadow: 
+    0 4px 12px rgba(46, 204, 113, 0.2),
+    0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
 .messageError {
-    background-color: rgba(220, 53, 69, 0.1);
-    border-color: #dc3545;
-    color: #721c24;
+  background: linear-gradient(135deg, 
+    rgba(231, 76, 60, 0.1) 0%, 
+    rgba(192, 57, 43, 0.05) 100%
+  );
+  border-color: #e74c3c;
+  color: #721c24;
+  box-shadow: 
+    0 4px 12px rgba(231, 76, 60, 0.2),
+    0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
-/* Mobile responsive */
+.message::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+  background: linear-gradient(to bottom, 
+    var(--color-primary), 
+    var(--color-secondary)
+  );
+}
+
+/* ===== ANIMACIÓN DE LECHUZA MÁGICA MEJORADA ===== */
+.owlAnimation {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: var(--spacing-8) 0;
+  padding: var(--spacing-6) var(--spacing-8);
+  background: linear-gradient(135deg, 
+    rgba(248, 248, 255, 0.9) 0%, 
+    rgba(240, 230, 246, 0.9) 50%, 
+    rgba(230, 215, 240, 0.9) 100%
+  );
+  border-radius: var(--radius-xl);
+  border: 2px solid rgba(106, 90, 205, 0.2);
+  backdrop-filter: blur(15px);
+  box-shadow: 
+    0 8px 25px rgba(106, 90, 205, 0.2),
+    0 4px 12px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  position: relative;
+  overflow: hidden;
+  animation: owlContainerPulse 2s ease-in-out infinite;
+}
+
+/* Decoración de fondo para la animación de lechuza */
+.owlAnimation::before {
+  content: '⭐ ✨ 🌟 ⭐ ✨ 🌟';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  font-size: 1rem;
+  opacity: 0.1;
+  animation: sparkleFloat 3s ease-in-out infinite;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  flex-wrap: wrap;
+}
+
+.owl {
+  font-size: clamp(3rem, 8vw, 4rem);
+  animation: owlFlyEnhanced 2.5s ease-in-out infinite;
+  margin-bottom: var(--spacing-4);
+  filter: drop-shadow(0 4px 8px rgba(106, 90, 205, 0.3));
+  position: relative;
+  z-index: 1;
+}
+
+.owlMessage {
+  font-family: var(--font-primary);
+  font-style: italic;
+  color: var(--color-primary);
+  font-weight: 600;
+  font-size: var(--text-lg);
+  text-align: center;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  letter-spacing: 0.5px;
+  position: relative;
+  z-index: 1;
+  animation: messageGlow 2s ease-in-out infinite alternate;
+}
+
+/* ===== ANIMACIONES MÁGICAS ELEGANTES ===== */
+
+/* Animación de entrada principal */
+@keyframes magicalFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Pulso mágico del fondo */
+@keyframes magicalPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.02);
+  }
+}
+
+/* Partículas flotantes */
+@keyframes floatingParticles {
+  0% {
+    transform: translateY(100vh) rotate(0deg);
+  }
+  100% {
+    transform: translateY(-100px) rotate(360deg);
+  }
+}
+
+/* Resplandor del título */
+@keyframes titleGlow {
+  0% {
+    text-shadow: 
+      0 0 10px rgba(75, 0, 130, 0.3),
+      0 0 20px rgba(106, 90, 205, 0.2);
+  }
+  100% {
+    text-shadow: 
+      0 0 20px rgba(75, 0, 130, 0.5),
+      0 0 30px rgba(106, 90, 205, 0.3),
+      0 0 40px rgba(255, 204, 0, 0.2);
+  }
+}
+
+/* Flotación suave de la tarjeta */
+@keyframes cardFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* Aparición suave de mensajes */
+@keyframes messageSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Animación mejorada de la lechuza */
+@keyframes owlFlyEnhanced {
+  0%, 100% {
+    transform: translateY(0px) rotate(-3deg) scale(1);
+  }
+  25% {
+    transform: translateY(-8px) rotate(2deg) scale(1.05);
+  }
+  50% {
+    transform: translateY(-12px) rotate(-1deg) scale(1.1);
+  }
+  75% {
+    transform: translateY(-8px) rotate(2deg) scale(1.05);
+  }
+}
+
+/* Pulso del contenedor de lechuza */
+@keyframes owlContainerPulse {
+  0%, 100% {
+    box-shadow: 
+      0 8px 25px rgba(106, 90, 205, 0.2),
+      0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  50% {
+    box-shadow: 
+      0 12px 35px rgba(106, 90, 205, 0.3),
+      0 6px 18px rgba(0, 0, 0, 0.15);
+  }
+}
+
+/* Chispas flotantes */
+@keyframes sparkleFloat {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+    opacity: 0.1;
+  }
+  50% {
+    transform: translateY(-10px) rotate(180deg);
+    opacity: 0.2;
+  }
+}
+
+/* Resplandor del mensaje de lechuza */
+@keyframes messageGlow {
+  0% {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  100% {
+    text-shadow: 
+      0 2px 4px rgba(0, 0, 0, 0.1),
+      0 0 15px rgba(106, 90, 205, 0.4);
+  }
+}
+
+/* ===== RESPONSIVIDAD MEJORADA ===== */
+
+/* Tablets y dispositivos medianos */
+@media (max-width: 1024px) {
+  .recoveryPageContainer {
+    padding: var(--spacing-6) var(--spacing-4);
+  }
+  
+  .recoveryCard {
+    padding: var(--spacing-8) var(--spacing-6);
+    max-width: 450px;
+  }
+  
+  .recoveryPageTitle {
+    font-size: clamp(1.6rem, 4.5vw, 2.2rem);
+  }
+  
+  .owl {
+    font-size: clamp(2.5rem, 7vw, 3.5rem);
+  }
+}
+
+/* Móviles grandes */
 @media (max-width: 768px) {
-    .recoveryPageContainer {
-        padding: var(--spacing-md);
-        margin: var(--spacing-lg) auto;
-    }
-    
-    .recoveryCard {
-        padding: var(--spacing-lg);
-        margin: 0 var(--spacing-sm);
-    }
+  .recoveryPageContainer {
+    padding: var(--spacing-4) var(--spacing-3);
+    min-height: 100vh;
+  }
+  
+  .recoveryCard {
+    padding: var(--spacing-6) var(--spacing-5);
+    margin: 0 var(--spacing-2);
+    max-width: 100%;
+  }
+  
+  .recoveryPageTitle {
+    font-size: clamp(1.4rem, 4vw, 1.8rem);
+    margin-bottom: var(--spacing-3);
+  }
+  
+  .recoveryPageDescription {
+    font-size: var(--text-base);
+    margin-bottom: var(--spacing-6);
+  }
+  
+  .formGroup {
+    margin-bottom: var(--spacing-5);
+  }
+  
+  .formInput {
+    padding: var(--spacing-3) var(--spacing-4);
+    font-size: var(--text-base);
+  }
+  
+  .submitButton {
+    padding: var(--spacing-3) var(--spacing-5);
+    font-size: var(--text-base);
+  }
+  
+  .owlAnimation {
+    margin: var(--spacing-6) 0;
+    padding: var(--spacing-5) var(--spacing-6);
+  }
+  
+  .owl {
+    font-size: clamp(2.2rem, 6vw, 3rem);
+  }
+  
+  .owlMessage {
+    font-size: var(--text-base);
+  }
 }
 
+/* Móviles pequeños */
 @media (max-width: 480px) {
-    .recoveryCard {
-        padding: var(--spacing-md);
-    }
+  .recoveryPageContainer {
+    padding: var(--spacing-3) var(--spacing-2);
+  }
+  
+  .recoveryCard {
+    padding: var(--spacing-5) var(--spacing-4);
+    margin: 0 var(--spacing-1);
+    border-radius: var(--radius-lg);
+  }
+  
+  .recoveryPageTitle {
+    font-size: clamp(1.3rem, 3.5vw, 1.6rem);
+    margin-bottom: var(--spacing-2);
+  }
+  
+  .recoveryPageDescription {
+    font-size: var(--text-sm);
+    margin-bottom: var(--spacing-5);
+    line-height: 1.6;
+  }
+  
+  .formLabel {
+    font-size: var(--text-sm);
+    margin-bottom: var(--spacing-2);
+  }
+  
+  .formInput {
+    padding: var(--spacing-3);
+    font-size: var(--text-sm);
+  }
+  
+  .formHint {
+    font-size: var(--text-xs);
+    margin-top: var(--spacing-1);
+  }
+  
+  .submitButton {
+    padding: var(--spacing-3) var(--spacing-4);
+    font-size: var(--text-base);
+    margin-top: var(--spacing-5);
+  }
+  
+  .message {
+    padding: var(--spacing-3) var(--spacing-4);
+    font-size: var(--text-sm);
+    margin-bottom: var(--spacing-5);
+  }
+  
+  .owlAnimation {
+    margin: var(--spacing-5) 0;
+    padding: var(--spacing-4) var(--spacing-5);
+  }
+  
+  .owl {
+    font-size: clamp(2rem, 5vw, 2.5rem);
+    margin-bottom: var(--spacing-3);
+  }
+  
+  .owlMessage {
+    font-size: var(--text-sm);
+  }
+  
+  .authLinks {
+    margin-top: var(--spacing-6);
+    padding-top: var(--spacing-5);
+  }
+  
+  .authLinks p,
+  .authLink {
+    font-size: var(--text-sm);
+  }
+}
+
+/* Dispositivos muy pequeños */
+@media (max-width: 360px) {
+  .recoveryCard {
+    padding: var(--spacing-4) var(--spacing-3);
+  }
+  
+  .recoveryPageTitle {
+    font-size: 1.2rem;
+  }
+  
+  .owl {
+    font-size: 1.8rem;
+  }
+}
+
+/* Mejoras para modo paisaje en móviles */
+@media (max-height: 600px) and (orientation: landscape) {
+  .recoveryPageContainer {
+    padding: var(--spacing-2) var(--spacing-4);
+    min-height: auto;
+  }
+  
+  .recoveryCard {
+    margin: var(--spacing-2) auto;
+  }
+  
+  .recoveryPageTitle {
+    margin-bottom: var(--spacing-2);
+  }
+  
+  .recoveryPageDescription {
+    margin-bottom: var(--spacing-4);
+  }
+  
+  .formGroup {
+    margin-bottom: var(--spacing-4);
+  }
+  
+  .owlAnimation {
+    margin: var(--spacing-4) 0;
+    padding: var(--spacing-3) var(--spacing-5);
+  }
 }

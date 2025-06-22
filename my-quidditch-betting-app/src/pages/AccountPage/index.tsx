@@ -30,15 +30,21 @@ interface Transaction {
 
 // Define sub-components for each account section
 const ProfileSection = () => {
-    const { user, updateUserProfile } = useAuth();
+    const { user, updateUserProfile, validateCurrentPassword, updatePassword } = useAuth();
     const [isEditing, setIsEditing] = useState(false);
     const [isChangingAvatar, setIsChangingAvatar] = useState(false);
+    const [isChangingPassword, setIsChangingPassword] = useState(false);
     const [formData, setFormData] = useState({
         username: user?.username || '',
         email: user?.email || '',
         newPassword: '',
         confirmPassword: ''
-    });    // Available avatar options
+    });
+    const [passwordData, setPasswordData] = useState({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+    });// Available avatar options
     const avatarOptions = [
         { id: 'wizard1', src: userLogoSrc, name: 'Mago Clásico' },
         { id: 'wizard2', src: user2LogoSrc, name: 'Mago Moderno' },
@@ -96,9 +102,7 @@ const ProfileSection = () => {
         
         // Show success message
         alert('Perfil actualizado exitosamente');
-    };
-
-    const handleCancel = () => {
+    };    const handleCancel = () => {
         // Reset form data to current user data
         if (user) {
             setFormData({
@@ -109,6 +113,53 @@ const ProfileSection = () => {
             });
         }
         setIsEditing(false);
+    };    const handlePasswordChange = (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        // Validar contraseña actual usando la función del contexto
+        if (!validateCurrentPassword(passwordData.currentPassword)) {
+            alert('La contraseña actual no es correcta. Peeves está riéndose de ti. 🃏');
+            return;
+        }
+
+        // Validar nueva contraseña
+        if (passwordData.newPassword !== passwordData.confirmPassword) {
+            alert('Las contraseñas no coinciden. Incluso la magia requiere precisión. ✨');
+            return;
+        }
+
+        if (passwordData.newPassword.length < 6) {
+            alert('La contraseña debe tener al menos 6 caracteres para ser verdaderamente mágica. 🔮');
+            return;
+        }
+
+        // Actualizar contraseña usando la función del contexto
+        updatePassword(passwordData.newPassword);
+
+        console.log('Password updated successfully:', {
+            userId: user?.id,
+            timestamp: new Date().toISOString()
+        });
+
+        // Reset form
+        setPasswordData({
+            currentPassword: '',
+            newPassword: '',
+            confirmPassword: ''
+        });
+        setIsChangingPassword(false);
+        
+        // Mostrar mensaje de éxito
+        alert('✨ ¡Tu nueva contraseña ha sido encantada por el mismísimo Dumbledore! Tu cuenta está ahora más segura que la bóveda de Gringotts. 🏛️');
+    };
+
+    const handlePasswordCancel = () => {
+        setPasswordData({
+            currentPassword: '',
+            newPassword: '',
+            confirmPassword: ''
+        });
+        setIsChangingPassword(false);
     };
 
     const userStats = {
@@ -246,9 +297,84 @@ const ProfileSection = () => {
                             >
                                 ✏️ Editar Perfil
                             </Button>
-                        </div>
-                    )}
-                </Card>                <Card className={`${styles.card} ${styles.statsCard}`}>
+                        </div>                    )}
+                </Card>                {/* Nueva tarjeta para cambio de contraseña - Solo para usuarios regulares */}
+                {user?.role !== 'admin' && (
+                    <Card className={styles.card}>
+                        <h3 className={styles.cardTitle}>🔐 Seguridad Mágica</h3>
+                        {!isChangingPassword ? (
+                            <div className={styles.passwordInfo}>
+                                <p className={styles.passwordDescription}>
+                                    Mantén tu cuenta segura con una contraseña fuerte que ni siquiera Voldemort pueda descifrar.
+                                </p>
+                                <div className={styles.buttonContainer}>
+                                    <Button 
+                                        variant="primary" 
+                                        onClick={() => setIsChangingPassword(true)}
+                                        fullWidth
+                                    >
+                                        🪄 Cambiar Contraseña
+                                    </Button>
+                                </div>
+                            </div>
+                        ) : (
+                            <form onSubmit={handlePasswordChange} className={styles.form}>
+                                <div className={styles.formGroup}>
+                                    <label className={styles.formLabel}>🔒 Contraseña Actual:</label>
+                                    <input 
+                                        type="password" 
+                                        placeholder="Tu contraseña actual"
+                                        className={styles.formInput}
+                                        value={passwordData.currentPassword}
+                                        onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
+                                        required
+                                    />
+                                    <small className={styles.formHelp}>
+                                        Ingresa tu contraseña actual para verificar tu identidad
+                                    </small>
+                                </div>
+                                <div className={styles.formGroup}>
+                                    <label className={styles.formLabel}>🔮 Nueva Contraseña:</label>
+                                    <input 
+                                        type="password" 
+                                        placeholder="Tu nueva contraseña mágica"
+                                        className={styles.formInput}
+                                        value={passwordData.newPassword}
+                                        onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
+                                        minLength={6}
+                                        required
+                                    />
+                                    <small className={styles.formHelp}>
+                                        Mínimo 6 caracteres para una protección mágica adecuada
+                                    </small>
+                                </div>
+                                <div className={styles.formGroup}>
+                                    <label className={styles.formLabel}>🔐 Confirmar Nueva Contraseña:</label>
+                                    <input 
+                                        type="password" 
+                                        placeholder="Repite tu nueva contraseña"
+                                        className={styles.formInput}
+                                        value={passwordData.confirmPassword}
+                                        onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
+                                        minLength={6}
+                                        required
+                                    />
+                                    <small className={styles.formHelp}>
+                                        Debe coincidir exactamente con la nueva contraseña
+                                    </small>
+                                </div>
+                                <div className={styles.buttonGroup}>
+                                    <Button type="submit" variant="primary">
+                                        ✨ Actualizar Contraseña
+                                    </Button>
+                                    <Button type="button" variant="outline" onClick={handlePasswordCancel}>
+                                        ❌ Cancelar
+                                    </Button>
+                                </div>
+                            </form>
+                        )}
+                    </Card>
+                )}<Card className={`${styles.card} ${styles.statsCard}`}>
                     <h3 className={`${styles.cardTitle} ${styles.titleWithIcon}`}>
                         <TrophyIcon />
                         Estadísticas del Mago

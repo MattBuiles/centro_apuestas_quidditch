@@ -614,9 +614,10 @@
 }
 
 .formHelp {
-  font-size: var(--text-xs);
   color: var(--color-gray-500);
+  font-size: var(--text-sm);
   margin-top: var(--spacing-1);
+  display: block;
   font-style: italic;
 }
 
@@ -1973,6 +1974,53 @@
   color: var(--color-gray-600);
 }
 
+/* ===== SECCIÓN DE CAMBIO DE CONTRASEÑA ===== */
+.passwordInfo {
+  text-align: center;
+  padding: var(--spacing-4) 0;
+}
+
+.passwordDescription {
+  color: var(--color-gray-600);
+  font-size: var(--text-base);
+  line-height: 1.6;
+  margin-bottom: var(--spacing-6);
+  font-style: italic;
+}
+
+/* Mejoras para formHelp */
+.formHelp {
+  color: var(--color-gray-500);
+  font-size: var(--text-sm);
+  margin-top: var(--spacing-1);
+  display: block;
+  font-style: italic;
+}
+
+/* Estilo para grupos de botones con mejor espaciado */
+.buttonGroup {
+  display: flex;
+  gap: var(--spacing-3);
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: var(--spacing-4);
+}
+
+.buttonGroup button {
+  flex: 1;
+  min-width: 120px;
+}
+
+@media (max-width: 480px) {
+  .buttonGroup {
+    flex-direction: column;
+  }
+  
+  .buttonGroup button {
+    width: 100%;
+  }
+}
+
 /* ===== RESPONSIVE DESIGN - Optimizado para todos los dispositivos ===== */
 
 /* Desktop y tablets grandes */
@@ -2540,27 +2588,24 @@
 .buttonGroup {
   display: flex;
   gap: var(--spacing-3);
-  margin-top: var(--spacing-6);
-  width: 100%;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: var(--spacing-4);
 }
 
 .buttonGroup button {
   flex: 1;
+  min-width: 120px;
 }
 
-@media (max-width: 479px) {
+@media (max-width: 480px) {
   .buttonGroup {
     flex-direction: column;
-    gap: var(--spacing-2);
   }
   
   .buttonGroup button {
     width: 100%;
   }
-}
-
-.saveButtonContainer {
-  margin-top: var(--spacing-8);
 }
 
 /* ===== TÍTULOS CON ICONOS ===== */
