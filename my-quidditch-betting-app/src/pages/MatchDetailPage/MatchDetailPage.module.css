@@ -3339,3 +3339,239 @@
     right: 15px;
   }
 }
+
+/* ========================================
+   TU VISIÓN DEL FUTURO - MAGICAL PROPHECY
+   ======================================== */
+
+.predictionDisplay {
+  background: linear-gradient(135deg, 
+    rgba(186, 104, 200, 0.12) 0%,
+    rgba(156, 39, 176, 0.08) 25%,
+    rgba(255, 255, 255, 0.85) 50%,
+    rgba(156, 39, 176, 0.08) 75%,
+    rgba(186, 104, 200, 0.12) 100%);
+  border-radius: 20px;
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  margin: 2rem 0;
+  border: 2px solid;
+  border-image: linear-gradient(45deg, 
+    #6A0DAD 0%,
+    #9C27B0 25%,
+    #BA68C8 50%,
+    #9C27B0 75%,
+    #6A0DAD 100%) 1;
+  backdrop-filter: blur(15px);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(106, 13, 173, 0.2);
+  transition: all 0.4s ease;
+  animation: prophecyGlow 6s ease-in-out infinite;
+}
+
+.predictionDisplay:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 50px rgba(106, 13, 173, 0.35);
+}
+
+.predictionDisplay::before {
+  content: '🔮✨🌟';
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 1.5rem;
+  opacity: 0.7;
+  animation: mysticOrbs 4s ease-in-out infinite;
+}
+
+.predictionDisplay::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%,
+    rgba(186, 104, 200, 0.3) 50%,
+    transparent 100%);
+  animation: prophecyShimmer 8s ease-in-out infinite;
+  z-index: 1;
+}
+
+@keyframes prophecyGlow {
+  0%, 100% { 
+    box-shadow: 0 10px 30px rgba(106, 13, 173, 0.2);
+    border-image: linear-gradient(45deg, #6A0DAD 0%, #9C27B0 50%, #6A0DAD 100%) 1;
+  }
+  50% { 
+    box-shadow: 0 15px 45px rgba(106, 13, 173, 0.4), 0 0 60px rgba(186, 104, 200, 0.2);
+    border-image: linear-gradient(45deg, #9C27B0 0%, #BA68C8 50%, #9C27B0 100%) 1;
+  }
+}
+
+@keyframes mysticOrbs {
+  0%, 100% { 
+    transform: rotate(0deg) scale(1);
+    opacity: 0.7;
+  }
+  25% { 
+    transform: rotate(90deg) scale(1.1);
+    opacity: 1;
+  }
+  50% { 
+    transform: rotate(180deg) scale(0.9);
+    opacity: 0.8;
+  }
+  75% { 
+    transform: rotate(270deg) scale(1.05);
+    opacity: 0.9;
+  }
+}
+
+@keyframes prophecyShimmer {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: 100%; }
+}
+
+.predictionTeam {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  background: linear-gradient(135deg, 
+    rgba(106, 13, 173, 0.8) 0%,
+    rgba(156, 39, 176, 0.9) 50%,
+    rgba(186, 104, 200, 0.8) 100%);
+  color: white;
+  font-weight: 700;
+  font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+  padding: 1.2rem 2rem;
+  border-radius: 15px;
+  margin: 1.5rem 0;
+  box-shadow: 0 8px 25px rgba(106, 13, 173, 0.3);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  z-index: 2;
+}
+
+.predictionTeam:hover {
+  transform: scale(1.03);
+  box-shadow: 0 12px 35px rgba(106, 13, 173, 0.5);
+}
+
+.predictionTeam::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 100%);
+  animation: teamShine 3s ease-in-out infinite;
+  z-index: -1;
+}
+
+@keyframes teamShine {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+.confidenceLevel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, 
+    rgba(255, 215, 0, 0.15) 0%,
+    rgba(255, 193, 7, 0.2) 50%,
+    rgba(255, 215, 0, 0.15) 100%);
+  color: #B8860B;
+  font-weight: 600;
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  margin-top: 1rem;
+  border: 2px solid rgba(255, 193, 7, 0.4);
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  text-shadow: 0 1px 4px rgba(184, 134, 11, 0.3);
+  z-index: 2;
+}
+
+.confidenceLevel:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(255, 193, 7, 0.3);
+  background: linear-gradient(135deg, 
+    rgba(255, 215, 0, 0.25) 0%,
+    rgba(255, 193, 7, 0.3) 50%,
+    rgba(255, 215, 0, 0.25) 100%);
+}
+
+.confidenceLevel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, 
+    rgba(255, 215, 0, 0.1) 0%,
+    rgba(255, 193, 7, 0.2) 50%,
+    rgba(255, 215, 0, 0.1) 100%);
+  animation: confidenceGlow 4s ease-in-out infinite;
+  z-index: -1;
+}
+
+@keyframes confidenceGlow {
+  0%, 100% { 
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
+
+/* Stars animation for confidence level */
+.confidenceLevel .stars {
+  animation: starsTwinkle 2s ease-in-out infinite;
+}
+
+@keyframes starsTwinkle {
+  0%, 100% { 
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
+}
+
+/* Responsive adjustments for prediction elements */
+@media (max-width: 768px) {
+  .predictionDisplay {
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+  }
+  
+  .predictionTeam {
+    padding: 1rem 1.5rem;
+    font-size: 1.1rem;
+  }
+  
+  .confidenceLevel {
+    padding: 0.8rem 1.2rem;
+    font-size: 1rem;
+  }
+}
