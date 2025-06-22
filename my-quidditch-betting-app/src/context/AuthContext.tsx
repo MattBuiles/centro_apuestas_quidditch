@@ -19,6 +19,7 @@ interface AuthContextType {
   register: (username: string, email: string, password: string, birthdate: string) => Promise<void>;
   logout: () => void;
   updateUserBalance: (newBalance: number) => void;
+  updateUserProfile: (userData: Partial<Pick<User, 'username' | 'email'>>) => void;
   error: string | null;
 }
 
@@ -132,10 +133,27 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     sessionStorage.removeItem('user');
     navigate('/login');
   };
-
   const updateUserBalance = (newBalance: number) => {
     if (user) {
       const updatedUser = { ...user, balance: newBalance };
+      setUser(updatedUser);
+      
+      // Update the stored user data
+      const storedInLocal = localStorage.getItem('user');
+      const storedInSession = sessionStorage.getItem('user');
+      
+      if (storedInLocal) {
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+      }
+      if (storedInSession) {
+        sessionStorage.setItem('user', JSON.stringify(updatedUser));
+      }
+    }
+  };
+
+  const updateUserProfile = (userData: Partial<Pick<User, 'username' | 'email'>>) => {
+    if (user) {
+      const updatedUser = { ...user, ...userData };
       setUser(updatedUser);
       
       // Update the stored user data
@@ -161,6 +179,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         register,
         logout,
         updateUserBalance,
+        updateUserProfile,
         error,
       }}
     >

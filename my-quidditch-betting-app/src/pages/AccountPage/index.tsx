@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, Routes, Route, Outlet, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import Button from '@/components/common/Button';
@@ -29,19 +29,68 @@ interface Transaction {
 
 // Define sub-components for each account section
 const ProfileSection = () => {
-    const { user } = useAuth();
+    const { user, updateUserProfile } = useAuth();
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState({
         username: user?.username || '',
         email: user?.email || '',
         newPassword: '',
         confirmPassword: ''
-    });
+    });    // Update form data when user changes (important for real-time sync)
+    useEffect(() => {
+        if (user) {
+            setFormData(prev => ({
+                ...prev,
+                username: user.username,
+                email: user.email
+            }));
+        }
+    }, [user]);
 
     const handleSave = (e: React.FormEvent) => {
         e.preventDefault();
+        
+        // Validate passwords if they're being changed
+        if (formData.newPassword && formData.newPassword !== formData.confirmPassword) {
+            alert('Las contraseñas no coinciden');
+            return;
+        }
+
+        // Update user profile in context (this will update the sidebar automatically)
+        updateUserProfile({
+            username: formData.username,
+            email: formData.email
+        });
+
         // Here you would typically call an API to update user info
-        console.log('Saving user data:', formData);
+        console.log('Saving user data:', {
+            username: formData.username,
+            email: formData.email,
+            passwordChanged: !!formData.newPassword
+        });
+        
+        // Clear password fields and exit edit mode
+        setFormData(prev => ({
+            ...prev,
+            newPassword: '',
+            confirmPassword: ''
+        }));
+        setIsEditing(false);
+        
+        // Show success message
+        alert('Perfil actualizado exitosamente');
+    };
+
+    const handleCancel = () => {
+        // Reset form data to current user data
+        if (user) {
+            setFormData({
+                username: user.username,
+                email: user.email,
+                newPassword: '',
+                confirmPassword: ''
+            });
+        }
         setIsEditing(false);
     };
 
@@ -80,8 +129,7 @@ const ProfileSection = () => {
                                     onChange={(e) => setFormData({...formData, email: e.target.value})}
                                     readOnly={!isEditing}
                                 />
-                            </div>
-                            {isEditing && (
+                            </div>                            {isEditing && (
                                 <>
                                     <div className={styles.formGroup}>
                                         <label className={styles.formLabel}>Nueva Contraseña:</label>
@@ -103,20 +151,28 @@ const ProfileSection = () => {
                                             onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
                                         />
                                     </div>
-                                    <Button type="submit" fullWidth>
-                                        Guardar Cambios
-                                    </Button>
+                                    <div className={styles.buttonGroup}>
+                                        <Button type="submit" variant="primary">
+                                            💾 Guardar Cambios
+                                        </Button>
+                                        <Button type="button" variant="outline" onClick={handleCancel}>
+                                            ❌ Cancelar
+                                        </Button>
+                                    </div>
                                 </>
                             )}
                         </form>
-                    )}                    <div className={styles.buttonContainer}>
-                        <Button 
-                            variant={isEditing ? "outline" : "primary"} 
-                            onClick={() => setIsEditing(!isEditing)}
-                        >
-                            {isEditing ? 'Cancelar' : 'Editar Perfil'}
-                        </Button>
-                    </div>
+                    )}                    {!isEditing && (
+                        <div className={styles.buttonContainer}>
+                            <Button 
+                                variant="primary" 
+                                onClick={() => setIsEditing(true)}
+                                fullWidth
+                            >
+                                ✏️ Editar Perfil
+                            </Button>
+                        </div>
+                    )}
                 </Card>                <Card className={styles.card}>
                     <h3 className={`${styles.cardTitle} ${styles.titleWithIcon}`}>
                         <TrophyIcon />
