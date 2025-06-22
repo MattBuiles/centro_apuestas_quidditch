@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import Button from '@/components/common/Button'
 import CTAButton from '@/components/common/CTAButton'
 import TeamLogo from '@/components/teams/TeamLogo'
+import { useAuth } from '@/context/AuthContext'
 import { virtualTimeManager } from '@/services/virtualTimeManager'
 import { Match, Team } from '@/types/league'
 import welcomeLogo from '@/assets/Welcome_Logo.png'
@@ -12,6 +13,7 @@ import styles from './HomePage.module.css'
 const HomePage = () => {
   const [featuredMatches, setFeaturedMatches] = useState<Match[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
+  const { canBet, isAdmin } = useAuth();
   useEffect(() => {
     // Load featured matches from the virtual time manager
     // This will automatically initialize a season if none exists
@@ -53,21 +55,23 @@ const HomePage = () => {
         </div>
         
         <div className={styles.heroContent}>
-          <div className={styles.heroText}>
-            <div className={styles.heroBadge}>
+          <div className={styles.heroText}>            <div className={styles.heroBadge}>
               <span className={styles.badgeIcon}>⚡</span>
-              <span>Centro Oficial de Apuestas</span>
+              <span>{isAdmin ? 'Panel de Administración' : 'Centro Oficial de Apuestas'}</span>
             </div>
             
             <h1 className={styles.heroTitle}>
               La Magia de las <br />
-              <span className={styles.titleHighlight}>Apuestas de Quidditch</span>
+              <span className={styles.titleHighlight}>
+                {isAdmin ? 'Gestión de Quidditch' : 'Apuestas de Quidditch'}
+              </span>
             </h1>
             
             <p className={styles.heroDescription}>
-              Sumérgete en el mundo mágico del Quidditch. Simula temporadas completas, 
-              experimenta partidos épicos en tiempo real y vive la emoción de apostar en 
-              el deporte más fascinante del mundo mágico.
+              {isAdmin 
+                ? 'Administra el mundo mágico del Quidditch. Gestiona temporadas completas, supervisa partidos épicos en tiempo real y controla toda la experiencia del deporte más fascinante del mundo mágico.'
+                : 'Sumérgete en el mundo mágico del Quidditch. Simula temporadas completas, experimenta partidos épicos en tiempo real y vive la emoción de apostar en el deporte más fascinante del mundo mágico.'
+              }
             </p>
             
             <div className={styles.heroStats}>
@@ -115,13 +119,15 @@ const HomePage = () => {
           </div>
         </div>
       </section>      {/* Features section */}
-      <section className={styles.featuresSection}>
-        <div className={styles.featuresHeader}>
+      <section className={styles.featuresSection}>        <div className={styles.featuresHeader}>
           <h2 className={styles.featuresTitle}>
             Experiencias Mágicas que te Esperan
           </h2>
           <p className={styles.featuresSubtitle}>
-            Descubre todas las funcionalidades épicas de nuestro centro de apuestas
+            {isAdmin 
+              ? 'Descubre todas las funcionalidades de administración del sistema de Quidditch'
+              : 'Descubre todas las funcionalidades épicas de nuestro centro de apuestas'
+            }
           </p>
         </div>
 
@@ -156,20 +162,37 @@ const HomePage = () => {
             </div>
           </div>
 
-          <div className={styles.featureCard}>
-            <div className={styles.featureIcon}>
-              <span>💎</span>
+          {isAdmin ? (
+            <div className={styles.featureCard}>
+              <div className={styles.featureIcon}>
+                <span>👥</span>
+              </div>
+              <h3 className={styles.featureTitle}>Gestión Administrativa</h3>
+              <p className={styles.featureDescription}>
+                Administra usuarios, supervisa el historial de apuestas y mantén el control 
+                total sobre todas las actividades del sistema de Quidditch.
+              </p>
+              <div className={styles.featureBenefits}>
+                <span className={styles.benefit}>🛡️ Control de usuarios</span>
+                <span className={styles.benefit}>📊 Supervisión completa</span>
+              </div>
             </div>
-            <h3 className={styles.featureTitle}>Apuestas Inteligentes</h3>
-            <p className={styles.featureDescription}>
-              Haz tus predicciones en una liga completamente simulada, sigue la 
-              evolución de los equipos y multiplica tus ganancias con cada victoria épica.
-            </p>
-            <div className={styles.featureBenefits}>
-              <span className={styles.benefit}>💰 Galeones virtuales</span>
-              <span className={styles.benefit}>📊 Estadísticas detalladas</span>
+          ) : (
+            <div className={styles.featureCard}>
+              <div className={styles.featureIcon}>
+                <span>💎</span>
+              </div>
+              <h3 className={styles.featureTitle}>Apuestas Inteligentes</h3>
+              <p className={styles.featureDescription}>
+                Haz tus predicciones en una liga completamente simulada, sigue la 
+                evolución de los equipos y multiplica tus ganancias con cada victoria épica.
+              </p>
+              <div className={styles.featureBenefits}>
+                <span className={styles.benefit}>💰 Galeones virtuales</span>
+                <span className={styles.benefit}>📊 Estadísticas detalladas</span>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </section>
 
@@ -227,14 +250,13 @@ const HomePage = () => {
                     </div>
                   </div>
                   
-                  <Link to={`/matches/${match.id}`} className={styles.matchAction}>
-                    <Button 
+                  <Link to={`/matches/${match.id}`} className={styles.matchAction}>                    <Button 
                       variant={index === 0 ? "magical" : index === 1 ? "secondary" : "outline"} 
                       size="sm" 
                       fullWidth
                     >
                       <span>
-                        {index === 0 ? "⚡ Apostar Ahora" : index === 1 ? "🔮 Ver Detalles" : "📊 Analizar"}
+                        {index === 0 ? (canBet ? "⚡ Apostar Ahora" : "🔮 Ver Detalles") : index === 1 ? "🔮 Ver Detalles" : "📊 Analizar"}
                       </span>
                     </Button>
                   </Link>
@@ -277,10 +299,9 @@ const HomePage = () => {
                       <span className={styles.oddsValue}>2.1x</span>
                     </div>
                   </div>
-                  
-                  <Link to="/matches/1" className={styles.matchAction}>
+                    <Link to="/matches/1" className={styles.matchAction}>
                     <Button variant="magical" size="sm" fullWidth>
-                      <span>⚡ Apostar Ahora</span>
+                      <span>{canBet ? "⚡ Apostar Ahora" : "🔮 Ver Detalles"}</span>
                     </Button>
                   </Link>
                 </div>
@@ -386,21 +407,22 @@ const HomePage = () => {
         <div className={styles.ctaBackground}>
           <div className={styles.ctaStars}></div>
         </div>
-        
-        <div className={styles.ctaContent}>
+          <div className={styles.ctaContent}>
           <h2 className={styles.ctaTitle}>
-            ¿Listo para la Aventura Mágica?
+            {isAdmin ? '¿Listo para Administrar la Magia?' : '¿Listo para la Aventura Mágica?'}
           </h2>
           <p className={styles.ctaDescription}>
-            Únete a miles de magos que ya disfrutan de la emoción del Quidditch. 
-            ¡Tu próxima gran apuesta te espera!
+            {isAdmin 
+              ? 'Controla y supervisa toda la experiencia del Quidditch. ¡Tu panel de administración te espera!'
+              : 'Únete a miles de magos que ya disfrutan de la emoción del Quidditch. ¡Tu próxima gran apuesta te espera!'
+            }
           </p>
           
           <div className={styles.ctaActions}>
-            <CTAButton size="xl" className={styles.ctaButton} />
-            <Link to="/teams" className={styles.ctaSecondary}>
-              <span>Conocer Equipos</span>
-              <span className={styles.ctaIcon}>🏆</span>
+            {!isAdmin && <CTAButton size="xl" className={styles.ctaButton} />}
+            <Link to={isAdmin ? "/account" : "/teams"} className={styles.ctaSecondary}>
+              <span>{isAdmin ? 'Panel de Control' : 'Conocer Equipos'}</span>
+              <span className={styles.ctaIcon}>{isAdmin ? '⚙️' : '🏆'}</span>
             </Link>
           </div>
         </div>

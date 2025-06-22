@@ -14,8 +14,13 @@ const CTAButton = ({
   size = 'lg',
   fullWidth = false 
 }: CTAButtonProps) => {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, canBet } = useAuth()
   const navigate = useNavigate()
+
+  // Don't show CTA button for admins since they can't bet
+  if (!canBet) {
+    return null
+  }
 
   const handleClick = () => {
     if (isAuthenticated) {
