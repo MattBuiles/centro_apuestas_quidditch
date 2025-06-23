@@ -261,12 +261,12 @@ const MatchDetailPage = () => {
           league: timeState.temporadaActiva.name || 'Liga Quidditch',
           location: foundMatch.venue || 'Campo de Quidditch',
         };
-          setMatch(matchDetails);
-        
-        // Check if detailed results are available for finished matches
+          setMatch(matchDetails);        // Check if detailed results are available for finished matches
         if (foundMatch.status === 'finished') {
           const detailedResults = matchResultsService.getMatchResult(foundMatch.id);
           setHasDetailedResults(detailedResults !== null);
+        } else {
+          setHasDetailedResults(false);
         }
         
         // Load prediction data and ensure mock predictions exist
@@ -1529,11 +1529,19 @@ const MatchDetailPage = () => {
               </div>
             </div>
           </div>
+        )}        {activeTab === 'detailed-analysis' && hasDetailedResults && match && (
+          <div className={styles.detailedAnalysisTab}>
+            {console.log('Rendering detailed analysis tab for match:', match.id)}
+            <MatchResultDetail matchId={match.id} />
+          </div>
         )}
 
-        {activeTab === 'detailed-analysis' && hasDetailedResults && match && (
+        {activeTab === 'detailed-analysis' && !hasDetailedResults && (
           <div className={styles.detailedAnalysisTab}>
-            <MatchResultDetail matchId={match.id} />
+            <div style={{ padding: '2rem', textAlign: 'center' }}>
+              <h3>No hay análisis detallado disponible</h3>
+              <p>Este partido no tiene resultados detallados guardados. Los análisis detallados están disponibles para partidos simulados.</p>
+            </div>
           </div>
         )}
       </main>
