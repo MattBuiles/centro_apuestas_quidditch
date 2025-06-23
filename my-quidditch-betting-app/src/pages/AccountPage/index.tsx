@@ -8,6 +8,7 @@ import user2LogoSrc from '@/assets/User2_Logo.png';
 import { teamLogos } from '@/assets/teamLogos';
 import AdminDashboard from '@/components/admin/AdminDashboard';
 import AdminBetsHistory from '@/components/admin/AdminBetsHistory';
+import AdminBetsStatistics from '@/components/admin/AdminBetsStatistics';
 import AdminUsersManagement from '@/components/admin/AdminUsersManagement';
 import styles from './AccountPage.module.css';
 
@@ -911,17 +912,16 @@ const AdminAccountPage = ({ user, logout }: { user: any; logout: () => void }) =
   const handleCancelLogout = () => {
     setShowLogoutModal(false);
   };
-  
-  const getActiveTab = () => {
+    const getActiveTab = () => {
     const path = location.pathname;
     if (path === '/account/bets-history') return 'bets-history';
+    if (path === '/account/bets-statistics') return 'bets-statistics';
     if (path === '/account/users-management') return 'users-management';
     if (path === '/account' || path === '/account/') return 'dashboard';
     return 'dashboard';
   };
   
   const activeTab = getActiveTab();
-
   const adminNavItems = [
     { 
       path: '/account', 
@@ -934,6 +934,12 @@ const AdminAccountPage = ({ user, logout }: { user: any; logout: () => void }) =
       label: 'Historial de Apuestas', 
       icon: <span className={styles.icon}>📊</span>, 
       tab: 'bets-history' 
+    },
+    { 
+      path: '/account/bets-statistics', 
+      label: 'Estadísticas Avanzadas', 
+      icon: <span className={styles.icon}>📈</span>, 
+      tab: 'bets-statistics' 
     },
     { 
       path: '/account/users-management', 
@@ -983,10 +989,10 @@ const AdminAccountPage = ({ user, logout }: { user: any; logout: () => void }) =
         </aside>
 
         {/* Admin Main Content */}
-        <main className={styles.mainContent}>
-          <Routes>
+        <main className={styles.mainContent}>          <Routes>
             <Route index element={<AdminDashboard />} />
             <Route path="bets-history" element={<AdminBetsHistory />} />
+            <Route path="bets-statistics" element={<AdminBetsStatistics />} />
             <Route path="users-management" element={<AdminUsersManagement />} />            <Route path="*" element={<Navigate to="/account" replace />} />
           </Routes>
           <Outlet />

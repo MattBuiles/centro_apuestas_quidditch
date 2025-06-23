@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import Card from '@/components/common/Card';
 import Button from '@/components/common/Button';
 import styles from './AdminBetsHistory.module.css';
@@ -320,13 +321,19 @@ const AdminBetsHistory = () => {
   }
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
+    <div className={styles.container}>      <div className={styles.header}>
         <h1 className={styles.title}>
           <span className={styles.titleIcon}>📊</span>
           Historial Global de Apuestas
         </h1>
-        <p className={styles.subtitle}>Gestión y análisis de todas las apuestas del sistema</p>
+        <p className={styles.subtitle}>Gestión y análisis detallado de todas las apuestas del sistema con filtros en tiempo real</p>
+        <div className={styles.headerActions}>
+          <Link to="/account/bets-statistics">
+            <Button variant="primary">
+              📈 Ver Estadísticas Avanzadas
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Statistics Cards */}
