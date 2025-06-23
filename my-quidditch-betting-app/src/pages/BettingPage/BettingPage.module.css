@@ -1181,61 +1181,46 @@
   border: 1px solid rgba(34, 197, 94, 0.3);
 }
 
-/* Responsive adjustments for combined betting */
-@media (max-width: 768px) {
-  .optionsGrid {
-    grid-template-columns: 1fr;
-  }
-  
-  .scoreInputsContainer {
-    flex-direction: column;
-    gap: var(--spacing-3);
-  }
-  
-  .scoreDivider {
-    transform: rotate(90deg);
-  }
-  
-  .selectedBetItem {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--spacing-2);
-  }
-  
-  .selectedBetInfo {
-    width: 100%;
-  }
-  
-  .removeBetBtn {
-    align-self: flex-end;
-    margin-left: 0;
-  }
-  
-  .combinedOddsInfo {
-    flex-direction: column;
-    gap: var(--spacing-2);
-    text-align: center;
-  }
+/* ===== DAILY LIMITS INFO ===== */
+.dailyLimitsInfo {
+  margin-top: var(--spacing-4);
+  padding: var(--spacing-3) var(--spacing-4);
+  background: rgba(106, 90, 205, 0.08);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(106, 90, 205, 0.2);
 }
 
-@media (max-width: 480px) {
-  .betTypeSection {
-    padding: var(--spacing-3);
-  }
-  
-  .betOptionCard {
-    flex-direction: column;
-    text-align: center;
-    gap: var(--spacing-2);
-    min-height: auto;
-    padding: var(--spacing-3);
-  }
-  
-  .optionInfo {
-    align-items: center;
-  }
-  
-  .scoreField {
-    width: 60px;
-  }
+.limitsRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-2);
+}
+
+.limitsLabel {
+  font-size: var(--text-sm);
+  color: var(--color-gray-600);
+  font-weight: 500;
+}
+
+.limitsValue {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.limitReached {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.limitWarning {
+  font-size: var(--text-sm);
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.1);
+  padding: var(--spacing-2) var(--spacing-3);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  text-align: center;
+  font-weight: 600;
 }

@@ -10,6 +10,30 @@ interface User {
   avatar?: string;
 }
 
+// Interfaz para las apuestas del usuario
+interface UserBet {
+  id: string;
+  userId: string;
+  matchId: string;
+  matchName: string;
+  options: BetOption[];
+  amount: number;
+  combinedOdds: number;
+  potentialWin: number;
+  date: string;
+  status: 'active' | 'won' | 'lost';
+}
+
+// Interfaz para las opciones de apuesta
+interface BetOption {
+  id: string;
+  type: string;
+  selection: string;
+  odds: number;
+  description: string;
+  matchId: string;
+}
+
 // Interfaz para almacenar credenciales de usuario (separada por seguridad)
 interface UserCredentials {
   userId: string;
@@ -20,6 +44,16 @@ interface UserCredentials {
 interface UserAccount {
   user: User;
   password: string;
+}
+
+// Interfaz para las transacciones del usuario
+interface UserTransaction {
+  id: number;
+  type: 'deposit' | 'withdraw' | 'bet' | 'win';
+  amount: number;
+  date: string;
+  description: string;
+  userId: string;
 }
 
 // 5 cuentas predefinidas
@@ -92,6 +126,274 @@ const PREDEFINED_ACCOUNTS: UserAccount[] = [
   }
 ];
 
+// Historial de transacciones simulado para usuarios predefinidos
+const PREDEFINED_TRANSACTIONS: Record<string, UserTransaction[]> = {
+  'user1': [ // Harry Potter
+    { id: 1, type: 'deposit', amount: 500, date: '2025-06-15', description: 'Depósito inicial de Gringotts', userId: 'user1' },
+    { id: 2, type: 'bet', amount: -50, date: '2025-06-16', description: 'Apuesta: Gryffindor vs Slytherin', userId: 'user1' },
+    { id: 3, type: 'win', amount: 100, date: '2025-06-16', description: 'Ganancia: Gryffindor vs Slytherin', userId: 'user1' },
+    { id: 4, type: 'bet', amount: -30, date: '2025-06-18', description: 'Apuesta: Ravenclaw vs Hufflepuff', userId: 'user1' },
+    { id: 5, type: 'bet', amount: -25, date: '2025-06-20', description: 'Apuesta: Holyhead Harpies vs Chudley Cannons', userId: 'user1' },
+    { id: 6, type: 'withdraw', amount: -70, date: '2025-06-21', description: 'Retiro de 70 galeones a Gringotts', userId: 'user1' }
+  ],
+  'user2': [ // Hermione Granger
+    { id: 7, type: 'deposit', amount: 400, date: '2025-06-14', description: 'Depósito inicial de Gringotts', userId: 'user2' },
+    { id: 8, type: 'bet', amount: -40, date: '2025-06-15', description: 'Apuesta: Gryffindor vs Ravenclaw', userId: 'user2' },
+    { id: 9, type: 'win', amount: 80, date: '2025-06-15', description: 'Ganancia: Gryffindor vs Ravenclaw', userId: 'user2' },
+    { id: 10, type: 'bet', amount: -35, date: '2025-06-17', description: 'Apuesta: Hufflepuff vs Slytherin', userId: 'user2' },
+    { id: 11, type: 'bet', amount: -20, date: '2025-06-19', description: 'Apuesta: Chudley Cannons vs Holyhead Harpies', userId: 'user2' },
+    { id: 12, type: 'withdraw', amount: -45, date: '2025-06-22', description: 'Retiro de 45 galeones a Gringotts', userId: 'user2' }
+  ],
+  'user3': [ // Draco Malfoy
+    { id: 13, type: 'deposit', amount: 800, date: '2025-06-13', description: 'Depósito inicial de Gringotts', userId: 'user3' },
+    { id: 14, type: 'bet', amount: -100, date: '2025-06-14', description: 'Apuesta: Slytherin vs Gryffindor', userId: 'user3' },
+    { id: 15, type: 'win', amount: 180, date: '2025-06-14', description: 'Ganancia: Slytherin vs Gryffindor', userId: 'user3' },
+    { id: 16, type: 'bet', amount: -60, date: '2025-06-16', description: 'Apuesta: Slytherin vs Ravenclaw', userId: 'user3' },
+    { id: 17, type: 'bet', amount: -80, date: '2025-06-18', description: 'Apuesta: Holyhead Harpies vs Chudley Cannons', userId: 'user3' },
+    { id: 18, type: 'win', amount: 140, date: '2025-06-18', description: 'Ganancia: Holyhead Harpies vs Chudley Cannons', userId: 'user3' },
+    { id: 19, type: 'withdraw', amount: -200, date: '2025-06-20', description: 'Retiro de 200 galeones a Gringotts', userId: 'user3' }
+  ],
+  'user4': [ // Luna Lovegood
+    { id: 20, type: 'deposit', amount: 300, date: '2025-06-16', description: 'Depósito inicial de Gringotts', userId: 'user4' },
+    { id: 21, type: 'bet', amount: -25, date: '2025-06-17', description: 'Apuesta: Ravenclaw vs Hufflepuff', userId: 'user4' },
+    { id: 22, type: 'win', amount: 50, date: '2025-06-17', description: 'Ganancia: Ravenclaw vs Hufflepuff', userId: 'user4' },
+    { id: 23, type: 'bet', amount: -30, date: '2025-06-19', description: 'Apuesta: Ravenclaw vs Gryffindor', userId: 'user4' },
+    { id: 24, type: 'bet', amount: -20, date: '2025-06-21', description: 'Apuesta: Chudley Cannons vs Holyhead Harpies', userId: 'user4' },
+    { id: 25, type: 'withdraw', amount: -80, date: '2025-06-22', description: 'Retiro de 80 galeones a Gringotts', userId: 'user4' }
+  ],
+  'user5': [ // Cedric Diggory
+    { id: 26, type: 'deposit', amount: 350, date: '2025-06-15', description: 'Depósito inicial de Gringotts', userId: 'user5' },
+    { id: 27, type: 'bet', amount: -45, date: '2025-06-16', description: 'Apuesta: Hufflepuff vs Slytherin', userId: 'user5' },
+    { id: 28, type: 'win', amount: 90, date: '2025-06-16', description: 'Ganancia: Hufflepuff vs Slytherin', userId: 'user5' },
+    { id: 29, type: 'bet', amount: -35, date: '2025-06-18', description: 'Apuesta: Hufflepuff vs Gryffindor', userId: 'user5' },
+    { id: 30, type: 'bet', amount: -40, date: '2025-06-20', description: 'Apuesta: Holyhead Harpies vs Chudley Cannons', userId: 'user5' },    { id: 31, type: 'withdraw', amount: -90, date: '2025-06-21', description: 'Retiro de 90 galeones a Gringotts', userId: 'user5' }
+  ]
+};
+
+// Historial de apuestas simulado para usuarios predefinidos
+const PREDEFINED_BETS: Record<string, UserBet[]> = {
+  'user1': [ // Harry Potter
+    {
+      id: 'bet_harry_1',
+      userId: 'user1',
+      matchId: 'match_gryf_sly_01',
+      matchName: 'Gryffindor vs Slytherin',
+      options: [
+        {
+          id: 'win_gryf_1',
+          type: 'winner',
+          selection: 'Gryffindor',
+          odds: 2.0,
+          description: 'Gryffindor gana',
+          matchId: 'match_gryf_sly_01'
+        }
+      ],
+      amount: 50,
+      combinedOdds: 2.0,
+      potentialWin: 100,
+      date: '2025-06-16T10:30:00.000Z',
+      status: 'won'
+    },
+    {
+      id: 'bet_harry_2',
+      userId: 'user1',
+      matchId: 'match_rav_huff_01',
+      matchName: 'Ravenclaw vs Hufflepuff',
+      options: [
+        {
+          id: 'win_rav_1',
+          type: 'winner',
+          selection: 'Ravenclaw',
+          odds: 1.8,
+          description: 'Ravenclaw gana',
+          matchId: 'match_rav_huff_01'
+        }
+      ],
+      amount: 30,
+      combinedOdds: 1.8,
+      potentialWin: 54,
+      date: '2025-06-18T14:15:00.000Z',
+      status: 'lost'
+    }
+  ],
+  'user2': [ // Hermione Granger
+    {
+      id: 'bet_hermione_1',
+      userId: 'user2',
+      matchId: 'match_gryf_rav_01',
+      matchName: 'Gryffindor vs Ravenclaw',
+      options: [
+        {
+          id: 'win_gryf_2',
+          type: 'winner',
+          selection: 'Gryffindor',
+          odds: 1.9,
+          description: 'Gryffindor gana',
+          matchId: 'match_gryf_rav_01'
+        }
+      ],
+      amount: 40,
+      combinedOdds: 1.9,
+      potentialWin: 76,
+      date: '2025-06-15T16:20:00.000Z',
+      status: 'won'
+    },
+    {
+      id: 'bet_hermione_2',
+      userId: 'user2',
+      matchId: 'match_huff_sly_01',
+      matchName: 'Hufflepuff vs Slytherin',
+      options: [
+        {
+          id: 'score_exact_1',
+          type: 'score',
+          selection: '150-140',
+          odds: 8.5,
+          description: 'Puntuación exacta: 150-140',
+          matchId: 'match_huff_sly_01'
+        }
+      ],
+      amount: 35,
+      combinedOdds: 8.5,
+      potentialWin: 297.5,
+      date: '2025-06-17T11:45:00.000Z',
+      status: 'lost'
+    }
+  ],
+  'user3': [ // Draco Malfoy
+    {
+      id: 'bet_draco_1',
+      userId: 'user3',
+      matchId: 'match_sly_gryf_01',
+      matchName: 'Slytherin vs Gryffindor',
+      options: [
+        {
+          id: 'win_sly_1',
+          type: 'winner',
+          selection: 'Slytherin',
+          odds: 2.2,
+          description: 'Slytherin gana',
+          matchId: 'match_sly_gryf_01'
+        }
+      ],
+      amount: 100,
+      combinedOdds: 2.2,
+      potentialWin: 220,
+      date: '2025-06-14T13:30:00.000Z',
+      status: 'won'
+    },
+    {
+      id: 'bet_draco_2',
+      userId: 'user3',
+      matchId: 'match_harpies_cannons_01',
+      matchName: 'Holyhead Harpies vs Chudley Cannons',
+      options: [
+        {
+          id: 'win_harpies_1',
+          type: 'winner',
+          selection: 'Holyhead Harpies',
+          odds: 1.75,
+          description: 'Holyhead Harpies gana',
+          matchId: 'match_harpies_cannons_01'
+        }
+      ],
+      amount: 80,
+      combinedOdds: 1.75,
+      potentialWin: 140,
+      date: '2025-06-18T15:00:00.000Z',
+      status: 'won'
+    }
+  ],
+  'user4': [ // Luna Lovegood
+    {
+      id: 'bet_luna_1',
+      userId: 'user4',
+      matchId: 'match_rav_huff_02',
+      matchName: 'Ravenclaw vs Hufflepuff',
+      options: [
+        {
+          id: 'win_rav_2',
+          type: 'winner',
+          selection: 'Ravenclaw',
+          odds: 2.0,
+          description: 'Ravenclaw gana',
+          matchId: 'match_rav_huff_02'
+        }
+      ],
+      amount: 25,
+      combinedOdds: 2.0,
+      potentialWin: 50,
+      date: '2025-06-17T12:15:00.000Z',
+      status: 'won'
+    },
+    {
+      id: 'bet_luna_2',
+      userId: 'user4',
+      matchId: 'match_rav_gryf_01',
+      matchName: 'Ravenclaw vs Gryffindor',
+      options: [
+        {
+          id: 'margin_rav_1',
+          type: 'margin',
+          selection: '+50',
+          odds: 3.5,
+          description: 'Ravenclaw gana por más de 50 puntos',
+          matchId: 'match_rav_gryf_01'
+        }
+      ],
+      amount: 30,
+      combinedOdds: 3.5,
+      potentialWin: 105,
+      date: '2025-06-19T14:45:00.000Z',
+      status: 'lost'
+    }
+  ],
+  'user5': [ // Cedric Diggory
+    {
+      id: 'bet_cedric_1',
+      userId: 'user5',
+      matchId: 'match_huff_sly_02',
+      matchName: 'Hufflepuff vs Slytherin',
+      options: [
+        {
+          id: 'win_huff_1',
+          type: 'winner',
+          selection: 'Hufflepuff',
+          odds: 2.0,
+          description: 'Hufflepuff gana',
+          matchId: 'match_huff_sly_02'
+        }
+      ],
+      amount: 45,
+      combinedOdds: 2.0,
+      potentialWin: 90,
+      date: '2025-06-16T16:30:00.000Z',
+      status: 'won'
+    },
+    {
+      id: 'bet_cedric_2',
+      userId: 'user5',
+      matchId: 'match_huff_gryf_01',
+      matchName: 'Hufflepuff vs Gryffindor',
+      options: [
+        {
+          id: 'total_points_1',
+          type: 'total',
+          selection: 'over_300',
+          odds: 2.5,
+          description: 'Total de puntos mayor a 300',
+          matchId: 'match_huff_gryf_01'
+        }
+      ],
+      amount: 35,
+      combinedOdds: 2.5,
+      potentialWin: 87.5,
+      date: '2025-06-18T10:20:00.000Z',
+      status: 'lost'
+    }
+  ]
+};
+
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
@@ -105,11 +407,17 @@ interface AuthContextType {
   updateUserProfile: (userData: Partial<Pick<User, 'username' | 'email' | 'avatar'>>) => void;
   validateCurrentPassword: (password: string) => boolean;
   validatePassword: (password: string) => string | null;
-  updatePassword: (newPassword: string) => void;
-  // Nueva función para restablecer contraseña por email
+  updatePassword: (newPassword: string) => void;  // Nueva función para restablecer contraseña por email
   resetPasswordByEmail: (email: string, newPassword: string) => boolean;
   // Nueva función para obtener las cuentas predefinidas (útil para debugging)
-  getPredefinedAccounts: () => { email: string; username: string; role: string }[];
+  getPredefinedAccounts: () => { email: string; username: string; role: string }[];  // Funciones para manejo de apuestas
+  placeBet: (bet: Omit<UserBet, 'id' | 'userId' | 'date' | 'status'>) => Promise<boolean>;
+  getUserBets: () => UserBet[];
+  getTodayBetsCount: () => number;
+  canPlaceBet: (amount: number) => { canBet: boolean; reason?: string };
+  // Funciones para manejo de transacciones
+  getUserTransactions: () => UserTransaction[];
+  addTransaction: (transaction: Omit<UserTransaction, 'id' | 'userId' | 'date'>) => void;
   error: string | null;
 }
 
@@ -129,9 +437,10 @@ interface AuthProviderProps {
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);  const [error, setError] = useState<string | null>(null);
   const [currentAccounts, setCurrentAccounts] = useState<UserAccount[]>(PREDEFINED_ACCOUNTS);
+  const [userBets, setUserBets] = useState<UserBet[]>([]);
+  const [userTransactions, setUserTransactions] = useState<UserTransaction[]>([]);
   const navigate = useNavigate();
 
   // Función para encontrar una cuenta por email
@@ -168,15 +477,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const clearUserCredentials = (userId: string) => {
     localStorage.removeItem(`credentials_${userId}`);
   };
-
   useEffect(() => {
     // Check if user is stored in localStorage
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      const parsedUser = JSON.parse(storedUser);      setUser(parsedUser);
+      // Load user bets from localStorage
+      loadUserBets(parsedUser.id);
+      // Load user transactions from localStorage
+      loadUserTransactions(parsedUser.id);
     }
     setIsLoading(false);
-  }, []);  const login = async (email: string, password: string, remember = false) => {
+  }, []);const login = async (email: string, password: string, remember = false) => {
     setIsLoading(true);
     setError(null);
     try {
@@ -190,10 +502,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       // Verificar la contraseña
       if (account.password !== password) {
         throw new Error('Credenciales incorrectas. Verifica tu email y contraseña.');
-      }
-
-      // Login exitoso
+      }      // Login exitoso
       setUser(account.user);
+      
+      // Cargar apuestas del usuario
+      loadUserBets(account.user.id);
+      
+      // Cargar transacciones del usuario
+      loadUserTransactions(account.user.id);
       
       // Guardar credenciales del usuario
       saveUserCredentials(account.user.id, password);
@@ -269,6 +585,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       clearUserCredentials(user.id);
     }
     setUser(null);
+    setUserBets([]); // Limpiar apuestas al cerrar sesión
+    setUserTransactions([]); // Limpiar transacciones al cerrar sesión
     localStorage.removeItem('user');
     sessionStorage.removeItem('user');
     navigate('/login');
@@ -344,7 +662,164 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       // También guardar en localStorage para compatibilidad
       saveUserCredentials(user.id, newPassword);
     }
-  };  // Función para restablecer contraseña por email
+  };
+
+  // ===== FUNCIONES DE MANEJO DE APUESTAS =====
+  // Cargar apuestas del usuario desde localStorage
+  const loadUserBets = (userId: string) => {
+    const storedBets = localStorage.getItem(`userBets_${userId}`);
+    if (storedBets) {
+      setUserBets(JSON.parse(storedBets));
+    } else {
+      // Si no hay apuestas guardadas, verificar si es un usuario predefinido
+      const predefinedBets = PREDEFINED_BETS[userId];
+      if (predefinedBets) {
+        // Cargar apuestas simuladas para usuarios predefinidos
+        setUserBets(predefinedBets);
+        // Guardar las apuestas simuladas en localStorage para futuras sesiones
+        localStorage.setItem(`userBets_${userId}`, JSON.stringify(predefinedBets));
+      } else {
+        // Usuario nuevo (registrado) - no hay historial
+        setUserBets([]);
+      }
+    }
+  };
+  // Cargar transacciones del usuario desde localStorage
+  const loadUserTransactions = (userId: string) => {
+    const storedTransactions = localStorage.getItem(`userTransactions_${userId}`);
+    if (storedTransactions) {
+      setUserTransactions(JSON.parse(storedTransactions));
+    } else {
+      // Si no hay transacciones guardadas, verificar si es un usuario predefinido
+      const predefinedTransactions = PREDEFINED_TRANSACTIONS[userId];
+      if (predefinedTransactions) {
+        // Cargar transacciones simuladas para usuarios predefinidos
+        setUserTransactions(predefinedTransactions);
+        // Guardar las transacciones simuladas en localStorage para futuras sesiones
+        localStorage.setItem(`userTransactions_${userId}`, JSON.stringify(predefinedTransactions));
+      } else {
+        // Usuario nuevo (registrado) - no hay historial
+        setUserTransactions([]);
+      }
+    }
+  };
+
+  // Guardar apuestas en localStorage
+  const saveUserBets = (bets: UserBet[]) => {
+    if (user) {
+      localStorage.setItem(`userBets_${user.id}`, JSON.stringify(bets));
+      setUserBets(bets);
+    }
+  };
+
+  // Obtener todas las apuestas del usuario
+  const getUserBets = (): UserBet[] => {
+    return userBets;
+  };
+
+  // Obtener el número de apuestas realizadas hoy
+  const getTodayBetsCount = (): number => {
+    const today = new Date().toDateString();
+    return userBets.filter(bet => new Date(bet.date).toDateString() === today).length;
+  };
+
+  // Validar si el usuario puede realizar una apuesta
+  const canPlaceBet = (amount: number): { canBet: boolean; reason?: string } => {
+    if (!user) {
+      return { canBet: false, reason: 'Usuario no autenticado' };
+    }
+
+    if (user.role === 'admin') {
+      return { canBet: false, reason: 'Los administradores no pueden realizar apuestas' };
+    }
+
+    if (amount <= 0) {
+      return { canBet: false, reason: 'El monto debe ser mayor a 0' };
+    }
+
+    if (amount > user.balance) {
+      return { canBet: false, reason: 'Saldo insuficiente' };
+    }
+
+    const todayBets = getTodayBetsCount();
+    if (todayBets >= 3) {
+      return { canBet: false, reason: 'Has alcanzado el límite de 3 apuestas por hoy. Intenta nuevamente mañana.' };
+    }
+
+    return { canBet: true };
+  };
+
+  // Realizar una apuesta
+  const placeBet = async (betData: Omit<UserBet, 'id' | 'userId' | 'date' | 'status'>): Promise<boolean> => {
+    if (!user) {
+      throw new Error('Usuario no autenticado');
+    }
+
+    const validation = canPlaceBet(betData.amount);
+    if (!validation.canBet) {
+      throw new Error(validation.reason || 'No se puede realizar la apuesta');
+    }
+
+    try {
+      // Crear la nueva apuesta
+      const newBet: UserBet = {
+        ...betData,
+        id: `bet_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        userId: user.id,
+        date: new Date().toISOString(),
+        status: 'active'
+      };
+
+      // Descontar el monto del saldo
+      const newBalance = user.balance - betData.amount;
+      updateUserBalance(newBalance);      // Agregar la apuesta al historial
+      const updatedBets = [...userBets, newBet];
+      saveUserBets(updatedBets);
+
+      // Registrar la transacción de la apuesta
+      addTransaction({
+        type: 'bet',
+        amount: -betData.amount,
+        description: `Apuesta: ${betData.matchName}`
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error al realizar la apuesta:', error);      return false;
+    }
+  };
+
+  // ===== FUNCIONES DE MANEJO DE TRANSACCIONES =====
+  
+  // Guardar transacciones en localStorage
+  const saveUserTransactions = (transactions: UserTransaction[]) => {
+    if (user) {
+      localStorage.setItem(`userTransactions_${user.id}`, JSON.stringify(transactions));
+      setUserTransactions(transactions);
+    }
+  };
+
+  // Obtener todas las transacciones del usuario
+  const getUserTransactions = (): UserTransaction[] => {
+    return userTransactions;
+  };
+
+  // Agregar una nueva transacción
+  const addTransaction = (transactionData: Omit<UserTransaction, 'id' | 'userId' | 'date'>) => {
+    if (!user) return;
+
+    const newTransaction: UserTransaction = {
+      ...transactionData,
+      id: Date.now(),
+      userId: user.id,
+      date: new Date().toISOString().split('T')[0] // YYYY-MM-DD format
+    };
+
+    const updatedTransactions = [...userTransactions, newTransaction];
+    saveUserTransactions(updatedTransactions);
+  };
+
+  // Función para restablecer contraseña por email
   const resetPasswordByEmail = (email: string, newPassword: string): boolean => {
     const account = findAccountByEmail(email);
     if (account) {
@@ -392,9 +867,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         updateUserProfile,
         validateCurrentPassword,
         validatePassword,
-        updatePassword,
-        resetPasswordByEmail,
-        getPredefinedAccounts,
+        updatePassword,        resetPasswordByEmail,
+        getPredefinedAccounts,        // Funciones de apuestas
+        placeBet,
+        getUserBets,
+        getTodayBetsCount,
+        canPlaceBet,
+        // Funciones de transacciones
+        getUserTransactions,
+        addTransaction,
         error,
       }}
     >

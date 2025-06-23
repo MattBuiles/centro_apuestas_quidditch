@@ -36,7 +36,7 @@ interface BettingMatch {
 
 const BettingPage: React.FC = () => {
   const { matchId: paramMatchId } = useParams<{ matchId?: string }>();
-  const { user, canBet } = useAuth(); // Get user for balance and betting permissions
+  const { user, canBet, placeBet, getTodayBetsCount, canPlaceBet } = useAuth(); // Get user for balance and betting permissions
   // Show admin message if user cannot bet
   if (!canBet) {
     return (
@@ -75,10 +75,15 @@ const BettingPage: React.FC = () => {
     const timeState = virtualTimeManager.getState();
     if (timeState.temporadaActiva) {
       setSeason(timeState.temporadaActiva);
-      
-      // Get upcoming and live matches that can be bet on
+        // Get only NON-FINISHED matches that can be bet on (scheduled, live, or upcoming)
+      // Filter out any matches that are completed or finished
       const bettableMatches = timeState.temporadaActiva.partidos
-        .filter(match => match.status === 'scheduled' || match.status === 'live')
+        .filter(match => {
+          // Only allow betting on matches that are NOT finished
+          const allowedStatuses = ['scheduled', 'live', 'upcoming'];
+          const isNotFinished = !['finished', 'completed', 'ended'].includes(match.status);
+          return allowedStatuses.includes(match.status) || isNotFinished;
+        })
         .map((match: Match) => {
           const homeTeam = timeState.temporadaActiva!.equipos.find(t => t.id === match.localId);
           const awayTeam = timeState.temporadaActiva!.equipos.find(t => t.id === match.visitanteId);
@@ -160,26 +165,47 @@ const BettingPage: React.FC = () => {
     };
     
     handleBetSelection(scoreOption);
-  };
-  const handleNextStep = () => {
+  };  const handleNextStep = async () => {
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Validate user has sufficient balance
-      if (!user || betAmount > (user.balance || 0)) {
-        alert('Saldo insuficiente para realizar esta apuesta.');
+      // Validate if user can place bet (balance, daily limit, etc.)
+      const validation = canPlaceBet(betAmount);
+      if (!validation.canBet) {
+        alert(validation.reason || 'No se puede realizar la apuesta');
         return;
       }
       
-      // Handle bet submission
-      const combinedBet: CombinedBet = {
-        options: selectedBets,
-        amount: betAmount,
-        combinedOdds: calculateCombinedOdds(),
-        potentialWin: calculatePotentialWin()
-      };
-      console.log('Combined bet submitted:', combinedBet);
-      alert(`¡Apuesta combinada realizada con éxito!\nApuestas: ${selectedBets.length}\nCuota combinada: ${calculateCombinedOdds().toFixed(2)}\nGanancia potencial: ${calculatePotentialWin().toFixed(2)} G`);
+      try {
+        // Prepare bet data
+        const betData = {
+          matchId: selectedMatch!,
+          matchName: getMatchNameById(selectedMatch!),
+          options: selectedBets,
+          amount: betAmount,
+          combinedOdds: calculateCombinedOdds(),
+          potentialWin: calculatePotentialWin()
+        };
+
+        // Place the bet using AuthContext
+        const success = await placeBet(betData);
+        
+        if (success) {
+          alert(`¡Apuesta realizada con éxito! ✨\n\nDetalles:\n- Apuestas: ${selectedBets.length}\n- Monto: ${betAmount} G\n- Cuota combinada: ${calculateCombinedOdds().toFixed(2)}\n- Ganancia potencial: ${calculatePotentialWin().toFixed(2)} G\n\nEl monto ha sido descontado de tu saldo.`);
+          
+          // Reset form
+          setCurrentStep(1);
+          setSelectedBets([]);
+          setBetAmount(0);
+          if (!paramMatchId) {
+            setSelectedMatch('');
+          }
+        } else {
+          alert('Error al realizar la apuesta. Intenta nuevamente.');
+        }
+      } catch (error) {
+        alert(error instanceof Error ? error.message : 'Error al realizar la apuesta');
+      }
     }
   };
 
@@ -212,6 +238,21 @@ const BettingPage: React.FC = () => {
           )}          <div className={styles.userBalance}>
             <span className={styles.balanceLabel}>Saldo disponible:</span>
             <span className={styles.balanceAmount}>{user?.balance || 0} Galeones</span>
+          </div>
+          
+          <div className={styles.dailyLimitsInfo}>
+            <div className={styles.limitsRow}>
+              <span className={styles.limitsLabel}>Apuestas realizadas hoy:</span>
+              <span className={styles.limitsValue}>
+                {getTodayBetsCount()}/3
+                {getTodayBetsCount() >= 3 && <span className={styles.limitReached}> (Límite alcanzado)</span>}
+              </span>
+            </div>
+            {getTodayBetsCount() >= 3 && (
+              <div className={styles.limitWarning}>
+                ⚠️ Has alcanzado el límite diario de apuestas. Intenta nuevamente mañana.
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -665,7 +706,10 @@ const BettingPage: React.FC = () => {
               disabled={
                 !selectedMatch || 
                 (currentStep === 2 && selectedBets.length === 0) || 
-                (currentStep === 3 && (betAmount <= 0 || betAmount > (user?.balance || 0)))
+                (currentStep === 3 && (
+                  betAmount <= 0 || 
+                  !canPlaceBet(betAmount).canBet
+                ))
               }
               className={styles.navButton}
             >
