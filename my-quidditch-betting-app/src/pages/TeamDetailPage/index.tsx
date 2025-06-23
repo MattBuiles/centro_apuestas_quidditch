@@ -23,6 +23,32 @@ interface Match {
   score?: string;
 }
 
+interface HistoricalIdol {
+  id: string;
+  name: string;
+  position: string;
+  period: string;
+  achievements: string[];
+  description: string;
+  legendaryStats?: string;
+}
+
+interface TeamRivalry {
+  opponentId: string;
+  opponentName: string;
+  totalMatches: number;
+  wins: number;
+  losses: number;
+  draws: number;
+  winPercentage: number;
+  lastMatch?: {
+    date: string;
+    result: 'win' | 'loss' | 'draw';
+    score: string;
+  };
+  noteableVictories?: string[];
+}
+
 interface TeamDetails {
   id: string;
   name: string;
@@ -39,6 +65,8 @@ interface TeamDetails {
   achievements?: string[];
   stadium?: string;
   colors?: string[];
+  historicalIdols?: HistoricalIdol[];
+  rivalries?: TeamRivalry[];
 }
 
 const mockTeamDetails: { [key: string]: TeamDetails } = {
@@ -61,12 +89,87 @@ const mockTeamDetails: { [key: string]: TeamDetails } = {
       {id: 'aw', name: 'Angelina Johnson', position: 'Cazadora', number: 8, yearsActive: 5, achievements: ["Capitana del equipo 2 años"]},
       {id: 'fw', name: 'Fred Weasley', position: 'Golpeador', number: 5, yearsActive: 4, achievements: ["Mejor golpeador defensivo de la década"]},
       {id: 'gw', name: 'George Weasley', position: 'Golpeador', number: 4, yearsActive: 4, achievements: ["Mejor golpeador ofensivo de la década"]},
-      {id: 'ow', name: 'Oliver Wood', position: 'Guardián', number: 1, yearsActive: 5, achievements: ["95% de efectividad en paradas", "Capitán legendario"]}
-    ],
+      {id: 'ow', name: 'Oliver Wood', position: 'Guardián', number: 1, yearsActive: 5, achievements: ["95% de efectividad en paradas", "Capitán legendario"]}    ],
     upcomingMatches: [
       {id: '1', opponent: 'Slytherin', date: '2025-07-15', venue: 'Campo de Hogwarts'},
       {id: '2', opponent: 'Ravenclaw', date: '2025-07-28', venue: 'Campo de Hogwarts'},
       {id: '3', opponent: 'Hufflepuff', date: '2025-08-10', venue: 'Campo de Hogwarts'}
+    ],
+    historicalIdols: [
+      {
+        id: 'james-potter',
+        name: 'James Potter',
+        position: 'Cazador',
+        period: '1971-1978',
+        achievements: ['Capitán del equipo durante 3 años', 'Récord de goles en una temporada: 127', 'Medalla al Mérito Deportivo'],
+        description: 'Legendario Cazador conocido por su liderazgo excepcional y habilidades ofensivas. Su estilo de juego audaz inspiró a toda una generación.',
+        legendaryStats: '127 goles en una temporada, 89% de efectividad'
+      },
+      {
+        id: 'charlie-weasley',
+        name: 'Charlie Weasley',
+        position: 'Buscador',
+        period: '1984-1991',
+        achievements: ['Capitán del equipo', 'Podría haber jugado para Inglaterra', 'Captura más rápida: 3 minutos 47 segundos'],
+        description: 'Buscador extraordinario que rechazó ofertas profesionales para seguir su pasión por los dragones. Su velocidad era legendaria.',
+        legendaryStats: 'Captura promedio: 12 minutos, 94% tasa de éxito'
+      },
+      {
+        id: 'godric-gryffindor',
+        name: 'Godric Gryffindor',
+        position: 'Fundador/Cazador',
+        period: '990-1020',
+        achievements: ['Fundador de la casa', 'Creador de las primeras tácticas de Quidditch', 'Poseedor de la espada de Gryffindor'],
+        description: 'El mismísimo fundador, cuyo valor y caballerosidad establecieron los estándares del equipo. Su legado trasciende el deporte.',
+        legendaryStats: 'Fundador - Estadísticas inmensurables'
+      }
+    ],
+    rivalries: [
+      {
+        opponentId: 'slytherin',
+        opponentName: 'Slytherin',
+        totalMatches: 67,
+        wins: 35,
+        losses: 28,
+        draws: 4,
+        winPercentage: 52.2,
+        lastMatch: {
+          date: '2025-06-20',
+          result: 'win',
+          score: '180-140'
+        },
+        noteableVictories: ['Final Copa de las Casas 2023: 210-160', 'Clásico Centenario 2022: 195-180']
+      },
+      {
+        opponentId: 'ravenclaw',
+        opponentName: 'Ravenclaw',
+        totalMatches: 45,
+        wins: 28,
+        losses: 15,
+        draws: 2,
+        winPercentage: 62.2,
+        lastMatch: {
+          date: '2025-05-15',
+          result: 'win',
+          score: '165-140'
+        },
+        noteableVictories: ['Semifinal Liga Mágica 2024: 175-150']
+      },
+      {
+        opponentId: 'hufflepuff',
+        opponentName: 'Hufflepuff',
+        totalMatches: 41,
+        wins: 31,
+        losses: 8,
+        draws: 2,
+        winPercentage: 75.6,
+        lastMatch: {
+          date: '2025-04-22',
+          result: 'win',
+          score: '145-120'
+        },
+        noteableVictories: ['Partido Benéfico 2023: 200-165']
+      }
     ]
   },  slytherin: {
     id: 'slytherin',
@@ -87,12 +190,88 @@ const mockTeamDetails: { [key: string]: TeamDetails } = {
       {id: 'cb', name: 'Vincent Crabbe', position: 'Golpeador', number: 3, yearsActive: 3, achievements: ["Golpeador más intimidante"]},
       {id: 'gg', name: 'Gregory Goyle', position: 'Golpeador', number: 2, yearsActive: 3, achievements: ["Especialista en jugadas de fuerza"]},
       {id: 'ap', name: 'Adrian Pucey', position: 'Cazador', number: 8, yearsActive: 4, achievements: ["Especialista en goles de larga distancia"]},
-      {id: 'mp', name: 'Miles Bletchley', position: 'Guardián', number: 1, yearsActive: 3, achievements: ["Guardián más joven en alcanzar 50 partidos"]}
-    ],
+      {id: 'mp', name: 'Miles Bletchley', position: 'Guardián', number: 1, yearsActive: 3, achievements: ["Guardián más joven en alcanzar 50 partidos"]}    ],
     upcomingMatches: [
       {id: '1', opponent: 'Gryffindor', date: '2025-07-15', venue: 'Campo de Hogwarts'},
       {id: '2', opponent: 'Hufflepuff', date: '2025-08-02', venue: 'Campo de Hogwarts'},
-      {id: '3', opponent: 'Ravenclaw', date: '2025-08-20', venue: 'Campo de Hogwarts'}    ]
+      {id: '3', opponent: 'Ravenclaw', date: '2025-08-20', venue: 'Campo de Hogwarts'}
+    ],
+    historicalIdols: [
+      {
+        id: 'salazar-slytherin',
+        name: 'Salazar Slytherin',
+        position: 'Fundador/Estratega',
+        period: '990-1020',
+        achievements: ['Fundador de la casa', 'Creador de las tácticas defensivas modernas', 'Heredero de Slytherin'],
+        description: 'El fundador original, cuya astucia y ambición establecieron las bases del estilo de juego Slytherin. Su legado estratégico perdura hasta hoy.',
+        legendaryStats: 'Fundador - Innovador táctico'
+      },
+      {
+        id: 'tom-riddle',
+        name: 'Tom Marvolo Riddle',
+        position: 'Buscador',
+        period: '1938-1945',
+        achievements: ['Capitán del equipo', 'Buscador más estratégico de su era', 'Récord de capturas consecutivas: 12'],
+        description: 'Buscador excepcionalmente hábil conocido por su capacidad de leer el juego y anticipar movimientos. Su enfoque meticuloso era legendario.',
+        legendaryStats: 'Captura promedio: 8 minutos, 97% tasa de éxito'
+      },
+      {
+        id: 'regulus-black',
+        name: 'Regulus Black',
+        position: 'Buscador',
+        period: '1972-1979',
+        achievements: ['Capitán más joven de Slytherin', 'Mejor promedio de captura en 7 años', 'Medalla al Valor Deportivo'],
+        description: 'Buscador talentoso cuyo coraje en el campo igualaba su determinación. Su estilo elegante inspiró a toda una generación de Slytherin.',
+        legendaryStats: 'Captura promedio: 10 minutos, 91% tasa de éxito'
+      }
+    ],
+    rivalries: [
+      {
+        opponentId: 'gryffindor',
+        opponentName: 'Gryffindor',
+        totalMatches: 67,
+        wins: 28,
+        losses: 35,
+        draws: 4,
+        winPercentage: 41.8,
+        lastMatch: {
+          date: '2025-06-20',
+          result: 'loss',
+          score: '140-180'
+        },
+        noteableVictories: ['Venganza del Heredero 2021: 190-170', 'Duelo de Rivalidad 2020: 205-195']
+      },
+      {
+        opponentId: 'hufflepuff',
+        opponentName: 'Hufflepuff',
+        totalMatches: 38,
+        wins: 25,
+        losses: 11,
+        draws: 2,
+        winPercentage: 65.8,
+        lastMatch: {
+          date: '2025-05-30',
+          result: 'win',
+          score: '155-135'
+        },
+        noteableVictories: ['Final Intercasas 2023: 185-160']
+      },
+      {
+        opponentId: 'ravenclaw',
+        opponentName: 'Ravenclaw',
+        totalMatches: 42,
+        wins: 24,
+        losses: 16,
+        draws: 2,
+        winPercentage: 57.1,
+        lastMatch: {
+          date: '2025-04-18',
+          result: 'win',
+          score: '170-155'
+        },
+        noteableVictories: ['Batalla de Estrategas 2022: 160-155']
+      }
+    ]
   },  ravenclaw: {
     id: 'ravenclaw',
     name: 'Ravenclaw', 
@@ -112,12 +291,87 @@ const mockTeamDetails: { [key: string]: TeamDetails } = {
       {id: 'jq', name: 'Jeremy Stretton', position: 'Golpeador', number: 4, yearsActive: 3, achievements: ["Especialista en jugadas defensivas"]},
       {id: 'ag', name: 'Anthony Goldstein', position: 'Golpeador', number: 3, yearsActive: 3, achievements: ["Jugada defensiva del año"]},
       {id: 'pb', name: 'Padma Patil', position: 'Cazadora', number: 6, yearsActive: 4, achievements: ["Pase perfecto - 95% precisión"]},
-      {id: 'gb', name: 'Grant Page', position: 'Guardián', number: 1, yearsActive: 4, achievements: ["Portero del año - 89% paradas", "Mejor reflejos de la liga"]}
-    ],
+      {id: 'gb', name: 'Grant Page', position: 'Guardián', number: 1, yearsActive: 4, achievements: ["Portero del año - 89% paradas", "Mejor reflejos de la liga"]}    ],
     upcomingMatches: [
       {id: '1', opponent: 'Hufflepuff', date: '2025-07-18', venue: 'Campo de Hogwarts'},
       {id: '2', opponent: 'Gryffindor', date: '2025-07-28', venue: 'Campo de Hogwarts'},
       {id: '3', opponent: 'Holyhead Harpies', date: '2025-08-08', venue: 'Campo de Hogwarts'}
+    ],
+    historicalIdols: [
+      {
+        id: 'rowena-ravenclaw',
+        name: 'Rowena Ravenclaw',
+        position: 'Fundadora/Estratega',
+        period: '990-1020',
+        achievements: ['Fundadora de la casa', 'Creadora de la Snitch Dorada moderna', 'Inventora de las jugadas aéreas complejas'],
+        description: 'La fundadora original, cuya inteligencia excepcional revolucionó el Quidditch. Sus innovaciones tácticas sentaron las bases del juego moderno.',
+        legendaryStats: 'Fundadora - Innovadora del deporte'
+      },
+      {
+        id: 'filius-flitwick',
+        name: 'Filius Flitwick',
+        position: 'Cazador',
+        period: '1955-1962',
+        achievements: ['Duelist campeón antes del Quidditch', 'Capitán durante 4 años', 'Record de precisión en pases: 98.7%'],
+        description: 'Maestro de la precisión y la técnica, cuyas habilidades como duelista se tradujeron en un control magistral de la Quaffle.',
+        legendaryStats: '98.7% precisión en pases, 84 goles en una temporada'
+      },
+      {
+        id: 'luna-lovegood',
+        name: 'Luna Lovegood',
+        position: 'Cazadora',
+        period: '1995-1998',
+        achievements: ['Jugada más creativa registrada', 'Comentarista legendaria', 'Inspiración para jugadas no convencionales'],
+        description: 'Jugadora única cuyo enfoque poco convencional del juego creó algunas de las jugadas más memorables y efectivas del Quidditch moderno.',
+        legendaryStats: '23 jugadas únicas registradas, 76% efectividad en creatividad'
+      }
+    ],
+    rivalries: [
+      {
+        opponentId: 'gryffindor',
+        opponentName: 'Gryffindor',
+        totalMatches: 45,
+        wins: 15,
+        losses: 28,
+        draws: 2,
+        winPercentage: 33.3,
+        lastMatch: {
+          date: '2025-05-15',
+          result: 'loss',
+          score: '140-165'
+        },
+        noteableVictories: ['Triunfo del Ingenio 2021: 180-175', 'Sorpresa Táctica 2019: 190-170']
+      },
+      {
+        opponentId: 'slytherin',
+        opponentName: 'Slytherin',
+        totalMatches: 42,
+        wins: 16,
+        losses: 24,
+        draws: 2,
+        winPercentage: 38.1,
+        lastMatch: {
+          date: '2025-04-18',
+          result: 'loss',
+          score: '155-170'
+        },
+        noteableVictories: ['Duelo de Estrategas 2022: 165-160']
+      },
+      {
+        opponentId: 'hufflepuff',
+        opponentName: 'Hufflepuff',
+        totalMatches: 39,
+        wins: 22,
+        losses: 15,
+        draws: 2,
+        winPercentage: 56.4,
+        lastMatch: {
+          date: '2025-05-08',
+          result: 'win',
+          score: '175-165'
+        },
+        noteableVictories: ['Batalla Intelectual 2023: 195-180', 'Creatividad vs Trabajo 2020: 160-145']
+      }
     ]
   },  hufflepuff: {
     id: 'hufflepuff',
@@ -138,12 +392,87 @@ const mockTeamDetails: { [key: string]: TeamDetails } = {
       {id: 'hm', name: 'Hannah Abbott', position: 'Cazadora', number: 6, yearsActive: 4, achievements: ["Mejor jugadora femenina de Hufflepuff"]},
       {id: 'jm', name: 'Justin Finch-Fletchley', position: 'Golpeador', number: 4, yearsActive: 4, achievements: ["Golpeador más técnico y preciso"]},
       {id: 'el', name: 'Ernie Macmillan', position: 'Golpeador', number: 3, yearsActive: 3, achievements: ["Especialista en jugadas defensivas"]},
-      {id: 'sb', name: 'Susan Bones', position: 'Guardiana', number: 1, yearsActive: 4, achievements: ["Guardiana más confiable - 92% paradas", "Líder silenciosa del equipo"]}
-    ],
+      {id: 'sb', name: 'Susan Bones', position: 'Guardiana', number: 1, yearsActive: 4, achievements: ["Guardiana más confiable - 92% paradas", "Líder silenciosa del equipo"]}    ],
     upcomingMatches: [
       {id: '1', opponent: 'Ravenclaw', date: '2025-07-18', venue: 'Campo de Hogwarts'},
       {id: '2', opponent: 'Slytherin', date: '2025-08-02', venue: 'Campo de Hogwarts'},
       {id: '3', opponent: 'Chudley Cannons', date: '2025-08-22', venue: 'Campo de Hogwarts'}
+    ],
+    historicalIdols: [
+      {
+        id: 'helga-hufflepuff',
+        name: 'Helga Hufflepuff',
+        position: 'Fundadora/Guardiana',
+        period: '990-1020',
+        achievements: ['Fundadora de la casa', 'Creadora del Fair Play en Quidditch', 'Primera en establecer reglas de deportividad'],
+        description: 'La fundadora cuyo corazón justo estableció los valores de deportividad y trabajo en equipo que definen el Quidditch moderno.',
+        legendaryStats: 'Fundadora - Madre del Fair Play'
+      },
+      {
+        id: 'cedric-diggory',
+        name: 'Cedric Diggory',
+        position: 'Buscador',
+        period: '1991-1995',
+        achievements: ['Capitán durante 3 años', 'Campeón de Quidditch Escolar', 'Leyenda inmortal de Hufflepuff'],
+        description: 'El Buscador más noble y talentoso en la historia de Hufflepuff. Su liderazgo y carisma inspiraron a generaciones futuras.',
+        legendaryStats: 'Captura promedio: 15 minutos, 88% tasa de éxito, 100% deportividad'
+      },
+      {
+        id: 'amos-diggory',
+        name: 'Amos Diggory',
+        position: 'Cazador',
+        period: '1968-1975',
+        achievements: ['Goleador histórico de Hufflepuff', 'Padre del gran Cedric', 'Récord de 156 goles en una temporada'],
+        description: 'Cazador legendario cuya dedicación y trabajo duro ejemplificaron los valores Hufflepuff. Mentor de muchos jugadores exitosos.',
+        legendaryStats: '156 goles en una temporada, 82% precisión en tiros'
+      }
+    ],
+    rivalries: [
+      {
+        opponentId: 'gryffindor',
+        opponentName: 'Gryffindor',
+        totalMatches: 41,
+        wins: 8,
+        losses: 31,
+        draws: 2,
+        winPercentage: 19.5,
+        lastMatch: {
+          date: '2025-04-22',
+          result: 'loss',
+          score: '120-145'
+        },
+        noteableVictories: ['Milagro de Hufflepuff 2020: 165-160', 'David vs Goliat 2018: 155-150']
+      },
+      {
+        opponentId: 'slytherin',
+        opponentName: 'Slytherin',
+        totalMatches: 38,
+        wins: 11,
+        losses: 25,
+        draws: 2,
+        winPercentage: 28.9,
+        lastMatch: {
+          date: '2025-05-30',
+          result: 'loss',
+          score: '135-155'
+        },
+        noteableVictories: ['Sorpresa del Año 2021: 170-165']
+      },
+      {
+        opponentId: 'ravenclaw',
+        opponentName: 'Ravenclaw',
+        totalMatches: 39,
+        wins: 15,
+        losses: 22,
+        draws: 2,
+        winPercentage: 38.5,
+        lastMatch: {
+          date: '2025-05-08',
+          result: 'loss',
+          score: '165-175'
+        },
+        noteableVictories: ['Triunfo del Corazón 2022: 180-175', 'Perseverancia Total 2019: 150-145']
+      }
     ]
   },
   cannons: {
@@ -163,16 +492,90 @@ const mockTeamDetails: { [key: string]: TeamDetails } = {
       {id: 'jw', name: 'Joey Jenkins', position: 'Buscador', number: 7, yearsActive: 4, achievements: ["Especialista en capturas bajo presión"]}, 
       {id: 'rw', name: 'Ron Weasley', position: 'Guardián', number: 1, yearsActive: 3, achievements: ["Guardián estrella en ascenso", "Mejor parada del año"]},
       {id: 'mb', name: 'Barry Ryan', position: 'Cazador', number: 9, yearsActive: 8, achievements: ["Veterano del equipo", "200+ partidos jugados"]},
-      {id: 'sp', name: 'Galvin Gudgeon', position: 'Cazador', number: 8, yearsActive: 4, achievements: ["Mejor anotador de la temporada actual"]},
-      {id: 'tk', name: 'Roderick Plumpton', position: 'Golpeador', number: 5, yearsActive: 7, achievements: ["Defensor más temido de la liga"]},
+      {id: 'sp', name: 'Galvin Gudgeon', position: 'Cazador', number: 8, yearsActive: 4, achievements: ["Mejor anotador de la temporada actual"]},      {id: 'tk', name: 'Roderick Plumpton', position: 'Golpeador', number: 5, yearsActive: 7, achievements: ["Defensor más temido de la liga"]},
       {id: 'bl', name: 'Dragomir Gorgovitch', position: 'Golpeador', number: 4, yearsActive: 5, achievements: ["Mejor golpeador defensivo del equipo"]}
     ],
     upcomingMatches: [
       {id: '1', opponent: 'Holyhead Harpies', date: '2025-07-20', venue: 'Estadio Ballycastle'},
       {id: '2', opponent: 'Gryffindor', date: '2025-08-05', venue: 'Campo de Hogwarts'},
       {id: '3', opponent: 'Slytherin', date: '2025-08-18', venue: 'Estadio Ballycastle'}
-    ]
-  },
+    ],
+    historicalIdols: [
+      {
+        id: 'galvin-gudgeon',
+        name: 'Galvin Gudgeon',
+        position: 'Cazador',
+        period: '2020-Presente',
+        achievements: ['Actual estrella del equipo', 'Récord de goles en una temporada reciente', 'Esperanza del renacimiento del equipo'],
+        description: 'El talentoso Cazador actual que representa la nueva era de los Cannons. Su habilidad y dedicación han renovado las esperanzas de los fanáticos.',
+        legendaryStats: '78 goles en la temporada actual, 73% efectividad'
+      },
+      {
+        id: 'roderick-plumpton',
+        name: 'Roderick Plumpton',
+        position: 'Buscador',
+        period: '1921-1939',
+        achievements: ['Único título de liga de los Cannons (1922)', 'Buscador más querido en la historia del equipo', 'Récord de captura más emotiva'],
+        description: 'Leyenda absoluta y héroe de la única victoria de liga de los Cannons. Su captura ganadora en 1922 sigue siendo el momento más glorioso del equipo.',
+        legendaryStats: 'Captura histórica en Final 1922, 79% tasa de éxito en carrera'
+      },
+      {
+        id: 'joey-jenkins',
+        name: 'Joey Jenkins',
+        position: 'Buscador',
+        period: '2018-Presente',
+        achievements: ['Buscador estrella actual', 'Especialista en capturas bajo presión', 'Líder del resurgimiento del equipo'],
+        description: 'El Buscador actual cuya determinación y habilidad bajo presión han devuelto la competitividad a los Cannons en los últimos años.',
+        legendaryStats: 'Captura promedio: 18 minutos, 71% tasa de éxito'
+      }
+    ],
+    rivalries: [
+      {
+        opponentId: 'harpies',
+        opponentName: 'Holyhead Harpies',
+        totalMatches: 28,
+        wins: 6,
+        losses: 20,
+        draws: 2,
+        winPercentage: 21.4,
+        lastMatch: {
+          date: '2025-03-15',
+          result: 'loss',
+          score: '140-185'
+        },
+        noteableVictories: ['Sorpresa Naranja 2019: 160-155', 'Milagro de Ballycastle 2017: 175-170']
+      },
+      {
+        opponentId: 'hufflepuff',
+        opponentName: 'Hufflepuff',
+        totalMatches: 15,
+        wins: 8,
+        losses: 6,
+        draws: 1,
+        winPercentage: 53.3,
+        lastMatch: {
+          date: '2025-04-10',
+          result: 'win',
+          score: '150-140'
+        },
+        noteableVictories: ['Duelo de Underdogs 2023: 165-160']
+      },
+      {
+        opponentId: 'appleby-arrows',
+        opponentName: 'Appleby Arrows',
+        totalMatches: 35,
+        wins: 12,
+        losses: 21,
+        draws: 2,
+        winPercentage: 34.3,
+        lastMatch: {
+          date: '2025-02-28',
+          result: 'loss',
+          score: '135-150'
+        },
+        noteableVictories: ['Derby Regional 2020: 180-175']
+      }
+    ]  },
   harpies: {
     id: 'harpies',
     name: 'Holyhead Harpies', 
@@ -199,59 +602,82 @@ const mockTeamDetails: { [key: string]: TeamDetails } = {
       {id: '1', opponent: 'Chudley Cannons', date: '2025-07-20', venue: 'Estadio Holyhead'},
       {id: '2', opponent: 'Ravenclaw', date: '2025-08-08', venue: 'Campo de Hogwarts'},
       {id: '3', opponent: 'Hufflepuff', date: '2025-08-22', venue: 'Estadio Holyhead'}
-    ]
-  },  chudley_cannons: {
-    id: 'chudley_cannons',
-    name: 'Chudley Cannons', 
-    slogan: "¡Vamos Cannons!", 
-    history: "Un equipo profesional británico conocido por su larga sequía de títulos pero con una base de fanáticos muy leal. Famosos por sus uniformes naranjas brillantes y su espíritu indomable. A pesar de las dificultades, los Cannons han mantenido una tradición de juego valiente y han cultivado algunos de los jugadores más queridos del Quidditch profesional.", 
-    wins: 89, 
-    losses: 98,
-    draws: 12,
-    titles: 1, 
-    founded: 1892,
-    stadium: "Estadio Ballycastle",
-    colors: ["Naranja Brillante", "Negro"],
-    achievements: ["Campeón de Liga (1 vez)", "Mayor base de fanáticos leales", "Récord de asistencia en partidos locales"],
-    roster: [ 
-      {id: 'jw', name: 'Joey Jenkins', position: 'Buscador', number: 7, yearsActive: 4, achievements: ["Especialista en capturas bajo presión"]}, 
-      {id: 'rw', name: 'Ron Weasley', position: 'Guardián', number: 1, yearsActive: 3, achievements: ["Guardián estrella en ascenso", "Mejor parada del año"]},
-      {id: 'mb', name: 'Barry Ryan', position: 'Cazador', number: 9, yearsActive: 8, achievements: ["Veterano del equipo", "200+ partidos jugados"]},
-      {id: 'sp', name: 'Galvin Gudgeon', position: 'Cazador', number: 8, yearsActive: 4, achievements: ["Mejor anotador de la temporada actual"]},
-      {id: 'tk', name: 'Roderick Plumpton', position: 'Golpeador', number: 5, yearsActive: 7, achievements: ["Defensor más temido de la liga"]},
-      {id: 'bl', name: 'Dragomir Gorgovitch', position: 'Golpeador', number: 4, yearsActive: 5, achievements: ["Mejor golpeador defensivo del equipo"]}
     ],
-    upcomingMatches: [
-      {id: '1', opponent: 'Holyhead Harpies', date: '2025-07-20', venue: 'Estadio Ballycastle'},
-      {id: '2', opponent: 'Gryffindor', date: '2025-08-05', venue: 'Campo de Hogwarts'},
-      {id: '3', opponent: 'Slytherin', date: '2025-08-18', venue: 'Estadio Ballycastle'}
-    ]
-  },  holyhead_harpies: {
-    id: 'holyhead_harpies',
-    name: 'Holyhead Harpies', 
-    slogan: "Vuela alto, golpea fuerte", 
-    history: "Un equipo profesional conocido por ser el único equipo completamente femenino en la liga profesional. Tienen una historia rica y gloriosa, siendo famosas por su juego agresivo, técnico y habilidoso. Las Harpies han sido pioneras en el Quidditch femenino y han inspirado a generaciones de jugadoras con su excelencia deportiva.", 
-    wins: 156, 
-    losses: 34,
-    draws: 8,
-    titles: 8, 
-    founded: 1203,
-    stadium: "Estadio Holyhead",
-    colors: ["Verde Esmeralda", "Dorado"],
-    achievements: ["Campeonas de Liga (8 veces)", "Equipo completamente femenino más exitoso", "Récord de mayor cantidad de títulos consecutivos (3)", "Mejor porcentaje de victorias de la liga"],
-    roster: [ 
-      {id: 'gw', name: 'Ginny Weasley', position: 'Cazadora', number: 8, yearsActive: 4, achievements: ["Estrella emergente del Quidditch", "Mejor jugadora joven del año"]}, 
-      {id: 'cj', name: 'Wilda Griffiths', position: 'Buscadora', number: 7, yearsActive: 9, achievements: ["Capitana y líder histórica", "Velocidad récord en captura de Snitch"]},
-      {id: 'md', name: 'Valmai Morgan', position: 'Cazadora', number: 9, yearsActive: 7, achievements: ["Anotadora más precisa del equipo", "300+ goles en su carrera"]},
-      {id: 'lb', name: 'Gwendolyn Morgan', position: 'Cazadora', number: 6, yearsActive: 6, achievements: ["Hermana legendaria", "Especialista en jugadas aéreas"]},
-      {id: 'jh', name: 'Gwenog Jones', position: 'Golpeadora', number: 4, yearsActive: 10, achievements: ["Ex-capitana legendaria", "Mejor golpeadora de la década"]},
-      {id: 'kt', name: 'Glynnis Griffiths', position: 'Golpeadora', number: 3, yearsActive: 8, achievements: ["Especialista en defensa aérea"]},
-      {id: 'sw', name: 'Artemis Fido', position: 'Guardiana', number: 1, yearsActive: 5, achievements: ["Portera más confiable de la liga", "Velocidad supersónica certificada"]}
+    historicalIdols: [
+      {
+        id: 'gwenog-jones',
+        name: 'Gwenog Jones',
+        position: 'Golpeadora',
+        period: '1998-2015',
+        achievements: ['Capitana durante 10 años', 'Mejor Golpeadora de la Liga (5 veces)', 'Líder histórica del equipo más exitoso'],
+        description: 'La capitana más exitosa en la historia de las Harpies. Su liderazgo feroz y habilidades incomparables como Golpeadora llevaron al equipo a su época dorada.',
+        legendaryStats: 'Capitana 10 años, 5 títulos de liga, 87% efectividad defensiva'
+      },
+      {
+        id: 'wilda-griffiths',
+        name: 'Wilda Griffiths',
+        position: 'Buscadora',
+        period: '2016-Presente',
+        achievements: ['Capitana actual', 'Récord de captura más rápida: 3 minutos 47 segundos', 'Buscadora del año (3 veces)'],
+        description: 'La actual capitana y una de las Buscadoras más talentosas de la era moderna. Su velocidad y precisión han redefinido la posición.',
+        legendaryStats: 'Captura promedio: 12 minutos, 92% tasa de éxito, Récord de velocidad'
+      },
+      {
+        id: 'ginny-weasley',
+        name: 'Ginny Weasley',
+        position: 'Cazadora',
+        period: '2019-Presente',
+        achievements: ['Estrella emergente del Quidditch', 'Mejor jugadora joven del año', 'Prometedora futura capitana'],
+        description: 'La joven estrella que representa el futuro brillante de las Harpies. Su talento natural y determinación la convierten en una de las jugadoras más prometedoras.',
+        legendaryStats: '89% precisión en pases, 67 goles en su primera temporada completa'
+      }
     ],
-    upcomingMatches: [
-      {id: '1', opponent: 'Chudley Cannons', date: '2025-07-20', venue: 'Estadio Holyhead'},
-      {id: '2', opponent: 'Ravenclaw', date: '2025-08-08', venue: 'Campo de Hogwarts'},
-      {id: '3', opponent: 'Hufflepuff', date: '2025-08-22', venue: 'Estadio Holyhead'}
+    rivalries: [
+      {
+        opponentId: 'cannons',
+        opponentName: 'Chudley Cannons',
+        totalMatches: 28,
+        wins: 20,
+        losses: 6,
+        draws: 2,
+        winPercentage: 71.4,
+        lastMatch: {
+          date: '2025-03-15',
+          result: 'win',
+          score: '185-140'
+        },
+        noteableVictories: ['Dominación Verde 2023: 210-125', 'Clásico Femenino 2021: 195-160']
+      },
+      {
+        opponentId: 'gryffindor',
+        opponentName: 'Gryffindor',
+        totalMatches: 22,
+        wins: 16,
+        losses: 5,
+        draws: 1,
+        winPercentage: 72.7,
+        lastMatch: {
+          date: '2025-06-10',
+          result: 'win',
+          score: '175-155'
+        },
+        noteableVictories: ['Duelo de Valor 2022: 190-175', 'Choque de Titanes 2020: 165-160']
+      },
+      {
+        opponentId: 'slytherin',
+        opponentName: 'Slytherin',
+        totalMatches: 26,
+        wins: 18,
+        losses: 7,
+        draws: 1,
+        winPercentage: 69.2,
+        lastMatch: {
+          date: '2025-05-25',
+          result: 'win',
+          score: '170-150'
+        },
+        noteableVictories: ['Batalla de Elegancia 2023: 185-170', 'Superioridad Táctica 2019: 160-145']
+      }
     ]
   },
 };
@@ -383,12 +809,23 @@ const TeamDetailPage = () => {
             onClick={() => handleTabClick('plantilla')}
           >
             Plantilla
-          </button>
-          <button 
+          </button>          <button 
             className={`${styles.tabButton} ${activeTab === 'logros' ? styles.active : ''}`} 
             onClick={() => handleTabClick('logros')}
           >
             Logros
+          </button>
+          <button 
+            className={`${styles.tabButton} ${activeTab === 'idolos' ? styles.active : ''}`} 
+            onClick={() => handleTabClick('idolos')}
+          >
+            Ídolos Históricos
+          </button>
+          <button 
+            className={`${styles.tabButton} ${activeTab === 'rivalidades' ? styles.active : ''}`} 
+            onClick={() => handleTabClick('rivalidades')}
+          >
+            Rivalidades
           </button>
           <button 
             className={`${styles.tabButton} ${activeTab === 'proximos' ? styles.active : ''}`} 
@@ -461,9 +898,7 @@ const TeamDetailPage = () => {
                 <p className={styles.tabText}>Información de logros no disponible.</p>
               )}
             </div>
-          )}
-
-          {/* Tab Próximos Partidos */}
+          )}          {/* Tab Próximos Partidos */}
           {activeTab === 'proximos' && (
             <div>
               <h2 className={styles.tabTitle}>Próximos Partidos</h2>
@@ -483,6 +918,120 @@ const TeamDetailPage = () => {
                 </div>
               ) : (
                 <p className={styles.tabText}>No hay próximos partidos programados.</p>
+              )}
+            </div>
+          )}
+
+          {/* Tab Ídolos Históricos */}
+          {activeTab === 'idolos' && (
+            <div>
+              <h2 className={styles.tabTitle}>Ídolos Históricos</h2>
+              {team.historicalIdols && team.historicalIdols.length > 0 ? (
+                <div className={styles.idolsList}>
+                  {team.historicalIdols.map(idol => (
+                    <div key={idol.id} className={styles.idolItem}>
+                      <div className={styles.idolHeader}>
+                        <div className={styles.idolBasicInfo}>
+                          <h3 className={styles.idolName}>{idol.name}</h3>
+                          <span className={styles.idolPosition}>{idol.position}</span>
+                          <span className={styles.idolPeriod}>📅 {idol.period}</span>
+                        </div>
+                        {idol.legendaryStats && (
+                          <div className={styles.idolStats}>
+                            <span className={styles.idolStatsLabel}>Estadísticas Legendarias:</span>
+                            <span className={styles.idolStatsValue}>{idol.legendaryStats}</span>
+                          </div>
+                        )}
+                      </div>
+                      <p className={styles.idolDescription}>{idol.description}</p>
+                      <div className={styles.idolAchievements}>
+                        <h4 className={styles.idolAchievementsTitle}>🏆 Logros Principales:</h4>
+                        <ul className={styles.idolAchievementsList}>
+                          {idol.achievements.map((achievement, index) => (
+                            <li key={index} className={styles.idolAchievementItem}>
+                              {achievement}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className={styles.tabText}>No hay información de ídolos históricos disponible.</p>
+              )}
+            </div>
+          )}
+
+          {/* Tab Rivalidades */}
+          {activeTab === 'rivalidades' && (
+            <div>
+              <h2 className={styles.tabTitle}>Estadísticas de Enfrentamientos</h2>
+              {team.rivalries && team.rivalries.length > 0 ? (
+                <div className={styles.rivalriesList}>
+                  {team.rivalries.map(rivalry => (
+                    <div key={rivalry.opponentId} className={styles.rivalryItem}>
+                      <div className={styles.rivalryHeader}>
+                        <div className={styles.rivalryTeamInfo}>
+                          <h3 className={styles.rivalryOpponent}>
+                            {team.name} vs {rivalry.opponentName}
+                          </h3>
+                          <span className={styles.rivalryRecord}>
+                            Historial: {rivalry.wins}-{rivalry.losses}-{rivalry.draws} 
+                            ({rivalry.winPercentage.toFixed(1)}% victorias)
+                          </span>
+                        </div>
+                        <div className={styles.rivalryStats}>
+                          <div className={styles.rivalryStatItem}>
+                            <span className={styles.rivalryStatValue}>{rivalry.totalMatches}</span>
+                            <span className={styles.rivalryStatLabel}>Partidos</span>
+                          </div>
+                          <div className={styles.rivalryStatItem}>
+                            <span className={styles.rivalryStatValue}>{rivalry.wins}</span>
+                            <span className={styles.rivalryStatLabel}>Victorias</span>
+                          </div>
+                          <div className={styles.rivalryStatItem}>
+                            <span className={styles.rivalryStatValue}>{rivalry.losses}</span>
+                            <span className={styles.rivalryStatLabel}>Derrotas</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {rivalry.lastMatch && (
+                        <div className={styles.rivalryLastMatch}>
+                          <h4 className={styles.rivalryLastMatchTitle}>Último Enfrentamiento:</h4>
+                          <div className={styles.rivalryLastMatchInfo}>
+                            <span className={styles.rivalryLastMatchDate}>
+                              📅 {formatDate(rivalry.lastMatch.date)}
+                            </span>
+                            <span className={`${styles.rivalryLastMatchResult} ${styles[rivalry.lastMatch.result]}`}>
+                              {rivalry.lastMatch.result === 'win' ? '✅ Victoria' : 
+                               rivalry.lastMatch.result === 'loss' ? '❌ Derrota' : '⚖️ Empate'}
+                            </span>
+                            <span className={styles.rivalryLastMatchScore}>
+                              {rivalry.lastMatch.score}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      {rivalry.noteableVictories && rivalry.noteableVictories.length > 0 && (
+                        <div className={styles.rivalryVictories}>
+                          <h4 className={styles.rivalryVictoriesTitle}>🌟 Victorias Memorables:</h4>
+                          <ul className={styles.rivalryVictoriesList}>
+                            {rivalry.noteableVictories.map((victory, index) => (
+                              <li key={index} className={styles.rivalryVictoryItem}>
+                                {victory}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className={styles.tabText}>No hay información de rivalidades disponible.</p>
               )}
             </div>
           )}

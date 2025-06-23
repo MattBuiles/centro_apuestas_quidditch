@@ -84,10 +84,11 @@ const TeamsPage: React.FC = () => {  const [teams, setTeams] = useState<TeamData
       const standings = standingsCalculator.calculateStandings(
         timeState.temporadaActiva.equipos,
         timeState.temporadaActiva.partidos.filter(match => match.status === 'finished')
-      );
-        // Convert teams to TeamData format
-      const teamsData: TeamData[] = timeState.temporadaActiva.equipos.map(team => {
-        const standing = standings.find(s => s.teamId === team.id);
+      );      // Convert teams to TeamData format and sort alphabetically
+      const teamsData: TeamData[] = timeState.temporadaActiva.equipos
+        .sort((a, b) => a.name.localeCompare(b.name)) // Sort alphabetically by name
+        .map(team => {
+          const standing = standings.find(s => s.teamId === team.id);
         
         return {
           id: team.id,
@@ -178,10 +179,29 @@ const TeamsPage: React.FC = () => {  const [teams, setTeams] = useState<TeamData
       </section>
 
       {/* Teams Grid */}
-      <section className={styles.teamsSection}>
-        <div className={styles.teamsGrid}>
-          {filteredTeams.length > 0 ? (
-            filteredTeams.map(team => (              <Link 
+      <section className={styles.teamsSection}>        <div className={styles.teamsGrid}>
+          {isLoading ? (
+            <div className={styles.loadingState}>
+              <h3>⚡ Cargando equipos...</h3>
+              <p>Consultando los datos mágicos de los equipos</p>
+            </div>
+          ) : teams.length === 0 ? (
+            <div className={styles.emptyState}>
+              <h3>🏟️ No se encontraron equipos</h3>
+              <p>
+                Actualmente no hay equipos disponibles. 
+                {!season && "Inicia una temporada en la página de Partidos para ver los equipos en acción."}
+              </p>
+              {!season && (
+                <Link to="/matches">
+                  <Button variant="primary">
+                    Ir a Partidos
+                  </Button>
+                </Link>
+              )}
+            </div>
+          ) : filteredTeams.length > 0 ? (
+            filteredTeams.map(team => (<Link 
                 key={team.id} 
                 to={`/teams/${team.id}`}
                 className={styles.teamCard}
@@ -205,7 +225,7 @@ const TeamsPage: React.FC = () => {  const [teams, setTeams] = useState<TeamData
                   <h3 className={styles.teamName}>{team.name}</h3>
                 </div>                {/* Team Card Body */}
                 <div className={styles.teamCardBody}>
-                  {team.stats && (
+                  {team.stats && team.stats.played > 0 ? (
                     <div className={styles.teamStats}>
                       <div className={styles.statItem}>
                         <div className={styles.statValue}>{team.stats.played}</div>
@@ -224,14 +244,19 @@ const TeamsPage: React.FC = () => {  const [teams, setTeams] = useState<TeamData
                         <div className={styles.statLabel}>Puntos</div>
                       </div>
                     </div>
+                  ) : (
+                    <div className={styles.noStatsMessage}>
+                      <p>📊 La clasificación aún no está disponible</p>
+                      <p>Vuelve más tarde para ver las estadísticas</p>
+                    </div>
                   )}
                 </div>
               </Link>
-            ))
-          ) : (            <div className={styles.emptyState}>
+            ))          ) : (
+            <div className={styles.emptyState}>
               <h3>🔍 No se encontraron equipos</h3>
               <p>
-                No hay equipos que coincidan con el término de búsqueda. 
+                No hay equipos que coincidan con el término de búsqueda "{searchTerm}". 
                 Intenta con otros términos.
               </p>
               <Button 

@@ -201,18 +201,19 @@ const ResultsPage: React.FC = () => {
               />
             </div>
             <div className={styles.formGroup}>
-              <label htmlFor="team-filter" className={styles.formLabel}>Equipo</label>
-              <select
+              <label htmlFor="team-filter" className={styles.formLabel}>Equipo</label>              <select
                 id="team-filter"
                 className={styles.formSelect}
                 value={teamFilter}
                 onChange={(e) => setTeamFilter(e.target.value)}
               >
                 <option value="">Todos los equipos</option>
-                <option value="Gryffindor">Gryffindor</option>
-                <option value="Slytherin">Slytherin</option>
-                <option value="Hufflepuff">Hufflepuff</option>
-                <option value="Ravenclaw">Ravenclaw</option>
+                {season && season.equipos
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .map(team => (
+                    <option key={team.id} value={team.name}>{team.name}</option>
+                  ))
+                }
               </select>
             </div>
           </div>
