@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { MatchState, GameEvent, Match, Team } from '@/types/league';
+import { Match, MatchState, Team, GameEvent } from '@/types/league';
 import { liveMatchSimulator } from '@/services/liveMatchSimulator';
 import Card from '@/components/common/Card';
 import Button from '@/components/common/Button';
@@ -32,26 +32,34 @@ const LiveMatchViewer: React.FC<LiveMatchViewerProps> = ({
   const [eventFeed, setEventFeed] = useState<GameEvent[]>([]);
   const [lastEventCount, setLastEventCount] = useState(0);
 
+  // Monitor for match completion and save results
   const updateMatchState = useCallback(() => {
     const currentState = liveMatchSimulator.getMatchState(match.id);
     if (currentState) {
       setMatchState(currentState);
       
-      // Check for new events
+      // Update event feed with new events
       if (currentState.eventos.length > lastEventCount) {
-        setEventFeed([...currentState.eventos].reverse()); // Show newest first
+        const newEvents = currentState.eventos.slice(lastEventCount);
+        setEventFeed(prev => [...prev, ...newEvents]);
         setLastEventCount(currentState.eventos.length);
       }
 
       // Check if match ended
       if (!currentState.isActive && isSimulating) {
         setIsSimulating(false);
+        
+        // Save detailed match result
+        console.log('🎯 Match ended, saving detailed results...');
+        liveMatchSimulator.saveDetailedMatchResult(match.id, match, homeTeam, awayTeam);
+        
+        // Call onMatchEnd callback
         if (onMatchEnd) {
           onMatchEnd(currentState);
         }
       }
     }
-  }, [match.id, lastEventCount, isSimulating, onMatchEnd]);
+  }, [match, homeTeam, awayTeam, lastEventCount, isSimulating, onMatchEnd]);
 
   useEffect(() => {
     if (isSimulating && autoRefresh) {

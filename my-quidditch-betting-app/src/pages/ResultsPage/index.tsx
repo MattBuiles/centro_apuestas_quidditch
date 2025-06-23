@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import Button from '@/components/common/Button';
-import LoadingSpinner from '@/components/common/LoadingSpinner';
-import TeamLogo from '@/components/teams/TeamLogo';
-import { virtualTimeManager } from '@/services/virtualTimeManager';
+import { Link, useNavigate } from 'react-router-dom';
 import { Season } from '@/types/league';
+import { virtualTimeManager } from '@/services/virtualTimeManager';
+import { DetailedMatchResult, matchResultsService } from '@/services/matchResultsService';
+import Card from '@/components/common/Card';
+import Button from '@/components/common/Button';
+import TeamLogo from '@/components/teams/TeamLogo';
+import FormInput from '@/components/common/FormInput';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 import styles from './ResultsPage.module.css';
 
 interface Result {
@@ -17,62 +20,127 @@ interface Result {
   league: string;
   snitchCaught: boolean;
   events: number;
+  duration: number;
 }
 
 const ResultsPage: React.FC = () => {
+  const navigate = useNavigate();
   const [results, setResults] = useState<Result[]>([]);
+  const [detailedResults, setDetailedResults] = useState<DetailedMatchResult[]>([]);
   const [season, setSeason] = useState<Season | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [teamFilter, setTeamFilter] = useState('');
+  const [showDetailed, setShowDetailed] = useState(false);
 
   useEffect(() => {
-    loadResultsFromSimulation();
+    loadResults();
+    loadDetailedResults();
   }, []);
-  const loadResultsFromSimulation = () => {
-    setIsLoading(true);
-    
-    // This will automatically initialize a season if none exists
-    const temporadaActiva = virtualTimeManager.getTemporadaActivaOInicializar();
-    setSeason(temporadaActiva);
-    
-    // Get finished matches from simulation
-    const finishedMatches = virtualTimeManager.getResultadosRecientes(20);
-    
-    const simulationResults: Result[] = finishedMatches.map(match => {
-      const homeTeam = temporadaActiva.equipos.find(t => t.id === match.localId);
-      const awayTeam = temporadaActiva.equipos.find(t => t.id === match.visitanteId);
+
+  const loadResults = async () => {
+    try {
+      setIsLoading(true);
+      const state = virtualTimeManager.getState();
       
-      return {
-        id: match.id,
-        date: new Date(match.fecha).toLocaleDateString('es-ES', {
-          month: 'short',
-          day: 'numeric'
-        }),
-        homeTeam: homeTeam?.name || match.localId,
-        awayTeam: awayTeam?.name || match.visitanteId,
-        homeScore: match.homeScore || 0,
-        awayScore: match.awayScore || 0,        league: temporadaActiva.name || 'Liga Profesional Quidditch',
-        snitchCaught: match.snitchCaught || false,
-        events: match.events?.length || 0
-      };
-    });
-    
-    setResults(simulationResults);
-    setIsLoading(false);
+      if (state.temporadaActiva) {
+        setSeason(state.temporadaActiva);
+        
+        // Get finished matches from the current season
+        const finishedMatches = state.temporadaActiva.partidos
+          .filter(match => match.status === 'finished')
+          .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());        const formattedResults: Result[] = finishedMatches.map(match => ({
+          id: match.id,
+          date: new Date(match.fecha).toISOString(),
+          homeTeam: state.temporadaActiva!.equipos.find(t => t.id === match.localId)?.name || 'Unknown',
+          awayTeam: state.temporadaActiva!.equipos.find(t => t.id === match.visitanteId)?.name || 'Unknown',
+          homeScore: match.homeScore || 0,
+          awayScore: match.awayScore || 0,
+          league: 'Quidditch League',
+          snitchCaught: match.events?.some(e => e.type === 'SNITCH_CAUGHT') || false,
+          events: match.events?.length || 0,
+          duration: match.currentMinute || 0
+        }));
+
+        setResults(formattedResults);
+      }
+    } catch (error) {
+      console.error('Error loading results:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  const loadDetailedResults = () => {
+    try {
+      const detailed = matchResultsService.getAllResults();
+      setDetailedResults(detailed.sort((a, b) => 
+        new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime()
+      ));
+    } catch (error) {
+      console.error('Error loading detailed results:', error);
+    }
+  };
+
   const handleFilterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Recargar datos con filtros aplicados
-    loadResultsFromSimulation();
-    console.log('Aplicando filtros:', { dateFrom, dateTo, teamFilter });
+    // Apply filters to results
+    let filteredResults = [...results];
+    
+    if (dateFrom) {
+      filteredResults = filteredResults.filter(result => 
+        new Date(result.date) >= new Date(dateFrom)
+      );
+    }
+    
+    if (dateTo) {
+      filteredResults = filteredResults.filter(result => 
+        new Date(result.date) <= new Date(dateTo)
+      );
+    }
+    
+    if (teamFilter) {
+      filteredResults = filteredResults.filter(result => 
+        result.homeTeam === teamFilter || result.awayTeam === teamFilter
+      );
+    }
+    
+    setResults(filteredResults);
   };
+
   const handleFilterReset = () => {
     setDateFrom('');
     setDateTo('');
     setTeamFilter('');
-    loadResultsFromSimulation();
+    loadResults(); // Reset to all results
+  };
+
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', {
+      weekday: 'short',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const formatDuration = (minutes: number): string => {
+    if (minutes < 60) {
+      return `${minutes} min`;
+    }
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours}h ${mins}m`;
+  };
+
+  const getMatchDetailedResult = (matchId: string): DetailedMatchResult | undefined => {
+    return detailedResults.find(dr => dr.matchId === matchId);
+  };
+
+  const handleViewDetailedResult = (matchId: string) => {
+    navigate(`/matches/${matchId}/result`);
   };
 
   if (isLoading) {
@@ -152,55 +220,173 @@ const ResultsPage: React.FC = () => {
             </Button>
           </div>
         </form>
-      </div>
-
-      {/* Results Grid */}
+      </div>      {/* Results Grid */}
       <section className={styles.resultsGrid}>
         {results.length > 0 ? (
-          results.map(result => (
-            <div key={result.id} className={styles.resultCard}>
-              <div className={styles.matchMeta}>
-                <span className={styles.matchDate}>
-                  {result.date} - {result.league}
-                </span>
-                <Link to={`/matches/${result.id}`} className={styles.matchDetailsLink}>
-                  Ver detalles
-                </Link>
-              </div>
+          results.map(result => {
+            const detailedResult = getMatchDetailedResult(result.id);
+            return (
+              <Card key={result.id} className={styles.resultCard}>
+                <div className={styles.matchMeta}>
+                  <span className={styles.matchDate}>
+                    {formatDate(result.date)} - {result.league}
+                  </span>
+                  <div className={styles.matchActions}>
+                    <Link to={`/matches/${result.id}`} className={styles.matchDetailsLink}>
+                      Ver partido
+                    </Link>
+                    {detailedResult && (
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleViewDetailedResult(result.id)}
+                      >
+                        Análisis completo
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                
                 <div className={styles.matchResult}>
-                <div className={styles.teamResult}>
-                  <TeamLogo teamName={result.homeTeam} size="md" />
-                  <h3 className={styles.teamName}>{result.homeTeam}</h3>
-                  <p className={styles.teamScore}>{result.homeScore}</p>
+                  <div className={styles.teamResult}>
+                    <TeamLogo teamName={result.homeTeam} size="md" />
+                    <h3 className={styles.teamName}>{result.homeTeam}</h3>
+                    <p className={styles.teamScore}>{result.homeScore}</p>
+                  </div>
+                  
+                  <div className={styles.scoreVs}>VS</div>
+                  
+                  <div className={styles.teamResult}>
+                    <TeamLogo teamName={result.awayTeam} size="md" />
+                    <h3 className={styles.teamName}>{result.awayTeam}</h3>
+                    <p className={styles.teamScore}>{result.awayScore}</p>
+                  </div>
                 </div>
                 
-                <div className={styles.scoreVs}>VS</div>
-                
-                <div className={styles.teamResult}>
-                  <TeamLogo teamName={result.awayTeam} size="md" />
-                  <h3 className={styles.teamName}>{result.awayTeam}</h3>
-                  <p className={styles.teamScore}>{result.awayScore}</p>
+                <div className={styles.matchDetails}>
+                  {result.snitchCaught && (
+                    <span className={styles.snitchBadge}>✨ Snitch Atrapada</span>
+                  )}
+                  <span className={styles.eventsBadge}>
+                    📊 {result.events} eventos
+                  </span>
+                  <span className={styles.durationBadge}>
+                    ⏱️ {formatDuration(result.duration)}
+                  </span>
+                  {detailedResult && (
+                    <span className={styles.detailedBadge}>
+                      📈 Análisis disponible
+                    </span>
+                  )}
                 </div>
-              </div>
-              
-              <div className={styles.matchDetails}>
-                {result.snitchCaught && (
-                  <span className={styles.snitchBadge}>✨ Snitch Atrapada</span>
-                )}
-                <span className={styles.eventsBadge}>📊 {result.events} eventos</span>
-              </div>
-              
-              <div className={`${styles.matchStatus} ${styles.finished}`}>
-                Finalizado
-              </div>
-            </div>
-          ))
+                
+                <div className={`${styles.matchStatus} ${styles.finished}`}>
+                  Finalizado
+                </div>
+              </Card>
+            );
+          })
         ) : (
-          <div className={styles.noResults}>
-            <p>No hay resultados para mostrar según los filtros actuales.</p>
-          </div>
+          <Card className={styles.noResults}>
+            <h3>No hay resultados disponibles</h3>
+            <p>
+              {teamFilter || dateFrom || dateTo 
+                ? 'No hay resultados que coincidan con los filtros aplicados.'
+                : 'Aún no hay partidos finalizados para mostrar.'
+              }
+            </p>
+            <Button onClick={handleFilterReset} variant="primary">
+              Ver todos los resultados
+            </Button>
+          </Card>
         )}
       </section>
+
+      {/* Detailed Results Section */}
+      {detailedResults.length > 0 && (
+        <section className={styles.detailedResultsSection}>
+          <Card className={styles.detailedResultsCard}>
+            <h2 className={styles.sectionTitle}>
+              📊 Análisis Detallados Disponibles
+            </h2>
+            <p className={styles.sectionDescription}>
+              Resultados con cronología completa y estadísticas avanzadas
+            </p>
+            
+            <div className={styles.detailedResultsGrid}>
+              {detailedResults.slice(0, 6).map(detailedResult => (
+                <div key={detailedResult.id} className={styles.detailedResultPreview}>
+                  <div className={styles.previewHeader}>
+                    <h4>
+                      {detailedResult.homeTeam.name} vs {detailedResult.awayTeam.name}
+                    </h4>
+                    <span className={styles.previewScore}>
+                      {detailedResult.finalScore.home} - {detailedResult.finalScore.away}
+                    </span>
+                  </div>
+                  
+                  <div className={styles.previewStats}>
+                    <span>📊 {detailedResult.statistics.totalEvents} eventos</span>
+                    <span>⏱️ {formatDuration(detailedResult.matchDuration)}</span>
+                    {detailedResult.snitchCaught && <span>✨ Snitch</span>}
+                  </div>
+                  
+                  <Button 
+                    size="sm" 
+                    variant="primary"
+                    fullWidth
+                    onClick={() => handleViewDetailedResult(detailedResult.matchId)}
+                  >
+                    Ver análisis completo
+                  </Button>
+                </div>
+              ))}
+            </div>
+            
+            {detailedResults.length > 6 && (
+              <div className={styles.seeAllResults}>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowDetailed(true)}
+                >
+                  Ver todos los análisis ({detailedResults.length})
+                </Button>
+              </div>
+            )}
+          </Card>
+        </section>
+      )}
+
+      {/* Statistics Summary */}
+      {results.length > 0 && (
+        <section className={styles.statisticsSection}>
+          <Card className={styles.statisticsCard}>
+            <h2 className={styles.sectionTitle}>📈 Estadísticas de la Temporada</h2>
+            
+            <div className={styles.statsGrid}>
+              <div className={styles.statItem}>
+                <h3>{results.length}</h3>
+                <p>Partidos jugados</p>
+              </div>
+              
+              <div className={styles.statItem}>
+                <h3>{results.filter(r => r.snitchCaught).length}</h3>
+                <p>Snitches atrapadas</p>
+              </div>
+              
+              <div className={styles.statItem}>
+                <h3>{Math.round(results.reduce((sum, r) => sum + r.duration, 0) / results.length)}</h3>
+                <p>Duración promedio (min)</p>
+              </div>
+              
+              <div className={styles.statItem}>
+                <h3>{Math.round(results.reduce((sum, r) => sum + r.events, 0) / results.length)}</h3>
+                <p>Eventos promedio</p>
+              </div>
+            </div>
+          </Card>
+        </section>
+      )}
     </div>
   );
 };

@@ -277,18 +277,26 @@ export class LiveMatchSimulator {
 
     return false;
   }
-
   /**
-   * Ends a live match
+   * Ends a live match and prepares for detailed result saving
    */
-  private endMatch(matchId: string): void {
+  private endMatch(matchId: string): MatchState | null {
     const estado = this.liveMatches.get(matchId);
-    if (estado) {
-      estado.isActive = false;
-      estado.duration = estado.minuto;
-      console.log(`[PARTIDO TERMINADO] ${estado.golesLocal} - ${estado.golesVisitante} (${estado.minuto} minutos)`);
+    if (!estado) {
+      console.warn(`Cannot end match ${matchId}: Match state not found`);
+      return null;
     }
+
+    estado.isActive = false;
+    estado.duration = estado.minuto;
+    
+    console.log(`[PARTIDO TERMINADO] ${estado.golesLocal} - ${estado.golesVisitante} (${estado.minuto} minutos)`);
+    console.log(`📊 Match ready for detailed result saving: ${matchId}`);
+    console.log(`📈 Events recorded: ${estado.eventos.length}`);
+    console.log(`⏱️ Final duration: ${estado.minuto} minutes`);
+    
     this.stopMatch(matchId);
+    return estado;
   }
   /**
    * Stops a match simulation
@@ -371,6 +379,42 @@ export class LiveMatchSimulator {
       this.liveMatches.delete(matchId);
       this.stopMatch(matchId);
     });
+  }
+
+  /**
+   * Saves detailed match result (called from components with full match data)
+   */
+  saveDetailedMatchResult(
+    matchId: string,
+    match: Match,
+    homeTeam: Team,
+    awayTeam: Team
+  ): void {
+    const estado = this.liveMatches.get(matchId);
+    if (!estado) {
+      console.warn(`Cannot save match result: Match state not found for ${matchId}`);
+      return;
+    }
+
+    try {
+      // Import the service here to avoid circular dependencies
+      import('./matchResultsService').then(({ matchResultsService }) => {
+        const detailedResult = matchResultsService.saveMatchResult(match, estado, homeTeam, awayTeam);
+        console.log(`✅ Detailed match result saved successfully for ${matchId}`);
+        console.log(`📊 Result ID: ${detailedResult.id}`);
+        
+        // Emit custom event for components to listen to
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('matchResultSaved', {
+            detail: { matchId, resultId: detailedResult.id, result: detailedResult }
+          }));
+        }
+      }).catch(error => {
+        console.error('Error importing matchResultsService:', error);
+      });
+    } catch (error) {
+      console.error('Error saving detailed match result:', error);
+    }
   }
 }
 

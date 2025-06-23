@@ -3,14 +3,16 @@ import { useParams, Link } from 'react-router-dom';
 import Button from '@/components/common/Button';
 import TeamLogo from '@/components/teams/TeamLogo';
 import LiveMatchViewer from '@/components/matches/LiveMatchViewer';
+import MatchResultDetail from '@/components/matches/MatchResultDetail';
 import { Team, Match } from '@/types/league';
 import { virtualTimeManager } from '@/services/virtualTimeManager';
 import { PredictionsService, MatchPredictionStats, Prediction, FinishedMatchData } from '@/services/predictionsService';
+import { matchResultsService } from '@/services/matchResultsService';
 import styles from './MatchDetailPage.module.css';
 import { useAuth } from '@/context/AuthContext';
 
 // Tab definitions with magical icons
-type TabType = 'overview' | 'predictions' | 'stats' | 'lineups' | 'head-to-head' | 'betting';
+type TabType = 'overview' | 'predictions' | 'stats' | 'lineups' | 'head-to-head' | 'betting' | 'detailed-analysis';
 
 interface TabConfig {
   id: TabType;
@@ -55,13 +57,19 @@ const tabs: TabConfig[] = [
     icon: '⚔️', 
     magicalIcon: '🔥', 
     description: 'Historial de enfrentamientos épicos' 
-  },
-  { 
+  },  { 
     id: 'betting', 
     label: 'Apuestas', 
     icon: '💰', 
     magicalIcon: '💎', 
     description: 'Mercados de apuestas disponibles' 
+  },
+  { 
+    id: 'detailed-analysis', 
+    label: 'Análisis Detallado', 
+    icon: '📊', 
+    magicalIcon: '🔍', 
+    description: 'Análisis completo post-partido con cronología y estadísticas avanzadas' 
   }
 ];
 
@@ -142,11 +150,12 @@ const MatchDetailPage = () => {
   const [predictionStats, setPredictionStats] = useState<MatchPredictionStats | null>(null);
   const [userPrediction, setUserPrediction] = useState<Prediction | null>(null);
   const [isPredicting, setIsPredicting] = useState(false);
-  
-  // Related matches state
+    // Related matches state
   const [relatedMatches, setRelatedMatches] = useState<Match[]>([]);
   // State for finished match data
   const [finishedMatchData, setFinishedMatchData] = useState<FinishedMatchData | null>(null);
+  // State for detailed match results
+  const [hasDetailedResults, setHasDetailedResults] = useState(false);
   // Helper function to get team roster data with real player names
   const getTeamRosterData = (teamName: string) => {
     const teamMockData: { [key: string]: { roster: { id: string; name: string; position: string; number: number; yearsActive: number; achievements: string[] }[] } } = {
@@ -252,9 +261,15 @@ const MatchDetailPage = () => {
           league: timeState.temporadaActiva.name || 'Liga Quidditch',
           location: foundMatch.venue || 'Campo de Quidditch',
         };
+          setMatch(matchDetails);
         
-        setMatch(matchDetails);
-          // Load prediction data and ensure mock predictions exist
+        // Check if detailed results are available for finished matches
+        if (foundMatch.status === 'finished') {
+          const detailedResults = matchResultsService.getMatchResult(foundMatch.id);
+          setHasDetailedResults(detailedResults !== null);
+        }
+        
+        // Load prediction data and ensure mock predictions exist
         predictionsService.addMockPredictionsForMatch(foundMatch.id);
         const stats = predictionsService.getMatchPredictionStats(foundMatch.id);
         setPredictionStats(stats);
@@ -374,10 +389,10 @@ const MatchDetailPage = () => {
   };  const canBet = () => {
     return userCanBet && match && (match.status === 'upcoming' || match.status === 'live');
   };
-
   // Get available tabs based on match status and user permissions
   const availableTabs = tabs.filter(tab => {
     if (tab.id === 'betting' && !canBet()) return false;
+    if (tab.id === 'detailed-analysis' && (!hasDetailedResults || match?.status !== 'finished')) return false;
     return true;
   });
 
@@ -1453,9 +1468,7 @@ const MatchDetailPage = () => {
               </div>
             </div>
           </div>
-        )}
-
-        {activeTab === 'betting' && canBet() && (
+        )}        {activeTab === 'betting' && canBet() && (
           <div className={styles.bettingTab}>
             <div className={styles.sectionCard}>
               <h2 className={styles.sectionTitle}>
@@ -1485,6 +1498,12 @@ const MatchDetailPage = () => {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {activeTab === 'detailed-analysis' && hasDetailedResults && match && (
+          <div className={styles.detailedAnalysisTab}>
+            <MatchResultDetail matchId={match.id} />
           </div>
         )}
       </main>
