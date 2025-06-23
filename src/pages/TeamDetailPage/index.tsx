@@ -475,8 +475,8 @@ const mockTeamDetails: { [key: string]: TeamDetails } = {
       }
     ]
   },
-  cannons: {
-    id: 'cannons',
+  chudley: {
+    id: 'chudley',
     name: 'Chudley Cannons', 
     slogan: "¡Vamos Cannons!", 
     history: "Un equipo profesional británico conocido por su larga sequía de títulos pero con una base de fanáticos muy leal. Famosos por sus uniformes naranjas brillantes y su espíritu indomable. A pesar de las dificultades, los Cannons han mantenido una tradición de juego valiente y han cultivado algunos de los jugadores más queridos del Quidditch profesional.", 
@@ -634,7 +634,7 @@ const mockTeamDetails: { [key: string]: TeamDetails } = {
     ],
     rivalries: [
       {
-        opponentId: 'cannons',
+        opponentId: 'chudley',
         opponentName: 'Chudley Cannons',
         totalMatches: 28,
         wins: 20,
