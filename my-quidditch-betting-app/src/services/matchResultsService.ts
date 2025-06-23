@@ -167,7 +167,7 @@ export class MatchResultsService {
         keyMoments
       },
       statistics,      venue: (match as Match & { location?: string }).location || 'Quidditch Stadium',
-      league: (match as Match & { league?: string }).league || 'Quidditch League',
+      league: 'Liga Profesional Quidditch',
       season: '2025-2026',
       snitchCaught: matchState.snitchCaught || false,
       snitchCaughtBy: matchState.snitchCaughtBy,

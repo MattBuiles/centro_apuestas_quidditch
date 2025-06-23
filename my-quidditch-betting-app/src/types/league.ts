@@ -223,7 +223,6 @@ export interface UpcomingMatch {
   awayTeam: string;
   date: Date;
   time: string;
-  league: string;
   venue?: string;
   canBet: boolean;
   odds?: {

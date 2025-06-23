@@ -177,15 +177,12 @@ export class UpcomingMatchesService {
     const timeString = matchDateObj.toLocaleTimeString('es-ES', { 
       hour: '2-digit', 
       minute: '2-digit' 
-    });
-
-    return {
+    });    return {
       id: match.id,
       homeTeam: homeTeam.name,
       awayTeam: awayTeam.name,
       date: matchDateObj,
       time: timeString,
-      league: season.name,
       venue: match.venue || 'Stadium',
       canBet: this.canBetOnMatch(match),
       odds: this.generateBasicOdds(homeTeam, awayTeam)

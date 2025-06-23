@@ -419,74 +419,89 @@
   flex-shrink: 0;
 }
 
-.cardStats {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: clamp(var(--spacing-3), 2vw, var(--spacing-4));
-  text-align: center;
+/* ===== HISTORICAL MODE STYLES ===== */
+.cardSeasons {
+  font-size: clamp(var(--text-xs), 2vw, var(--text-sm));
+  color: var(--color-gray-600);
+  font-weight: 500;
+  margin-top: var(--spacing-1);
 }
 
-.statItem {
+.cardHonors {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  gap: clamp(var(--spacing-3), 3vw, var(--spacing-4));
+  margin-top: clamp(var(--spacing-3), 2vw, var(--spacing-4));
+  padding-top: clamp(var(--spacing-3), 2vw, var(--spacing-4));
+  border-top: 2px dashed rgba(75, 0, 130, 0.2);
+}
+
+.honorItem {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: var(--spacing-1);
   padding: clamp(var(--spacing-2), 2vw, var(--spacing-3));
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.7);
   border-radius: var(--radius-md);
   transition: all 0.3s ease;
+  min-width: clamp(50px, 8vw, 60px);
 }
 
-.statItem:hover {
-  background: rgba(255, 255, 255, 0.8);
+.honorItem:hover {
+  background: rgba(255, 255, 255, 0.9);
   transform: translateY(-2px);
 }
 
-.statValue {
+.honorIcon {
+  font-size: clamp(var(--text-base), 3vw, var(--text-lg));
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+.honorCount {
   font-family: var(--font-secondary);
-  font-size: clamp(var(--text-base), 3.5vw, var(--text-lg));
+  font-size: clamp(var(--text-sm), 2.5vw, var(--text-base));
   font-weight: 700;
   color: var(--color-primary);
-  margin-bottom: var(--spacing-1);
   text-shadow: 0 1px 2px rgba(75, 0, 130, 0.1);
 }
 
-.statLabel {
-  font-size: clamp(var(--text-xs), 2vw, var(--text-sm));
+/* ===== VIEW MODE INDICATORS ===== */
+.seasonInfo,
+.noDataInfo,
+.noHistoryInfo {
+  position: relative;
+  z-index: 1;
+  font-size: clamp(var(--text-sm), 2.5vw, var(--text-base));
   color: var(--color-gray-600);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-weight: 600;
-  line-height: 1.2;
+  margin-top: clamp(var(--spacing-2), 1.5vw, var(--spacing-3));
+  padding: clamp(var(--spacing-2), 2vw, var(--spacing-3));
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--color-primary);
+  font-weight: 500;
 }
 
-/* ===== EMPTY STATE ===== */
-.emptyState {
-  text-align: center;
-  padding: clamp(var(--spacing-8), 6vw, var(--spacing-12));
-  color: var(--color-gray-600);
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: clamp(var(--radius-lg), 2vw, var(--radius-xl));
-  box-shadow: 
-    0 8px 20px rgba(0, 0, 0, 0.08),
-    0 4px 8px rgba(75, 0, 130, 0.1);
-  backdrop-filter: blur(15px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+.noHistoryInfo {
+  border-left-color: var(--color-warning);
+  color: var(--color-warning-dark);
+  background: rgba(255, 204, 0, 0.1);
 }
 
-.emptyState h3 {
-  font-family: var(--font-secondary);
-  font-size: clamp(var(--text-lg), 4vw, var(--text-xl));
-  font-weight: 600;
-  color: var(--color-primary);
-  margin-bottom: var(--spacing-3);
+/* ===== ENHANCED FILTER BUTTONS ===== */
+.filterButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: var(--color-gray-200) !important;
+  color: var(--color-gray-500) !important;
+  border-color: var(--color-gray-300) !important;
 }
 
-.emptyState p {
-  font-size: clamp(var(--text-base), 3vw, var(--text-lg));
-  line-height: 1.6;
-  margin-bottom: var(--spacing-5);
+.filterButton:disabled:hover {
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 /* ===== RESPONSIVE DESIGN ===== */

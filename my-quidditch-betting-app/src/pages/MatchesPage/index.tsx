@@ -119,14 +119,13 @@ const MatchesPage = () => {
     const cardStatus = match.status === 'scheduled' ? 'upcoming' as const : 
                       match.status === 'live' ? 'live' as const :
                       match.status === 'finished' ? 'finished' as const : 'upcoming' as const;
-    
-    return {
+      return {
       id: match.id,
       homeTeam: homeTeam?.name || match.localId,
       awayTeam: awayTeam?.name || match.visitanteId,
       date: new Date(match.fecha).toLocaleDateString('es-ES'),
       time: new Date(match.fecha).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
-      league: season?.name || 'Liga Quidditch',
+      league: 'Liga Profesional Quidditch',
       status: cardStatus,
       homeScore: match.homeScore,
       awayScore: match.awayScore,

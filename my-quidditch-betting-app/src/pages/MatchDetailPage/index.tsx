@@ -84,7 +84,6 @@ interface MatchDetails {
   minute?: string;
   date: string;
   time: string;
-  league: string;
   location: string;
 }
 
@@ -129,7 +128,6 @@ const mockMatchDetail: MatchDetails = {
   minute: "75'",
   date: 'Hoy',
   time: '19:00',
-  league: 'Liga de Hogwarts',
   location: 'Campo de Quidditch de Hogwarts',
 };
 
@@ -245,8 +243,7 @@ const MatchDetailPage = () => {
         
         setHomeTeam(foundHomeTeam || mockHomeTeam);
         setAwayTeam(foundAwayTeam || mockAwayTeam);
-        
-        // Convert to MatchDetails format
+          // Convert to MatchDetails format
         const matchDetails: MatchDetails = {
           id: foundMatch.id,
           homeTeam: foundHomeTeam?.name || foundMatch.localId,
@@ -258,7 +255,6 @@ const MatchDetailPage = () => {
           minute: foundMatch.currentMinute?.toString(),
           date: new Date(foundMatch.fecha).toLocaleDateString('es-ES'),
           time: new Date(foundMatch.fecha).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
-          league: timeState.temporadaActiva.name || 'Liga Quidditch',
           location: foundMatch.venue || 'Campo de Quidditch',
         };
           setMatch(matchDetails);
@@ -484,10 +480,9 @@ const MatchDetailPage = () => {
             <span className={styles.metaItem}>
               <span className={styles.metaIcon}>🕐</span>
               {match.time}
-            </span>
-            <span className={styles.metaItem}>
+            </span>            <span className={styles.metaItem}>
               <span className={styles.metaIcon}>🏆</span>
-              {match.league}
+              Liga Profesional Quidditch
             </span>
             <span className={styles.metaItem}>
               <span className={styles.metaIcon}>🏟️</span>

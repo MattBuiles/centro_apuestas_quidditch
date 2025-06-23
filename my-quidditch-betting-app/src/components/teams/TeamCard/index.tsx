@@ -6,7 +6,6 @@ import styles from './TeamCard.module.css';
 interface Team {
   id: string;
   name: string;
-  league: string;
   wins?: number;
   losses?: number;
 }
@@ -24,9 +23,8 @@ const TeamCard = ({ team }: TeamCardProps) => {
           size="lg" 
           animated
           className={styles.teamCardLogo}
-        />
-        <h3 className={styles.teamName}>{team.name}</h3>
-        <p className={styles.teamLeague}>{team.league}</p>
+        />        <h3 className={styles.teamName}>{team.name}</h3>
+        <p className={styles.teamLeague}>Liga Profesional Quidditch</p>
         
         {(team.wins !== undefined || team.losses !== undefined) && (
           <div className={styles.teamStats}>

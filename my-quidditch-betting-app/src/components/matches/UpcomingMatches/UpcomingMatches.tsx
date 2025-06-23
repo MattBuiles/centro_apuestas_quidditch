@@ -35,9 +35,7 @@ const UpcomingMatches: React.FC<UpcomingMatchesProps> = ({
   const loadUpcomingMatches = useCallback(async () => {
     try {
       setLoading(true);
-      setError(null);
-
-      // In a real app, you would fetch from your backend/context
+      setError(null);      // In a real app, you would fetch from your backend/context
       // For now, we'll simulate this with mock data
       const mockMatches: UpcomingMatch[] = [
         {
@@ -46,7 +44,6 @@ const UpcomingMatches: React.FC<UpcomingMatchesProps> = ({
           awayTeam: 'Slytherin',
           date: new Date(Date.now() + 2 * 60 * 60 * 1000), // 2 hours from now
           time: '19:00',
-          league: 'Liga de Hogwarts',
           venue: 'Campo de Quidditch de Hogwarts',
           canBet: true,
           odds: { home: 1.85, away: 2.10 }
@@ -57,7 +54,6 @@ const UpcomingMatches: React.FC<UpcomingMatchesProps> = ({
           awayTeam: 'Hufflepuff',
           date: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day from now
           time: '16:30',
-          league: 'Liga de Hogwarts',
           venue: 'Campo Norte',
           canBet: true,
           odds: { home: 1.95, away: 1.95 }
@@ -68,7 +64,6 @@ const UpcomingMatches: React.FC<UpcomingMatchesProps> = ({
           awayTeam: 'Holyhead Harpies',
           date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
           time: '15:00',
-          league: 'Liga Profesional',
           venue: 'Estadio Nacional de Quidditch',
           canBet: true,
           odds: { home: 2.25, away: 1.65 }
@@ -199,9 +194,8 @@ const UpcomingMatches: React.FC<UpcomingMatchesProps> = ({
                     {getTimeUntilMatch(match.date)}
                   </span>
                 </div>
-                
-                <div className={styles.venue}>
-                  <span className={styles.leagueName}>{match.league}</span>
+                  <div className={styles.venue}>
+                  <span className={styles.leagueName}>Liga Profesional Quidditch</span>
                   {match.venue && (
                     <span className={styles.venueName}> • {match.venue}</span>
                   )}

@@ -57,7 +57,7 @@ const ResultsPage: React.FC = () => {
           awayTeam: state.temporadaActiva!.equipos.find(t => t.id === match.visitanteId)?.name || 'Unknown',
           homeScore: match.homeScore || 0,
           awayScore: match.awayScore || 0,
-          league: 'Quidditch League',
+          league: 'Liga Profesional Quidditch',
           snitchCaught: match.events?.some(e => e.type === 'SNITCH_CAUGHT') || false,
           events: match.events?.length || 0,
           duration: match.currentMinute || 0
