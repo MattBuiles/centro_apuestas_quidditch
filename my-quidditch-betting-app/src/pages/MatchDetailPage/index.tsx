@@ -354,8 +354,37 @@ const MatchDetailPage = () => {
         predictionsService.saveFinishedMatchData(matchData);
         setFinishedMatchData(matchData);
       }
+    }  }, [matchId, match, realMatch, predictionStats, predictionsService]);
+  // Listen for prediction updates when matches finish
+  useEffect(() => {
+    const handlePredictionsUpdate = (event: CustomEvent) => {
+      const { matchId: updatedMatchId, result } = event.detail;
+      if (updatedMatchId === matchId && matchId) {
+        console.log(`🔮 Predictions updated for match ${matchId}, result: ${result}`);
+        
+        // Refresh user prediction to get updated isCorrect status
+        const updatedPrediction = predictionsService.getUserPrediction(matchId);
+        setUserPrediction(updatedPrediction);
+        
+        // Refresh prediction stats
+        const updatedStats = predictionsService.getMatchPredictionStats(matchId);
+        setPredictionStats(updatedStats);
+        
+        // Force component re-render to show updated results
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('predictionsUpdated', handlePredictionsUpdate as EventListener);
+      
+      return () => {
+        window.removeEventListener('predictionsUpdated', handlePredictionsUpdate as EventListener);
+      };
     }
-  }, [matchId, match, realMatch, predictionStats, predictionsService]);
+  }, [matchId, predictionsService]);
 
   const handleTabClick = (tabId: TabType) => {
     setActiveTab(tabId);
@@ -734,17 +763,51 @@ const MatchDetailPage = () => {
                           <span>Victoria por {Math.abs(match.homeScore - match.awayScore)} puntos</span>
                         </div>
                       </div>
-                      
-                      {userPrediction && (
+                        {userPrediction && (
                         <div className={styles.predictionResult}>
-                          <h4>Tu Predicción</h4>
+                          <h4>🔮 Tu Predicción</h4>
+                          <div className={styles.predictionDetails}>
+                            <div className={styles.predictionMade}>
+                              <span className={styles.predictionLabel}>Predijiste:</span>
+                              <span className={styles.predictionValue}>
+                                {userPrediction.predictedWinner === 'home' ? match.homeTeam :
+                                 userPrediction.predictedWinner === 'away' ? match.awayTeam :
+                                 'Empate'}
+                              </span>
+                              <span className={styles.confidenceDisplay}>
+                                (Confianza: {userPrediction.confidence}/5 ⭐)
+                              </span>
+                            </div>
+                            <div className={styles.actualResult}>
+                              <span className={styles.actualLabel}>Resultado real:</span>
+                              <span className={styles.actualValue}>
+                                {match.homeScore > match.awayScore ? match.homeTeam :
+                                 match.awayScore > match.homeScore ? match.awayTeam :
+                                 'Empate'}
+                              </span>
+                            </div>
+                          </div>
                           <div className={userPrediction.isCorrect ? styles.correctPrediction : styles.incorrectPrediction}>
                             <span className={styles.predictionIcon}>
                               {userPrediction.isCorrect ? '🎯' : '❌'}
                             </span>
-                            <span>
-                              {userPrediction.isCorrect ? '¡Predicción acertada!' : 'Predicción incorrecta'}
+                            <span className={styles.predictionResultText}>
+                              {userPrediction.isCorrect ? 
+                                '¡Excelente! Tu predicción fue acertada' : 
+                                `Tu predicción fue incorrecta. Predijiste ${
+                                  userPrediction.predictedWinner === 'home' ? match.homeTeam :
+                                  userPrediction.predictedWinner === 'away' ? match.awayTeam :
+                                  'Empate'
+                                } pero ganó ${
+                                  match.homeScore > match.awayScore ? match.homeTeam :
+                                  match.awayScore > match.homeScore ? match.awayTeam :
+                                  'fue empate'
+                                }`
+                              }
                             </span>
+                          </div>
+                          <div className={styles.predictionTimestamp}>
+                            <small>📅 Predicción realizada: {new Date(userPrediction.timestamp).toLocaleString('es-ES')}</small>
                           </div>
                         </div>
                       )}
@@ -819,8 +882,7 @@ const MatchDetailPage = () => {
                 <span className={styles.sectionIcon}>🔮</span>
                 Predicciones Mágicas
               </h2>
-              
-              {userPrediction ? (
+                {userPrediction ? (
                 <div className={styles.userPredictionCard}>
                   <h3>Tu Visión del Futuro</h3>
                   <div className={styles.predictionDisplay}>
@@ -833,6 +895,45 @@ const MatchDetailPage = () => {
                       Confianza: {userPrediction.confidence}/5 ⭐
                     </span>
                   </div>
+                  
+                  {/* Show prediction result if match is finished */}
+                  {match.status === 'finished' && userPrediction.isCorrect !== undefined && (
+                    <div className={styles.predictionResultSection}>
+                      <h4>🔮 Resultado de tu Predicción</h4>
+                      <div className={styles.predictionComparison}>
+                        <div className={styles.predictionMade}>
+                          <span className={styles.predictionLabel}>Tu predicción:</span>
+                          <span className={styles.predictionValue}>
+                            {userPrediction.predictedWinner === 'home' ? match.homeTeam :
+                             userPrediction.predictedWinner === 'away' ? match.awayTeam :
+                             'Empate'}
+                          </span>
+                        </div>
+                        <div className={styles.actualResult}>
+                          <span className={styles.actualLabel}>Resultado real:</span>
+                          <span className={styles.actualValue}>
+                            {match.homeScore > match.awayScore ? match.homeTeam :
+                             match.awayScore > match.homeScore ? match.awayTeam :
+                             'Empate'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className={userPrediction.isCorrect ? styles.correctPrediction : styles.incorrectPrediction}>
+                        <span className={styles.predictionIcon}>
+                          {userPrediction.isCorrect ? '🎯' : '❌'}
+                        </span>
+                        <span className={styles.predictionResultText}>
+                          {userPrediction.isCorrect ? 
+                            '¡Excelente! Tu predicción fue acertada. Eres un verdadero vidente del Quidditch.' : 
+                            'Tu predicción fue incorrecta esta vez. Las estrellas pueden ser difíciles de interpretar.'
+                          }
+                        </span>
+                      </div>
+                      <div className={styles.predictionTimestamp}>
+                        <small>📅 Predicción realizada: {new Date(userPrediction.timestamp).toLocaleString('es-ES')}</small>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 canPredict() && isAuthenticated && (

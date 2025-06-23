@@ -115,10 +115,10 @@ export class QuidditchSimulator {
     };
     
     this.eventProbabilities = EVENT_PROBABILITIES;
-  }
-  /**
+  }  /**
    * Simulates a complete Quidditch match minute by minute
-   */  public simulateMatch(homeTeam: Team, awayTeam: Team, matchId?: string): MatchResult {
+   */  
+  public simulateMatch(homeTeam: Team, awayTeam: Team, matchId?: string): MatchResult {
     const matchState = this.initializeMatchState(matchId);
     
     // Simulate minute by minute
@@ -134,14 +134,14 @@ export class QuidditchSimulator {
 
     const result = this.createMatchResult(matchState);
     
-    // Resolve bets for finished match
-    console.log(`💰 Match simulation completed, resolving bets for match ${result.matchId}...`);
-    this.resolveBetsForMatch(result.matchId).catch((error: unknown) => {
-      console.error('❌ Error resolving bets after simulation:', error);
+    // Resolve bets and predictions for finished match
+    console.log(`💰 Match simulation completed, resolving bets and predictions for match ${result.matchId}...`);
+    this.resolveBetsAndPredictionsForMatch(result).catch((error: unknown) => {
+      console.error('❌ Error resolving bets and predictions after simulation:', error);
     });
     
     return result;
-  }  /**
+  }/**
    * Initializes the match state
    */
   private initializeMatchState(matchId?: string): MatchState {
@@ -406,27 +406,46 @@ export class QuidditchSimulator {
       avgHomeScore,
       avgAwayScore,
       avgTotalScore: avgHomeScore + avgAwayScore
-    };  }
-
-  /**
-   * Resolves bets for a finished match
+    };  }  /**
+   * Resolves bets and predictions for a finished match
    */
-  private async resolveBetsForMatch(matchId: string): Promise<void> {
+  private async resolveBetsAndPredictionsForMatch(matchResult: MatchResult): Promise<void> {
     try {
-      // Import bet resolution service dynamically to avoid circular dependencies
-      const { betResolutionService } = await import('./betResolutionService');
-      const results = await betResolutionService.resolveMatchBets(matchId);
+      // Import services dynamically to avoid circular dependencies
+      const [{ betResolutionService }, { predictionsService }] = await Promise.all([
+        import('./betResolutionService'),
+        import('./predictionsService')
+      ]);
       
-      console.log(`✅ Resolved ${results.length} bets for match ${matchId}`);
+      // Resolve bets
+      const results = await betResolutionService.resolveMatchBets(matchResult.matchId);
+      console.log(`✅ Resolved ${results.length} bets for match ${matchResult.matchId}`);
+        // Determine match result for predictions
+      const actualResult: 'home' | 'away' | 'draw' = 
+        matchResult.homeScore > matchResult.awayScore ? 'home' :
+        matchResult.awayScore > matchResult.homeScore ? 'away' : 'draw';
       
-      // Emit custom event for UI components to listen to
+      console.log(`🏆 Simulator result determination for ${matchResult.matchId}:`);
+      console.log(`   - Home score: ${matchResult.homeScore}`);
+      console.log(`   - Away score: ${matchResult.awayScore}`);
+      console.log(`   - Determined result: ${actualResult}`);
+      
+      // Update prediction results
+      predictionsService.updatePredictionResult(matchResult.matchId, actualResult);
+      console.log(`🔮 Updated prediction result for match ${matchResult.matchId}: ${actualResult}`);
+      
+      // Emit custom events for UI components to listen to
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('betsResolved', {
-          detail: { matchId, results }
+          detail: { matchId: matchResult.matchId, results }
+        }));
+        
+        window.dispatchEvent(new CustomEvent('predictionsUpdated', {
+          detail: { matchId: matchResult.matchId, result: actualResult }
         }));
       }
     } catch (error) {
-      console.error('❌ Error resolving bets:', error);
+      console.error('❌ Error resolving bets and predictions:', error);
     }
   }
 }

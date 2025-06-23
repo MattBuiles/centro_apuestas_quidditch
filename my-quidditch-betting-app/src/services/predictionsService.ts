@@ -105,15 +105,22 @@ export class PredictionsService {
       userPrediction: userPrediction || undefined
     };
   }
-
   /**
    * Update prediction correctness after match ends
-   */
-  updatePredictionResult(matchId: string, actualResult: 'home' | 'away' | 'draw'): void {
+   */  updatePredictionResult(matchId: string, actualResult: 'home' | 'away' | 'draw'): void {
     const prediction = this.getUserPrediction(matchId);
     if (prediction) {
+      console.log(`🔮 Updating prediction for match ${matchId}:`);
+      console.log(`   - User predicted: ${prediction.predictedWinner}`);
+      console.log(`   - Actual result: ${actualResult}`);
+      
       prediction.isCorrect = prediction.predictedWinner === actualResult;
       this.savePrediction(prediction);
+      
+      console.log(`   - Match: ${prediction.isCorrect ? 'CORRECT' : 'INCORRECT'}`);
+      console.log(`✅ Prediction updated: isCorrect = ${prediction.isCorrect}`);
+    } else {
+      console.log(`⚠️ No prediction found for match ${matchId}`);
     }
   }
 
