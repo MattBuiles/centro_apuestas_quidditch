@@ -10,6 +10,7 @@ const LoginPage = lazy(() => import('./pages/LoginPage'))
 const RegisterPage = lazy(() => import('./pages/RegisterPage'))
 const MatchesPage = lazy(() => import('./pages/MatchesPage'))
 const MatchDetailPage = lazy(() => import('./pages/MatchDetailPage'))
+const MatchResultDetail = lazy(() => import('./components/matches/MatchResultDetail'))
 const TeamsPage = lazy(() => import('./pages/TeamsPage'))
 const StandingsPage = lazy(() => import('./pages/StandingsPage'))
 const TeamDetailPage = lazy(() => import('./pages/TeamDetailPage'))
@@ -31,12 +32,12 @@ function App() {
           <Route index element={<HomePage />} />
           <Route path="login" element={<LoginPage />} />
           <Route path="register" element={<RegisterPage />} />
-          <Route path="recovery" element={<RecoveryPage />} />
-          <Route path="matches" element={<MatchesPage />} />
+          <Route path="recovery" element={<RecoveryPage />} />          <Route path="matches" element={<MatchesPage />} />
           <Route path="matches/:matchId" element={<MatchDetailPage />} />
+          <Route path="matches/:matchId/result" element={<MatchResultDetail />} />
           <Route path="teams" element={<TeamsPage />} />
           <Route path="standings" element={<StandingsPage />} />
-          <Route path="results" element={<ResultsPage />} />          <Route path="teams/:teamId" element={<TeamDetailPage />} />
+          <Route path="results" element={<ResultsPage />} /><Route path="teams/:teamId" element={<TeamDetailPage />} />
           {/* Footer pages */}
           <Route path="about" element={<AboutPage />} />
           <Route path="terms" element={<TermsPage />} />

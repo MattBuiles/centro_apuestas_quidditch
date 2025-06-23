@@ -1,0 +1,542 @@
+/* Match Result Detail Component Styles */
+
+.resultDetailContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+  min-height: 100vh;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.backButton {
+  flex-shrink: 0;
+}
+
+.matchTitle h1 {
+  margin: 0;
+  font-size: 2.5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.matchDate {
+  margin: 0.5rem 0 0 0;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+}
+
+/* Main Match Card */
+.mainMatchCard {
+  margin-bottom: 2rem;
+  padding: 2rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85));
+  border: 2px solid rgba(var(--primary-color-rgb), 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.matchHeader {
+  text-align: center;
+}
+
+.teamSection {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.teamName {
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin: 0;
+  text-align: center;
+}
+
+.scoreSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.finalScore {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 4rem;
+  font-weight: 800;
+}
+
+.homeScore, .awayScore {
+  color: var(--primary-color);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.scoreSeparator {
+  color: var(--text-muted);
+  font-weight: 300;
+}
+
+.matchInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+}
+
+.duration {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.snitchInfo {
+  color: var(--accent-color);
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+/* Tabs */
+.tabsContainer {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.tabsHeader {
+  display: flex;
+  border-bottom: 2px solid rgba(var(--primary-color-rgb), 0.1);
+  background: linear-gradient(90deg, rgba(var(--primary-color-rgb), 0.05), rgba(var(--accent-color-rgb), 0.05));
+}
+
+.tab {
+  flex: 1;
+  padding: 1rem 2rem;
+  border: none;
+  background: transparent;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-bottom: 3px solid transparent;
+}
+
+.tab:hover {
+  background: rgba(var(--primary-color-rgb), 0.1);
+  color: var(--primary-color);
+}
+
+.tab.active {
+  color: var(--primary-color);
+  border-bottom-color: var(--primary-color);
+  background: rgba(var(--primary-color-rgb), 0.05);
+}
+
+.tabContent {
+  padding: 0;
+}
+
+/* Summary Tab */
+.summaryCard {
+  margin: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 2rem;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-top: 1.5rem;
+}
+
+.summaryItem h4 {
+  margin: 0 0 1rem 0;
+  color: var(--primary-color);
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.keyMoments {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.keyMoment {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.8rem;
+  background: rgba(var(--primary-color-rgb), 0.05);
+  border-radius: 8px;
+  border-left: 4px solid var(--accent-color);
+}
+
+.minute {
+  font-weight: 700;
+  color: var(--primary-color);
+  font-size: 0.9rem;
+  min-width: 60px;
+}
+
+.description {
+  flex: 1;
+  color: var(--text-color);
+  font-size: 0.95rem;
+}
+
+.quickStats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.8rem;
+  background: rgba(var(--accent-color-rgb), 0.05);
+  border-radius: 8px;
+}
+
+.stat span:first-child {
+  color: var(--text-color);
+  font-weight: 500;
+}
+
+.stat span:last-child {
+  color: var(--primary-color);
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+/* Chronology Tab */
+.chronologyCard {
+  margin: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 2rem;
+}
+
+.chronologyContainer {
+  margin-top: 1.5rem;
+  max-height: 600px;
+  overflow-y: auto;
+  padding-right: 1rem;
+}
+
+.timeline {
+  position: relative;
+  padding-left: 2rem;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 1rem;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--primary-color), var(--accent-color));
+}
+
+.timelineItem {
+  position: relative;
+  margin-bottom: 2rem;
+  padding-left: 2rem;
+}
+
+.timelineDot {
+  position: absolute;
+  left: -2rem;
+  top: 0;
+  width: 4rem;
+  height: 2.5rem;
+  background: var(--primary-color);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.minuteNumber {
+  color: white;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.timelineContent {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(var(--primary-color-rgb), 0.1);
+}
+
+.scoreAtTime {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.events {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.event {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.6rem;
+  background: rgba(var(--accent-color-rgb), 0.05);
+  border-radius: 6px;
+}
+
+.eventIcon {
+  font-size: 1.2rem;
+  min-width: 1.5rem;
+  text-align: center;
+}
+
+.eventDescription {
+  flex: 1;
+  color: var(--text-color);
+  font-size: 0.95rem;
+}
+
+.eventPoints {
+  color: var(--accent-color);
+  font-weight: 700;
+  font-size: 0.9rem;
+  background: rgba(var(--accent-color-rgb), 0.1);
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+}
+
+/* Statistics Tab */
+.statisticsCard {
+  margin: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 2rem;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  margin-top: 1.5rem;
+}
+
+.statCategory {
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(var(--primary-color-rgb), 0.1);
+}
+
+.statCategory h4 {
+  margin: 0 0 1.5rem 0;
+  color: var(--primary-color);
+  font-size: 1.4rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.statComparison {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.teamStats h5 {
+  margin: 0 0 1rem 0;
+  color: var(--accent-color);
+  font-size: 1.2rem;
+  font-weight: 600;
+  text-align: center;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid rgba(var(--accent-color-rgb), 0.2);
+}
+
+.statLine {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.statLine span:first-child {
+  color: var(--text-color);
+  font-weight: 500;
+}
+
+.statLine span:last-child {
+  color: var(--primary-color);
+  font-weight: 700;
+}
+
+.totalScore {
+  font-size: 1.2rem !important;
+  color: var(--accent-color) !important;
+}
+
+.dominanceStats {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.periodStat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: rgba(var(--primary-color-rgb), 0.05);
+  border-radius: 8px;
+  border-left: 4px solid var(--accent-color);
+}
+
+.dominance {
+  color: var(--primary-color);
+  font-weight: 700;
+}
+
+/* Loading States */
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+}
+
+.loadingSpinner {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.spinner {
+  width: 4rem;
+  height: 4rem;
+  border: 4px solid rgba(var(--primary-color-rgb), 0.2);
+  border-top: 4px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Error States */
+.errorContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+}
+
+.errorCard {
+  text-align: center;
+  padding: 3rem;
+  max-width: 400px;
+}
+
+.errorCard h2 {
+  color: var(--error-color);
+  margin-bottom: 1rem;
+}
+
+.errorCard p {
+  color: var(--text-muted);
+  margin-bottom: 2rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .resultDetailContainer {
+    padding: 0.5rem;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .matchTitle h1 {
+    font-size: 2rem;
+  }
+
+  .teamSection {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .finalScore {
+    font-size: 3rem;
+    order: 1;
+  }
+
+  .team:first-child {
+    order: 2;
+  }
+
+  .team:last-child {
+    order: 3;
+  }
+
+  .summaryGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .statComparison {
+    grid-template-columns: 1fr;
+  }
+
+  .tabsHeader {
+    flex-direction: column;
+  }
+
+  .tab {
+    padding: 0.8rem 1rem;
+  }
+}

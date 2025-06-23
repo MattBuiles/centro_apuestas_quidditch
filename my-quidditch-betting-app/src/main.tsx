@@ -16,6 +16,8 @@ import './services/testInicializacion'
 import { validacionCompleta } from './services/validacionCompleta'
 // Import test final
 import './services/testFinal'
+// Import results validation system
+import './services/resultsValidation'
 
 // Force initialization check on app start
 console.log('🎮 App starting - VirtualTimeManager state:', {

@@ -403,6 +403,88 @@ export class QuidditchSimulator {
       avgTotalScore: avgHomeScore + avgAwayScore
     };
   }
+
+  /**
+   * Simulates a complete match between two teams
+   */
+  simulateMatch(homeTeam: Team, awayTeam: Team): MatchResult {
+    const matchState = this.initializeMatchState();
+    
+    // Simulate minute by minute
+    while (!this.isMatchFinished(matchState)) {
+      this.simulateMinute(matchState, homeTeam, awayTeam);
+      matchState.currentMinute++;
+      
+      // Safety check to prevent infinite loops
+      if (matchState.currentMinute > this.config.maxDuration) {
+        break;
+      }
+    }
+
+    const result: MatchResult = {
+      homeScore: matchState.homeScore,
+      awayScore: matchState.awayScore,
+      events: matchState.events,
+      duration: matchState.currentMinute,
+      snitchCaught: matchState.snitchCaught,
+      snitchCaughtBy: matchState.snitchCaughtBy,
+      winner: matchState.homeScore > matchState.awayScore ? homeTeam.id : awayTeam.id
+    };
+
+    // Save detailed result automatically for historical viewing
+    this.saveDetailedResult(matchState, homeTeam, awayTeam, result);
+    
+    return result;
+  }
+
+  /**
+   * Saves detailed match result using the matchResultsService
+   */
+  private async saveDetailedResult(
+    matchState: MatchState, 
+    homeTeam: Team, 
+    awayTeam: Team, 
+    result: MatchResult
+  ): Promise<void> {
+    try {
+      // Import the service dynamically to avoid circular dependencies
+      const { matchResultsService } = await import('./matchResultsService');
+      
+      // Create a simplified match object for the service
+      const match = {
+        id: matchState.matchId,
+        homeScore: result.homeScore,
+        awayScore: result.awayScore,
+        events: result.events,
+        currentMinute: result.duration,
+        status: 'finished' as const
+      };
+
+      // Create a simplified match state for the service
+      const detailedState = {
+        matchId: matchState.matchId,
+        minuto: matchState.currentMinute,
+        golesLocal: matchState.homeScore,
+        golesVisitante: matchState.awayScore,
+        eventos: matchState.events,
+        snitchCaught: matchState.snitchCaught,
+        snitchCaughtBy: matchState.snitchCaughtBy || undefined,
+        isActive: false,
+        duration: matchState.currentMinute,
+        lastEventTime: Date.now()
+      };      const detailedResult = matchResultsService.saveMatchResult(
+        match as any, 
+        detailedState as any, 
+        homeTeam, 
+        awayTeam
+      );
+
+      console.log(`💾 Detailed result saved with ID: ${detailedResult.id}`);
+      
+    } catch (error) {
+      console.error('Error saving detailed match result from simulator:', error);
+    }
+  }
 }
 
 // Export singleton instance
