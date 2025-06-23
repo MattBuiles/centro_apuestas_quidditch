@@ -240,13 +240,12 @@ export class MatchResultsService {
 
     events.forEach(event => {
       const teamName = event.teamId === homeTeam.id ? homeTeam.name : awayTeam.name;
-      
-      switch (event.type) {
+        switch (event.type) {
         case 'QUAFFLE_GOAL':
           keyMoments.push({
             minute: event.minute,
             type: 'GOAL',
-            description: `${teamName} scores with the Quaffle! (+${event.points} points)`,
+            description: `¡${teamName} anota con la Quaffle! (+${event.points} puntos)`,
             team: teamName,
             impact: 'medium'
           });
@@ -256,29 +255,33 @@ export class MatchResultsService {
           keyMoments.push({
             minute: event.minute,
             type: 'SNITCH_CAUGHT',
-            description: `${teamName} catches the Golden Snitch! (+${event.points} points) - MATCH ENDS!`,
+            description: `¡${teamName} captura la Snitch Dorada! (+${event.points} puntos) - ¡EL PARTIDO TERMINA!`,
             team: teamName,
             impact: 'high'
           });
-          break;
-          
-        case 'FOUL_COBBING':
+          break;        case 'FOUL_COBBING':
         case 'FOUL_BLAGGING':
-        case 'FOUL_BLATCHING':
+        case 'FOUL_BLATCHING': {
+          const foulTranslations: { [key: string]: string } = {
+            'FOUL_COBBING': 'Cobbing (uso excesivo de codos)',
+            'FOUL_BLAGGING': 'Blagging (agarrar cola de escoba)',
+            'FOUL_BLATCHING': 'Blatching (volar con intención de colisionar)'
+          };
           keyMoments.push({
             minute: event.minute,
             type: 'MAJOR_FOUL',
-            description: `${teamName} commits a major foul: ${event.type.replace('FOUL_', '')}`,
+            description: `${teamName} comete una falta grave: ${foulTranslations[event.type] || event.type.replace('FOUL_', '')}`,
             team: teamName,
             impact: 'medium'
           });
           break;
+        }
           
         case 'INJURY':
           keyMoments.push({
             minute: event.minute,
             type: 'INJURY',
-            description: `Player injured on ${teamName} side`,
+            description: `Jugador lesionado en el equipo ${teamName}`,
             team: teamName,
             impact: 'low'
           });
@@ -487,6 +490,15 @@ export class MatchResultsService {
     localStorage.removeItem(this.RESULTS_CACHE_KEY);
     console.log('All match results cleared');
   }
+
+  /**
+   * Clear and regenerate all results with updated translations
+   * Useful after updating translation logic
+   */
+  public clearAndRegenerateResults(): void {
+    this.clearAllResults();
+    console.log('Match results cleared. New matches will generate with updated translations.');
+  }
 }
 
 // Export singleton instance
@@ -494,5 +506,14 @@ export const matchResultsService = new MatchResultsService();
 
 // Expose to window for debugging
 if (typeof window !== 'undefined') {
-  (window as Window & { matchResultsService?: MatchResultsService }).matchResultsService = matchResultsService;
+  (window as Window & { 
+    matchResultsService?: MatchResultsService;
+    clearMatchResults?: () => void;
+  }).matchResultsService = matchResultsService;
+  
+  // Expose clear function directly
+  (window as Window & { 
+    matchResultsService?: MatchResultsService;
+    clearMatchResults?: () => void;
+  }).clearMatchResults = () => matchResultsService.clearAndRegenerateResults();
 }

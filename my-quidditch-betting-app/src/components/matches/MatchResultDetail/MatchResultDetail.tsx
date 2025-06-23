@@ -29,11 +29,12 @@ const MatchResultDetail: React.FC<MatchResultDetailProps> = ({ matchId: propMatc
       loadMatchResult(effectiveMatchId);
     }
   }, [effectiveMatchId]);
-
   const loadMatchResult = async (id: string) => {
     try {
       setIsLoading(true);
+      console.log('Loading match result for ID:', id);
       const matchResult = matchResultsService.getMatchResult(id);
+      console.log('Match result retrieved:', matchResult ? 'Found' : 'Not found');
       
       if (matchResult) {
         setResult(matchResult);
@@ -70,32 +71,56 @@ const MatchResultDetail: React.FC<MatchResultDetailProps> = ({ matchId: propMatc
         return '⚠️';
       case 'QUAFFLE_SAVE':
         return '🛡️';
-      case 'SNITCH_SPOTTED':
-        return '👁️';
+      case 'SNITCH_SPOTTED':        return '👁️';
       default:
         return '📝';
     }
   };
+  const translateDescription = (description: string): string => {
+    // Traduce descripciones que puedan venir en inglés desde datos guardados
+    const translations: { [key: string]: string } = {
+      'scores with the Quaffle!': 'anota con la Quaffle!',
+      ' points\\)': ' puntos)',
+      'commits a major foul:': 'comete una falta grave:',
+      'catches the Golden Snitch!': 'captura la Snitch Dorada!',
+      'MATCH ENDS!': '¡EL PARTIDO TERMINA!',
+      'Player injured on': 'Jugador lesionado en el equipo',
+      ' side': '',
+      'COBBING': 'Cobbing (uso excesivo de codos)',
+      'BLAGGING': 'Blagging (agarrar cola de escoba)',
+      'BLATCHING': 'Blatching (volar con intención de colisionar)'
+    };
 
+    let translatedDescription = description;
+      // Aplica todas las traducciones, escapando caracteres especiales
+    Object.entries(translations).forEach(([english, spanish]) => {
+      // Escapar caracteres especiales para regex
+      const escapedEnglish = english.replace(/[.*+?^${}()|[\\\]]/g, '\\$&');
+      translatedDescription = translatedDescription.replace(new RegExp(escapedEnglish, 'gi'), spanish);
+    });
+
+    return translatedDescription;
+  };
   if (isLoading) {
     return (
       <div className={styles.loadingContainer}>
         <div className={styles.loadingSpinner}>
           <div className={styles.spinner}></div>
-          <p>Loading match details...</p>
+          <p>Cargando detalles del partido...</p>
         </div>
       </div>
     );
   }
+
   if (!result) {
     return (
       <div className={styles.errorContainer}>
         <Card className={styles.errorCard}>
-          <h2>Match Result Not Found</h2>
-          <p>The detailed result for this match could not be found.</p>
+          <h2>Resultado del Partido No Encontrado</h2>
+          <p>No se pudo encontrar el resultado detallado de este partido.</p>
           {!propMatchId && (
             <Button onClick={() => navigate('/results')} variant="primary">
-              Back to Results
+              Volver a Resultados
             </Button>
           )}
         </Card>
@@ -105,21 +130,20 @@ const MatchResultDetail: React.FC<MatchResultDetailProps> = ({ matchId: propMatc
   return (
     <div className={styles.resultDetailContainer}>
       {/* Header */}
-      <div className={styles.header}>
-        {!propMatchId && (
+      <div className={styles.header}>        {!propMatchId && (
           <Button 
             onClick={() => navigate('/results')} 
             variant="outline" 
             className={styles.backButton}
           >
-            ← Back to Results
+            ← Volver a Resultados
           </Button>
         )}
         
         <div className={styles.matchTitle}>
-          <h1>Match Details</h1>
+          <h1>Detalles del Partido</h1>
           <p className={styles.matchDate}>
-            {new Date(result.completedAt).toLocaleDateString('en-US', {
+            {new Date(result.completedAt).toLocaleDateString('es-ES', {
               weekday: 'long',
               year: 'numeric',
               month: 'long',
@@ -147,12 +171,11 @@ const MatchResultDetail: React.FC<MatchResultDetailProps> = ({ matchId: propMatc
                 <span className={styles.awayScore}>{result.finalScore.away}</span>
               </div>
               <div className={styles.matchInfo}>
-                <span className={styles.duration}>
-                  Duration: {formatDuration(result.matchDuration)}
+                <span className={styles.duration}>                  Duración: {formatDuration(result.matchDuration)}
                 </span>
                 {result.snitchCaught && (
                   <span className={styles.snitchInfo}>
-                    ✨ Snitch caught at minute {result.snitchCaughtAtMinute}
+                    ✨ Snitch capturada en el minuto {result.snitchCaughtAtMinute}
                   </span>
                 )}
               </div>
@@ -173,19 +196,18 @@ const MatchResultDetail: React.FC<MatchResultDetailProps> = ({ matchId: propMatc
             className={`${styles.tab} ${activeTab === 'summary' ? styles.active : ''}`}
             onClick={() => setActiveTab('summary')}
           >
-            Summary
+            Resumen
           </button>
           <button
             className={`${styles.tab} ${activeTab === 'chronology' ? styles.active : ''}`}
             onClick={() => setActiveTab('chronology')}
-          >
-            Chronology
+          >            Cronología
           </button>
           <button
             className={`${styles.tab} ${activeTab === 'statistics' ? styles.active : ''}`}
             onClick={() => setActiveTab('statistics')}
           >
-            Statistics
+            Estadísticas
           </button>
         </div>
 
@@ -193,50 +215,46 @@ const MatchResultDetail: React.FC<MatchResultDetailProps> = ({ matchId: propMatc
           {/* Summary Tab */}
           {activeTab === 'summary' && (
             <Card className={styles.summaryCard}>
-              <h3>Match Summary</h3>
+              <h3>Resumen del Partido</h3>
               
               <div className={styles.summaryGrid}>
                 <div className={styles.summaryItem}>
-                  <h4>Key Moments</h4>
-                  <div className={styles.keyMoments}>
-                    {result.chronology.keyMoments.slice(0, 5).map((moment, index) => (
+                  <h4>Momentos Clave</h4>
+                  <div className={styles.keyMoments}>                    {result.chronology.keyMoments.slice(0, 5).map((moment, index) => (
                       <div key={index} className={styles.keyMoment}>
                         <span className={styles.minute}>Min {moment.minute}</span>
-                        <span className={styles.description}>{moment.description}</span>
+                        <span className={styles.description}>{translateDescription(moment.description)}</span>
                       </div>
                     ))}
                   </div>
                 </div>
-                
-                <div className={styles.summaryItem}>
-                  <h4>Quick Stats</h4>
+                  <div className={styles.summaryItem}>
+                  <h4>Estadísticas Rápidas</h4>
                   <div className={styles.quickStats}>
                     <div className={styles.stat}>
-                      <span>Total Events:</span>
+                      <span>Eventos Totales:</span>
                       <span>{result.statistics.totalEvents}</span>
                     </div>
                     <div className={styles.stat}>
-                      <span>Quaffle Goals:</span>
+                      <span>Goles de Quaffle:</span>
                       <span>{result.statistics.quaffleGoals.home + result.statistics.quaffleGoals.away}</span>
                     </div>
                     <div className={styles.stat}>
-                      <span>Fouls:</span>
+                      <span>Faltas:</span>
                       <span>{result.statistics.fouls.home + result.statistics.fouls.away}</span>
                     </div>
                     <div className={styles.stat}>
-                      <span>Bludger Hits:</span>
+                      <span>Golpes de Bludger:</span>
                       <span>{result.statistics.bludgerHits.home + result.statistics.bludgerHits.away}</span>
                     </div>
                   </div>
                 </div>
               </div>
             </Card>
-          )}
-
-          {/* Chronology Tab */}
+          )}          {/* Chronology Tab */}
           {activeTab === 'chronology' && (
             <Card className={styles.chronologyCard}>
-              <h3>Complete Match Chronology</h3>
+              <h3>Cronología Completa del Partido</h3>
               
               <div className={styles.chronologyContainer}>
                 <div className={styles.timeline}>
@@ -258,9 +276,8 @@ const MatchResultDetail: React.FC<MatchResultDetailProps> = ({ matchId: propMatc
                             <div key={eventIndex} className={styles.event}>
                               <span className={styles.eventIcon}>
                                 {getEventIcon(event.type)}
-                              </span>
-                              <span className={styles.eventDescription}>
-                                {event.description}
+                              </span>                              <span className={styles.eventDescription}>
+                                {translateDescription(event.description)}
                               </span>
                               {event.points && event.points > 0 && (
                                 <span className={styles.eventPoints}>
@@ -276,29 +293,26 @@ const MatchResultDetail: React.FC<MatchResultDetailProps> = ({ matchId: propMatc
                 </div>
               </div>
             </Card>
-          )}
-
-          {/* Statistics Tab */}
+          )}          {/* Statistics Tab */}
           {activeTab === 'statistics' && (
             <Card className={styles.statisticsCard}>
-              <h3>Detailed Statistics</h3>
+              <h3>Estadísticas Detalladas</h3>
               
               <div className={styles.statsGrid}>
                 <div className={styles.statCategory}>
-                  <h4>Scoring Breakdown</h4>
+                  <h4>Desglose de Puntuación</h4>
                   <div className={styles.statComparison}>
                     <div className={styles.teamStats}>
-                      <h5>{result.homeTeam.name}</h5>
-                      <div className={styles.statLine}>
-                        <span>Quaffle Goals:</span>
+                      <h5>{result.homeTeam.name}</h5>                      <div className={styles.statLine}>
+                        <span>Goles de Quaffle:</span>
                         <span>{result.statistics.quaffleGoals.home}</span>
                       </div>
                       <div className={styles.statLine}>
-                        <span>Snitch Points:</span>
+                        <span>Puntos de Snitch:</span>
                         <span>{result.statistics.snitchPoints.home}</span>
                       </div>
                       <div className={styles.statLine}>
-                        <span>Total Score:</span>
+                        <span>Puntuación Total:</span>
                         <span className={styles.totalScore}>{result.finalScore.home}</span>
                       </div>
                     </div>
@@ -306,15 +320,15 @@ const MatchResultDetail: React.FC<MatchResultDetailProps> = ({ matchId: propMatc
                     <div className={styles.teamStats}>
                       <h5>{result.awayTeam.name}</h5>
                       <div className={styles.statLine}>
-                        <span>Quaffle Goals:</span>
+                        <span>Goles de Quaffle:</span>
                         <span>{result.statistics.quaffleGoals.away}</span>
                       </div>
                       <div className={styles.statLine}>
-                        <span>Snitch Points:</span>
+                        <span>Puntos de Snitch:</span>
                         <span>{result.statistics.snitchPoints.away}</span>
                       </div>
                       <div className={styles.statLine}>
-                        <span>Total Score:</span>
+                        <span>Puntuación Total:</span>
                         <span className={styles.totalScore}>{result.finalScore.away}</span>
                       </div>
                     </div>
@@ -322,16 +336,15 @@ const MatchResultDetail: React.FC<MatchResultDetailProps> = ({ matchId: propMatc
                 </div>
                 
                 <div className={styles.statCategory}>
-                  <h4>Game Flow</h4>
-                  <div className={styles.statComparison}>
-                    <div className={styles.teamStats}>
+                  <h4>Flujo del Juego</h4>
+                  <div className={styles.statComparison}>                    <div className={styles.teamStats}>
                       <h5>{result.homeTeam.name}</h5>
                       <div className={styles.statLine}>
-                        <span>Fouls:</span>
+                        <span>Faltas:</span>
                         <span>{result.statistics.fouls.home}</span>
                       </div>
                       <div className={styles.statLine}>
-                        <span>Bludger Hits:</span>
+                        <span>Golpes de Bludger:</span>
                         <span>{result.statistics.bludgerHits.home}</span>
                       </div>
                     </div>
@@ -339,11 +352,11 @@ const MatchResultDetail: React.FC<MatchResultDetailProps> = ({ matchId: propMatc
                     <div className={styles.teamStats}>
                       <h5>{result.awayTeam.name}</h5>
                       <div className={styles.statLine}>
-                        <span>Fouls:</span>
+                        <span>Faltas:</span>
                         <span>{result.statistics.fouls.away}</span>
                       </div>
                       <div className={styles.statLine}>
-                        <span>Bludger Hits:</span>
+                        <span>Golpes de Bludger:</span>
                         <span>{result.statistics.bludgerHits.away}</span>
                       </div>
                     </div>
@@ -351,27 +364,26 @@ const MatchResultDetail: React.FC<MatchResultDetailProps> = ({ matchId: propMatc
                 </div>
                 
                 <div className={styles.statCategory}>
-                  <h4>Period Dominance</h4>
+                  <h4>Dominio por Período</h4>
                   <div className={styles.dominanceStats}>
                     <div className={styles.periodStat}>
-                      <span>First Period:</span>
-                      <span className={styles.dominance}>
+                      <span>Primer Período:</span>                      <span className={styles.dominance}>
                         {result.statistics.dominanceByPeriod.first15 === 'home' ? result.homeTeam.name :
-                         result.statistics.dominanceByPeriod.first15 === 'away' ? result.awayTeam.name : 'Even'}
+                         result.statistics.dominanceByPeriod.first15 === 'away' ? result.awayTeam.name : 'Empate'}
                       </span>
                     </div>
                     <div className={styles.periodStat}>
-                      <span>Middle Period:</span>
+                      <span>Período Medio:</span>
                       <span className={styles.dominance}>
                         {result.statistics.dominanceByPeriod.middle === 'home' ? result.homeTeam.name :
-                         result.statistics.dominanceByPeriod.middle === 'away' ? result.awayTeam.name : 'Even'}
+                         result.statistics.dominanceByPeriod.middle === 'away' ? result.awayTeam.name : 'Empate'}
                       </span>
                     </div>
                     <div className={styles.periodStat}>
-                      <span>Final Period:</span>
+                      <span>Período Final:</span>
                       <span className={styles.dominance}>
                         {result.statistics.dominanceByPeriod.final === 'home' ? result.homeTeam.name :
-                         result.statistics.dominanceByPeriod.final === 'away' ? result.awayTeam.name : 'Even'}
+                         result.statistics.dominanceByPeriod.final === 'away' ? result.awayTeam.name : 'Empate'}
                       </span>
                     </div>
                   </div>
