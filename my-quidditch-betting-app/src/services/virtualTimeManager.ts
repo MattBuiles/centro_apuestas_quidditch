@@ -1,7 +1,8 @@
-import { Season, Match, MatchState, Team } from '@/types/league';
+import { Season, Match, MatchState, Team, MatchResult } from '@/types/league';
 import { quidditchSimulator } from './quidditchSimulator';
 import { liveMatchSimulator } from './liveMatchSimulator';
 import { quidditchLeagueManager } from './quidditchLeagueManager';
+import { predictionsService } from './predictionsService';
 
 /**
  * Virtual Time Manager
@@ -332,16 +333,17 @@ export class VirtualTimeManager {
     partido.events = estado.eventos;
     partido.currentMinute = estado.minuto;
     partido.snitchCaught = estado.snitchCaught;    // Resolve bets and predictions for the finished match
-    console.log(`💰 Match ${partidoId} finished, resolving bets and predictions...`);
-      // Determine match result for predictions
+    console.log(`💰 Match ${partidoId} finished, resolving bets and predictions...`);      // Determine match result for predictions
     const actualResult: 'home' | 'away' | 'draw' = 
       partido.homeScore! > partido.awayScore! ? 'home' :
       partido.awayScore! > partido.homeScore! ? 'away' : 'draw';
     
-    console.log(`🏆 Match result determination for ${partidoId}:`);
-    console.log(`   - Local team (home): ${partido.localId} - Score: ${partido.homeScore}`);
-    console.log(`   - Visitante team (away): ${partido.visitanteId} - Score: ${partido.awayScore}`);
-    console.log(`   - Determined result: ${actualResult}`);
+    console.log(`🏆 DETAILED MATCH RESULT DETERMINATION for ${partidoId}:`);
+    console.log(`   🏠 Local team (home): ${partido.localId} - Score: ${partido.homeScore}`);
+    console.log(`   🚗 Visitante team (away): ${partido.visitanteId} - Score: ${partido.awayScore}`);
+    console.log(`   🎯 Score comparison: ${partido.homeScore} vs ${partido.awayScore}`);
+    console.log(`   🏆 Determined result: "${actualResult}"`);
+    console.log(`   📊 Match object scores:`, { homeScore: partido.homeScore, awayScore: partido.awayScore });
     
     try {
       // Import services dynamically to avoid circular dependencies
@@ -748,8 +750,7 @@ if (typeof window !== 'undefined') {
     checkInit: () => {
       const state = virtualTimeManager.getState();
       console.log('🔍 Estado actual:', {
-        temporadaActiva: !!state.temporadaActiva,
-        nombreTemporada: state.temporadaActiva?.name,
+        temporadaActiva: !!state.temporadaActiva,        nombreTemporada: state.temporadaActiva?.name,
         equipos: state.temporadaActiva?.equipos?.length,
         partidos: state.temporadaActiva?.partidos?.length,
         fechaVirtual: state.fechaVirtualActual
@@ -758,4 +759,76 @@ if (typeof window !== 'undefined') {
   };
   console.log('🐛 Debug tools available: window.debugQuidditch');
   console.log('🐛 Commands: resetCompleto(), checkInit(), getState()');
+}
+
+// Expose the manager instance globally for debugging
+if (typeof window !== 'undefined') {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (window as any).virtualTimeManager = virtualTimeManager;
+  // Add debug helpers
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (window as any).debugMatchesAndPredictions = () => {
+    const today = virtualTimeManager.getPartidosHoy();
+    const finished = today.filter((m: Match) => m.resultado);
+    const live = today.filter((m: Match) => !m.resultado && m.isLive);
+    
+    console.log('🔍 Debug Match Status:');
+    console.log('Today matches:', today.length);
+    console.log('Finished matches:', finished.map((m: Match) => ({
+      id: m.id,
+      teams: `${m.homeTeamId} vs ${m.awayTeamId}`,
+      result: m.resultado,
+      status: m.status,
+      live: m.isLive
+    })));
+    console.log('Live matches:', live.map((m: Match) => ({
+      id: m.id,
+      teams: `${m.homeTeamId} vs ${m.awayTeamId}`,
+      status: m.status,
+      live: m.isLive
+    })));
+      return { today, finished, live };
+  };
+  
+  // Add a manual match finish trigger for debugging
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (window as any).finishMatchManually = (matchId: string, winner: 'home' | 'away' | 'draw') => {
+    console.log(`🔧 Manually finishing match ${matchId} with result: ${winner}`);
+    
+    // Find the match
+    const match = virtualTimeManager.getState().temporadaActiva?.partidos.find(m => m.id === matchId);
+    if (!match) {
+      console.error('Match not found:', matchId);
+      return;
+    }
+    
+    // Create a result
+    const homeScore = winner === 'home' ? 150 : (winner === 'draw' ? 150 : 100);
+    const awayScore = winner === 'away' ? 160 : (winner === 'draw' ? 150 : 90);
+      const result: MatchResult = {
+      matchId: match.id,
+      homeScore,
+      awayScore,
+      winner: winner === 'draw' ? undefined : (winner === 'home' ? match.homeTeamId : match.awayTeamId),
+      snitchCaught: true,
+      snitchCaughtBy: winner === 'home' ? match.homeTeamId : match.awayTeamId,
+      duration: 60,
+      events: []
+    };
+    
+    // Set result on match
+    match.resultado = result;
+    match.status = 'finished';
+    match.isLive = false;
+    match.homeScore = homeScore;
+    match.awayScore = awayScore;
+    
+    // Manually trigger prediction evaluation
+    const actualResult = winner;
+    console.log(`🔧 Triggering prediction evaluation for match ${matchId} with result: ${actualResult}`);
+    predictionsService.updatePredictionResult(matchId, actualResult);
+    
+    console.log('✅ Match finished manually. Check predictions now.');
+    return result;
+  };
 }

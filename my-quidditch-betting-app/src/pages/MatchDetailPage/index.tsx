@@ -356,24 +356,29 @@ const MatchDetailPage = () => {
       }
     }  }, [matchId, match, realMatch, predictionStats, predictionsService]);
   // Listen for prediction updates when matches finish
-  useEffect(() => {
-    const handlePredictionsUpdate = (event: CustomEvent) => {
+  useEffect(() => {    const handlePredictionsUpdate = (event: CustomEvent) => {
+      console.log(`🎪 PREDICTIONS UPDATE EVENT RECEIVED:`, event.detail);
       const { matchId: updatedMatchId, result } = event.detail;
+      
       if (updatedMatchId === matchId && matchId) {
-        console.log(`🔮 Predictions updated for match ${matchId}, result: ${result}`);
+        console.log(`🔮 Processing predictions update for match ${matchId}, result: ${result}`);
         
         // Refresh user prediction to get updated isCorrect status
         const updatedPrediction = predictionsService.getUserPrediction(matchId);
+        console.log(`📊 Updated prediction from service:`, updatedPrediction);
         setUserPrediction(updatedPrediction);
         
         // Refresh prediction stats
         const updatedStats = predictionsService.getMatchPredictionStats(matchId);
         setPredictionStats(updatedStats);
         
+        console.log(`🔄 About to reload page in 1 second...`);
         // Force component re-render to show updated results
         setTimeout(() => {
           window.location.reload();
         }, 1000);
+      } else {
+        console.log(`⚠️ Event is for different match: ${updatedMatchId} vs current ${matchId}`);
       }
     };
 
@@ -389,9 +394,15 @@ const MatchDetailPage = () => {
   const handleTabClick = (tabId: TabType) => {
     setActiveTab(tabId);
   };
-
   const handlePrediction = async (winner: 'home' | 'away' | 'draw') => {
     if (!match || !isAuthenticated) return;
+    
+    console.log(`🎯 UI PREDICTION CREATION for match ${match.id}:`);
+    console.log(`   🏠 Home team: "${match.homeTeam}"`);
+    console.log(`   🚗 Away team: "${match.awayTeam}"`);
+    console.log(`   👤 User clicked: "${winner}"`);
+    console.log(`   📊 Match object:`, match);
+    console.log(`   🔗 Real match data:`, realMatch);
     
     setIsPredicting(true);
     try {

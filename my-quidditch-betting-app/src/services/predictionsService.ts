@@ -50,11 +50,14 @@ export class PredictionsService {
   constructor() {
     this.initializeMockPredictions();
   }
-
   /**
    * Create a prediction for a match
    */
   createPrediction(matchId: string, predictedWinner: 'home' | 'away' | 'draw', confidence: number = 3, predictedScore?: { home: number; away: number }): Prediction {
+    console.log(`🔮 CREATING PREDICTION for match ${matchId}:`);
+    console.log(`   📝 Predicted winner: "${predictedWinner}"`);
+    console.log(`   🎯 Confidence: ${confidence}`);
+    
     const prediction: Prediction = {
       id: `pred_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       matchId,
@@ -65,7 +68,10 @@ export class PredictionsService {
       timestamp: new Date()
     };
 
+    console.log(`   💾 Final prediction object:`, prediction);
     this.savePrediction(prediction);
+    console.log(`   ✅ Prediction saved successfully`);
+    
     return prediction;
   }
 
@@ -104,21 +110,24 @@ export class PredictionsService {
       drawPercentage: totalPredictions > 0 ? (drawPredictions / totalPredictions) * 100 : 0,
       userPrediction: userPrediction || undefined
     };
-  }
-  /**
+  }  /**
    * Update prediction correctness after match ends
    */  updatePredictionResult(matchId: string, actualResult: 'home' | 'away' | 'draw'): void {
     const prediction = this.getUserPrediction(matchId);
     if (prediction) {
-      console.log(`🔮 Updating prediction for match ${matchId}:`);
-      console.log(`   - User predicted: ${prediction.predictedWinner}`);
-      console.log(`   - Actual result: ${actualResult}`);
+      console.log(`🔮 DETAILED PREDICTION ANALYSIS for match ${matchId}:`);
+      console.log(`   📝 User predicted: "${prediction.predictedWinner}"`);
+      console.log(`   🏆 Actual result: "${actualResult}"`);
+      console.log(`   🔍 Comparison: "${prediction.predictedWinner}" === "${actualResult}"`);
+      console.log(`   ⚡ String equality: ${prediction.predictedWinner === actualResult}`);
+      console.log(`   📊 Prediction object:`, prediction);
       
-      prediction.isCorrect = prediction.predictedWinner === actualResult;
+      const wasCorrect = prediction.predictedWinner === actualResult;
+      prediction.isCorrect = wasCorrect;
       this.savePrediction(prediction);
       
-      console.log(`   - Match: ${prediction.isCorrect ? 'CORRECT' : 'INCORRECT'}`);
-      console.log(`✅ Prediction updated: isCorrect = ${prediction.isCorrect}`);
+      console.log(`   🎯 Final result: ${wasCorrect ? '✅ CORRECT' : '❌ INCORRECT'}`);
+      console.log(`   💾 Saved isCorrect: ${prediction.isCorrect}`);
     } else {
       console.log(`⚠️ No prediction found for match ${matchId}`);
     }
@@ -335,7 +344,6 @@ export class PredictionsService {
       return {};
     }
   }
-
   /**
    * Add mock predictions for a new match
    */
@@ -346,7 +354,108 @@ export class PredictionsService {
       localStorage.setItem(this.MOCK_PREDICTIONS_KEY, JSON.stringify(mockData));
     }
   }
+  /**
+   * DEBUG: Manually check and fix prediction for a match
+   */
+  debugPredictionForMatch(matchId: string): void {
+    console.log(`🔧 DEBUG: Manually checking prediction for match ${matchId}`);
+    
+    const prediction = this.getUserPrediction(matchId);
+    if (!prediction) {
+      console.log(`❌ No prediction found for match ${matchId}`);
+      return;
+    }
+    
+    console.log(`📊 Current prediction:`, prediction);
+    console.log(`🔍 Current isCorrect status: ${prediction.isCorrect}`);
+    
+    // Try to find the match and determine result manually
+    if (typeof window !== 'undefined' && (window as any).debugQuidditch?.virtualTimeManager) {
+      const timeManager = (window as any).debugQuidditch.virtualTimeManager;
+      const state = timeManager.getState();
+      
+      if (state.temporadaActiva) {
+        const match = state.temporadaActiva.partidos.find((p: any) => p.id === matchId);
+        if (match && match.status === 'finished') {
+          console.log(`🏆 Found finished match:`, match);
+          
+          const actualResult = 
+            match.homeScore > match.awayScore ? 'home' :
+            match.awayScore > match.homeScore ? 'away' : 'draw';
+          
+          console.log(`🎯 Manual calculation: ${match.homeScore} vs ${match.awayScore} = ${actualResult}`);
+          console.log(`🔍 Prediction vs Result: "${prediction.predictedWinner}" vs "${actualResult}"`);
+          console.log(`⚡ Should be correct: ${prediction.predictedWinner === actualResult}`);
+          
+          // Force update the prediction
+          this.updatePredictionResult(matchId, actualResult);
+        } else {
+          console.log(`❌ Match not found or not finished:`, match);
+        }
+      }
+    }
+  }
 }
 
 // Export singleton instance
 export const predictionsService = new PredictionsService();
+
+// Make debug function and service available globally
+if (typeof window !== 'undefined') {
+  (window as any).debugPrediction = (matchId: string) => {
+    predictionsService.debugPredictionForMatch(matchId);
+  };
+  
+  // Expose predictionsService globally for debugging  // Expose predictionsService globally for debugging
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (window as any).predictionsService = predictionsService;
+  
+  // Add comprehensive debug helper
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (window as any).testPredictionFlow = (matchId: string) => {
+    console.log(`🔧 TESTING FULL PREDICTION FLOW for match ${matchId}`);
+    
+    // Step 1: Check if prediction exists
+    const prediction = predictionsService.getUserPrediction(matchId);
+    if (!prediction) {
+      console.log('❌ No prediction found. Creating one for testing...');
+      predictionsService.createPrediction(matchId, 'home', 4);
+    } else {
+      console.log('✅ Existing prediction found:', prediction);
+    }
+    
+    // Step 2: Check match status
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (typeof window !== 'undefined' && (window as any).virtualTimeManager) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const timeManager = (window as any).virtualTimeManager;
+      const state = timeManager.getState();
+      
+      if (state.temporadaActiva) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const match = state.temporadaActiva.partidos.find((p: any) => p.id === matchId);
+        if (match) {
+          console.log('🏆 Match found:', {
+            id: match.id,
+            status: match.status,
+            homeScore: match.homeScore,
+            awayScore: match.awayScore,
+            finished: !!match.resultado
+          });
+        } else {
+          console.log('❌ Match not found in current season');
+        }
+      }
+    }
+    
+    // Step 3: Test manual evaluation
+    console.log('🧪 Testing manual evaluation with "away" result...');
+    predictionsService.updatePredictionResult(matchId, 'away');
+    
+    // Step 4: Check final state
+    const finalPrediction = predictionsService.getUserPrediction(matchId);
+    console.log('🎯 Final prediction state:', finalPrediction);
+    
+    return finalPrediction;
+  };
+}
