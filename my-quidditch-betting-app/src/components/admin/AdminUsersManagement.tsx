@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Card from '@/components/common/Card';
 import Button from '@/components/common/Button';
 import styles from './AdminUsersManagement.module.css';
@@ -174,8 +174,7 @@ const AdminUsersManagement = () => {
     setUsers(mockUsers);
     setIsLoading(false);
   };
-
-  const applyFilters = () => {
+  const applyFilters = useCallback(() => {
     let filtered = [...users];
 
     // Role filter
@@ -199,7 +198,7 @@ const AdminUsersManagement = () => {
 
     setFilteredUsers(filtered);
     setCurrentPage(1);
-  };
+  }, [users, filters]);
 
   const handleFilterChange = (key: keyof FilterOptions, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -240,7 +239,6 @@ const AdminUsersManagement = () => {
     setSelectedUser(user);
     setShowDeleteModal(true);
   };
-
   const submitCreate = () => {
     const newUser: User = {
       id: `user_${Date.now()}`,
@@ -258,8 +256,10 @@ const AdminUsersManagement = () => {
     setUsers(prev => [...prev, newUser]);
     setShowCreateModal(false);
     console.log('Usuario creado:', newUser);
+    
+    // Mostrar alerta de éxito
+    alert(`✨ ¡Usuario creado exitosamente! 🧙‍♂️\n\nSe ha creado el usuario "${formData.username}" con el rol de ${formData.role === 'admin' ? 'Administrador' : 'Usuario'}.`);
   };
-
   const submitEdit = () => {
     if (!selectedUser) return;
 
@@ -278,15 +278,21 @@ const AdminUsersManagement = () => {
     setShowEditModal(false);
     setSelectedUser(null);
     console.log('Usuario actualizado:', updatedUser);
+    
+    // Mostrar alerta de éxito
+    alert(`📝 ¡Usuario actualizado correctamente! ⚡\n\nLos datos de "${formData.username}" han sido modificados exitosamente.`);
   };
-
   const confirmDelete = () => {
     if (!selectedUser) return;
 
+    const deletedUserName = selectedUser.username;
     setUsers(prev => prev.filter(user => user.id !== selectedUser.id));
     setShowDeleteModal(false);
     setSelectedUser(null);
     console.log('Usuario eliminado:', selectedUser.id);
+    
+    // Mostrar alerta de éxito
+    alert(`🗑️ ¡Usuario eliminado exitosamente! 🏴‍☠️\n\nEl usuario "${deletedUserName}" ha sido eliminado del sistema de forma permanente.`);
   };
 
   const getStatusBadge = (status: string) => {
