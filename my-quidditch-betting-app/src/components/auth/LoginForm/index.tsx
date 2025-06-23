@@ -7,18 +7,25 @@ const LoginForm = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [remember, setRemember] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
   const { login, isLoading, error } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setFormError(null)
+
+    if (!email || !password) {
+      setFormError('Por favor complete todos los campos')
+      return
+    }
+
     await login(email, password, remember)
   }
 
-  return (
-    <form onSubmit={handleSubmit} className={styles.loginForm}>
-      {error && (
+  return (    <form onSubmit={handleSubmit} className={styles.loginForm}>
+      {(error || formError) && (
         <div className={styles.errorMessage}>
-          {error}
+          {error || formError}
         </div>
       )}
       

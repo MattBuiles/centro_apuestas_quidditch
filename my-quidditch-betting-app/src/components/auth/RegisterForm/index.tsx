@@ -12,27 +12,30 @@ const RegisterForm = () => {
   const [terms, setTerms] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   
-  const { register, isLoading, error: authError } = useAuth()
-
+  const { register, isLoading, error: authError, validatePassword } = useAuth()
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setFormError(null)
 
     if (!username || !email || !password || !confirmPassword || !birthdate) {
-      setFormError('Por favor, completa todos los campos.')
+      setFormError('Por favor complete todos los campos')
       return
     }
     if (!/\S+@\S+\.\S+/.test(email)) {
       setFormError('Por favor, introduce un correo electrónico válido.')
       return
     }
+    
     if (password !== confirmPassword) {
       setFormError('Las contraseñas no coinciden')
       return
     }
-    if (password.length < 8 || !/\d/.test(password) || !/[a-zA-Z]/.test(password)) {
-        setFormError('La contraseña debe tener al menos 8 caracteres, incluyendo letras y números.');
-        return;
+    
+    // Validar contraseña usando la función del contexto
+    const passwordError = validatePassword(password)
+    if (passwordError) {
+      setFormError(passwordError)
+      return
     }
     const birthdateDate = new Date(birthdate)
     const today = new Date()
@@ -103,9 +106,8 @@ const RegisterForm = () => {
           onChange={(e) => setPassword(e.target.value)}
           required
           minLength={8}
-        />
-        <small className={styles.formHint}>
-          🔒 Mínimo 8 caracteres con letras y números para proteger tu cuenta mágica
+        />        <small className={styles.formHint}>
+          🔒 Mínimo 8 caracteres con número y letra mayúscula para proteger tu cuenta mágica
         </small>
       </div>
       

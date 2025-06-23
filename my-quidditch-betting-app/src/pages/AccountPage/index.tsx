@@ -30,15 +30,12 @@ interface Transaction {
 
 // Define sub-components for each account section
 const ProfileSection = () => {
-    const { user, updateUserProfile, validateCurrentPassword, updatePassword } = useAuth();
+    const { user, updateUserProfile, validateCurrentPassword, validatePassword, updatePassword } = useAuth();
     const [isEditing, setIsEditing] = useState(false);
     const [isChangingAvatar, setIsChangingAvatar] = useState(false);
-    const [isChangingPassword, setIsChangingPassword] = useState(false);
-    const [formData, setFormData] = useState({
+    const [isChangingPassword, setIsChangingPassword] = useState(false);    const [formData, setFormData] = useState({
         username: user?.username || '',
-        email: user?.email || '',
-        newPassword: '',
-        confirmPassword: ''
+        email: user?.email || ''
     });
     const [passwordData, setPasswordData] = useState({
         currentPassword: '',
@@ -68,17 +65,14 @@ const ProfileSection = () => {
     const handleAvatarChange = (avatarSrc: string) => {
         updateUserProfile({ avatar: avatarSrc });
         setIsChangingAvatar(false);
-    };
-
-    const handleSave = (e: React.FormEvent) => {
+    };    const handleSave = (e: React.FormEvent) => {
         e.preventDefault();
         
-        // Validate passwords if they're being changed
-        if (formData.newPassword && formData.newPassword !== formData.confirmPassword) {
-            alert('Las contraseñas no coinciden');
+        if (!formData.username || !formData.email) {
+            alert('Por favor complete todos los campos');
             return;
         }
-
+        
         // Update user profile in context (this will update the sidebar automatically)
         updateUserProfile({
             username: formData.username,
@@ -88,16 +82,10 @@ const ProfileSection = () => {
         // Here you would typically call an API to update user info
         console.log('Saving user data:', {
             username: formData.username,
-            email: formData.email,
-            passwordChanged: !!formData.newPassword
+            email: formData.email
         });
         
-        // Clear password fields and exit edit mode
-        setFormData(prev => ({
-            ...prev,
-            newPassword: '',
-            confirmPassword: ''
-        }));
+        // Exit edit mode
         setIsEditing(false);
         
         // Show success message
@@ -107,34 +95,44 @@ const ProfileSection = () => {
         if (user) {
             setFormData({
                 username: user.username,
-                email: user.email,
-                newPassword: '',
-                confirmPassword: ''
+                email: user.email
             });
         }
         setIsEditing(false);
     };    const handlePasswordChange = (e: React.FormEvent) => {
         e.preventDefault();
         
+        if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+            alert('Por favor complete todos los campos');
+            return;
+        }
+        
         // Validar contraseña actual usando la función del contexto
         if (!validateCurrentPassword(passwordData.currentPassword)) {
             alert('La contraseña actual no es correcta. Peeves está riéndose de ti. 🃏');
             return;
-        }
-
-        // Validar nueva contraseña
+        }// Validar nueva contraseña
         if (passwordData.newPassword !== passwordData.confirmPassword) {
             alert('Las contraseñas no coinciden. Incluso la magia requiere precisión. ✨');
             return;
         }
 
-        if (passwordData.newPassword.length < 6) {
-            alert('La contraseña debe tener al menos 6 caracteres para ser verdaderamente mágica. 🔮');
+        // Validar contraseña usando la función del contexto
+        const passwordError = validatePassword(passwordData.newPassword);
+        if (passwordError) {
+            alert(`${passwordError} 🔮`);
             return;
         }
 
-        // Actualizar contraseña usando la función del contexto
-        updatePassword(passwordData.newPassword);
+        try {
+            // Actualizar contraseña usando la función del contexto
+            updatePassword(passwordData.newPassword);
+        } catch (error) {
+            if (error instanceof Error) {
+                alert(`Error al cambiar contraseña: ${error.message} 🔮`);
+                return;
+            }
+        }
 
         console.log('Password updated successfully:', {
             userId: user?.id,
@@ -256,36 +254,14 @@ const ProfileSection = () => {
                                     readOnly={!isEditing}
                                 />
                             </div>                            {isEditing && (
-                                <>
-                                    <div className={styles.formGroup}>
-                                        <label className={styles.formLabel}>Nueva Contraseña:</label>
-                                        <input 
-                                            type="password" 
-                                            placeholder="Dejar vacío para mantener actual"
-                                            className={styles.formInput}
-                                            value={formData.newPassword}
-                                            onChange={(e) => setFormData({...formData, newPassword: e.target.value})}
-                                        />
-                                    </div>
-                                    <div className={styles.formGroup}>
-                                        <label className={styles.formLabel}>Confirmar Nueva Contraseña:</label>
-                                        <input 
-                                            type="password" 
-                                            placeholder="Confirmar nueva contraseña"
-                                            className={styles.formInput}
-                                            value={formData.confirmPassword}
-                                            onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
-                                        />
-                                    </div>
-                                    <div className={styles.buttonGroup}>
-                                        <Button type="submit" variant="primary">
-                                            💾 Guardar Cambios
-                                        </Button>
-                                        <Button type="button" variant="outline" onClick={handleCancel}>
-                                            ❌ Cancelar
-                                        </Button>
-                                    </div>
-                                </>
+                                <div className={styles.buttonGroup}>
+                                    <Button type="submit" variant="primary">
+                                        💾 Guardar Cambios
+                                    </Button>
+                                    <Button type="button" variant="outline" onClick={handleCancel}>
+                                        ❌ Cancelar
+                                    </Button>
+                                </div>
                             )}
                         </form>
                     )}                    {!isEditing && (
@@ -334,18 +310,17 @@ const ProfileSection = () => {
                                     </small>
                                 </div>
                                 <div className={styles.formGroup}>
-                                    <label className={styles.formLabel}>🔮 Nueva Contraseña:</label>
-                                    <input 
+                                    <label className={styles.formLabel}>🔮 Nueva Contraseña:</label>                                    <input 
                                         type="password" 
                                         placeholder="Tu nueva contraseña mágica"
                                         className={styles.formInput}
                                         value={passwordData.newPassword}
                                         onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
-                                        minLength={6}
+                                        minLength={8}
                                         required
                                     />
                                     <small className={styles.formHelp}>
-                                        Mínimo 6 caracteres para una protección mágica adecuada
+                                        Mínimo 8 caracteres con número y letra mayúscula para una protección mágica adecuada
                                     </small>
                                 </div>
                                 <div className={styles.formGroup}>
@@ -356,7 +331,7 @@ const ProfileSection = () => {
                                         className={styles.formInput}
                                         value={passwordData.confirmPassword}
                                         onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
-                                        minLength={6}
+                                        minLength={8}
                                         required
                                     />
                                     <small className={styles.formHelp}>
