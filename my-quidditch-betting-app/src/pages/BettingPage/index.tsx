@@ -125,23 +125,30 @@ const BettingPage: React.FC = () => {
     const combinedOdds = calculateCombinedOdds();
     return betAmount * combinedOdds;
   };
-
-  // Handle bet selection (allow multiple selections for combined bets)
+  // Handle bet selection (allow multiple selections for combined bets and deselection)
   const handleBetSelection = (option: BetOption) => {
     setSelectedBets(prev => {
-      // Check if this bet type already exists for this match (prevent conflicting bets)
-      const existingIndex = prev.findIndex(bet => 
-        bet.matchId === option.matchId && bet.type === option.type
-      );
+      // Check if this exact bet is already selected
+      const existingIndex = prev.findIndex(bet => bet.id === option.id);
 
       if (existingIndex >= 0) {
-        // Replace existing bet of same type
-        const newBets = [...prev];
-        newBets[existingIndex] = option;
-        return newBets;
+        // If already selected, remove it (deselect)
+        return prev.filter(bet => bet.id !== option.id);
       } else {
-        // Add new bet
-        return [...prev, option];
+        // Check if there's a conflicting bet of the same type for the same match
+        const conflictingIndex = prev.findIndex(bet => 
+          bet.matchId === option.matchId && bet.type === option.type
+        );
+
+        if (conflictingIndex >= 0) {
+          // Replace conflicting bet with the new selection
+          const newBets = [...prev];
+          newBets[conflictingIndex] = option;
+          return newBets;
+        } else {
+          // Add new bet
+          return [...prev, option];
+        }
       }
     });
   };
