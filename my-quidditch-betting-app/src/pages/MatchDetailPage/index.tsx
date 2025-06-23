@@ -151,9 +151,10 @@ const MatchDetailPage = () => {
     // Related matches state
   const [relatedMatches, setRelatedMatches] = useState<Match[]>([]);
   // State for finished match data
-  const [finishedMatchData, setFinishedMatchData] = useState<FinishedMatchData | null>(null);
-  // State for detailed match results
+  const [finishedMatchData, setFinishedMatchData] = useState<FinishedMatchData | null>(null);  // State for detailed match results
   const [hasDetailedResults, setHasDetailedResults] = useState(false);
+  const [detailedMatchResult, setDetailedMatchResult] = useState<ReturnType<typeof matchResultsService.getMatchResult> | null>(null);
+  
   // Helper function to get team roster data with real player names
   const getTeamRosterData = (teamName: string) => {
     const teamMockData: { [key: string]: { roster: { id: string; name: string; position: string; number: number; yearsActive: number; achievements: string[] }[] } } = {
@@ -240,16 +241,35 @@ const MatchDetailPage = () => {
         // Find teams
         const foundHomeTeam = timeState.temporadaActiva.equipos.find(t => t.id === foundMatch.localId);
         const foundAwayTeam = timeState.temporadaActiva.equipos.find(t => t.id === foundMatch.visitanteId);
-        
-        setHomeTeam(foundHomeTeam || mockHomeTeam);
+          setHomeTeam(foundHomeTeam || mockHomeTeam);
         setAwayTeam(foundAwayTeam || mockAwayTeam);
-          // Convert to MatchDetails format
+        
+        // Check if detailed results are available for finished matches
+        let finalHomeScore = foundMatch.homeScore || 0;
+        let finalAwayScore = foundMatch.awayScore || 0;
+        
+        if (foundMatch.status === 'finished') {
+          const detailedResults = matchResultsService.getMatchResult(foundMatch.id);
+          setHasDetailedResults(detailedResults !== null);
+          setDetailedMatchResult(detailedResults);
+          
+          // Use detailed results scores if available (more accurate)
+          if (detailedResults) {
+            finalHomeScore = detailedResults.finalScore.home;
+            finalAwayScore = detailedResults.finalScore.away;
+          }
+        } else {
+          setHasDetailedResults(false);
+          setDetailedMatchResult(null);
+        }
+
+        // Convert to MatchDetails format with correct scores
         const matchDetails: MatchDetails = {
           id: foundMatch.id,
           homeTeam: foundHomeTeam?.name || foundMatch.localId,
           awayTeam: foundAwayTeam?.name || foundMatch.visitanteId,
-          homeScore: foundMatch.homeScore || 0,
-          awayScore: foundMatch.awayScore || 0,
+          homeScore: finalHomeScore,
+          awayScore: finalAwayScore,
           status: foundMatch.status === 'scheduled' ? 'upcoming' : 
                  foundMatch.status === 'live' ? 'live' : 'finished',
           minute: foundMatch.currentMinute?.toString(),
@@ -257,13 +277,7 @@ const MatchDetailPage = () => {
           time: new Date(foundMatch.fecha).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
           location: foundMatch.venue || 'Campo de Quidditch',
         };
-          setMatch(matchDetails);        // Check if detailed results are available for finished matches
-        if (foundMatch.status === 'finished') {
-          const detailedResults = matchResultsService.getMatchResult(foundMatch.id);
-          setHasDetailedResults(detailedResults !== null);
-        } else {
-          setHasDetailedResults(false);
-        }
+        setMatch(matchDetails);
         
         // Load prediction data and ensure mock predictions exist
         predictionsService.addMockPredictionsForMatch(foundMatch.id);
@@ -522,20 +536,26 @@ const MatchDetailPage = () => {
 
       {/* Magical Scoreboard */}
       <section className={styles.magicalScoreboard}>
-        <div className={styles.teamContainer}>
-          <div className={`${styles.teamCard} ${styles.homeTeam}`}>
+        <div className={styles.teamContainer}>          <div className={`${styles.teamCard} ${styles.homeTeam}`}>
             <div className={styles.teamBadge}>Local</div>
             <TeamLogo teamName={match.homeTeam} size="xl" className={styles.teamLogo} />
             <h2 className={styles.teamName}>{match.homeTeam}</h2>
             <div className={styles.teamScore}>{match.homeScore}</div>
+            {detailedMatchResult && match.status === 'finished' && (
+              <div className={styles.scoreBreakdown}>
+                <small>Quaffle: {detailedMatchResult.statistics.quaffleGoals.home * 10}pts</small>
+                {detailedMatchResult.statistics.snitchPoints.home > 0 && (
+                  <small>Snitch: {detailedMatchResult.statistics.snitchPoints.home}pts</small>
+                )}
+              </div>
+            )}
           </div>
 
           <div className={styles.scoreCenter}>
             <div className={styles.vsContainer}>
               <span className={styles.vsText}>VS</span>
               <div className={styles.magicalOrb}></div>
-            </div>
-            <div className={styles.matchStatus}>
+            </div>            <div className={styles.matchStatus}>
               {match.status === 'live' && match.minute && (
                 <div className={styles.liveTimer}>
                   <span className={styles.timerIcon}>⚡</span>
@@ -546,6 +566,11 @@ const MatchDetailPage = () => {
                 <div className={styles.finalIndicator}>
                   <span className={styles.finalIcon}>🏁</span>
                   Final
+                  {detailedMatchResult && (
+                    <div className={styles.detailedIndicator}>
+                      <small>Duración: {detailedMatchResult.matchDuration}min</small>
+                    </div>
+                  )}
                 </div>
               )}
               {match.status === 'upcoming' && (
@@ -555,13 +580,19 @@ const MatchDetailPage = () => {
                 </div>
               )}
             </div>
-          </div>
-
-          <div className={`${styles.teamCard} ${styles.awayTeam}`}>
+          </div>          <div className={`${styles.teamCard} ${styles.awayTeam}`}>
             <div className={styles.teamBadge}>Visitante</div>
             <TeamLogo teamName={match.awayTeam} size="xl" className={styles.teamLogo} />
             <h2 className={styles.teamName}>{match.awayTeam}</h2>
             <div className={styles.teamScore}>{match.awayScore}</div>
+            {detailedMatchResult && match.status === 'finished' && (
+              <div className={styles.scoreBreakdown}>
+                <small>Quaffle: {detailedMatchResult.statistics.quaffleGoals.away * 10}pts</small>
+                {detailedMatchResult.statistics.snitchPoints.away > 0 && (
+                  <small>Snitch: {detailedMatchResult.statistics.snitchPoints.away}pts</small>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -1526,7 +1557,6 @@ const MatchDetailPage = () => {
           </div>
         )}        {activeTab === 'detailed-analysis' && hasDetailedResults && match && (
           <div className={styles.detailedAnalysisTab}>
-            {console.log('Rendering detailed analysis tab for match:', match.id)}
             <MatchResultDetail matchId={match.id} />
           </div>
         )}
