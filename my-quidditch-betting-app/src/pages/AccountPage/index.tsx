@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, Routes, Route, Outlet, useLocation, Navigate } from 'react-router-dom';
+import { Link, Routes, Route, Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
@@ -18,15 +18,6 @@ const BetIcon = () => <span className={styles.icon}>🎯</span>;
 const HistoryIcon = () => <span className={styles.icon}>📊</span>;
 const SettingsIcon = () => <span className={styles.icon}>⚙️</span>;
 const TrophyIcon = () => <span className={styles.icon}>🏆</span>;
-
-// Define types for better TypeScript support
-interface Transaction {
-    id: number;
-    type: 'deposit' | 'withdraw' | 'bet' | 'win';
-    amount: number;
-    date: string;
-    description: string;
-}
 
 // Define sub-components for each account section
 const ProfileSection = () => {
@@ -384,7 +375,7 @@ const ProfileSection = () => {
 };
 
 const WalletSection = () => {
-    const { user, updateUserBalance } = useAuth();
+    const { user, updateUserBalance, getUserTransactions, addTransaction } = useAuth();
     const [showDepositModal, setShowDepositModal] = useState(false);
     const [showWithdrawModal, setShowWithdrawModal] = useState(false);
     const [depositAmount, setDepositAmount] = useState('');
@@ -392,43 +383,22 @@ const WalletSection = () => {
     const [isProcessing, setIsProcessing] = useState(false);
     const [showNotification, setShowNotification] = useState(false);
     const [notificationMessage, setNotificationMessage] = useState('');
-    const [balanceUpdated, setBalanceUpdated] = useState(false);      // Cargar transacciones del localStorage o usar datos por defecto
-    const [transactions, setTransactions] = useState<Transaction[]>(() => {
-        const savedTransactions = localStorage.getItem('userTransactions');
-        if (savedTransactions) {
-            const parsed = JSON.parse(savedTransactions);
-            // Ordenar por fecha descendente (más reciente primero)
-            return parsed.sort((a: Transaction, b: Transaction) => 
-                new Date(b.date).getTime() - new Date(a.date).getTime()
-            );
-        }
-        return [
-            { id: 5, type: 'withdraw', amount: -12, date: '2025-06-22', description: 'Retiro de 12 galeones a Gringotts' },
-            { id: 4, type: 'withdraw', amount: -200, date: '2025-06-17', description: 'Retiro a cuenta Gringotts' },
-            { id: 3, type: 'bet', amount: -30, date: '2025-06-17', description: 'Apuesta: Hufflepuff vs Ravenclaw' },
-            { id: 2, type: 'win', amount: 100, date: '2025-06-16', description: 'Ganancia: Gryffindor vs Slytherin' },
-            { id: 1, type: 'bet', amount: -50, date: '2025-06-16', description: 'Apuesta: Gryffindor vs Slytherin' },
-            { id: 0, type: 'deposit', amount: 500, date: '2025-06-15', description: 'Depósito inicial' }
-        ];
-    });    // Guardar transacciones en localStorage cuando cambien
-    const saveTransactions = (newTransactions: Transaction[]) => {
-        // Ordenar por fecha descendente (más reciente primero) y por ID si las fechas son iguales
-        const sortedTransactions = newTransactions.sort((a, b) => {
-            const dateA = new Date(a.date).getTime();
-            const dateB = new Date(b.date).getTime();
-            
-            // Si las fechas son diferentes, ordenar por fecha descendente
-            if (dateA !== dateB) {
-                return dateB - dateA;
-            }
-            
-            // Si las fechas son iguales, ordenar por ID descendente (más reciente primero)
-            return b.id - a.id;
-        });
+    const [balanceUpdated, setBalanceUpdated] = useState(false);
+
+    // Obtener transacciones del contexto, ordenadas por fecha descendente
+    const transactions = getUserTransactions().sort((a, b) => {
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
         
-        setTransactions(sortedTransactions);
-        localStorage.setItem('userTransactions', JSON.stringify(sortedTransactions));
-    };const showSuccessNotification = (message: string) => {
+        // Si las fechas son diferentes, ordenar por fecha descendente
+        if (dateA !== dateB) {
+            return dateB - dateA;
+        }
+        
+        // Si las fechas son iguales, ordenar por ID descendente (más reciente primero)
+        return b.id - a.id;    });
+
+    const showSuccessNotification = (message: string) => {
         setNotificationMessage(message);
         setShowNotification(true);
         setBalanceUpdated(true);
@@ -436,32 +406,25 @@ const WalletSection = () => {
         setTimeout(() => setBalanceUpdated(false), 600);
     };
 
-    const handleDeposit = async () => {
-        if (depositAmount && Number(depositAmount) > 0) {
+    const handleDeposit = async () => {        if (depositAmount && Number(depositAmount) > 0) {
             setIsProcessing(true);
             
             // Simular delay de procesamiento
             await new Promise(resolve => setTimeout(resolve, 1500));
             
             const amount = Number(depositAmount);
-            const currentDate = new Date().toISOString().split('T')[0];
             
-            // Crear nueva transacción
-            const newTransaction = {
-                id: Date.now(), // Usar timestamp para ID único
-                type: 'deposit' as const,
-                amount: amount,
-                date: currentDate,
-                description: `Depósito de ${amount} galeones`
-            };
-              // Actualizar balance del usuario
+            // Actualizar balance del usuario
             if (updateUserBalance && user) {
                 updateUserBalance(user.balance + amount);
             }
             
-            // Agregar transacción al historial
-            const updatedTransactions = [...transactions, newTransaction];
-            saveTransactions(updatedTransactions);
+            // Agregar transacción al historial usando el contexto
+            addTransaction({
+                type: 'deposit',
+                amount: amount,
+                description: `Depósito de ${amount} galeones`
+            });
             
             setShowDepositModal(false);
             setDepositAmount('');
@@ -481,30 +444,22 @@ const WalletSection = () => {
                 alert('🚫 ¡No tienes suficientes galeones para este retiro!');
                 return;
             }
-            
-            setIsProcessing(true);
+              setIsProcessing(true);
             
             // Simular delay de procesamiento
             await new Promise(resolve => setTimeout(resolve, 1500));
             
-            const currentDate = new Date().toISOString().split('T')[0];
-            
-            // Crear nueva transacción
-            const newTransaction = {
-                id: Date.now(), // Usar timestamp para ID único
-                type: 'withdraw' as const,
-                amount: -amount,
-                date: currentDate,
-                description: `Retiro de ${amount} galeones a Gringotts`
-            };
-              // Actualizar balance del usuario
+            // Actualizar balance del usuario
             if (updateUserBalance && user) {
                 updateUserBalance(user.balance - amount);
             }
             
-            // Agregar transacción al historial
-            const updatedTransactions = [...transactions, newTransaction];
-            saveTransactions(updatedTransactions);
+            // Agregar transacción al historial usando el contexto
+            addTransaction({
+                type: 'withdraw',
+                amount: -amount,
+                description: `Retiro de ${amount} galeones a Gringotts`
+            });
             
             setShowWithdrawModal(false);
             setWithdrawAmount('');
@@ -675,65 +630,13 @@ const WalletSection = () => {
 };
 
 const BetsSection = () => {
-    const [activeTab, setActiveTab] = useState<'active' | 'history'>('active');
-
-    const activeBets = [
-        {
-            id: 1,
-            match: 'Gryffindor vs Slytherin',
-            date: '2025-06-20',
-            time: '15:00',
-            option: 'Gryffindor Victoria',
-            amount: 50,
-            odds: 2.1,
-            potentialWin: 105,
-            status: 'active'
-        },
-        {
-            id: 2,
-            match: 'Hufflepuff vs Ravenclaw',
-            date: '2025-06-21',
-            time: '18:00',
-            option: 'Más de 150 puntos',
-            amount: 30,
-            odds: 1.8,
-            potentialWin: 54,
-            status: 'active'
-        }
-    ];
-
-    const betHistory = [
-        {
-            id: 3,
-            match: 'Chudley Cannons vs Holyhead Harpies',
-            date: '2025-06-15',
-            option: 'Holyhead Harpies Victoria',
-            amount: 25,
-            odds: 1.5,
-            result: 'win',
-            payout: 37.5
-        },
-        {
-            id: 4,
-            match: 'Gryffindor vs Hufflepuff',
-            date: '2025-06-12',
-            option: 'Empate',
-            amount: 40,
-            odds: 3.2,
-            result: 'loss',
-            payout: 0
-        },
-        {
-            id: 5,
-            match: 'Ravenclaw vs Slytherin',
-            date: '2025-06-10',
-            option: 'Ravenclaw Victoria',
-            amount: 60,
-            odds: 1.9,
-            result: 'win',
-            payout: 114
-        }
-    ];
+    const { getUserBets } = useAuth();
+    const [activeTab, setActiveTab] = useState<'active' | 'history'>('active');    // Get user bets from AuthContext
+    const allUserBets = getUserBets();
+    
+    // Separate active and historical bets
+    const activeBets = allUserBets.filter(bet => bet.status === 'active');
+    const betHistory = allUserBets.filter(bet => bet.status !== 'active');
 
     return (
         <div className={styles.sectionContent}>
@@ -757,34 +660,45 @@ const BetsSection = () => {
                 </button>
             </div>            {activeTab === 'active' && (
                 <div className={styles.betsContainer}>
-                    {activeBets.length > 0 ? (
-                        activeBets.map((bet) => (
+                    {activeBets.length > 0 ? (                        activeBets.map((bet) => (
                             <div key={bet.id} className={`${styles.betCard} ${styles.active}`}>
                                 <div className={styles.betHeader}>
-                                    <h3 className={styles.betMatch}>{bet.match}</h3>
+                                    <h3 className={styles.betMatch}>{bet.matchName}</h3>
                                     <span className={`${styles.betStatus} ${styles.active}`}>
                                         Activa
                                     </span>
                                 </div>
                                 <div className={styles.betDetails}>
                                     <div className={styles.betDetail}>
-                                        <p className={styles.betDetailLabel}>Fecha y Hora</p>
-                                        <p className={styles.betDetailValue}>{bet.date} - {bet.time}</p>
+                                        <p className={styles.betDetailLabel}>Fecha de Apuesta</p>
+                                        <p className={styles.betDetailValue}>{new Date(bet.date).toLocaleDateString('es-ES')}</p>
                                     </div>
                                     <div className={styles.betDetail}>
-                                        <p className={styles.betDetailLabel}>Tu Predicción</p>
-                                        <p className={styles.betDetailValue}>{bet.option}</p>
+                                        <p className={styles.betDetailLabel}>Tipo de Apuesta</p>
+                                        <p className={styles.betDetailValue}>
+                                            {bet.options.length === 1 ? 'Simple' : `Combinada (${bet.options.length})`}
+                                        </p>
                                     </div>
                                     <div className={styles.betDetail}>
                                         <p className={styles.betDetailLabel}>Apuesta</p>
-                                        <p className={styles.betDetailValue}>{bet.amount} G (x{bet.odds})</p>
+                                        <p className={styles.betDetailValue}>{bet.amount} G (x{bet.combinedOdds.toFixed(2)})</p>
                                     </div>
                                 </div>
                                 <div className={styles.potentialWin}>
                                     <p className={styles.potentialWinText}>
                                         💰 Ganancia potencial
                                     </p>
-                                    <p className={styles.potentialWinAmount}>{bet.potentialWin} Galeones</p>
+                                    <p className={styles.potentialWinAmount}>{bet.potentialWin.toFixed(2)} Galeones</p>
+                                </div>
+                                {/* Show bet options details */}
+                                <div className={styles.betOptionsDetails}>
+                                    <h4 className={styles.betOptionsTitle}>Detalles de las Apuestas:</h4>
+                                    {bet.options.map((option) => (
+                                        <div key={option.id} className={styles.betOptionItem}>
+                                            <span className={styles.betOptionText}>{option.description}</span>
+                                            <span className={styles.betOptionOdds}>x{option.odds}</span>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         ))
@@ -803,37 +717,60 @@ const BetsSection = () => {
                 </div>
             )}            {activeTab === 'history' && (
                 <div className={styles.betsContainer}>
-                    {betHistory.map((bet) => (
-                        <div key={bet.id} className={`${styles.betCard} ${styles[bet.result]}`}>
-                            <div className={styles.betHeader}>
-                                <h3 className={styles.betMatch}>{bet.match}</h3>
-                                <span className={`${styles.betStatus} ${styles[bet.result]}`}>
-                                    {bet.result === 'win' ? '🎉 Ganada' : '😞 Perdida'}
-                                </span>
+                    {betHistory.length > 0 ? (
+                        betHistory.map((bet) => (
+                            <div key={bet.id} className={`${styles.betCard} ${styles[bet.status]}`}>
+                                <div className={styles.betHeader}>
+                                    <h3 className={styles.betMatch}>{bet.matchName}</h3>
+                                    <span className={`${styles.betStatus} ${styles[bet.status]}`}>
+                                        {bet.status === 'won' ? '🎉 Ganada' : bet.status === 'lost' ? '😞 Perdida' : 'Pendiente'}
+                                    </span>
+                                </div>
+                                <div className={styles.betDetails}>
+                                    <div className={styles.betDetail}>
+                                        <p className={styles.betDetailLabel}>Fecha</p>
+                                        <p className={styles.betDetailValue}>{new Date(bet.date).toLocaleDateString('es-ES')}</p>
+                                    </div>
+                                    <div className={styles.betDetail}>
+                                        <p className={styles.betDetailLabel}>Tipo de Apuesta</p>
+                                        <p className={styles.betDetailValue}>
+                                            {bet.options.length === 1 ? 'Simple' : `Combinada (${bet.options.length})`}
+                                        </p>
+                                    </div>
+                                    <div className={styles.betDetail}>
+                                        <p className={styles.betDetailLabel}>Apuesta</p>
+                                        <p className={styles.betDetailValue}>{bet.amount} G (x{bet.combinedOdds.toFixed(2)})</p>
+                                    </div>
+                                    <div className={styles.betDetail}>
+                                        <p className={styles.betDetailLabel}>Resultado</p>
+                                        <p className={`${styles.betDetailValue} ${
+                                            bet.status === 'won' ? styles.winResult : styles.lossResult
+                                        }`}>
+                                            {bet.status === 'won' ? `+${bet.potentialWin.toFixed(2)} G` : '0 G'}
+                                        </p>
+                                    </div>
+                                </div>
+                                {/* Show bet options details */}
+                                <div className={styles.betOptionsDetails}>
+                                    <h4 className={styles.betOptionsTitle}>Detalles de las Apuestas:</h4>
+                                    {bet.options.map((option) => (
+                                        <div key={option.id} className={styles.betOptionItem}>
+                                            <span className={styles.betOptionText}>{option.description}</span>
+                                            <span className={styles.betOptionOdds}>x{option.odds}</span>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
-                            <div className={styles.betDetails}>
-                                <div className={styles.betDetail}>
-                                    <p className={styles.betDetailLabel}>Fecha</p>
-                                    <p className={styles.betDetailValue}>{bet.date}</p>
-                                </div>
-                                <div className={styles.betDetail}>
-                                    <p className={styles.betDetailLabel}>Predicción</p>
-                                    <p className={styles.betDetailValue}>{bet.option}</p>
-                                </div>
-                                <div className={styles.betDetail}>
-                                    <p className={styles.betDetailLabel}>Apuesta</p>
-                                    <p className={styles.betDetailValue}>{bet.amount} G (x{bet.odds})</p>
-                                </div>
-                                <div className={styles.betDetail}>
-                                    <p className={styles.betDetailLabel}>Resultado</p>                                    <p className={`${styles.betDetailValue} ${
-                                        bet.result === 'win' ? styles.winResult : styles.lossResult
-                                    }`}>
-                                        {bet.result === 'win' ? `+${bet.payout} G` : '0 G'}
-                                    </p>
-                                </div>
-                            </div>
+                        ))
+                    ) : (
+                        <div className={styles.emptyState}>
+                            <div className={styles.emptyStateIcon}>📊</div>
+                            <div className={styles.emptyStateTitle}>No tienes historial de apuestas</div>
+                            <p className={styles.emptyStateDescription}>
+                                Cuando realices apuestas, aparecerán aquí una vez finalizadas
+                            </p>
                         </div>
-                    ))}
+                    )}
                 </div>
             )}
         </div>
@@ -929,7 +866,6 @@ const SettingsSection = () => {
 
 const AccountPage = () => {
   const { user, logout } = useAuth();
-  const location = useLocation();
 
   if (!user) {
     return (
@@ -961,7 +897,6 @@ const AccountPage = () => {
 
 // Admin Account Interface
 const AdminAccountPage = ({ user, logout }: { user: any; logout: () => void }) => {
-  const location = useLocation();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const handleLogoutClick = () => {
@@ -1091,7 +1026,6 @@ const AdminAccountPage = ({ user, logout }: { user: any; logout: () => void }) =
 
 // Regular User Account Interface
 const RegularAccountPage = ({ user, logout }: { user: any; logout: () => void }) => {
-  const location = useLocation();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const handleLogoutClick = () => {

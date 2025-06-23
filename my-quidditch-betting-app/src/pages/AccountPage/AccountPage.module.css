@@ -1617,80 +1617,57 @@
   text-shadow: 0 1px 2px rgba(239, 68, 68, 0.3);
 }
 
-/* ===== APUESTAS - Diseño de tabs y tarjetas mejorado ===== */
+/* ===== BETS SECTION ===== */
+.betsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
 .betTabs {
   display: flex;
-  gap: var(--spacing-3);
-  margin-bottom: var(--spacing-8);
-  background: rgba(255, 255, 255, 0.5);
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-6);
+  background: rgba(255, 255, 255, 0.7);
   padding: var(--spacing-2);
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(75, 0, 130, 0.1);
+  border: 1px solid rgba(106, 90, 205, 0.2);
 }
 
 .betTab {
   flex: 1;
-  padding: var(--spacing-4) var(--spacing-5);
-  border: 2px solid transparent;
-  border-radius: var(--radius-md);
+  padding: var(--spacing-3) var(--spacing-4);
+  border: none;
   background: transparent;
-  color: var(--color-gray-600);
+  border-radius: var(--radius-md);
   font-weight: 600;
-  font-size: var(--text-base);
+  color: var(--color-gray-600);
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  text-align: center;
-  position: relative;
-  overflow: hidden;
+  transition: all 0.3s ease;
 }
 
-.betTab::before {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  width: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
-  transition: all 0.3s ease;
-  transform: translateX(-50%);
+.betTab:hover {
+  background: rgba(106, 90, 205, 0.1);
+  color: var(--color-primary);
 }
 
 .betTab.active {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+  background: var(--color-primary);
   color: white;
-  border-color: var(--color-primary);
-  box-shadow: 
-    0 8px 20px rgba(75, 0, 130, 0.25),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  transform: scale(1.02);
-}
-
-.betTab.active::before {
-  width: 100%;
-}
-
-.betTab:not(.active):hover {
-  background: rgba(75, 0, 130, 0.08);
-  color: var(--color-primary);
-  border-color: rgba(75, 0, 130, 0.2);
-  transform: translateY(-2px);
-}
-
-.betTab:not(.active):hover::before {
-  width: 50%;
+  box-shadow: 0 4px 12px rgba(106, 90, 205, 0.3);
 }
 
 .betCard {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: var(--radius-xl);
   padding: var(--spacing-6);
-  margin-bottom: var(--spacing-5);
-  border-left: 6px solid transparent;
-  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow: 
+    0 10px 25px rgba(0, 0, 0, 0.08),
+    0 4px 12px rgba(106, 90, 205, 0.12);
+  border: 1px solid rgba(106, 90, 205, 0.1);
+  transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .betCard::before {
@@ -1699,104 +1676,104 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  height: 4px;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
 }
 
 .betCard:hover::before {
-  opacity: 1;
+  height: 6px;
 }
 
 .betCard:hover {
-  transform: translateX(10px) scale(1.01);
+  transform: translateY(-2px);
   box-shadow: 
-    0 12px 30px rgba(0, 0, 0, 0.1),
-    0 6px 20px rgba(0, 0, 0, 0.06);
+    0 15px 35px rgba(0, 0, 0, 0.12),
+    0 8px 20px rgba(106, 90, 205, 0.18);
 }
 
 .betCard.active {
-  border-left-color: #3b82f6;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, rgba(147, 51, 234, 0.03) 100%);
-  box-shadow: 0 6px 18px rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.betCard.active::before {
+  background: linear-gradient(90deg, #3b82f6, #1d4ed8);
 }
 
 .betCard.won {
-  border-left-color: #10b981;
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.03) 0%, rgba(22, 163, 74, 0.03) 100%);
-  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.betCard.won::before {
+  background: linear-gradient(90deg, #10b981, #059669);
 }
 
 .betCard.lost {
-  border-left-color: #ef4444;
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.03) 0%, rgba(220, 38, 38, 0.03) 100%);
-  box-shadow: 0 6px 18px rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.betCard.lost::before {
+  background: linear-gradient(90deg, #ef4444, #dc2626);
 }
 
 .betHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--spacing-5);
-  flex-wrap: wrap;
-  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-4);
 }
 
 .betMatch {
   font-family: var(--font-primary);
-  font-size: var(--text-xl);
+  font-size: var(--text-lg);
   font-weight: 700;
   color: var(--color-primary);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  margin: 0;
 }
 
 .betStatus {
-  padding: var(--spacing-2) var(--spacing-4);
+  padding: var(--spacing-2) var(--spacing-3);
   border-radius: var(--radius-full);
-  font-size: var(--text-xs);
-  font-weight: 700;
+  font-size: var(--text-sm);
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
-  border: 2px solid transparent;
-  transition: all 0.3s ease;
+  letter-spacing: 0.5px;
 }
 
 .betStatus.active {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%);
-  color: #3b82f6;
-  border-color: rgba(59, 130, 246, 0.2);
+  background: rgba(59, 130, 246, 0.1);
+  color: #1d4ed8;
+  border: 1px solid rgba(59, 130, 246, 0.2);
 }
 
 .betStatus.won {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(22, 163, 74, 0.1) 100%);
-  color: #10b981;
-  border-color: rgba(16, 185, 129, 0.2);
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.2);
 }
 
 .betStatus.lost {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.1) 100%);
-  color: #ef4444;
-  border-color: rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
 .betDetails {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: var(--spacing-5);
-  margin-bottom: var(--spacing-5);
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-4);
 }
 
 .betDetail {
-  text-align: center;
+  background: rgba(106, 90, 205, 0.05);
   padding: var(--spacing-3);
-  background: rgba(248, 250, 252, 0.8);
   border-radius: var(--radius-md);
+  border: 1px solid rgba(106, 90, 205, 0.1);
   transition: all 0.3s ease;
 }
 
 .betDetail:hover {
-  background: rgba(248, 250, 252, 1);
+  background: rgba(106, 90, 205, 0.08);
   transform: translateY(-2px);
 }
 
@@ -1813,6 +1790,14 @@
   font-weight: 700;
   color: var(--color-gray-800);
   font-size: var(--text-base);
+}
+
+.winResult {
+  color: #10b981 !important;
+}
+
+.lossResult {
+  color: #ef4444 !important;
 }
 
 .potentialWin {
@@ -1848,6 +1833,54 @@
   font-weight: 800;
   color: #92400e;
   text-shadow: 0 1px 2px rgba(146, 64, 14, 0.3);
+}
+
+/* ===== BET OPTIONS DETAILS ===== */
+.betOptionsDetails {
+  margin-top: var(--spacing-4);
+  padding: var(--spacing-3);
+  background: rgba(106, 90, 205, 0.05);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(106, 90, 205, 0.1);
+}
+
+.betOptionsTitle {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.betOptionItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-2) 0;
+  border-bottom: 1px solid rgba(106, 90, 205, 0.1);
+}
+
+.betOptionItem:last-child {
+  border-bottom: none;
+}
+
+.betOptionText {
+  font-size: var(--text-sm);
+  color: var(--color-gray-700);
+  font-weight: 500;
+  flex: 1;
+}
+
+.betOptionOdds {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-primary);
+  background: rgba(106, 90, 205, 0.1);
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--radius-sm);
+  min-width: 60px;
+  text-align: center;
 }
 
 /* ===== MODAL - Diseño elegante mejorado ===== */
