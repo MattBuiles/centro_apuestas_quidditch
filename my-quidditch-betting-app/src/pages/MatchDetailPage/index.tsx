@@ -257,12 +257,12 @@ const MatchDetailPage = () => {
           time: new Date(foundMatch.fecha).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
           location: foundMatch.venue || 'Campo de Quidditch',
         };
-          setMatch(matchDetails);
-        
-        // Check if detailed results are available for finished matches
+          setMatch(matchDetails);        // Check if detailed results are available for finished matches
         if (foundMatch.status === 'finished') {
           const detailedResults = matchResultsService.getMatchResult(foundMatch.id);
           setHasDetailedResults(detailedResults !== null);
+        } else {
+          setHasDetailedResults(false);
         }
         
         // Load prediction data and ensure mock predictions exist
@@ -385,8 +385,36 @@ const MatchDetailPage = () => {
   };  const canBet = () => {
     return userCanBet && match && (match.status === 'upcoming' || match.status === 'live');
   };
+
+  // Generate tabs dynamically based on match status
+  const getTabsForMatch = (): TabConfig[] => {
+    const baseTabs = [...tabs];
+    
+    // For finished matches, change 'Cronología' to 'Resumen' and move 'detailed-analysis' after it
+    if (match?.status === 'finished') {
+      const overviewTabIndex = baseTabs.findIndex(tab => tab.id === 'overview');
+      const detailedAnalysisTabIndex = baseTabs.findIndex(tab => tab.id === 'detailed-analysis');
+      
+      if (overviewTabIndex !== -1) {
+        baseTabs[overviewTabIndex] = {
+          ...baseTabs[overviewTabIndex],
+          label: 'Resumen',
+          description: 'Resumen del encuentro finalizado'
+        };
+      }
+      
+      // Move detailed-analysis tab to position after overview (resumen)
+      if (detailedAnalysisTabIndex !== -1 && overviewTabIndex !== -1) {
+        const detailedTab = baseTabs.splice(detailedAnalysisTabIndex, 1)[0];
+        baseTabs.splice(overviewTabIndex + 1, 0, detailedTab);
+      }
+    }
+    
+    return baseTabs;
+  };
+
   // Get available tabs based on match status and user permissions
-  const availableTabs = tabs.filter(tab => {
+  const availableTabs = getTabsForMatch().filter(tab => {
     if (tab.id === 'betting' && !canBet()) return false;
     if (tab.id === 'detailed-analysis' && (!hasDetailedResults || match?.status !== 'finished')) return false;
     return true;
@@ -703,47 +731,49 @@ const MatchDetailPage = () => {
                             <p>✨ Finalizado el: <strong>{new Date(finishedMatchData.finishedAt).toLocaleString('es-ES')}</strong></p>
                           </div>
                         </div>
-                      )}
-                    </div>
+                      )}                    </div>
                     
-                    <div className={styles.timelineHistoryCard}>
-                      <h4>Cronología del Partido</h4>
-                      <div className={styles.timelineHistory}>
-                        {finishedMatchData && finishedMatchData.timeline ? (
-                          finishedMatchData.timeline.map((event, index) => (
-                            <div key={index} className={styles.timelineEvent}>
-                              <span className={styles.eventTime}>{event.minute}'</span>
-                              <span className={styles.eventDescription}>{event.event}</span>
-                              {event.score && (
-                                <span className={styles.eventScore}>
-                                  {event.score.home} - {event.score.away}
+                    {/* Show detailed timeline only for non-finished matches */}
+                    {match.status !== 'finished' && (
+                      <div className={styles.timelineHistoryCard}>
+                        <h4>Cronología del Partido</h4>
+                        <div className={styles.timelineHistory}>
+                          {finishedMatchData && finishedMatchData.timeline ? (
+                            finishedMatchData.timeline.map((event, index) => (
+                              <div key={index} className={styles.timelineEvent}>
+                                <span className={styles.eventTime}>{event.minute}'</span>
+                                <span className={styles.eventDescription}>{event.event}</span>
+                                {event.score && (
+                                  <span className={styles.eventScore}>
+                                    {event.score.home} - {event.score.away}
+                                  </span>
+                                )}
+                              </div>
+                            ))
+                          ) : (
+                            <>
+                              <div className={styles.timelineEvent}>
+                                <span className={styles.eventTime}>0'</span>
+                                <span className={styles.eventDescription}>🏃‍♂️ Inicio del duelo mágico</span>
+                              </div>
+                              <div className={styles.timelineEvent}>
+                                <span className={styles.eventTime}>Final</span>
+                                <span className={styles.eventDescription}>
+                                  🟡 Snitch capturada - {match.homeScore > match.awayScore ? match.homeTeam : match.awayTeam} obtiene la victoria
                                 </span>
-                              )}
-                            </div>
-                          ))
-                        ) : (
-                          <>
-                            <div className={styles.timelineEvent}>
-                              <span className={styles.eventTime}>0'</span>
-                              <span className={styles.eventDescription}>🏃‍♂️ Inicio del duelo mágico</span>
-                            </div>
-                            <div className={styles.timelineEvent}>
-                              <span className={styles.eventTime}>Final</span>
-                              <span className={styles.eventDescription}>
-                                🟡 Snitch capturada - {match.homeScore > match.awayScore ? match.homeTeam : match.awayTeam} obtiene la victoria
-                              </span>
-                            </div>
-                          </>
-                        )}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                        <div className={styles.timelineNote}>
+                          <small>
+                            {finishedMatchData ? 
+                              '✨ Cronología completa guardada del partido simulado' : 
+                              '💡 La cronología detallada estará disponible en futuras simulaciones'}
+                          </small>
+                        </div>
                       </div>
-                      <div className={styles.timelineNote}>
-                        <small>
-                          {finishedMatchData ? 
-                            '✨ Cronología completa guardada del partido simulado' : 
-                            '💡 La cronología detallada estará disponible en futuras simulaciones'}
-                        </small>
-                      </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -1494,11 +1524,19 @@ const MatchDetailPage = () => {
               </div>
             </div>
           </div>
+        )}        {activeTab === 'detailed-analysis' && hasDetailedResults && match && (
+          <div className={styles.detailedAnalysisTab}>
+            {console.log('Rendering detailed analysis tab for match:', match.id)}
+            <MatchResultDetail matchId={match.id} />
+          </div>
         )}
 
-        {activeTab === 'detailed-analysis' && hasDetailedResults && match && (
+        {activeTab === 'detailed-analysis' && !hasDetailedResults && (
           <div className={styles.detailedAnalysisTab}>
-            <MatchResultDetail matchId={match.id} />
+            <div style={{ padding: '2rem', textAlign: 'center' }}>
+              <h3>No hay análisis detallado disponible</h3>
+              <p>Este partido no tiene resultados detallados guardados. Los análisis detallados están disponibles para partidos simulados.</p>
+            </div>
           </div>
         )}
       </main>
