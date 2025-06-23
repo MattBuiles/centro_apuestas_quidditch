@@ -8,7 +8,7 @@ const EVENT_PROBABILITIES: EventProbability[] = [
     attackModifier: 1.2,
     defenseModifier: 0.8,
     points: 10,
-    description: 'Quaffle thrown through the goal hoops!'
+    description: '¡Quaffle lanzada a través de los aros de gol!'
   },
   {
     type: 'QUAFFLE_ATTEMPT',
@@ -16,7 +16,7 @@ const EVENT_PROBABILITIES: EventProbability[] = [
     attackModifier: 1.1,
     defenseModifier: 0.9,
     points: 0,
-    description: 'Quaffle shot attempted'
+    description: 'Intento de tiro con la Quaffle'
   },
   {
     type: 'QUAFFLE_SAVE',
@@ -24,7 +24,7 @@ const EVENT_PROBABILITIES: EventProbability[] = [
     attackModifier: 0.8,
     defenseModifier: 1.3,
     points: 0,
-    description: 'Keeper makes a spectacular save!'
+    description: '¡El guardián hace una parada espectacular!'
   },
   {
     type: 'SNITCH_SPOTTED',
@@ -32,7 +32,7 @@ const EVENT_PROBABILITIES: EventProbability[] = [
     attackModifier: 1.0,
     defenseModifier: 1.0,
     points: 0,
-    description: 'The Golden Snitch has been spotted!'
+    description: '¡La Snitch Dorada ha sido avistada!'
   },
   {
     type: 'SNITCH_CAUGHT',
@@ -41,15 +41,14 @@ const EVENT_PROBABILITIES: EventProbability[] = [
     defenseModifier: 1.0,
     points: 150,
     endsMatch: true,
-    description: 'The Golden Snitch has been caught!'
-  },
-  {
+    description: '¡La Snitch Dorada ha sido capturada!'
+  },  {
     type: 'BLUDGER_HIT',
     baseProb: 0.08, // 8% chance per minute
     attackModifier: 0.9,
     defenseModifier: 1.1,
     points: 0,
-    description: 'Player hit by a Bludger!'
+    description: '¡Jugador golpeado por una Bludger!'
   },
   {
     type: 'BLUDGER_BLOCKED',
@@ -57,7 +56,7 @@ const EVENT_PROBABILITIES: EventProbability[] = [
     attackModifier: 1.1,
     defenseModifier: 0.9,
     points: 0,
-    description: 'Beater deflects the Bludger!'
+    description: '¡Golpeador desvía la Bludger!'
   },
   {
     type: 'FOUL_BLAGGING',
@@ -65,7 +64,7 @@ const EVENT_PROBABILITIES: EventProbability[] = [
     attackModifier: 1.0,
     defenseModifier: 1.0,
     points: 0,
-    description: 'Foul: Blagging - Grabbing opponent\'s broom tail'
+    description: 'Falta: Blagging - Agarrar la cola de la escoba del oponente'
   },
   {
     type: 'FOUL_COBBING',
@@ -73,7 +72,7 @@ const EVENT_PROBABILITIES: EventProbability[] = [
     attackModifier: 1.0,
     defenseModifier: 1.0,
     points: 0,
-    description: 'Foul: Cobbing - Excessive use of elbows'
+    description: 'Falta: Cobbing - Uso excesivo de codos'
   },
   {
     type: 'TIMEOUT',
@@ -81,7 +80,7 @@ const EVENT_PROBABILITIES: EventProbability[] = [
     attackModifier: 1.0,
     defenseModifier: 1.0,
     points: 0,
-    description: 'Team timeout called'
+    description: 'Tiempo muerto solicitado por el equipo'
   }
 ];
 
