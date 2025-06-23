@@ -962,6 +962,20 @@ const AccountPage = () => {
 // Admin Account Interface
 const AdminAccountPage = ({ user, logout }: { user: any; logout: () => void }) => {
   const location = useLocation();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
+
+  const handleConfirmLogout = () => {
+    setShowLogoutModal(false);
+    logout();
+  };
+
+  const handleCancelLogout = () => {
+    setShowLogoutModal(false);
+  };
   
   const getActiveTab = () => {
     const path = location.pathname;
@@ -1003,14 +1017,13 @@ const AdminAccountPage = ({ user, logout }: { user: any; logout: () => void }) =
               <img src={user.avatar || userLogoSrc} alt="Administrator" />
             </div>
             <h3 className={styles.userName}>👑 {user.username}</h3>
-            <p className={styles.userEmail}>{user.email}</p>
-            <div className={styles.adminBadge}>
+            <p className={styles.userEmail}>{user.email}</p>            <div className={styles.adminBadge}>
               🛡️ Administrador
             </div>
             <Button 
               variant="outline" 
               size="sm" 
-              onClick={logout} 
+              onClick={handleLogoutClick} 
               fullWidth
               className="border-red-300 text-red-600 hover:bg-red-50"
             >
@@ -1039,12 +1052,39 @@ const AdminAccountPage = ({ user, logout }: { user: any; logout: () => void }) =
           <Routes>
             <Route index element={<AdminDashboard />} />
             <Route path="bets-history" element={<AdminBetsHistory />} />
-            <Route path="users-management" element={<AdminUsersManagement />} />
-            <Route path="*" element={<Navigate to="/account" replace />} />
+            <Route path="users-management" element={<AdminUsersManagement />} />            <Route path="*" element={<Navigate to="/account" replace />} />
           </Routes>
           <Outlet />
         </main>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div className={styles.modal}>
+          <div className={styles.modalContent}>
+            <h3 className={styles.modalTitle}>
+              🚪 ¿Seguro que quieres cerrar sesión?
+            </h3>
+            <div className={styles.modalButtons}>
+              <Button
+                variant="outline"
+                onClick={handleCancelLogout}
+                size="sm"
+              >
+                Cancelar
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleConfirmLogout}
+                size="sm"
+                className="bg-red-600 hover:bg-red-700"
+              >
+                Aceptar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -1052,6 +1092,20 @@ const AdminAccountPage = ({ user, logout }: { user: any; logout: () => void }) =
 // Regular User Account Interface
 const RegularAccountPage = ({ user, logout }: { user: any; logout: () => void }) => {
   const location = useLocation();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
+
+  const handleConfirmLogout = () => {
+    setShowLogoutModal(false);
+    logout();
+  };
+
+  const handleCancelLogout = () => {
+    setShowLogoutModal(false);
+  };
   
   // Determine active tab based on URL, default to profile
   const getActiveTab = () => {
@@ -1084,14 +1138,13 @@ const RegularAccountPage = ({ user, logout }: { user: any; logout: () => void })
               />
             </div>
             <h3 className={styles.userName}>🧙‍♂️ {user.username}</h3>
-            <p className={styles.userEmail}>{user.email}</p>
-            <div className={styles.userBalance}>
+            <p className={styles.userEmail}>{user.email}</p>            <div className={styles.userBalance}>
               {user.balance} Galeones
             </div>
             <Button 
               variant="outline" 
               size="sm" 
-              onClick={logout} 
+              onClick={handleLogoutClick} 
               fullWidth
               className="border-red-300 text-red-600 hover:bg-red-50"
             >
@@ -1123,10 +1176,37 @@ const RegularAccountPage = ({ user, logout }: { user: any; logout: () => void })
             <Route path="bets" element={<BetsSection />} />
             <Route path="settings" element={<SettingsSection />} />
             <Route path="*" element={<Navigate to="/account" replace />} />
-          </Routes>
-          <Outlet />
+          </Routes>          <Outlet />
         </main>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div className={styles.modal}>
+          <div className={styles.modalContent}>
+            <h3 className={styles.modalTitle}>
+              🚪 ¿Seguro que quieres cerrar sesión?
+            </h3>
+            <div className={styles.modalButtons}>
+              <Button
+                variant="outline"
+                onClick={handleCancelLogout}
+                size="sm"
+              >
+                Cancelar
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleConfirmLogout}
+                size="sm"
+                className="bg-red-600 hover:bg-red-700"
+              >
+                Aceptar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

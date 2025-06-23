@@ -10,7 +10,21 @@ const Header = () => {
   const { isAuthenticated, logout, user } = useAuth()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
   const location = useLocation()
+
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true)
+  }
+
+  const handleConfirmLogout = () => {
+    setShowLogoutModal(false)
+    logout()
+  }
+
+  const handleCancelLogout = () => {
+    setShowLogoutModal(false)
+  }
 
   // Cierra el menú móvil cuando la ruta cambia
   useEffect(() => {
@@ -94,11 +108,10 @@ const Header = () => {
                       />
                     </div>
                   </div>
-                )}
-                <Button 
+                )}                <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={() => logout()}
+                  onClick={handleLogoutClick}
                   className={styles.logoutButton}
                 >
                   Cerrar Sesión
@@ -234,19 +247,45 @@ const Header = () => {
                   </Button>
                 </Link>
               </>
-            ) : (
-              <Button 
+            ) : (              <Button 
                 variant="outline" 
                 fullWidth
-                onClick={() => logout()}
+                onClick={handleLogoutClick}
                 className={styles.mobileLogoutButton}
               >
                 Cerrar Sesión
               </Button>
-            )}
-          </div>
+            )}          </div>
         </div>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div className={styles.modal}>
+          <div className={styles.modalContent}>
+            <h3 className={styles.modalTitle}>
+              🚪 ¿Seguro que quieres cerrar sesión?
+            </h3>
+            <div className={styles.modalButtons}>
+              <Button
+                variant="outline"
+                onClick={handleCancelLogout}
+                size="sm"
+              >
+                Cancelar
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleConfirmLogout}
+                size="sm"
+                className="bg-red-600 hover:bg-red-700"
+              >
+                Aceptar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   )
 }
