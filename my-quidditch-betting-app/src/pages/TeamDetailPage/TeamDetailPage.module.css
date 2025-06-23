@@ -476,130 +476,396 @@
   font-size: 0.8em;
 }
 
-/* Lista de logros */
-.achievementsList {
-  display: grid;
-  gap: clamp(var(--spacing-3), 2vw, var(--spacing-4));
-}
-
-.achievementItem {
+/* ===== ÍDOLOS HISTÓRICOS ===== */
+.idolsList {
   display: flex;
-  align-items: center;
-  gap: clamp(var(--spacing-3), 2vw, var(--spacing-4));
-  padding: clamp(var(--spacing-3), 2vw, var(--spacing-4));
-  background: rgba(255, 204, 0, 0.05);
-  border-radius: clamp(var(--radius-md), 1.5vw, var(--radius-lg));
-  border-left: 4px solid var(--color-secondary);
+  flex-direction: column;
+  gap: clamp(var(--spacing-6), 4vw, var(--spacing-8));
+}
+
+.idolItem {
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid rgba(75, 0, 130, 0.1);
+  border-radius: clamp(var(--radius-md), 2vw, var(--radius-lg));
+  padding: clamp(var(--spacing-4), 3vw, var(--spacing-6));
   transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
 
-.achievementItem:hover {
-  background: rgba(255, 204, 0, 0.1);
-  transform: translateX(4px);
-  box-shadow: 0 4px 12px rgba(255, 204, 0, 0.2);
+.idolItem::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(135deg, var(--color-accent), var(--color-primary));
+  border-radius: inherit;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
-.achievementIcon {
+.idolItem:hover::before {
+  opacity: 0.1;
+}
+
+.idolItem:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 32px rgba(75, 0, 130, 0.15);
+}
+
+.idolHeader {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(var(--spacing-3), 2vw, var(--spacing-4));
+  margin-bottom: clamp(var(--spacing-4), 3vw, var(--spacing-5));
+}
+
+.idolBasicInfo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: clamp(var(--spacing-2), 2vw, var(--spacing-3));
+}
+
+.idolName {
+  font-family: var(--font-primary);
   font-size: clamp(var(--text-lg), 4vw, var(--text-xl));
-  flex-shrink: 0;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 0;
+  text-shadow: 0 1px 2px rgba(75, 0, 130, 0.1);
 }
 
-.achievementText {
-  font-family: var(--font-body);
-  font-size: clamp(var(--text-base), 3vw, var(--text-lg));
-  color: var(--color-gray-700);
+.idolPosition {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  color: white;
+  padding: clamp(var(--spacing-1), 1vw, var(--spacing-2)) clamp(var(--spacing-2), 2vw, var(--spacing-3));
+  border-radius: var(--radius-sm);
+  font-size: clamp(var(--text-xs), 2.5vw, var(--text-sm));
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.idolPeriod {
+  font-size: clamp(var(--text-sm), 3vw, var(--text-base));
+  color: var(--color-text-secondary);
   font-weight: 500;
+}
+
+.idolStats {
+  background: rgba(75, 0, 130, 0.05);
+  padding: clamp(var(--spacing-3), 2vw, var(--spacing-4));
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(75, 0, 130, 0.1);
+}
+
+.idolStatsLabel {
+  display: block;
+  font-size: clamp(var(--text-xs), 2.5vw, var(--text-sm));
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-1);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.idolStatsValue {
+  font-family: var(--font-primary);
+  font-size: clamp(var(--text-sm), 3vw, var(--text-base));
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+.idolDescription {
+  font-size: clamp(var(--text-sm), 3vw, var(--text-base));
+  line-height: 1.6;
+  color: var(--color-text-primary);
+  margin: 0 0 clamp(var(--spacing-4), 3vw, var(--spacing-5)) 0;
+  font-style: italic;
+}
+
+.idolAchievements {
+  background: rgba(255, 204, 0, 0.05);
+  padding: clamp(var(--spacing-3), 2vw, var(--spacing-4));
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 204, 0, 0.2);
+}
+
+.idolAchievementsTitle {
+  font-size: clamp(var(--text-sm), 3vw, var(--text-base));
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 0 0 clamp(var(--spacing-2), 2vw, var(--spacing-3)) 0;
+}
+
+.idolAchievementsList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(var(--spacing-1), 1vw, var(--spacing-2));
+}
+
+.idolAchievementItem {
+  position: relative;
+  padding-left: clamp(var(--spacing-4), 3vw, var(--spacing-5));
+  font-size: clamp(var(--text-sm), 3vw, var(--text-base));
+  color: var(--color-text-primary);
   line-height: 1.5;
 }
 
-/* Lista de partidos */
-.matchesList {
-  display: grid;
-  gap: clamp(var(--spacing-3), 2vw, var(--spacing-4));
+.idolAchievementItem::before {
+  content: '⭐';
+  position: absolute;
+  left: 0;
+  color: var(--color-accent);
+  font-size: 1em;
 }
 
-.matchItem {
-  padding: clamp(var(--spacing-4), 3vw, var(--spacing-5));
-  background: rgba(255, 255, 255, 0.7);
-  border-radius: clamp(var(--radius-md), 1.5vw, var(--radius-lg));
-  border: 1px solid rgba(75, 0, 130, 0.1);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
-}
-
-.matchItem:hover {
-  background: rgba(255, 255, 255, 0.9);
-  border-color: rgba(75, 0, 130, 0.2);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-}
-
-.matchHeader {
+/* ===== RIVALIDADES ===== */
+.rivalriesList {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--spacing-2);
-  flex-wrap: wrap;
-  gap: var(--spacing-2);
+  flex-direction: column;
+  gap: clamp(var(--spacing-6), 4vw, var(--spacing-8));
 }
 
-.matchOpponent {
-  font-family: var(--font-body);
-  font-size: clamp(var(--text-base), 3vw, var(--text-lg));
+.rivalryItem {
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid rgba(75, 0, 130, 0.1);
+  border-radius: clamp(var(--radius-md), 2vw, var(--radius-lg));
+  padding: clamp(var(--spacing-4), 3vw, var(--spacing-6));
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.rivalryItem::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.rivalryItem:hover::before {
+  transform: scaleX(1);
+}
+
+.rivalryItem:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(75, 0, 130, 0.15);
+}
+
+.rivalryHeader {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(var(--spacing-3), 2vw, var(--spacing-4));
+  margin-bottom: clamp(var(--spacing-4), 3vw, var(--spacing-5));
+}
+
+.rivalryTeamInfo {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(var(--spacing-1), 1vw, var(--spacing-2));
+}
+
+.rivalryOpponent {
+  font-family: var(--font-primary);
+  font-size: clamp(var(--text-lg), 4vw, var(--text-xl));
   font-weight: 700;
   color: var(--color-primary);
+  margin: 0;
+  text-shadow: 0 1px 2px rgba(75, 0, 130, 0.1);
 }
 
-.matchDate {
-  font-family: var(--font-body);
-  font-size: clamp(var(--text-sm), 2.5vw, var(--text-base));
-  color: var(--color-gray-600);
-  font-weight: 500;
+.rivalryRecord {
+  font-size: clamp(var(--text-sm), 3vw, var(--text-base));
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+.rivalryStats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: clamp(var(--spacing-3), 2vw, var(--spacing-4));
   background: rgba(75, 0, 130, 0.05);
-  padding: var(--spacing-1) var(--spacing-3);
-  border-radius: var(--radius-sm);
+  padding: clamp(var(--spacing-3), 2vw, var(--spacing-4));
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(75, 0, 130, 0.1);
 }
 
-.matchDetails {
+.rivalryStatItem {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: var(--spacing-2);
+  gap: var(--spacing-1);
 }
 
-.matchVenue {
-  font-family: var(--font-body);
-  font-size: clamp(var(--text-sm), 2.5vw, var(--text-base));
-  color: var(--color-gray-600);
+.rivalryStatValue {
+  font-family: var(--font-primary);
+  font-size: clamp(var(--text-lg), 4vw, var(--text-xl));
+  font-weight: 900;
+  color: var(--color-primary);
+  text-shadow: 0 1px 2px rgba(75, 0, 130, 0.1);
+}
+
+.rivalryStatLabel {
+  font-size: clamp(var(--text-xs), 2.5vw, var(--text-sm));
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.rivalryLastMatch {
+  background: rgba(255, 255, 255, 0.8);
+  padding: clamp(var(--spacing-3), 2vw, var(--spacing-4));
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(75, 0, 130, 0.1);
+  margin-bottom: clamp(var(--spacing-3), 2vw, var(--spacing-4));
+}
+
+.rivalryLastMatchTitle {
+  font-size: clamp(var(--text-sm), 3vw, var(--text-base));
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 0 0 clamp(var(--spacing-2), 2vw, var(--spacing-3)) 0;
+}
+
+.rivalryLastMatchInfo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(var(--spacing-2), 2vw, var(--spacing-3));
+  align-items: center;
+}
+
+.rivalryLastMatchDate {
+  font-size: clamp(var(--text-sm), 3vw, var(--text-base));
+  color: var(--color-text-secondary);
   font-weight: 500;
 }
 
-/* Estado de no encontrado */
-.notFound {
-  text-align: center;
-  padding: clamp(var(--spacing-8), 6vw, var(--spacing-12));
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: clamp(var(--radius-lg), 2vw, var(--radius-xl));
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+.rivalryLastMatchResult {
+  padding: clamp(var(--spacing-1), 1vw, var(--spacing-2)) clamp(var(--spacing-2), 2vw, var(--spacing-3));
+  border-radius: var(--radius-sm);
+  font-size: clamp(var(--text-xs), 2.5vw, var(--text-sm));
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-.notFound h2 {
+.rivalryLastMatchResult.win {
+  background: rgba(34, 197, 94, 0.1);
+  color: #059669;
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.rivalryLastMatchResult.loss {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.rivalryLastMatchResult.draw {
+  background: rgba(251, 191, 36, 0.1);
+  color: #d97706;
+  border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+.rivalryLastMatchScore {
   font-family: var(--font-primary);
-  font-size: clamp(var(--text-xl), 5vw, var(--text-2xl));
+  font-size: clamp(var(--text-sm), 3vw, var(--text-base));
+  font-weight: 700;
   color: var(--color-primary);
-  margin-bottom: var(--spacing-4);
+  background: rgba(75, 0, 130, 0.05);
+  padding: clamp(var(--spacing-1), 1vw, var(--spacing-2)) clamp(var(--spacing-2), 2vw, var(--spacing-3));
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(75, 0, 130, 0.1);
 }
 
-.notFound p {
-  font-family: var(--font-body);
-  font-size: clamp(var(--text-base), 3vw, var(--text-lg));
-  color: var(--color-gray-600);
-  margin-bottom: var(--spacing-6);
+.rivalryVictories {
+  background: rgba(255, 204, 0, 0.05);
+  padding: clamp(var(--spacing-3), 2vw, var(--spacing-4));
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 204, 0, 0.2);
 }
 
-/* Mejoras responsivas específicas */
+.rivalryVictoriesTitle {
+  font-size: clamp(var(--text-sm), 3vw, var(--text-base));
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 0 0 clamp(var(--spacing-2), 2vw, var(--spacing-3)) 0;
+}
+
+.rivalryVictoriesList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(var(--spacing-1), 1vw, var(--spacing-2));
+}
+
+.rivalryVictoryItem {
+  position: relative;
+  padding-left: clamp(var(--spacing-4), 3vw, var(--spacing-5));
+  font-size: clamp(var(--text-sm), 3vw, var(--text-base));
+  color: var(--color-text-primary);
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.rivalryVictoryItem::before {
+  content: '🏆';
+  position: absolute;
+  left: 0;
+  font-size: 1em;
+}
+
+/* ===== RESPONSIVE PARA NUEVOS ELEMENTOS ===== */
+@media (max-width: 768px) {
+  .idolHeader,
+  .rivalryHeader {
+    gap: var(--spacing-2);
+  }
+  
+  .idolBasicInfo {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .rivalryStats {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-2);
+  }
+  
+  .rivalryLastMatchInfo {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .rivalryStats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .idolItem,
+  .rivalryItem {
+    padding: var(--spacing-3);
+  }
+}
+
 @media (max-width: 640px) {
   .playerHeader {
     flex-direction: column;

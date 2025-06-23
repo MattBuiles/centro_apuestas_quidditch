@@ -480,6 +480,66 @@
   margin-bottom: var(--spacing-5);
 }
 
+/* ===== NO STATS MESSAGE ===== */
+.noStatsMessage {
+  text-align: center;
+  padding: var(--spacing-4);
+  background: rgba(255, 204, 0, 0.1);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 204, 0, 0.3);
+}
+
+.noStatsMessage p {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+.noStatsMessage p:first-child {
+  font-weight: 600;
+  color: var(--color-warning);
+  margin-bottom: var(--spacing-1);
+}
+
+/* ===== LOADING STATE ===== */
+.loadingState {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: clamp(var(--spacing-8), 8vw, var(--spacing-12));
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: clamp(var(--radius-lg), 2vw, var(--radius-xl));
+  box-shadow: 
+    0 8px 20px rgba(0, 0, 0, 0.08),
+    0 4px 12px rgba(75, 0, 130, 0.1);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.loadingState h3 {
+  font-family: var(--font-secondary);
+  font-size: clamp(var(--text-lg), 4vw, var(--text-xl));
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-3);
+  animation: pulse 2s infinite;
+}
+
+.loadingState p {
+  font-size: clamp(var(--text-base), 3vw, var(--text-lg));
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
 /* ===== RESPONSIVE DESIGN ===== */
 @media (max-width: 768px) {
   .teamsPageContainer {
