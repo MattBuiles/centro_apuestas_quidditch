@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Season } from '@/types/league';
 import { virtualTimeManager } from '@/services/virtualTimeManager';
 import { DetailedMatchResult, matchResultsService } from '@/services/matchResultsService';
@@ -23,7 +23,6 @@ interface Result {
 }
 
 const ResultsPage: React.FC = () => {
-  const navigate = useNavigate();
   const [results, setResults] = useState<Result[]>([]);
   const [detailedResults, setDetailedResults] = useState<DetailedMatchResult[]>([]);
   const [season, setSeason] = useState<Season | null>(null);
@@ -146,12 +145,7 @@ const ResultsPage: React.FC = () => {
     return `${hours}h ${mins}m`;
   };
 
-  const getMatchDetailedResult = (matchId: string): DetailedMatchResult | undefined => {
-    return detailedResults.find(dr => dr.matchId === matchId);
-  };
-
-  const handleViewDetailedResult = (matchId: string) => {
-    navigate(`/matches/${matchId}/result`);
+  const getMatchDetailedResult = (matchId: string): DetailedMatchResult | undefined => {    return detailedResults.find(dr => dr.matchId === matchId);
   };
 
   if (isLoading) {
@@ -241,20 +235,10 @@ const ResultsPage: React.FC = () => {
                 <div className={styles.matchMeta}>
                   <span className={styles.matchDate}>
                     {formatDate(result.date)} - {result.league}
-                  </span>
-                  <div className={styles.matchActions}>
+                  </span>                  <div className={styles.matchActions}>
                     <Link to={`/matches/${result.id}`} className={styles.matchDetailsLink}>
                       Ver partido
                     </Link>
-                    {detailedResult && (
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => handleViewDetailedResult(result.id)}
-                      >
-                        Análisis completo
-                      </Button>
-                    )}
                   </div>
                 </div>
                   <div className={styles.matchResult}>
@@ -348,21 +332,11 @@ const ResultsPage: React.FC = () => {
                       {detailedResult.finalScore.home} - {detailedResult.finalScore.away}
                     </span>
                   </div>
-                  
-                  <div className={styles.previewStats}>
+                    <div className={styles.previewStats}>
                     <span>📊 {detailedResult.statistics.totalEvents} eventos</span>
                     <span>⏱️ {formatDuration(detailedResult.matchDuration)}</span>
                     {detailedResult.snitchCaught && <span>✨ Snitch</span>}
                   </div>
-                  
-                  <Button 
-                    size="sm" 
-                    variant="primary"
-                    fullWidth
-                    onClick={() => handleViewDetailedResult(detailedResult.matchId)}
-                  >
-                    Ver análisis completo
-                  </Button>
                 </div>
               ))}
             </div>
