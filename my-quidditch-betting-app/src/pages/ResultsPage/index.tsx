@@ -6,7 +6,6 @@ import { DetailedMatchResult, matchResultsService } from '@/services/matchResult
 import Card from '@/components/common/Card';
 import Button from '@/components/common/Button';
 import TeamLogo from '@/components/teams/TeamLogo';
-import FormInput from '@/components/common/FormInput';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import styles from './ResultsPage.module.css';
 
@@ -28,11 +27,9 @@ const ResultsPage: React.FC = () => {
   const [results, setResults] = useState<Result[]>([]);
   const [detailedResults, setDetailedResults] = useState<DetailedMatchResult[]>([]);
   const [season, setSeason] = useState<Season | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [dateFrom, setDateFrom] = useState('');
+  const [isLoading, setIsLoading] = useState(true);  const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [teamFilter, setTeamFilter] = useState('');
-  const [showDetailed, setShowDetailed] = useState(false);
 
   useEffect(() => {
     loadResults();
@@ -50,18 +47,32 @@ const ResultsPage: React.FC = () => {
         // Get finished matches from the current season
         const finishedMatches = state.temporadaActiva.partidos
           .filter(match => match.status === 'finished')
-          .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());        const formattedResults: Result[] = finishedMatches.map(match => ({
-          id: match.id,
-          date: new Date(match.fecha).toISOString(),
-          homeTeam: state.temporadaActiva!.equipos.find(t => t.id === match.localId)?.name || 'Unknown',
-          awayTeam: state.temporadaActiva!.equipos.find(t => t.id === match.visitanteId)?.name || 'Unknown',
-          homeScore: match.homeScore || 0,
-          awayScore: match.awayScore || 0,
-          league: 'Liga Profesional Quidditch',
-          snitchCaught: match.events?.some(e => e.type === 'SNITCH_CAUGHT') || false,
-          events: match.events?.length || 0,
-          duration: match.currentMinute || 0
-        }));
+          .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());        const formattedResults: Result[] = finishedMatches.map(match => {
+          // Check if detailed results are available for more accurate scores
+          const detailedResult = matchResultsService.getMatchResult(match.id);
+          
+          let finalHomeScore = match.homeScore || 0;
+          let finalAwayScore = match.awayScore || 0;
+          
+          // Use detailed results scores if available (more accurate from simulation)
+          if (detailedResult) {
+            finalHomeScore = detailedResult.finalScore.home;
+            finalAwayScore = detailedResult.finalScore.away;
+          }
+          
+          return {
+            id: match.id,
+            date: new Date(match.fecha).toISOString(),
+            homeTeam: state.temporadaActiva!.equipos.find(t => t.id === match.localId)?.name || 'Unknown',
+            awayTeam: state.temporadaActiva!.equipos.find(t => t.id === match.visitanteId)?.name || 'Unknown',
+            homeScore: finalHomeScore,
+            awayScore: finalAwayScore,
+            league: 'Liga Profesional Quidditch',
+            snitchCaught: detailedResult?.snitchCaught || match.events?.some(e => e.type === 'SNITCH_CAUGHT') || false,
+            events: detailedResult?.statistics.totalEvents || match.events?.length || 0,
+            duration: detailedResult?.matchDuration || match.currentMinute || 0
+          };
+        });
 
         setResults(formattedResults);
       }
@@ -246,12 +257,18 @@ const ResultsPage: React.FC = () => {
                     )}
                   </div>
                 </div>
-                
-                <div className={styles.matchResult}>
+                  <div className={styles.matchResult}>
                   <div className={styles.teamResult}>
                     <TeamLogo teamName={result.homeTeam} size="md" />
                     <h3 className={styles.teamName}>{result.homeTeam}</h3>
-                    <p className={styles.teamScore}>{result.homeScore}</p>
+                    <p className={styles.teamScore}>
+                      {result.homeScore}
+                      {detailedResult && (
+                        <span className={styles.realScoreIndicator} title="Marcador de simulación real">
+                          ⚡
+                        </span>
+                      )}
+                    </p>
                   </div>
                   
                   <div className={styles.scoreVs}>VS</div>
@@ -259,7 +276,14 @@ const ResultsPage: React.FC = () => {
                   <div className={styles.teamResult}>
                     <TeamLogo teamName={result.awayTeam} size="md" />
                     <h3 className={styles.teamName}>{result.awayTeam}</h3>
-                    <p className={styles.teamScore}>{result.awayScore}</p>
+                    <p className={styles.teamScore}>
+                      {result.awayScore}
+                      {detailedResult && (
+                        <span className={styles.realScoreIndicator} title="Marcador de simulación real">
+                          ⚡
+                        </span>
+                      )}
+                    </p>
                   </div>
                 </div>
                 
@@ -342,15 +366,11 @@ const ResultsPage: React.FC = () => {
                 </div>
               ))}
             </div>
-            
-            {detailedResults.length > 6 && (
+              {detailedResults.length > 6 && (
               <div className={styles.seeAllResults}>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setShowDetailed(true)}
-                >
-                  Ver todos los análisis ({detailedResults.length})
-                </Button>
+                <p className={styles.moreResultsText}>
+                  Y {detailedResults.length - 6} análisis más disponibles...
+                </p>
               </div>
             )}
           </Card>

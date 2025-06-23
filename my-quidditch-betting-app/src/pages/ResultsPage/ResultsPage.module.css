@@ -383,6 +383,31 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  position: relative;
+}
+
+.realScoreIndicator {
+  position: absolute;
+  top: -8px;
+  right: -12px;
+  font-size: 0.8rem;
+  color: var(--color-accent);
+  text-shadow: 0 1px 2px rgba(255, 204, 0, 0.3);
+  animation: magicalPulse 2s ease-in-out infinite;
+  cursor: help;
+  z-index: 2;
+  filter: drop-shadow(0 0 4px rgba(255, 204, 0, 0.5));
+}
+
+@keyframes magicalPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
 }
 
 .scoreVs {
@@ -616,6 +641,16 @@
 
 .seeAllResults {
   text-align: center;
+}
+
+.moreResultsText {
+  font-family: var(--font-secondary);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin: 0;
+  padding: var(--spacing-3);
+  font-style: italic;
+  opacity: 0.8;
 }
 
 /* Statistics Section */
