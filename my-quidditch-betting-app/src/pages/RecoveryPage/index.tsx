@@ -2,6 +2,7 @@ import React, { useState, FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
+import { useAuth } from '@/context/AuthContext';
 import styles from './RecoveryPage.module.css';
 
 const RecoveryPage: React.FC = () => {
@@ -12,20 +13,31 @@ const RecoveryPage: React.FC = () => {
   const [message, setMessage] = useState<string | null>(null);
   const [messageType, setMessageType] = useState<'success' | 'error' | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [showOwlAnimation, setShowOwlAnimation] = useState(false);
+  const [showOwlAnimation, setShowOwlAnimation] = useState(false);  const [validatedUserId, setValidatedUserId] = useState<string | null>(null);
   const navigate = useNavigate();
-
+  const { getPredefinedAccounts, resetPasswordByEmail, validatePassword } = useAuth();
   const handleEmailSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setMessage(null);
     setMessageType(null);
 
-    // Simulate API call for email verification
+    if (!email) {
+      setMessage('Por favor complete todos los campos');
+      setMessageType('error');
+      setIsLoading(false);
+      return;
+    }
+
+    // Verificar si el email está registrado en las cuentas predefinidas o registradas
     setTimeout(() => {
-      if (email.includes('@') && email.length > 5) {
+      const accounts = getPredefinedAccounts();
+      const accountExists = accounts.find(account => account.email === email);
+      
+      if (accountExists) {
+        setValidatedUserId(email); // Usamos el email como identificador temporal
         setShowOwlAnimation(true);
-        setMessage('🦉 ¡Una lechuza ha llevado tu solicitud a Madame Pomfrey! Procederemos con el restablecimiento...');
+        setMessage('🦉 ¡Una lechuza ha llevado tu solicitud a Madame Pomfrey! Email verificado exitosamente...');
         setMessageType('success');
         
         // After owl animation, proceed to password reset
@@ -35,15 +47,19 @@ const RecoveryPage: React.FC = () => {
           setMessage(null);
         }, 3000);
       } else {
-        setMessage('Por favor, introduce un correo electrónico válido registrado en Hogwarts.');
+        setMessage('Este correo electrónico no está registrado en el mundo mágico de Quidditch. Verifica que sea correcto o regístrate primero.');
         setMessageType('error');
       }
       setIsLoading(false);
     }, 1500);
-  };
-
-  const handlePasswordSubmit = async (e: FormEvent) => {
+  };  const handlePasswordSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    
+    if (!newPassword || !confirmPassword) {
+      setMessage('Por favor complete todos los campos');
+      setMessageType('error');
+      return;
+    }
     
     if (newPassword !== confirmPassword) {
       setMessage('Las contraseñas no coinciden. Incluso la magia requiere precisión.');
@@ -51,27 +67,39 @@ const RecoveryPage: React.FC = () => {
       return;
     }
 
-    if (newPassword.length < 6) {
-      setMessage('La contraseña debe tener al menos 6 caracteres para ser verdaderamente mágica.');
+    // Validar contraseña usando la función del contexto
+    const passwordError = validatePassword(newPassword);
+    if (passwordError) {
+      setMessage(passwordError);
       setMessageType('error');
       return;
     }
 
     setIsLoading(true);
-    setMessage(null);
-
-    // Simulate password update
+    setMessage(null);    // Actualizar contraseña usando la función del contexto
     setTimeout(() => {
-      setMessage('✨ ¡La nueva contraseña ha sido hechizada con éxito! No se la digas a Peeves.');
-      setMessageType('success');
-      setIsLoading(false);
-      
-      // Redirect to login after success
-      setTimeout(() => {
-        navigate('/login');
-      }, 3000);
+      try {
+        if (validatedUserId && resetPasswordByEmail(validatedUserId, newPassword)) {
+          setMessage('✨ ¡La nueva contraseña ha sido hechizada con éxito! Ahora puedes iniciar sesión con tu nueva contraseña mágica.');
+          setMessageType('success');
+          setIsLoading(false);
+          
+          // Redirect to login after success
+          setTimeout(() => {
+            navigate('/login');
+          }, 3000);
+        } else {
+          setMessage('Ha ocurrido un error mágico. Por favor, inténtalo nuevamente.');
+          setMessageType('error');
+          setIsLoading(false);
+        }
+      } catch (error) {
+        setMessage(error instanceof Error ? error.message : 'Ha ocurrido un error mágico. Por favor, inténtalo nuevamente.');
+        setMessageType('error');
+        setIsLoading(false);
+      }
     }, 2000);
-  };  return (
+  };return (
     <div className={styles.recoveryPageContainer}>
       <Card className={styles.recoveryCard}>
         <div className="text-center">
@@ -150,8 +178,7 @@ const RecoveryPage: React.FC = () => {
             )}            <div className={styles.formGroup}>
               <label htmlFor="newPassword" className={styles.formLabel}>
                 🔒 Nueva Contraseña Mágica
-              </label>
-              <input
+              </label>              <input
                 id="newPassword"
                 type="password"
                 className={styles.formInput}
@@ -159,17 +186,16 @@ const RecoveryPage: React.FC = () => {
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="Crea una contraseña poderosa y secreta"
                 required
-                minLength={6}
+                minLength={8}
               />
               <small className={styles.formHint}>
-                Mínimo 6 caracteres para una protección mágica adecuada
+                Mínimo 8 caracteres con número y letra mayúscula para una protección mágica adecuada
               </small>
             </div>
             <div className={styles.formGroup}>
               <label htmlFor="confirmPassword" className={styles.formLabel}>
                 🔐 Confirmar Contraseña Mágica
-              </label>
-              <input
+              </label>              <input
                 id="confirmPassword"
                 type="password"
                 className={styles.formInput}
@@ -177,7 +203,7 @@ const RecoveryPage: React.FC = () => {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Repite tu nueva contraseña mágica"
                 required
-                minLength={6}
+                minLength={8}
               />
               <small className={styles.formHint}>
                 Debe coincidir exactamente con la contraseña anterior
