@@ -8,15 +8,18 @@ import { standingsCalculator } from '@/services/standingsCalculator';
 import { Season, Standing } from '@/types/league';
 import styles from './StandingsPage.module.css';
 
-const StandingsPage = () => {  const [standings, setStandings] = useState<Standing[]>([]);
+const StandingsPage = () => {
+  const [standings, setStandings] = useState<Standing[]>([]);
   const [season, setSeason] = useState<Season | null>(null);
   const [viewMode, setViewMode] = useState<'current' | 'historical'>('current');
   const [historicalSeasons, setHistoricalSeasons] = useState<SeasonHistory[]>([]);
   const [historicalStandings, setHistoricalStandings] = useState<any[]>([]);
+
   useEffect(() => {
     loadStandingsFromSimulation();
     loadHistoricalData();
   }, []);
+
   const loadHistoricalData = () => {
     const historial = virtualTimeManager.getHistorialTemporadas();
     setHistoricalSeasons(historial);
@@ -183,7 +186,9 @@ const StandingsPage = () => {  const [standings, setStandings] = useState<Standi
       
       setHistoricalStandings(exampleHistoricalData);
     }
-  };const loadStandingsFromSimulation = () => {
+  };
+
+  const loadStandingsFromSimulation = () => {
     // This will automatically initialize a season if none exists
     const temporadaActiva = virtualTimeManager.getTemporadaActivaOInicializar();
     setSeason(temporadaActiva);
@@ -202,7 +207,9 @@ const StandingsPage = () => {  const [standings, setStandings] = useState<Standi
     if (position === 2) return 'second';
     if (position === 3) return 'third';
     return 'default';
-  };  // Preparar datos según el modo de vista
+  };
+
+  // Preparar datos según el modo de vista
   const currentStandingsData = standings.map((standing, index) => ({
     position: standing.position || (index + 1),
     teamId: standing.teamId,
@@ -213,8 +220,10 @@ const StandingsPage = () => {  const [standings, setStandings] = useState<Standi
     lost: standing.losses,
     points: standing.points,
     goalsFor: standing.goalsFor,
-    goalsAgainst: standing.goalsAgainst
+    goalsAgainst: standing.goalsAgainst,
+    league: 'Liga Profesional Quidditch'
   }));
+
   const historicalStandingsData = historicalStandings.map(team => ({
     position: team.position,
     teamId: team.teamId,
@@ -226,17 +235,21 @@ const StandingsPage = () => {  const [standings, setStandings] = useState<Standi
     points: team.totalPoints,
     goalsFor: team.totalGoalsFor,
     goalsAgainst: team.totalGoalsAgainst,
+    league: 'Liga Profesional Quidditch',
     // Datos adicionales para tabla histórica
     seasonsPlayed: team.seasonsPlayed,
     championships: team.championships,
     runnerUps: team.runnerUps,
     thirdPlaces: team.thirdPlaces
   }));
+
   // Seleccionar datos según el modo de vista
   const filteredStandings = viewMode === 'current' ? currentStandingsData : historicalStandingsData;
+
   return (
     <div className={styles.standingsPageContainer}>
-      {/* Hero Header Section */}      <section className={styles.pageHeader}>
+      {/* Hero Header Section */}
+      <section className={styles.pageHeader}>
         <Card className={styles.heroCard}>
           <h1 className={styles.pageTitle}>
             <span className={styles.titleIcon}>
@@ -262,7 +275,8 @@ const StandingsPage = () => {  const [standings, setStandings] = useState<Standi
               🏆 Inicia una temporada en la página de Partidos para ver las clasificaciones en vivo
             </div>
           )}
-            {viewMode === 'historical' && historicalSeasons.length > 0 && (
+          
+          {viewMode === 'historical' && historicalSeasons.length > 0 && (
             <div className={styles.seasonInfo}>
               🏆 Datos de {historicalSeasons.length} temporada{historicalSeasons.length !== 1 ? 's' : ''} completada{historicalSeasons.length !== 1 ? 's' : ''} • {historicalStandings.length} equipos históricos
             </div>
@@ -281,7 +295,8 @@ const StandingsPage = () => {  const [standings, setStandings] = useState<Standi
           )}
         </Card>
       </section>
-        <section className={styles.standingsSection}>
+      
+      <section className={styles.standingsSection}>
         {/* View Mode Toggle */}
         <Card className={styles.filtersCard}>
           <div className={styles.standingsFilters}>
@@ -312,9 +327,11 @@ const StandingsPage = () => {  const [standings, setStandings] = useState<Standi
             </div>
           )}
         </Card>
-          {filteredStandings.length > 0 ? (
+
+        {filteredStandings.length > 0 ? (
           <>
-            {/* Desktop Table View */}            <Card className={styles.tableCard}>
+            {/* Desktop Table View */}
+            <Card className={styles.tableCard}>
               <div className={styles.tableContainer}>
                 <table className={styles.standingsTable}>
                   <thead className={styles.tableHeader}>
@@ -392,7 +409,8 @@ const StandingsPage = () => {  const [standings, setStandings] = useState<Standi
               </div>
             </Card>
 
-            {/* Mobile Cards View */}            <div className={styles.mobileView}>
+            {/* Mobile Cards View */}
+            <div className={styles.mobileView}>
               {filteredStandings.map((team) => (
                 <div key={team.teamId} className={styles.standingCard}>
                   <div className={styles.cardHeader}>
@@ -465,7 +483,8 @@ const StandingsPage = () => {  const [standings, setStandings] = useState<Standi
                 </div>
               ))}
             </div>
-          </>        ) : (
+          </>
+        ) : (
           <div className={styles.emptyState}>
             <h3>No hay equipos para mostrar</h3>
             <p>No se encontraron equipos en la liga.</p>

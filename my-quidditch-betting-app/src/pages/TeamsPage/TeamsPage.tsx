@@ -12,7 +12,6 @@ import styles from './TeamsPage.module.css';
 interface TeamData {
   id: string;
   name: string;
-  league: string;
   logoChar?: string;
   stats?: {
     wins: number;
@@ -30,53 +29,45 @@ const mockTeams: TeamData[] = [
   { 
     id: 'gryffindor', 
     name: 'Gryffindor', 
-    league: 'Liga de Hogwarts',
     logoChar: 'G',
     stats: { wins: 12, losses: 3, draws: 2, points: 38, played: 17, goalsFor: 45, goalsAgainst: 25 }
   },
   { 
     id: 'slytherin', 
     name: 'Slytherin', 
-    league: 'Liga de Hogwarts',
     logoChar: 'S',
     stats: { wins: 11, losses: 4, draws: 2, points: 35, played: 17, goalsFor: 42, goalsAgainst: 28 }
   },
   { 
     id: 'ravenclaw', 
     name: 'Ravenclaw', 
-    league: 'Liga de Hogwarts',
     logoChar: 'R',
     stats: { wins: 9, losses: 6, draws: 2, points: 29, played: 17, goalsFor: 38, goalsAgainst: 35 }
   },
   { 
     id: 'hufflepuff', 
     name: 'Hufflepuff', 
-    league: 'Liga de Hogwarts',
     logoChar: 'H',
     stats: { wins: 8, losses: 7, draws: 2, points: 26, played: 17, goalsFor: 35, goalsAgainst: 38 }
   },
   { 
     id: 'chudley_cannons', 
     name: 'Chudley Cannons', 
-    league: 'Liga Británica e Irlandesa',
     logoChar: 'C',
     stats: { wins: 15, losses: 8, draws: 1, points: 46, played: 24, goalsFor: 65, goalsAgainst: 45 }
   },
   { 
     id: 'holyhead_harpies', 
     name: 'Holyhead Harpies', 
-    league: 'Liga Británica e Irlandesa',
     logoChar: 'H',
     stats: { wins: 13, losses: 9, draws: 2, points: 41, played: 24, goalsFor: 58, goalsAgainst: 52 }
   },
 ];
 
-const TeamsPage: React.FC = () => {
-  const [teams, setTeams] = useState<TeamData[]>([]);
+const TeamsPage: React.FC = () => {  const [teams, setTeams] = useState<TeamData[]>([]);
   const [season, setSeason] = useState<Season | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedLeague, setSelectedLeague] = useState('all');
 
   useEffect(() => {
     loadTeamsFromSimulation();
@@ -94,15 +85,13 @@ const TeamsPage: React.FC = () => {
         timeState.temporadaActiva.equipos,
         timeState.temporadaActiva.partidos.filter(match => match.status === 'finished')
       );
-      
-      // Convert teams to TeamData format
+        // Convert teams to TeamData format
       const teamsData: TeamData[] = timeState.temporadaActiva.equipos.map(team => {
         const standing = standings.find(s => s.teamId === team.id);
         
         return {
           id: team.id,
           name: team.name,
-          league: timeState.temporadaActiva?.name || 'Liga Profesional Quidditch',
           logoChar: team.name.charAt(0).toUpperCase(),
           stats: standing ? {
             wins: standing.wins,
@@ -132,16 +121,13 @@ const TeamsPage: React.FC = () => {
     
     setIsLoading(false);
   };
-
   const filteredTeams = teams.filter(team => {
     const matchesSearch = searchTerm === '' || team.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesLeague = selectedLeague === 'all' || team.league === selectedLeague;
-    return matchesSearch && matchesLeague;
+    return matchesSearch;
   });
 
   const handleClearFilters = () => {
     setSearchTerm('');
-    setSelectedLeague('all');
   };
 
   return (
@@ -180,39 +166,11 @@ const TeamsPage: React.FC = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <Button 
-                size="sm" 
+              <Button                size="sm" 
                 className={styles.searchButton}
                 aria-label="Buscar"
               >
                 🔍
-              </Button>
-            </div>
-            
-            <div className={styles.filterButtons}>
-              <Button 
-                variant={selectedLeague === 'all' ? 'primary' : 'outline'} 
-                size="sm" 
-                onClick={() => setSelectedLeague('all')}
-                className={`${styles.filterButton} ${selectedLeague === 'all' ? styles.active : ''}`}
-              >
-                Todas las Ligas
-              </Button>
-              <Button 
-                variant={selectedLeague === 'Liga de Hogwarts' ? 'primary' : 'outline'} 
-                size="sm" 
-                onClick={() => setSelectedLeague('Liga de Hogwarts')}
-                className={`${styles.filterButton} ${selectedLeague === 'Liga de Hogwarts' ? styles.active : ''}`}
-              >
-                Liga de Hogwarts
-              </Button>
-              <Button 
-                variant={selectedLeague === 'Liga Británica e Irlandesa' ? 'primary' : 'outline'} 
-                size="sm" 
-                onClick={() => setSelectedLeague('Liga Británica e Irlandesa')}
-                className={`${styles.filterButton} ${selectedLeague === 'Liga Británica e Irlandesa' ? styles.active : ''}`}
-              >
-                Liga Británica
               </Button>
             </div>
           </div>
@@ -245,14 +203,9 @@ const TeamsPage: React.FC = () => {
                     )}
                   </div>
                   <h3 className={styles.teamName}>{team.name}</h3>
-                </div>
-
-                {/* Team Card Body */}
+                </div>                {/* Team Card Body */}
                 <div className={styles.teamCardBody}>
-                  <div className={styles.teamLeague}>
-                    <span className={styles.leagueIcon}>🏰</span>
-                    {team.league}
-                  </div>                  {team.stats && (
+                  {team.stats && (
                     <div className={styles.teamStats}>
                       <div className={styles.statItem}>
                         <div className={styles.statValue}>{team.stats.played}</div>
@@ -275,13 +228,13 @@ const TeamsPage: React.FC = () => {
                 </div>
               </Link>
             ))
-          ) : (
-            <div className={styles.emptyState}>
+          ) : (            <div className={styles.emptyState}>
               <h3>🔍 No se encontraron equipos</h3>
               <p>
-                No hay equipos que coincidan con los filtros aplicados. 
-                Intenta con otros términos de búsqueda o liga.
-              </p>              <Button 
+                No hay equipos que coincidan con el término de búsqueda. 
+                Intenta con otros términos.
+              </p>
+              <Button 
                 variant="outline" 
                 onClick={handleClearFilters}
               >

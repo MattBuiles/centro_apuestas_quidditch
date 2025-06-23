@@ -191,14 +191,13 @@ export class QuidditchSystem {
     return upcomingMatches.map(match => ({
       id: match.id,
       title: `${match.homeTeam} vs ${match.awayTeam}`,
-      start: match.date.toISOString(),
-      extendedProps: {
+      start: match.date.toISOString(),      extendedProps: {
         homeTeam: match.homeTeam,
         awayTeam: match.awayTeam,
         venue: match.venue,
         canBet: match.canBet,
         status: 'scheduled',
-        league: match.league
+        league: 'Liga Profesional Quidditch'
       }
     }));
   }

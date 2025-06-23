@@ -26,7 +26,6 @@ interface Match {
 interface TeamDetails {
   id: string;
   name: string;
-  league: string;
   slogan: string;
   history: string;
   wins: number;
@@ -46,7 +45,6 @@ const mockTeamDetails: { [key: string]: TeamDetails } = {
   gryffindor: {
     id: 'gryffindor', 
     name: 'Gryffindor', 
-    league: 'Liga de Hogwarts', 
     slogan: "Donde habitan los valientes de corazón", 
     history: "Fundado por Godric Gryffindor, conocido por su coraje y caballerosidad. Los Gryffindor son famosos por su valentía, osadía, temple y caballerosidad. A lo largo de los siglos, este equipo ha demostrado que el coraje y la determinación pueden superar cualquier obstáculo en el campo de Quidditch. Sus jugadores legendarios han inspirado a generaciones con su juego audaz y su espíritu indomable.", 
     wins: 152, 
@@ -70,11 +68,9 @@ const mockTeamDetails: { [key: string]: TeamDetails } = {
       {id: '2', opponent: 'Ravenclaw', date: '2025-07-28', venue: 'Campo de Hogwarts'},
       {id: '3', opponent: 'Hufflepuff', date: '2025-08-10', venue: 'Campo de Hogwarts'}
     ]
-  },
-  slytherin: {
+  },  slytherin: {
     id: 'slytherin',
     name: 'Slytherin', 
-    league: 'Liga de Hogwarts',
     slogan: "Lograrás tus fines verdaderos", 
     history: "Fundado por Salazar Slytherin, valora la ambición y la astucia. Los Slytherin son conocidos por su determinación, liderazgo y recursos para alcanzar sus objetivos. Su estilo de juego se caracteriza por la estrategia meticulosa y la ejecución precisa. Han dominado el campo de Quidditch con su inteligencia táctica y su capacidad para adaptarse a cualquier situación durante el juego.", 
     wins: 145, 
@@ -97,74 +93,165 @@ const mockTeamDetails: { [key: string]: TeamDetails } = {
       {id: '1', opponent: 'Gryffindor', date: '2025-07-15', venue: 'Campo de Hogwarts'},
       {id: '2', opponent: 'Hufflepuff', date: '2025-08-02', venue: 'Campo de Hogwarts'},
       {id: '3', opponent: 'Ravenclaw', date: '2025-08-20', venue: 'Campo de Hogwarts'}    ]
-  },
-  ravenclaw: {
-    id: 'ravenclaw',    name: 'Ravenclaw', 
-    league: 'Liga de Hogwarts',
+  },  ravenclaw: {
+    id: 'ravenclaw',
+    name: 'Ravenclaw', 
     slogan: "Inteligencia es la primera y más grande virtud", 
-    history: "Fundado por Rowena Ravenclaw, valora la inteligencia, el saber, la agudeza mental y el aprendizaje. Los Ravenclaw son conocidos por su sabiduría y creatividad.", 
+    history: "Fundado por Rowena Ravenclaw, valora la inteligencia, el saber, la agudeza mental y el aprendizaje. Los Ravenclaw son conocidos por su sabiduría y creatividad en el campo de Quidditch, utilizando estrategias innovadoras y jugadas inteligentes que sorprenden a sus oponentes. Su enfoque analítico del juego les ha permitido desarrollar algunas de las tácticas más brillantes del deporte.", 
     wins: 134, 
+    losses: 56,
+    draws: 14,
     titles: 5, 
     founded: 990,
+    stadium: "Campo de Quidditch de Hogwarts",
+    colors: ["Azul Bronce", "Plata"],
+    achievements: ["Campeón de la Copa de las Casas (5 veces)", "Estrategia más innovadora del torneo", "Mayor número de jugadas creativas registradas"],
     roster: [ 
-      {id: 'cc', name: 'Cho Chang', position: 'Buscadora', number: 7}, 
-      {id: 'rl', name: 'Roger Davies', position: 'Cazador', number: 9},
-      {id: 'jq', name: 'Jeremy Stretton', position: 'Golpeador', number: 4},
-      {id: 'ag', name: 'Anthony Goldstein', position: 'Golpeador', number: 3},
-      {id: 'pb', name: 'Padma Patil', position: 'Cazadora', number: 6},
-      {id: 'gb', name: 'Grant Page', position: 'Guardián', number: 1}
+      {id: 'cc', name: 'Cho Chang', position: 'Buscadora', number: 7, yearsActive: 5, achievements: ["Velocidad récord en captura de Snitch", "Buscadora más inteligente de su generación"]}, 
+      {id: 'rl', name: 'Roger Davies', position: 'Cazador', number: 9, yearsActive: 4, achievements: ["Goleador del año - Liga Escolar", "Capitán estratega"]},
+      {id: 'jq', name: 'Jeremy Stretton', position: 'Golpeador', number: 4, yearsActive: 3, achievements: ["Especialista en jugadas defensivas"]},
+      {id: 'ag', name: 'Anthony Goldstein', position: 'Golpeador', number: 3, yearsActive: 3, achievements: ["Jugada defensiva del año"]},
+      {id: 'pb', name: 'Padma Patil', position: 'Cazadora', number: 6, yearsActive: 4, achievements: ["Pase perfecto - 95% precisión"]},
+      {id: 'gb', name: 'Grant Page', position: 'Guardián', number: 1, yearsActive: 4, achievements: ["Portero del año - 89% paradas", "Mejor reflejos de la liga"]}
+    ],
+    upcomingMatches: [
+      {id: '1', opponent: 'Hufflepuff', date: '2025-07-18', venue: 'Campo de Hogwarts'},
+      {id: '2', opponent: 'Gryffindor', date: '2025-07-28', venue: 'Campo de Hogwarts'},
+      {id: '3', opponent: 'Holyhead Harpies', date: '2025-08-08', venue: 'Campo de Hogwarts'}
     ]
-  },
-  hufflepuff: {
-    id: 'hufflepuff',    name: 'Hufflepuff', 
-    league: 'Liga de Hogwarts',
+  },  hufflepuff: {
+    id: 'hufflepuff',
+    name: 'Hufflepuff', 
     slogan: "Los de corazón justo y leal", 
-    history: "Fundado por Helga Hufflepuff, valora el trabajo duro, la paciencia, la lealtad y la justicia. Los Hufflepuff son conocidos por su dedicación y espíritu de equipo.", 
+    history: "Fundado por Helga Hufflepuff, valora el trabajo duro, la paciencia, la lealtad y la justicia. Los Hufflepuff son conocidos por su dedicación y espíritu de equipo incomparable. Su filosofía de juego se basa en la perseverancia, el trabajo en equipo y la deportividad. Aunque a menudo subestimados, han demostrado que la determinación y la lealtad pueden superar la falta de talento natural.", 
     wins: 128, 
+    losses: 62,
+    draws: 18,
     titles: 4, 
     founded: 990,
+    stadium: "Campo de Quidditch de Hogwarts",
+    colors: ["Amarillo", "Negro"],
+    achievements: ["Campeón de la Copa de las Casas (4 veces)", "Equipo más deportivo (10 años consecutivos)", "Mayor espíritu de equipo reconocido"],
     roster: [ 
-      {id: 'cd', name: 'Cedric Diggory', position: 'Buscador', number: 7}, 
-      {id: 'za', name: 'Zacharias Smith', position: 'Cazador', number: 8},
-      {id: 'hm', name: 'Hannah Abbott', position: 'Cazadora', number: 6},
-      {id: 'jm', name: 'Justin Finch-Fletchley', position: 'Golpeador', number: 4},
-      {id: 'el', name: 'Ernie Macmillan', position: 'Golpeador', number: 3},
-      {id: 'sb', name: 'Susan Bones', position: 'Guardiana', number: 1}
+      {id: 'cd', name: 'Cedric Diggory', position: 'Buscador', number: 7, yearsActive: 5, achievements: ["Leyenda viviente de Hufflepuff", "Capitán más querido de la historia"]}, 
+      {id: 'za', name: 'Zacharias Smith', position: 'Cazador', number: 8, yearsActive: 3, achievements: ["Anotador más consistente del equipo"]},
+      {id: 'hm', name: 'Hannah Abbott', position: 'Cazadora', number: 6, yearsActive: 4, achievements: ["Mejor jugadora femenina de Hufflepuff"]},
+      {id: 'jm', name: 'Justin Finch-Fletchley', position: 'Golpeador', number: 4, yearsActive: 4, achievements: ["Golpeador más técnico y preciso"]},
+      {id: 'el', name: 'Ernie Macmillan', position: 'Golpeador', number: 3, yearsActive: 3, achievements: ["Especialista en jugadas defensivas"]},
+      {id: 'sb', name: 'Susan Bones', position: 'Guardiana', number: 1, yearsActive: 4, achievements: ["Guardiana más confiable - 92% paradas", "Líder silenciosa del equipo"]}
+    ],
+    upcomingMatches: [
+      {id: '1', opponent: 'Ravenclaw', date: '2025-07-18', venue: 'Campo de Hogwarts'},
+      {id: '2', opponent: 'Slytherin', date: '2025-08-02', venue: 'Campo de Hogwarts'},
+      {id: '3', opponent: 'Chudley Cannons', date: '2025-08-22', venue: 'Campo de Hogwarts'}
     ]
   },
-  chudley_cannons: {
-    id: 'chudley_cannons',    name: 'Chudley Cannons', 
-    league: 'Liga Británica e Irlandesa',
+  cannons: {
+    id: 'cannons',
+    name: 'Chudley Cannons', 
     slogan: "¡Vamos Cannons!", 
-    history: "Un equipo profesional británico conocido por su larga sequía de títulos pero con una base de fanáticos muy leal. Famosos por sus uniformes naranjas brillantes.", 
+    history: "Un equipo profesional británico conocido por su larga sequía de títulos pero con una base de fanáticos muy leal. Famosos por sus uniformes naranjas brillantes y su espíritu indomable. A pesar de las dificultades, los Cannons han mantenido una tradición de juego valiente y han cultivado algunos de los jugadores más queridos del Quidditch profesional.", 
     wins: 89, 
+    losses: 98,
+    draws: 12,
     titles: 1, 
     founded: 1892,
+    stadium: "Estadio Ballycastle",
+    colors: ["Naranja Brillante", "Negro"],
+    achievements: ["Campeón de Liga (1 vez)", "Mayor base de fanáticos leales", "Récord de asistencia en partidos locales"],
     roster: [ 
-      {id: 'jw', name: 'Joey Jenkins', position: 'Buscador', number: 7}, 
-      {id: 'rw', name: 'Ron Weasley', position: 'Guardián', number: 1},
-      {id: 'mb', name: 'Michael Chang', position: 'Cazador', number: 9},
-      {id: 'sp', name: 'Sarah Potter', position: 'Cazadora', number: 8},
-      {id: 'tk', name: 'Tom King', position: 'Golpeador', number: 5},
-      {id: 'bl', name: 'Ben Lewis', position: 'Golpeador', number: 4}
+      {id: 'jw', name: 'Joey Jenkins', position: 'Buscador', number: 7, yearsActive: 4, achievements: ["Especialista en capturas bajo presión"]}, 
+      {id: 'rw', name: 'Ron Weasley', position: 'Guardián', number: 1, yearsActive: 3, achievements: ["Guardián estrella en ascenso", "Mejor parada del año"]},
+      {id: 'mb', name: 'Barry Ryan', position: 'Cazador', number: 9, yearsActive: 8, achievements: ["Veterano del equipo", "200+ partidos jugados"]},
+      {id: 'sp', name: 'Galvin Gudgeon', position: 'Cazador', number: 8, yearsActive: 4, achievements: ["Mejor anotador de la temporada actual"]},
+      {id: 'tk', name: 'Roderick Plumpton', position: 'Golpeador', number: 5, yearsActive: 7, achievements: ["Defensor más temido de la liga"]},
+      {id: 'bl', name: 'Dragomir Gorgovitch', position: 'Golpeador', number: 4, yearsActive: 5, achievements: ["Mejor golpeador defensivo del equipo"]}
+    ],
+    upcomingMatches: [
+      {id: '1', opponent: 'Holyhead Harpies', date: '2025-07-20', venue: 'Estadio Ballycastle'},
+      {id: '2', opponent: 'Gryffindor', date: '2025-08-05', venue: 'Campo de Hogwarts'},
+      {id: '3', opponent: 'Slytherin', date: '2025-08-18', venue: 'Estadio Ballycastle'}
     ]
   },
-  holyhead_harpies: {
-    id: 'holyhead_harpies',    name: 'Holyhead Harpies', 
-    league: 'Liga Británica e Irlandesa',
+  harpies: {
+    id: 'harpies',
+    name: 'Holyhead Harpies', 
     slogan: "Vuela alto, golpea fuerte", 
-    history: "Un equipo profesional conocido por ser el único equipo completamente femenino en la liga. Tienen una historia rica y son famosas por su juego agresivo y habilidoso.", 
+    history: "Un equipo profesional conocido por ser el único equipo completamente femenino en la liga profesional. Tienen una historia rica y gloriosa, siendo famosas por su juego agresivo, técnico y habilidoso. Las Harpies han sido pioneras en el Quidditch femenino y han inspirado a generaciones de jugadoras con su excelencia deportiva.", 
     wins: 156, 
+    losses: 34,
+    draws: 8,
     titles: 8, 
     founded: 1203,
+    stadium: "Estadio Holyhead",
+    colors: ["Verde Esmeralda", "Dorado"],
+    achievements: ["Campeonas de Liga (8 veces)", "Equipo completamente femenino más exitoso", "Récord de mayor cantidad de títulos consecutivos (3)", "Mejor porcentaje de victorias de la liga"],
     roster: [ 
-      {id: 'gw', name: 'Ginny Weasley', position: 'Cazadora', number: 8}, 
-      {id: 'cj', name: 'Claire Johnson', position: 'Buscadora', number: 7},
-      {id: 'md', name: 'Mary Davies', position: 'Cazadora', number: 9},
-      {id: 'lb', name: 'Lisa Brown', position: 'Cazadora', number: 6},
-      {id: 'jh', name: 'Jane Harris', position: 'Golpeadora', number: 4},
-      {id: 'kt', name: 'Kate Thompson', position: 'Golpeadora', number: 3},
-      {id: 'sw', name: 'Sophie Wilson', position: 'Guardiana', number: 1}
+      {id: 'gw', name: 'Ginny Weasley', position: 'Cazadora', number: 8, yearsActive: 4, achievements: ["Estrella emergente del Quidditch", "Mejor jugadora joven del año"]}, 
+      {id: 'cj', name: 'Wilda Griffiths', position: 'Buscadora', number: 7, yearsActive: 9, achievements: ["Capitana y líder histórica", "Velocidad récord en captura de Snitch"]},
+      {id: 'md', name: 'Valmai Morgan', position: 'Cazadora', number: 9, yearsActive: 7, achievements: ["Anotadora más precisa del equipo", "300+ goles en su carrera"]},
+      {id: 'lb', name: 'Gwendolyn Morgan', position: 'Cazadora', number: 6, yearsActive: 6, achievements: ["Hermana legendaria", "Especialista en jugadas aéreas"]},
+      {id: 'jh', name: 'Gwenog Jones', position: 'Golpeadora', number: 4, yearsActive: 10, achievements: ["Ex-capitana legendaria", "Mejor golpeadora de la década"]},
+      {id: 'kt', name: 'Glynnis Griffiths', position: 'Golpeadora', number: 3, yearsActive: 8, achievements: ["Especialista en defensa aérea"]},
+      {id: 'sw', name: 'Artemis Fido', position: 'Guardiana', number: 1, yearsActive: 5, achievements: ["Portera más confiable de la liga", "Velocidad supersónica certificada"]}
+    ],
+    upcomingMatches: [
+      {id: '1', opponent: 'Chudley Cannons', date: '2025-07-20', venue: 'Estadio Holyhead'},
+      {id: '2', opponent: 'Ravenclaw', date: '2025-08-08', venue: 'Campo de Hogwarts'},
+      {id: '3', opponent: 'Hufflepuff', date: '2025-08-22', venue: 'Estadio Holyhead'}
+    ]
+  },  chudley_cannons: {
+    id: 'chudley_cannons',
+    name: 'Chudley Cannons', 
+    slogan: "¡Vamos Cannons!", 
+    history: "Un equipo profesional británico conocido por su larga sequía de títulos pero con una base de fanáticos muy leal. Famosos por sus uniformes naranjas brillantes y su espíritu indomable. A pesar de las dificultades, los Cannons han mantenido una tradición de juego valiente y han cultivado algunos de los jugadores más queridos del Quidditch profesional.", 
+    wins: 89, 
+    losses: 98,
+    draws: 12,
+    titles: 1, 
+    founded: 1892,
+    stadium: "Estadio Ballycastle",
+    colors: ["Naranja Brillante", "Negro"],
+    achievements: ["Campeón de Liga (1 vez)", "Mayor base de fanáticos leales", "Récord de asistencia en partidos locales"],
+    roster: [ 
+      {id: 'jw', name: 'Joey Jenkins', position: 'Buscador', number: 7, yearsActive: 4, achievements: ["Especialista en capturas bajo presión"]}, 
+      {id: 'rw', name: 'Ron Weasley', position: 'Guardián', number: 1, yearsActive: 3, achievements: ["Guardián estrella en ascenso", "Mejor parada del año"]},
+      {id: 'mb', name: 'Barry Ryan', position: 'Cazador', number: 9, yearsActive: 8, achievements: ["Veterano del equipo", "200+ partidos jugados"]},
+      {id: 'sp', name: 'Galvin Gudgeon', position: 'Cazador', number: 8, yearsActive: 4, achievements: ["Mejor anotador de la temporada actual"]},
+      {id: 'tk', name: 'Roderick Plumpton', position: 'Golpeador', number: 5, yearsActive: 7, achievements: ["Defensor más temido de la liga"]},
+      {id: 'bl', name: 'Dragomir Gorgovitch', position: 'Golpeador', number: 4, yearsActive: 5, achievements: ["Mejor golpeador defensivo del equipo"]}
+    ],
+    upcomingMatches: [
+      {id: '1', opponent: 'Holyhead Harpies', date: '2025-07-20', venue: 'Estadio Ballycastle'},
+      {id: '2', opponent: 'Gryffindor', date: '2025-08-05', venue: 'Campo de Hogwarts'},
+      {id: '3', opponent: 'Slytherin', date: '2025-08-18', venue: 'Estadio Ballycastle'}
+    ]
+  },  holyhead_harpies: {
+    id: 'holyhead_harpies',
+    name: 'Holyhead Harpies', 
+    slogan: "Vuela alto, golpea fuerte", 
+    history: "Un equipo profesional conocido por ser el único equipo completamente femenino en la liga profesional. Tienen una historia rica y gloriosa, siendo famosas por su juego agresivo, técnico y habilidoso. Las Harpies han sido pioneras en el Quidditch femenino y han inspirado a generaciones de jugadoras con su excelencia deportiva.", 
+    wins: 156, 
+    losses: 34,
+    draws: 8,
+    titles: 8, 
+    founded: 1203,
+    stadium: "Estadio Holyhead",
+    colors: ["Verde Esmeralda", "Dorado"],
+    achievements: ["Campeonas de Liga (8 veces)", "Equipo completamente femenino más exitoso", "Récord de mayor cantidad de títulos consecutivos (3)", "Mejor porcentaje de victorias de la liga"],
+    roster: [ 
+      {id: 'gw', name: 'Ginny Weasley', position: 'Cazadora', number: 8, yearsActive: 4, achievements: ["Estrella emergente del Quidditch", "Mejor jugadora joven del año"]}, 
+      {id: 'cj', name: 'Wilda Griffiths', position: 'Buscadora', number: 7, yearsActive: 9, achievements: ["Capitana y líder histórica", "Velocidad récord en captura de Snitch"]},
+      {id: 'md', name: 'Valmai Morgan', position: 'Cazadora', number: 9, yearsActive: 7, achievements: ["Anotadora más precisa del equipo", "300+ goles en su carrera"]},
+      {id: 'lb', name: 'Gwendolyn Morgan', position: 'Cazadora', number: 6, yearsActive: 6, achievements: ["Hermana legendaria", "Especialista en jugadas aéreas"]},
+      {id: 'jh', name: 'Gwenog Jones', position: 'Golpeadora', number: 4, yearsActive: 10, achievements: ["Ex-capitana legendaria", "Mejor golpeadora de la década"]},
+      {id: 'kt', name: 'Glynnis Griffiths', position: 'Golpeadora', number: 3, yearsActive: 8, achievements: ["Especialista en defensa aérea"]},
+      {id: 'sw', name: 'Artemis Fido', position: 'Guardiana', number: 1, yearsActive: 5, achievements: ["Portera más confiable de la liga", "Velocidad supersónica certificada"]}
+    ],
+    upcomingMatches: [
+      {id: '1', opponent: 'Chudley Cannons', date: '2025-07-20', venue: 'Estadio Holyhead'},
+      {id: '2', opponent: 'Ravenclaw', date: '2025-08-08', venue: 'Campo de Hogwarts'},
+      {id: '3', opponent: 'Hufflepuff', date: '2025-08-22', venue: 'Estadio Holyhead'}
     ]
   },
 };
@@ -247,9 +334,8 @@ const TeamDetailPage = () => {
         />
         <div className={styles.teamInfoMain}>
           <h1 className={styles.teamName}>{team.name}</h1>
-          <p className={styles.teamSlogan}>"{team.slogan}"</p>
-          <div className={styles.teamMetaInfo}>
-            <span>🏰 {team.league}</span>
+          <p className={styles.teamSlogan}>"{team.slogan}"</p>          <div className={styles.teamMetaInfo}>
+            <span>� Liga Profesional Quidditch</span>
             <span>📅 Fundado en {team.founded}</span>
             {team.stadium && <span>🏟️ {team.stadium}</span>}
           </div>

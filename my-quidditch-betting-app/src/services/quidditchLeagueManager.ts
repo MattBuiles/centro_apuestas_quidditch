@@ -17,13 +17,12 @@ export class QuidditchLeagueManager {
     this.simulator = new QuidditchSimulator();
     this.standingsCalculator = new LeagueStandingsCalculator();
   }
-
   /**
    * Creates a complete season with all fixtures
    */
   createSeason(
     teams: Team[],
-    seasonName: string = 'Liga de Hogwarts',
+    seasonName: string = 'Liga Profesional Quidditch',
     year: number = new Date().getFullYear(),
     config?: Partial<ScheduleConfig>
   ): Season {
@@ -160,7 +159,6 @@ export class QuidditchLeagueManager {
   validateSeason(season: Season) {
     return this.scheduler.validateCalendar(season);
   }
-
   /**
    * Creates sample teams for testing
    */
@@ -170,6 +168,8 @@ export class QuidditchLeagueManager {
         id: 'gryffindor',
         name: 'Gryffindor',
         house: 'Gryffindor',
+        fuerzaAtaque: 85,
+        fuerzaDefensa: 80,
         attackStrength: 85,
         defenseStrength: 80,
         seekerSkill: 90,
@@ -182,6 +182,8 @@ export class QuidditchLeagueManager {
         id: 'slytherin',
         name: 'Slytherin',
         house: 'Slytherin',
+        fuerzaAtaque: 90,
+        fuerzaDefensa: 85,
         attackStrength: 90,
         defenseStrength: 85,
         seekerSkill: 85,
@@ -194,6 +196,8 @@ export class QuidditchLeagueManager {
         id: 'ravenclaw',
         name: 'Ravenclaw',
         house: 'Ravenclaw',
+        fuerzaAtaque: 80,
+        fuerzaDefensa: 85,
         attackStrength: 80,
         defenseStrength: 85,
         seekerSkill: 95,
@@ -206,6 +210,8 @@ export class QuidditchLeagueManager {
         id: 'hufflepuff',
         name: 'Hufflepuff',
         house: 'Hufflepuff',
+        fuerzaAtaque: 75,
+        fuerzaDefensa: 90,
         attackStrength: 75,
         defenseStrength: 90,
         seekerSkill: 75,
@@ -217,6 +223,8 @@ export class QuidditchLeagueManager {
       {
         id: 'cannons',
         name: 'Chudley Cannons',
+        fuerzaAtaque: 70,
+        fuerzaDefensa: 65,
         attackStrength: 70,
         defenseStrength: 65,
         seekerSkill: 70,
@@ -228,6 +236,8 @@ export class QuidditchLeagueManager {
       {
         id: 'harpies',
         name: 'Holyhead Harpies',
+        fuerzaAtaque: 95,
+        fuerzaDefensa: 75,
         attackStrength: 95,
         defenseStrength: 75,
         seekerSkill: 80,
@@ -250,7 +260,7 @@ export class QuidditchLeagueManager {
       matchTimes: ['14:00', '16:30', '19:00']
     };
 
-    return this.createSeason(teams, 'Liga Mágica de Quidditch', 2025, config);
+    return this.createSeason(teams, 'Liga Profesional Quidditch', 2025, config);
   }
 
   /**
