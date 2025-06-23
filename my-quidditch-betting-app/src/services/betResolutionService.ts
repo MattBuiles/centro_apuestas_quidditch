@@ -261,10 +261,8 @@ class BetResolutionService {
     for (const bet of userBets) {
       try {
         const resolution = this.resolveSingleBet(bet, matchResult);
-        results.push(resolution);
-
-        // Update bet status and user balance
-        this.updateBetStatus(userId, bet.id, resolution.won ? 'won' : 'lost');
+        results.push(resolution);        // Update bet status and user balance
+        this.updateBetStatus(userId, bet.id, resolution.won ? 'won' : 'lost', resolution);
         
         if (resolution.won && resolution.winAmount > 0) {
           this.updateUserBalance(userId, resolution.winAmount);
@@ -543,10 +541,15 @@ class BetResolutionService {
           }
           
           localStorage.setItem(`userBets_${userId}`, JSON.stringify(userBets));
+          console.log(`✅ Updated bet ${betId} status to ${status} for user ${userId}`);
+        } else {
+          console.warn(`⚠️ Bet ${betId} not found for user ${userId}`);
         }
+      } else {
+        console.warn(`⚠️ No stored bets found for user ${userId}`);
       }
     } catch (error) {
-      console.error(`Error updating bet status for user ${userId}:`, error);
+      console.error(`❌ Error updating bet status for user ${userId}, bet ${betId}:`, error);
     }
   }
 
@@ -603,6 +606,51 @@ class BetResolutionService {
     const results = await this.resolveMatchBets(matchId);
     console.log(`✅ Manual resolution complete. Results:`, results);
   }
+
+  /**
+   * Debug function to check all pending bets for a match
+   */
+  public debugMatchBets(matchId: string): void {
+    console.log(`🔧 DEBUG: Checking all bets for match ${matchId}`);
+    
+    const allUserBets = this.getAllActiveBetsForMatch(matchId);
+    console.log(`📊 Found ${allUserBets.length} users with active bets for this match`);
+    
+    allUserBets.forEach(userBets => {
+      console.log(`👤 User ${userBets.userId}: ${userBets.bets.length} bets`);
+      userBets.bets.forEach(bet => {
+        console.log(`   💰 Bet ${bet.id}: ${bet.amount}G on ${bet.options.length} options`);
+        bet.options.forEach(option => {
+          console.log(`     - ${option.type}: ${option.selection} (odds: ${option.odds})`);
+        });
+      });
+    });
+    
+    // Also check match result
+    const matchResult = this.getMatchResult(matchId);
+    if (matchResult) {
+      console.log(`🏆 Match result found:`, matchResult);
+    } else {
+      console.log(`❌ No match result found for ${matchId}`);
+    }
+  }
+
+  /**
+   * Debug function to force bet resolution for a specific match
+   */
+  public async debugResolveMatch(matchId: string): Promise<void> {
+    console.log(`🔧 DEBUG: Force resolving bets for match ${matchId}`);
+    
+    try {
+      const results = await this.resolveMatchBets(matchId);
+      console.log(`✅ DEBUG: Resolved ${results.length} bets`);
+      results.forEach(result => {
+        console.log(`   ${result.won ? '🎉' : '💔'} User ${result.userId}: ${result.reason} (${result.won ? `+${result.winAmount}G` : 'lost'})`);
+      });
+    } catch (error) {
+      console.error('❌ DEBUG: Error during forced resolution:', error);
+    }
+  }
 }
 
 // Export singleton instance
@@ -610,5 +658,19 @@ export const betResolutionService = BetResolutionService.getInstance();
 
 // Make it available globally for debugging
 if (typeof window !== 'undefined') {
-  (window as unknown as { betResolutionService: BetResolutionService }).betResolutionService = betResolutionService;
+  (window as unknown as { 
+    betResolutionService: BetResolutionService;
+    debugMatchBets: (matchId: string) => void;
+    debugResolveMatch: (matchId: string) => Promise<void>;
+  }).betResolutionService = betResolutionService;
+  
+  // Add global debug functions
+  (window as unknown as { 
+    debugMatchBets: (matchId: string) => void;
+    debugResolveMatch: (matchId: string) => Promise<void>;
+  }).debugMatchBets = (matchId: string) => betResolutionService.debugMatchBets(matchId);
+  
+  (window as unknown as { 
+    debugResolveMatch: (matchId: string) => Promise<void>;
+  }).debugResolveMatch = (matchId: string) => betResolutionService.debugResolveMatch(matchId);
 }

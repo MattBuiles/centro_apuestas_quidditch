@@ -178,6 +178,44 @@ export class VirtualTimeManager {
 
         console.log(`✅ Partido simulado: ${equipoLocal.name} ${resultado.homeScore} - ${resultado.awayScore} ${equipoVisitante.name}`);
 
+        // Resolve bets and predictions for the simulated match
+        console.log(`💰 Match ${partido.id} finished via simulation, resolving bets and predictions...`);
+        
+        // Determine match result for predictions
+        const actualResult: 'home' | 'away' | 'draw' = 
+          resultado.homeScore > resultado.awayScore ? 'home' :
+          resultado.awayScore > resultado.homeScore ? 'away' : 'draw';
+        
+        console.log(`🏆 SIMULATION RESULT for ${partido.id}: ${actualResult} (${resultado.homeScore}-${resultado.awayScore})`);
+        
+        try {
+          // Import services to resolve bets and predictions
+          const [{ betResolutionService }, { predictionsService }] = await Promise.all([
+            import('./betResolutionService'),
+            import('./predictionsService')
+          ]);
+
+          // Resolve bets
+          const betResults = await betResolutionService.resolveMatchBets(partido.id);
+          console.log(`✅ Resolved ${betResults.length} bets for simulated match ${partido.id}`);
+
+          // Update prediction results
+          predictionsService.updatePredictionResult(partido.id, actualResult);
+          console.log(`🔮 Updated prediction result for simulated match ${partido.id}: ${actualResult}`);
+          
+          // Emit custom events for UI updates
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('betsResolved', {
+              detail: { matchId: partido.id, results: betResults }
+            }));
+            window.dispatchEvent(new CustomEvent('predictionsUpdated', {
+              detail: { matchId: partido.id, result: actualResult }
+            }));
+          }
+        } catch (error) {
+          console.error('❌ Error resolving match results for simulated match:', error);
+        }
+
       } catch (error) {
         console.error(`Error simulando partido ${partido.id}:`, error);
       }

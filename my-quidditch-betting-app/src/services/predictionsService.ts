@@ -112,24 +112,39 @@ export class PredictionsService {
     };
   }  /**
    * Update prediction correctness after match ends
-   */  updatePredictionResult(matchId: string, actualResult: 'home' | 'away' | 'draw'): void {
+   */
+  updatePredictionResult(matchId: string, actualResult: 'home' | 'away' | 'draw'): void {
+    console.log(`🔮 UPDATING PREDICTION RESULT for match ${matchId}:`);
+    console.log(`   🏆 Actual result: "${actualResult}"`);
+    
     const prediction = this.getUserPrediction(matchId);
-    if (prediction) {
-      console.log(`🔮 DETAILED PREDICTION ANALYSIS for match ${matchId}:`);
-      console.log(`   📝 User predicted: "${prediction.predictedWinner}"`);
-      console.log(`   🏆 Actual result: "${actualResult}"`);
-      console.log(`   🔍 Comparison: "${prediction.predictedWinner}" === "${actualResult}"`);
-      console.log(`   ⚡ String equality: ${prediction.predictedWinner === actualResult}`);
-      console.log(`   📊 Prediction object:`, prediction);
-      
-      const wasCorrect = prediction.predictedWinner === actualResult;
-      prediction.isCorrect = wasCorrect;
-      this.savePrediction(prediction);
-      
-      console.log(`   🎯 Final result: ${wasCorrect ? '✅ CORRECT' : '❌ INCORRECT'}`);
-      console.log(`   💾 Saved isCorrect: ${prediction.isCorrect}`);
+    if (!prediction) {
+      console.log(`⚠️ No prediction found for match ${matchId} - user did not make a prediction`);
+      return;
+    }
+    
+    console.log(`   � User predicted: "${prediction.predictedWinner}"`);
+    console.log(`   🔍 Comparison: "${prediction.predictedWinner}" === "${actualResult}"`);
+    console.log(`   📊 Prediction object before update:`, prediction);
+    
+    const wasCorrect = prediction.predictedWinner === actualResult;
+    prediction.isCorrect = wasCorrect;
+    
+    // Force save the updated prediction
+    this.savePrediction(prediction);
+    
+    console.log(`   🎯 Final result: ${wasCorrect ? '✅ CORRECT' : '❌ INCORRECT'}`);
+    console.log(`   💾 Saved isCorrect: ${prediction.isCorrect}`);
+    
+    // Verify the save worked by retrieving it again
+    const verifyPrediction = this.getUserPrediction(matchId);
+    if (verifyPrediction && verifyPrediction.isCorrect === wasCorrect) {
+      console.log(`   ✅ Verification successful: prediction correctly saved`);
     } else {
-      console.log(`⚠️ No prediction found for match ${matchId}`);
+      console.error(`   ❌ Verification failed: prediction may not have been saved correctly`);
+      console.log(`   🔧 Retry saving prediction...`);
+      // Retry save once more
+      this.savePrediction(prediction);
     }
   }
 
@@ -368,14 +383,13 @@ export class PredictionsService {
     
     console.log(`📊 Current prediction:`, prediction);
     console.log(`🔍 Current isCorrect status: ${prediction.isCorrect}`);
-    
-    // Try to find the match and determine result manually
-    if (typeof window !== 'undefined' && (window as any).debugQuidditch?.virtualTimeManager) {
-      const timeManager = (window as any).debugQuidditch.virtualTimeManager;
+      // Try to find the match and determine result manually
+    if (typeof window !== 'undefined' && (window as unknown as { debugQuidditch?: { virtualTimeManager?: { getState(): { temporadaActiva?: { partidos: { id: string; status: string; homeScore: number; awayScore: number }[] } } } } }).debugQuidditch?.virtualTimeManager) {
+      const timeManager = (window as unknown as { debugQuidditch: { virtualTimeManager: { getState(): { temporadaActiva?: { partidos: { id: string; status: string; homeScore: number; awayScore: number }[] } } } } }).debugQuidditch.virtualTimeManager;
       const state = timeManager.getState();
       
       if (state.temporadaActiva) {
-        const match = state.temporadaActiva.partidos.find((p: any) => p.id === matchId);
+        const match = state.temporadaActiva.partidos.find((p: { id: string; status: string; homeScore: number; awayScore: number }) => p.id === matchId);
         if (match && match.status === 'finished') {
           console.log(`🏆 Found finished match:`, match);
           
@@ -402,13 +416,12 @@ export const predictionsService = new PredictionsService();
 
 // Make debug function and service available globally
 if (typeof window !== 'undefined') {
-  (window as any).debugPrediction = (matchId: string) => {
+  (window as unknown as { debugPrediction: (matchId: string) => void }).debugPrediction = (matchId: string) => {
     predictionsService.debugPredictionForMatch(matchId);
   };
   
-  // Expose predictionsService globally for debugging  // Expose predictionsService globally for debugging
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (window as any).predictionsService = predictionsService;
+  // Expose predictionsService globally for debugging
+  (window as unknown as { predictionsService: PredictionsService }).predictionsService = predictionsService;
   
   // Add comprehensive debug helper
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
