@@ -18,6 +18,16 @@ interface UserBet {
   potentialWin: number;
   date: string;
   status: 'active' | 'won' | 'lost';
+  resolutionDetails?: {
+    matchResult: MatchResult;
+    optionResults: Array<{
+      option: BetOption;
+      won: boolean;
+      reason: string;
+    }>;
+    reason: string;
+    resolvedAt: string;
+  };
 }
 
 interface BetOption {
@@ -44,6 +54,12 @@ export interface BetResolutionResult {
   won: boolean;
   winAmount: number;
   reason: string;
+  matchResult?: MatchResult;
+  optionResults?: Array<{
+    option: BetOption;
+    won: boolean;
+    reason: string;
+  }>;
 }
 
 export interface MatchResult {
@@ -262,8 +278,7 @@ class BetResolutionService {
     }
 
     return results;
-  }
-  /**
+  }  /**
    * Resolves a single bet based on match result
    */
   private resolveSingleBet(bet: UserBet, matchResult: MatchResult): BetResolutionResult {
@@ -272,19 +287,34 @@ class BetResolutionService {
       userId: bet.userId,
       won: false,
       winAmount: 0,
-      reason: ''
+      reason: '',
+      matchResult,
+      optionResults: []
     };
+
+    const optionResults: Array<{
+      option: BetOption;
+      won: boolean;
+      reason: string;
+    }> = [];
 
     // Check each bet option
     for (const option of bet.options) {
       const optionResult = this.checkBetOption(option, matchResult);
+      
+      optionResults.push({
+        option,
+        won: optionResult.won,
+        reason: optionResult.reason
+      });
       
       if (!optionResult.won) {
         // If any option in a combined bet fails, entire bet is lost
         return {
           ...baseResult,
           won: false,
-          reason: `Lost: ${optionResult.reason}`
+          reason: `Lost: ${optionResult.reason}`,
+          optionResults
         };
       }
     }
@@ -296,7 +326,8 @@ class BetResolutionService {
       ...baseResult,
       won: true,
       winAmount: totalWinnings,
-      reason: `Won: All predictions correct (${bet.options.length} option${bet.options.length > 1 ? 's' : ''})`
+      reason: `Won: All predictions correct (${bet.options.length} option${bet.options.length > 1 ? 's' : ''})`,
+      optionResults
     };
   }
   /**
@@ -328,7 +359,6 @@ class BetResolutionService {
         return { won: false, reason: `Unknown bet type: ${type}` };
     }
   }
-
   /**
    * Check winner bet
    */
@@ -339,7 +369,7 @@ class BetResolutionService {
       const won = matchResult.winner === 'draw';
       return {
         won,
-        reason: won ? 'Match ended in draw' : `${matchResult.winner === 'home' ? matchResult.homeTeamName : matchResult.awayTeamName} won`
+        reason: won ? 'El partido terminó en empate como predijiste' : `Ganó ${matchResult.winner === 'home' ? matchResult.homeTeamName : matchResult.awayTeamName}, no fue empate`
       };
     }
     
@@ -353,17 +383,16 @@ class BetResolutionService {
     return {
       won,
       reason: won ? 
-        `${matchResult.winner === 'home' ? matchResult.homeTeamName : matchResult.awayTeamName} won as predicted` :
-        `${matchResult.winner === 'home' ? matchResult.homeTeamName : matchResult.awayTeamName} won, not ${selection}`
+        `¡Correcto! ${matchResult.winner === 'home' ? matchResult.homeTeamName : matchResult.awayTeamName} ganó como predijiste` :
+        `Incorrecto: Ganó ${matchResult.winner === 'home' ? matchResult.homeTeamName : matchResult.awayTeamName}, no ${selection}`
     };
   }
-
   /**
    * Check snitch bet
    */
   private checkSnitchBet(selection: string, matchResult: MatchResult): {won: boolean, reason: string} {
     if (!matchResult.snitchCaught) {
-      return { won: false, reason: 'Snitch was not caught during the match' };
+      return { won: false, reason: 'La Snitch Dorada no fue capturada durante el partido' };
     }
 
     const selectionLower = selection.toLowerCase();
@@ -380,14 +409,15 @@ class BetResolutionService {
             (matchResult.winner === 'away' && selectionLower.includes(matchResult.awayTeamName.toLowerCase()));
     }
 
+    const snitchTeam = matchResult.snitchCaughtBy === matchResult.homeTeamId ? matchResult.homeTeamName : matchResult.awayTeamName;
+    
     return {
       won,
       reason: won ? 
-        `Snitch caught by predicted team` :
-        `Snitch caught by ${matchResult.snitchCaughtBy || 'other team'}, not as predicted`
+        `¡Correcto! La Snitch fue capturada por ${snitchTeam} como predijiste` :
+        `Incorrecto: La Snitch fue capturada por ${snitchTeam}, no como predijiste`
     };
   }
-
   /**
    * Check exact score bet
    */
@@ -396,7 +426,7 @@ class BetResolutionService {
     const match = selection.match(scoreRegex);
     
     if (!match) {
-      return { won: false, reason: 'Invalid score format' };
+      return { won: false, reason: 'Formato de puntuación inválido' };
     }
 
     const predictedHome = parseInt(match[1]);
@@ -406,8 +436,8 @@ class BetResolutionService {
     return {
       won,
       reason: won ? 
-        'Exact score predicted correctly' :
-        `Actual score: ${matchResult.homeScore}-${matchResult.awayScore}, predicted: ${predictedHome}-${predictedAway}`
+        '¡Perfecto! Acertaste la puntuación exacta' :
+        `Puntuación real: ${matchResult.homeScore}-${matchResult.awayScore}, predijiste: ${predictedHome}-${predictedAway}`
     };
   }
 
@@ -489,11 +519,10 @@ class BetResolutionService {
         `Match duration ${durationMinutes} minutes matches prediction` :
         `Duration was ${durationMinutes} minutes, prediction was ${selection}`
     };
-  }
-  /**
+  }  /**
    * Updates bet status in localStorage
    */
-  private updateBetStatus(userId: string, betId: string, status: 'won' | 'lost'): void {
+  private updateBetStatus(userId: string, betId: string, status: 'won' | 'lost', resolutionResult?: BetResolutionResult): void {
     try {
       const storedBets = localStorage.getItem(`userBets_${userId}`);
       if (storedBets) {
@@ -502,6 +531,17 @@ class BetResolutionService {
         
         if (betIndex !== -1) {
           userBets[betIndex].status = status;
+          
+          // Add resolution details if provided
+          if (resolutionResult && resolutionResult.matchResult && resolutionResult.optionResults) {
+            userBets[betIndex].resolutionDetails = {
+              matchResult: resolutionResult.matchResult,
+              optionResults: resolutionResult.optionResults,
+              reason: resolutionResult.reason,
+              resolvedAt: new Date().toISOString()
+            };
+          }
+          
           localStorage.setItem(`userBets_${userId}`, JSON.stringify(userBets));
         }
       }

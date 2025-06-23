@@ -331,13 +331,25 @@ export class VirtualTimeManager {
     partido.awayScore = estado.golesVisitante;
     partido.events = estado.eventos;
     partido.currentMinute = estado.minuto;
-    partido.snitchCaught = estado.snitchCaught;
-
-    // Resolve bets for the finished match
-    console.log(`💰 Match ${partidoId} finished, resolving bets...`);
+    partido.snitchCaught = estado.snitchCaught;    // Resolve bets and predictions for the finished match
+    console.log(`💰 Match ${partidoId} finished, resolving bets and predictions...`);
+      // Determine match result for predictions
+    const actualResult: 'home' | 'away' | 'draw' = 
+      partido.homeScore! > partido.awayScore! ? 'home' :
+      partido.awayScore! > partido.homeScore! ? 'away' : 'draw';
+    
+    console.log(`🏆 Match result determination for ${partidoId}:`);
+    console.log(`   - Local team (home): ${partido.localId} - Score: ${partido.homeScore}`);
+    console.log(`   - Visitante team (away): ${partido.visitanteId} - Score: ${partido.awayScore}`);
+    console.log(`   - Determined result: ${actualResult}`);
+    
     try {
-      // Import bet resolution service dynamically to avoid circular dependencies
-      import('../services/betResolutionService').then(({ betResolutionService }) => {
+      // Import services dynamically to avoid circular dependencies
+      Promise.all([
+        import('../services/betResolutionService'),
+        import('../services/predictionsService')
+      ]).then(([{ betResolutionService }, { predictionsService }]) => {
+        // Resolve bets
         betResolutionService.resolveMatchBets(partidoId).then((results) => {
           console.log(`✅ Resolved ${results.length} bets for match ${partidoId}`);
           
@@ -350,9 +362,22 @@ export class VirtualTimeManager {
         }).catch((error) => {
           console.error('❌ Error resolving bets:', error);
         });
+
+        // Update prediction results
+        predictionsService.updatePredictionResult(partidoId, actualResult);
+        console.log(`🔮 Updated prediction result for match ${partidoId}: ${actualResult}`);
+        
+        // Emit custom event for predictions update
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('predictionsUpdated', {
+            detail: { matchId: partidoId, result: actualResult }
+          }));
+        }
+      }).catch((error) => {
+        console.error('❌ Error importing services:', error);
       });
     } catch (error) {
-      console.error('❌ Error importing bet resolution service:', error);
+      console.error('❌ Error resolving match results:', error);
     }
 
     // Limpiar estado en vivo

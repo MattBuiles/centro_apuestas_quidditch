@@ -147,16 +147,14 @@ export class LiveMatchSimulator {
 
       // Calculate probabilities for both teams
       const probLocal = this.ajustarProb(evento, local, visitante, 'home');
-      const probVisitante = this.ajustarProb(evento, visitante, local, 'away');
-
-      // Check if local team event occurs
+      const probVisitante = this.ajustarProb(evento, visitante, local, 'away');      // Check if local team event occurs
       if (Math.random() < probLocal) {
-        this.registrarEvento(estado, evento, local.id, local.name);
+        this.registrarEvento(estado, evento, local.id, local.name, true);
       }
 
       // Check if visiting team event occurs (unless match has ended)
       if (estado.isActive && Math.random() < probVisitante) {
-        this.registrarEvento(estado, evento, visitante.id, visitante.name);
+        this.registrarEvento(estado, evento, visitante.id, visitante.name, false);
       }
     });
   }
@@ -209,7 +207,6 @@ export class LiveMatchSimulator {
     // Cap probability at reasonable maximum
     return Math.min(prob, 0.25);
   }
-
   /**
    * Registers an event that occurred during the match
    */
@@ -217,7 +214,8 @@ export class LiveMatchSimulator {
     estado: MatchState, 
     evento: EventConfig, 
     teamId: string, 
-    teamName: string
+    teamName: string,
+    isLocalTeam: boolean
   ): void {
     const gameEvent: GameEvent = {
       id: `${estado.matchId}-${estado.eventos.length + 1}`,
@@ -232,9 +230,9 @@ export class LiveMatchSimulator {
 
     estado.eventos.push(gameEvent);
 
-    // Update scores
+    // Update scores - Fixed logic based on team position
     if (evento.puntos > 0) {
-      if (teamId === estado.matchId.split('-')[0]) { // Assuming match ID format includes team info
+      if (isLocalTeam) {
         estado.golesLocal += evento.puntos;
       } else {
         estado.golesVisitante += evento.puntos;
