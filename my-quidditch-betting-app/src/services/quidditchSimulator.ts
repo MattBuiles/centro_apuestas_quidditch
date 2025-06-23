@@ -419,16 +419,17 @@ export class QuidditchSimulator {
       
       // Resolve bets
       const results = await betResolutionService.resolveMatchBets(matchResult.matchId);
-      console.log(`✅ Resolved ${results.length} bets for match ${matchResult.matchId}`);
-        // Determine match result for predictions
+      console.log(`✅ Resolved ${results.length} bets for match ${matchResult.matchId}`);      // Determine match result for predictions
       const actualResult: 'home' | 'away' | 'draw' = 
         matchResult.homeScore > matchResult.awayScore ? 'home' :
         matchResult.awayScore > matchResult.homeScore ? 'away' : 'draw';
       
-      console.log(`🏆 Simulator result determination for ${matchResult.matchId}:`);
-      console.log(`   - Home score: ${matchResult.homeScore}`);
-      console.log(`   - Away score: ${matchResult.awayScore}`);
-      console.log(`   - Determined result: ${actualResult}`);
+      console.log(`🏆 DETAILED SIMULATOR RESULT DETERMINATION for ${matchResult.matchId}:`);
+      console.log(`   🏠 Home score: ${matchResult.homeScore}`);
+      console.log(`   🚗 Away score: ${matchResult.awayScore}`);
+      console.log(`   🎯 Score comparison: ${matchResult.homeScore} vs ${matchResult.awayScore}`);
+      console.log(`   🏆 Determined result: "${actualResult}"`);
+      console.log(`   📊 MatchResult object:`, matchResult);
       
       // Update prediction results
       predictionsService.updatePredictionResult(matchResult.matchId, actualResult);
