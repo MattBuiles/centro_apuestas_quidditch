@@ -832,7 +832,146 @@
   font-size: 1em;
 }
 
-/* ===== RESPONSIVE PARA NUEVOS ELEMENTOS ===== */
+/* ===== PRÓXIMOS PARTIDOS ===== */
+.upcomingMatchesList {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(var(--spacing-4), 3vw, var(--spacing-5));
+}
+
+.matchItem {
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid rgba(75, 0, 130, 0.1);
+  border-radius: clamp(var(--radius-md), 2vw, var(--radius-lg));
+  padding: clamp(var(--spacing-4), 3vw, var(--spacing-5));
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.matchItem::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.matchItem:hover::before {
+  transform: scaleX(1);
+}
+
+.matchItem:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(75, 0, 130, 0.15);
+}
+
+.matchHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: clamp(var(--spacing-2), 2vw, var(--spacing-3));
+  margin-bottom: clamp(var(--spacing-3), 2vw, var(--spacing-4));
+}
+
+.matchOpponent {
+  font-family: var(--font-primary);
+  font-size: clamp(var(--text-lg), 4vw, var(--text-xl));
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 0;
+}
+
+.matchDate {
+  font-size: clamp(var(--text-sm), 3vw, var(--text-base));
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  background: rgba(75, 0, 130, 0.05);
+  padding: clamp(var(--spacing-1), 1vw, var(--spacing-2)) clamp(var(--spacing-2), 2vw, var(--spacing-3));
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(75, 0, 130, 0.1);
+}
+
+.matchVenue {
+  font-size: clamp(var(--text-sm), 3vw, var(--text-base));
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.matchVenue::before {
+  content: '🏟️';
+  font-size: 1em;
+}
+
+/* ===== LOGROS ===== */
+.achievementsList {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(var(--spacing-3), 2vw, var(--spacing-4));
+}
+
+.achievementItem {
+  display: flex;
+  align-items: center;
+  gap: clamp(var(--spacing-3), 2vw, var(--spacing-4));
+  background: rgba(255, 255, 255, 0.8);
+  padding: clamp(var(--spacing-3), 2vw, var(--spacing-4));
+  border-radius: var(--radius-md);
+  border-left: 4px solid var(--color-accent);
+  transition: all 0.3s ease;
+}
+
+.achievementItem:hover {
+  transform: translateX(4px);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.achievementIcon {
+  font-size: clamp(var(--text-lg), 4vw, var(--text-xl));
+  flex-shrink: 0;
+}
+
+.achievementText {
+  font-size: clamp(var(--text-sm), 3vw, var(--text-base));
+  color: var(--color-text-primary);
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+/* ===== ERROR STATE ===== */
+.notFound {
+  text-align: center;
+  padding: clamp(var(--spacing-8), 6vw, var(--spacing-12));
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: clamp(var(--radius-lg), 2vw, var(--radius-xl));
+  backdrop-filter: blur(20px);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.notFound h2 {
+  font-family: var(--font-primary);
+  font-size: clamp(var(--text-xl), 5vw, var(--text-2xl));
+  color: var(--color-primary);
+  margin-bottom: clamp(var(--spacing-4), 3vw, var(--spacing-6));
+}
+
+.notFound p {
+  font-size: clamp(var(--text-base), 3vw, var(--text-lg));
+  color: var(--color-text-secondary);
+  margin-bottom: clamp(var(--spacing-6), 4vw, var(--spacing-8));
+}
+
 @media (max-width: 768px) {
   .idolHeader,
   .rivalryHeader {
