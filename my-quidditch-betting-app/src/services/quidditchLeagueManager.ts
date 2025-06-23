@@ -52,10 +52,8 @@ export class QuidditchLeagueManager {
 
     if (!homeTeam || !awayTeam) {
       throw new Error('Teams not found for match');
-    }
-
-    // Simulate the match
-    const result = this.simulator.simulateMatch(homeTeam, awayTeam);
+    }    // Simulate the match with correct ID
+    const result = this.simulator.simulateMatch(homeTeam, awayTeam, matchId);
 
     // Update match with results
     match.status = 'finished';

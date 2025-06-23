@@ -161,8 +161,8 @@ export class VirtualTimeManager {
         if (!equipoLocal || !equipoVisitante) {
           console.warn(`Equipos no encontrados para el partido ${partido.id}`);
           continue;
-        }        // Simular el partido
-        const resultado = quidditchSimulator.simulateMatch(equipoLocal, equipoVisitante);
+        }        // Simular el partido con el ID correcto
+        const resultado = quidditchSimulator.simulateMatch(equipoLocal, equipoVisitante, partido.id);
         
         // Actualizar el partido con el resultado
         partido.homeScore = resultado.homeScore;
@@ -315,8 +315,7 @@ export class VirtualTimeManager {
     this.saveState();
     
     return estadoPartido;
-  }
-  /**
+  }  /**
    * Finaliza un partido que estaba en estado live y lo marca como terminado
    */
   finalizarPartidoEnVivo(partidoId: string): void {
@@ -333,6 +332,28 @@ export class VirtualTimeManager {
     partido.events = estado.eventos;
     partido.currentMinute = estado.minuto;
     partido.snitchCaught = estado.snitchCaught;
+
+    // Resolve bets for the finished match
+    console.log(`💰 Match ${partidoId} finished, resolving bets...`);
+    try {
+      // Import bet resolution service dynamically to avoid circular dependencies
+      import('../services/betResolutionService').then(({ betResolutionService }) => {
+        betResolutionService.resolveMatchBets(partidoId).then((results) => {
+          console.log(`✅ Resolved ${results.length} bets for match ${partidoId}`);
+          
+          // Emit custom event for UI components to listen to
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('betsResolved', {
+              detail: { matchId: partidoId, results }
+            }));
+          }
+        }).catch((error) => {
+          console.error('❌ Error resolving bets:', error);
+        });
+      });
+    } catch (error) {
+      console.error('❌ Error importing bet resolution service:', error);
+    }
 
     // Limpiar estado en vivo
     liveMatchSimulator.stopMatch(partidoId);

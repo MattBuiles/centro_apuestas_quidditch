@@ -43,15 +43,35 @@ const LiveMatchViewer: React.FC<LiveMatchViewerProps> = ({
         const newEvents = currentState.eventos.slice(lastEventCount);
         setEventFeed(prev => [...prev, ...newEvents]);
         setLastEventCount(currentState.eventos.length);
-      }
-
-      // Check if match ended
+      }      // Check if match ended
       if (!currentState.isActive && isSimulating) {
         setIsSimulating(false);
         
         // Save detailed match result
         console.log('🎯 Match ended, saving detailed results...');
         liveMatchSimulator.saveDetailedMatchResult(match.id, match, homeTeam, awayTeam);
+        
+        // Resolve bets for finished match
+        console.log('💰 Resolving bets for finished match...');
+        try {
+          // Import bet resolution service dynamically to avoid circular dependencies
+          import('@/services/betResolutionService').then(({ betResolutionService }) => {
+            betResolutionService.resolveMatchBets(match.id).then((results) => {
+              console.log(`✅ Resolved ${results.length} bets for match ${match.id}`);
+              
+              // Emit custom event for UI components to listen to
+              if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('betsResolved', {
+                  detail: { matchId: match.id, results }
+                }));
+              }
+            }).catch((error) => {
+              console.error('❌ Error resolving bets:', error);
+            });
+          });
+        } catch (error) {
+          console.error('❌ Error importing bet resolution service:', error);
+        }
         
         // Call onMatchEnd callback
         if (onMatchEnd) {
