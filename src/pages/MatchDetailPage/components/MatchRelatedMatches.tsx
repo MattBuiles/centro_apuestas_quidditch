@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import TeamLogo from '@/components/teams/TeamLogo';
 import { Match } from '@/types/league';
 import { virtualTimeManager } from '@/services/virtualTimeManager';
-import styles from '../MatchDetailPage.module.css';
+import styles from './MatchRelatedMatches.module.css';
 
 interface MatchRelatedMatchesProps {
   relatedMatches: Match[];

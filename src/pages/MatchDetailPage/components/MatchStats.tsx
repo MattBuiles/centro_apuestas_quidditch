@@ -1,7 +1,7 @@
 import React from 'react';
 import TeamLogo from '@/components/teams/TeamLogo';
 import { Team } from '@/types/league';
-import styles from '../MatchDetailPage.module.css';
+import styles from './MatchStats.module.css';
 
 interface MatchStatsProps {
   homeTeam: Team | null;

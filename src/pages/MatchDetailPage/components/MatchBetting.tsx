@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Button from '@/components/common/Button';
-import styles from '../MatchDetailPage.module.css';
+import styles from './MatchBetting.module.css';
 
 interface MatchBettingProps {
   match: {

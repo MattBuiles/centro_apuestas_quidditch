@@ -1,6 +1,6 @@
 import React from 'react';
 import MatchResultDetail from '@/components/matches/MatchResultDetail';
-import styles from '../MatchDetailPage.module.css';
+import styles from './MatchDetailedAnalysis.module.css';
 
 interface MatchDetailedAnalysisProps {
   match: {

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import Button from '@/components/common/Button';
 import TeamLogo from '@/components/teams/TeamLogo';
 import { MatchPredictionStats, Prediction } from '@/services/predictionsService';
-import styles from '../MatchDetailPage.module.css';
+import styles from './MatchPredictions.module.css';
 
 interface MatchPredictionsProps {
   match: {

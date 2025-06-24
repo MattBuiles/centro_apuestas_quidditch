@@ -1,0 +1,592 @@
+/* ========================================
+   MATCH PREDICTIONS - CRYSTAL BALL MAGIC
+   ======================================== */
+
+.predictionsTab {
+  background: linear-gradient(135deg, 
+    rgba(186, 104, 200, 0.12) 0%,
+    rgba(156, 39, 176, 0.08) 25%,
+    rgba(255, 255, 255, 0.85) 50%,
+    rgba(156, 39, 176, 0.08) 75%,
+    rgba(186, 104, 200, 0.12) 100%);
+  border-radius: 30px;
+  position: relative;
+  overflow: hidden;
+  animation: mysticGlow 6s ease-in-out infinite;
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  border: 3px solid rgba(186, 104, 200, 0.2);
+  backdrop-filter: blur(20px);
+}
+
+@keyframes mysticGlow {
+  0%, 100% { 
+    box-shadow: 
+      0 0 40px rgba(186, 104, 200, 0.2),
+      0 20px 60px rgba(106, 13, 173, 0.1);
+  }
+  33% { 
+    box-shadow: 
+      0 0 60px rgba(186, 104, 200, 0.3),
+      0 25px 80px rgba(156, 39, 176, 0.15);
+  }
+  66% { 
+    box-shadow: 
+      0 0 80px rgba(156, 39, 176, 0.4),
+      0 30px 100px rgba(186, 104, 200, 0.2);
+  }
+}
+
+.predictionsTab::before {
+  content: '🔮✨';
+  position: absolute;
+  top: 20px;
+  right: 25px;
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+  opacity: 0.8;
+  animation: crystallFloat 4s ease-in-out infinite;
+  z-index: 1;
+}
+
+@keyframes crystallFloat {
+  0%, 100% { 
+    transform: translateY(0px) rotate(0deg) scale(1);
+    opacity: 0.8;
+  }
+  25% { 
+    transform: translateY(-15px) rotate(5deg) scale(1.1);
+    opacity: 1;
+  }
+  50% { 
+    transform: translateY(-8px) rotate(-3deg) scale(1.05);
+    opacity: 0.9;
+  }
+  75% { 
+    transform: translateY(-20px) rotate(8deg) scale(1.15);
+    opacity: 0.95;
+  }
+}
+
+/* Prediction Display Container */
+.predictionDisplay {
+  background: linear-gradient(135deg, 
+    rgba(186, 104, 200, 0.15) 0%,
+    rgba(156, 39, 176, 0.1) 25%,
+    rgba(255, 255, 255, 0.9) 50%,
+    rgba(156, 39, 176, 0.1) 75%,
+    rgba(186, 104, 200, 0.15) 100%);
+  border-radius: 25px;
+  padding: clamp(2rem, 4vw, 3rem);
+  margin: clamp(1.5rem, 3vw, 2.5rem) 0;
+  border: 2px solid rgba(186, 104, 200, 0.3);
+  backdrop-filter: blur(15px);
+  position: relative;
+  overflow: hidden;
+  animation: prophecyGlow 8s ease-in-out infinite;
+}
+
+@keyframes prophecyGlow {
+  0%, 100% { 
+    border-color: rgba(186, 104, 200, 0.3);
+    background: linear-gradient(135deg, 
+      rgba(186, 104, 200, 0.15) 0%,
+      rgba(156, 39, 176, 0.1) 25%,
+      rgba(255, 255, 255, 0.9) 50%,
+      rgba(156, 39, 176, 0.1) 75%,
+      rgba(186, 104, 200, 0.15) 100%);
+  }
+  50% { 
+    border-color: rgba(186, 104, 200, 0.5);
+    background: linear-gradient(135deg, 
+      rgba(186, 104, 200, 0.2) 0%,
+      rgba(156, 39, 176, 0.15) 25%,
+      rgba(255, 255, 255, 0.95) 50%,
+      rgba(156, 39, 176, 0.15) 75%,
+      rgba(186, 104, 200, 0.2) 100%);
+  }
+}
+
+.predictionDisplay::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 100%);
+  animation: prophecyShimmer 5s ease-in-out infinite;
+}
+
+@keyframes prophecyShimmer {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: 100%; }
+}
+
+/* Prediction Team Cards */
+.predictionTeam {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(1rem, 2.5vw, 1.5rem);
+  background: linear-gradient(135deg, 
+    rgba(106, 13, 173, 0.85) 0%,
+    rgba(156, 39, 176, 0.9) 50%,
+    rgba(186, 104, 200, 0.8) 100%);
+  color: white;
+  font-weight: 700;
+  font-size: clamp(1.1rem, 2.8vw, 1.6rem);
+  padding: clamp(1.2rem, 3vw, 2rem) clamp(1.5rem, 4vw, 2.5rem);
+  border-radius: 20px;
+  margin: clamp(1.5rem, 3vw, 2rem) 0;
+  box-shadow: 
+    0 12px 30px rgba(106, 13, 173, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  z-index: 2;
+  cursor: pointer;
+}
+
+.predictionTeam:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 
+    0 20px 50px rgba(106, 13, 173, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.predictionTeam::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 100%);
+  animation: teamShine 3s ease-in-out infinite;
+  z-index: -1;
+}
+
+@keyframes teamShine {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* Confidence Level */
+.confidenceLevel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.5rem, 1.5vw, 0.8rem);
+  background: linear-gradient(135deg, 
+    rgba(255, 215, 0, 0.2) 0%,
+    rgba(255, 193, 7, 0.25) 50%,
+    rgba(255, 215, 0, 0.2) 100%);
+  color: #B8860B;
+  font-weight: 600;
+  font-size: clamp(1rem, 2.2vw, 1.3rem);
+  padding: clamp(1rem, 2.5vw, 1.5rem) clamp(1.2rem, 3vw, 2rem);
+  border-radius: 15px;
+  margin-top: clamp(1rem, 2vw, 1.5rem);
+  border: 2px solid rgba(255, 193, 7, 0.4);
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  text-shadow: 0 1px 4px rgba(184, 134, 11, 0.3);
+  z-index: 2;
+}
+
+.confidenceLevel:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(255, 193, 7, 0.3);
+  background: linear-gradient(135deg, 
+    rgba(255, 215, 0, 0.3) 0%,
+    rgba(255, 193, 7, 0.35) 50%,
+    rgba(255, 215, 0, 0.3) 100%);
+  border-color: rgba(255, 193, 7, 0.6);
+}
+
+.confidenceLevel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, 
+    rgba(255, 215, 0, 0.1) 0%,
+    rgba(255, 193, 7, 0.2) 50%,
+    rgba(255, 215, 0, 0.1) 100%);
+  animation: confidenceGlow 4s ease-in-out infinite;
+  z-index: -1;
+}
+
+@keyframes confidenceGlow {
+  0%, 100% { 
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
+
+/* Stars animation for confidence level */
+.confidenceLevel .stars {
+  animation: starsTwinkle 2s ease-in-out infinite;
+  display: inline-flex;
+  gap: 0.2rem;
+}
+
+@keyframes starsTwinkle {
+  0%, 100% { 
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.7;
+    transform: scale(1.2);
+  }
+}
+
+/* User Prediction Cards */
+.userPredictionCard,
+.predictionInterface,
+.communityPredictions {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(186, 104, 200, 0.08) 25%,
+    rgba(255, 255, 255, 0.8) 50%,
+    rgba(156, 39, 176, 0.06) 75%,
+    rgba(255, 255, 255, 0.85) 100%);
+  border-radius: 25px;
+  padding: clamp(1.8rem, 3.5vw, 2.8rem);
+  margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+  border: 2px solid rgba(186, 104, 200, 0.3);
+  backdrop-filter: blur(15px);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s ease;
+  box-shadow: 
+    0 15px 40px rgba(186, 104, 200, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.userPredictionCard:hover,
+.predictionInterface:hover,
+.communityPredictions:hover {
+  transform: translateY(-8px);
+  box-shadow: 
+    0 25px 60px rgba(186, 104, 200, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  border-color: rgba(186, 104, 200, 0.5);
+}
+
+/* Enhanced prediction bars */
+.predictionBars {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1rem, 2vw, 1.5rem);
+  margin: clamp(1.5rem, 3vw, 2rem) 0;
+}
+
+.predictionBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(90deg, 
+    rgba(106, 13, 173, 0.85) 0%,
+    rgba(156, 39, 176, 0.7) 50%,
+    rgba(186, 104, 200, 0.6) 100%);
+  border-radius: 18px;
+  padding: clamp(1rem, 2.5vw, 1.5rem) clamp(1.2rem, 3vw, 2rem);
+  font-weight: 700;
+  color: white;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(106, 13, 173, 0.3);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  min-height: clamp(50px, 8vw, 70px);
+  font-size: clamp(1rem, 2.2vw, 1.2rem);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.predictionBar:hover {
+  transform: scale(1.02);
+  box-shadow: 
+    0 12px 30px rgba(106, 13, 173, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.predictionBar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    rgba(255, 255, 255, 0.3) 0%,
+    rgba(255, 255, 255, 0.1) 100%);
+  animation: predictionShine 3s ease-in-out infinite;
+  border-radius: 18px;
+}
+
+@keyframes predictionShine {
+  0% { width: 0%; }
+  50% { width: 100%; }
+  100% { width: 0%; }
+}
+
+.totalPredictions {
+  text-align: center;
+  font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+  color: #6A0DAD;
+  font-weight: 600;
+  margin-top: clamp(1.5rem, 3vw, 2rem);
+  background: linear-gradient(135deg, 
+    rgba(106, 13, 173, 0.1) 0%,
+    rgba(186, 104, 200, 0.15) 100%);
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+  border-radius: 18px;
+  border: 2px solid rgba(106, 13, 173, 0.3);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.totalPredictions::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, 
+    rgba(106, 13, 173, 0.05) 0%,
+    rgba(186, 104, 200, 0.1) 100%);
+  animation: totalGlow 3s ease-in-out infinite;
+  z-index: -1;
+}
+
+@keyframes totalGlow {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* Coming Soon Styles */
+.comingSoon {
+  text-align: center;
+  padding: clamp(2.5rem, 5vw, 4rem);
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.8) 0%,
+    rgba(186, 104, 200, 0.1) 50%,
+    rgba(255, 255, 255, 0.7) 100%);
+  border-radius: 25px;
+  border: 2px dashed rgba(186, 104, 200, 0.5);
+  color: rgba(106, 13, 173, 0.8);
+  backdrop-filter: blur(15px);
+  position: relative;
+  overflow: hidden;
+  animation: comingSoonFloat 4s ease-in-out infinite;
+}
+
+@keyframes comingSoonFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.comingSoonIcon {
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  margin-bottom: clamp(1rem, 2vw, 1.5rem);
+  opacity: 0.7;
+  animation: comingSoonPulse 3s ease-in-out infinite;
+}
+
+@keyframes comingSoonPulse {
+  0%, 100% { 
+    transform: scale(1) rotate(0deg);
+    opacity: 0.7;
+  }
+  33% { 
+    transform: scale(1.1) rotate(5deg);
+    opacity: 0.9;
+  }
+  66% { 
+    transform: scale(1.05) rotate(-3deg);
+    opacity: 1;
+  }
+}
+
+/* Mystic Orbs Decoration */
+.mysticOrbs {
+  position: absolute;
+  width: clamp(30px, 5vw, 50px);
+  height: clamp(30px, 5vw, 50px);
+  background: radial-gradient(circle, 
+    rgba(186, 104, 200, 0.6) 0%,
+    rgba(156, 39, 176, 0.4) 50%,
+    transparent 100%);
+  border-radius: 50%;
+  animation: mysticOrbs 6s ease-in-out infinite;
+}
+
+.mysticOrbs:nth-child(1) {
+  top: 10%;
+  left: 5%;
+  animation-delay: 0s;
+}
+
+.mysticOrbs:nth-child(2) {
+  top: 70%;
+  right: 8%;
+  animation-delay: 2s;
+}
+
+.mysticOrbs:nth-child(3) {
+  bottom: 15%;
+  left: 12%;
+  animation-delay: 4s;
+}
+
+@keyframes mysticOrbs {
+  0%, 100% { 
+    transform: rotate(0deg) scale(1);
+    opacity: 0.6;
+  }
+  33% { 
+    transform: rotate(120deg) scale(1.2);
+    opacity: 0.9;
+  }
+  66% { 
+    transform: rotate(240deg) scale(0.8);
+    opacity: 0.7;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+  .predictionBars {
+    gap: 1rem;
+  }
+  
+  .predictionBar {
+    min-height: 60px;
+    padding: 1rem 1.5rem;
+  }
+  
+  .userPredictionCard,
+  .predictionInterface,
+  .communityPredictions {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .predictionsTab {
+    padding: 1.5rem;
+  }
+  
+  .predictionDisplay {
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+  }
+  
+  .predictionTeam {
+    padding: 1rem 1.5rem;
+    font-size: 1.1rem;
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+  
+  .confidenceLevel {
+    padding: 0.8rem 1.2rem;
+    font-size: 1rem;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .predictionBars {
+    gap: 0.8rem;
+  }
+  
+  .predictionBar {
+    min-height: 50px;
+    padding: 0.8rem 1.2rem;
+    font-size: 0.95rem;
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: center;
+  }
+}
+
+@media (max-width: 576px) {
+  .predictionsTab::before {
+    font-size: 1.5rem;
+    top: 15px;
+    right: 15px;
+  }
+  
+  .predictionDisplay {
+    padding: 1rem;
+    border-radius: 15px;
+  }
+  
+  .predictionTeam {
+    padding: 0.8rem 1rem;
+    border-radius: 12px;
+    margin: 1rem 0;
+  }
+  
+  .confidenceLevel {
+    padding: 0.6rem 1rem;
+    border-radius: 10px;
+    margin-top: 0.8rem;
+  }
+  
+  .predictionBar {
+    min-height: 45px;
+    padding: 0.7rem 1rem;
+    border-radius: 12px;
+    font-size: 0.9rem;
+  }
+  
+  .userPredictionCard,
+  .predictionInterface,
+  .communityPredictions {
+    padding: 1.2rem;
+    border-radius: 15px;
+    margin-bottom: 1.2rem;
+  }
+  
+  .comingSoon {
+    padding: 2rem 1.2rem;
+    border-radius: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .predictionsTab {
+    padding: 1rem;
+    border-radius: 20px;
+  }
+  
+  .mysticOrbs {
+    width: 25px;
+    height: 25px;
+  }
+  
+  .totalPredictions {
+    padding: 0.8rem;
+    font-size: 1rem;
+  }
+}

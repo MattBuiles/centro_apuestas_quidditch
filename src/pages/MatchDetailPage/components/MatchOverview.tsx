@@ -3,7 +3,7 @@ import Button from '@/components/common/Button';
 import LiveMatchViewer from '@/components/matches/LiveMatchViewer';
 import { Team, Match } from '@/types/league';
 import { FinishedMatchData, Prediction } from '@/services/predictionsService';
-import styles from '../MatchDetailPage.module.css';
+import styles from './MatchOverview.module.css';
 
 interface MatchOverviewProps {
   match: {
