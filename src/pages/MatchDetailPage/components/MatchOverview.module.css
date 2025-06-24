@@ -1003,23 +1003,326 @@
   content: '';
   position: absolute;
   top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
+  left: 0;
+  right: 0;
+  height: 4px;
   background: linear-gradient(90deg, 
     transparent 0%,
-    rgba(255, 255, 255, 0.3) 50%,
+    rgba(106, 13, 173, 0.6) 20%,
+    rgba(156, 39, 176, 0.8) 50%,
+    rgba(106, 13, 173, 0.6) 80%,
     transparent 100%);
-  animation: resultShimmer 3s ease-in-out infinite;
+  animation: mysticBorder 3s ease-in-out infinite;
 }
 
-@keyframes resultShimmer {
-  0% { left: -100%; }
-  100% { left: 100%; }
+@keyframes mysticBorder {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
 }
 
-/* Correct Prediction */
-.predictionCorrect {
+.predictionResult h4 {
+  font-size: clamp(1.3rem, 2.8vw, 1.6rem);
+  font-weight: 700;
+  color: #6A0DAD;
+  margin-bottom: clamp(1rem, 2vw, 1.5rem);
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+/* Prediction Timestamp */
+.predictionTimestamp {
+  text-align: center;
+  padding: clamp(0.8rem, 2vw, 1rem);
+  background: rgba(106, 13, 173, 0.08);
+  border-radius: 12px;
+  border: 1px solid rgba(106, 13, 173, 0.15);
+  margin-bottom: clamp(1rem, 2vw, 1.5rem);
+}
+
+.predictionTimestamp small {
+  font-size: clamp(0.8rem, 1.8vw, 0.9rem);
+  color: rgba(106, 13, 173, 0.7);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+/* Community Predictions Results */
+.communityPredictionsResult {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(248, 249, 250, 0.9) 100%);
+  border-radius: 20px;
+  padding: clamp(1.5rem, 3vw, 2rem);
+  border: 2px solid rgba(106, 13, 173, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.communityPredictionsResult::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, 
+    transparent 0%,
+    rgba(156, 39, 176, 0.6) 20%,
+    rgba(186, 104, 200, 0.8) 50%,
+    rgba(156, 39, 176, 0.6) 80%,
+    transparent 100%);
+  animation: communityBorder 3s ease-in-out infinite;
+}
+
+@keyframes communityBorder {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.communityPredictionsResult h4 {
+  font-size: clamp(1.3rem, 2.8vw, 1.6rem);
+  font-weight: 700;
+  color: #6A0DAD;
+  margin-bottom: clamp(1rem, 2vw, 1.5rem);
+  text-align: center;
+}
+
+.predictionsStats {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.8rem, 2vw, 1rem);
+}
+
+.predictionsStats p {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: clamp(1rem, 2.2vw, 1.1rem);
+  color: #212529;
+  background: rgba(106, 13, 173, 0.05);
+  padding: clamp(0.8rem, 2vw, 1rem);
+  border-radius: 12px;
+  border: 1px solid rgba(106, 13, 173, 0.1);
+  transition: all 0.3s ease;
+  margin: 0;
+}
+
+.predictionsStats p:hover {
+  background: rgba(106, 13, 173, 0.08);
+  transform: translateX(5px);
+  box-shadow: 0 5px 15px rgba(106, 13, 173, 0.1);
+}
+
+.predictionsStats strong {
+  color: #6A0DAD;
+  font-weight: 700;
+}
+
+/* ========================================
+   MATCH SUMMARY SECTION - ENHANCED RESULTS
+   ======================================== */
+
+/* Match Summary Container */
+.matchSummary {
+  margin-top: clamp(2rem, 4vw, 3rem);
+  position: relative;
+}
+
+.summaryCard {
+  background: linear-gradient(135deg, 
+    rgba(106, 13, 173, 0.08) 0%,
+    rgba(156, 39, 176, 0.12) 25%,
+    rgba(255, 255, 255, 0.95) 50%,
+    rgba(186, 104, 200, 0.08) 75%,
+    rgba(106, 13, 173, 0.12) 100%);
+  border-radius: 25px;
+  padding: clamp(2rem, 4vw, 3rem);
+  border: 3px solid rgba(106, 13, 173, 0.2);
+  backdrop-filter: blur(20px);
+  box-shadow: 
+    0 25px 60px rgba(106, 13, 173, 0.15),
+    0 10px 30px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  position: relative;
+  overflow: hidden;
+  animation: summaryGlow 8s ease-in-out infinite;
+}
+
+@keyframes summaryGlow {
+  0%, 100% { 
+    box-shadow: 
+      0 25px 60px rgba(106, 13, 173, 0.15),
+      0 10px 30px rgba(0, 0, 0, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+  50% { 
+    box-shadow: 
+      0 30px 80px rgba(106, 13, 173, 0.2),
+      0 15px 40px rgba(0, 0, 0, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.95),
+      0 0 50px rgba(106, 13, 173, 0.1);
+  }
+}
+
+.summaryCard::before {
+  content: '🏆✨';
+  position: absolute;
+  top: 20px;
+  right: 25px;
+  font-size: clamp(1.8rem, 3.5vw, 2.5rem);
+  opacity: 0.8;
+  animation: trophyFloat 6s ease-in-out infinite;
+  z-index: 1;
+}
+
+@keyframes trophyFloat {
+  0%, 100% { 
+    transform: translateY(0px) rotate(0deg) scale(1);
+    opacity: 0.8;
+  }
+  25% { 
+    transform: translateY(-12px) rotate(5deg) scale(1.1);
+    opacity: 1;
+  }
+  50% { 
+    transform: translateY(-20px) rotate(-3deg) scale(1.05);
+    opacity: 0.9;
+  }
+  75% { 
+    transform: translateY(-15px) rotate(8deg) scale(1.15);
+    opacity: 0.95;
+  }
+}
+
+.summaryCard h3 {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 800;
+  color: #6A0DAD;
+  text-shadow: 0 3px 10px rgba(106, 13, 173, 0.4);
+  margin-bottom: clamp(1.5rem, 3vw, 2rem);
+  position: relative;
+  text-align: center;
+}
+
+.summaryCard h3::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 3px;
+  background: linear-gradient(90deg, 
+    #6A0DAD 0%,
+    #9C27B0 25%,
+    #BA68C8 50%,
+    #9C27B0 75%,
+    #6A0DAD 100%);
+  border-radius: 2px;
+  animation: headerGradientFlow 4s ease-in-out infinite;
+}
+
+/* Match Result Section */
+.matchResult {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(248, 249, 250, 0.9) 100%);
+  border-radius: 20px;
+  padding: clamp(1.5rem, 3vw, 2rem);
+  margin-bottom: clamp(1.5rem, 3vw, 2rem);
+  border: 2px solid rgba(106, 13, 173, 0.15);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  text-align: center;
+}
+
+.matchResult::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, 
+    transparent 0%,
+    rgba(218, 165, 32, 0.7) 20%,
+    rgba(255, 215, 0, 0.9) 50%,
+    rgba(218, 165, 32, 0.7) 80%,
+    transparent 100%);
+  animation: victoryBorder 3s ease-in-out infinite;
+}
+
+@keyframes victoryBorder {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.matchResult:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 
+    0 20px 50px rgba(218, 165, 32, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.winner {
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  font-weight: 900;
+  color: #DAA520;
+  text-shadow: 0 4px 15px rgba(218, 165, 32, 0.5);
+  margin-bottom: clamp(1rem, 2vw, 1.5rem);
+  animation: winnerGlow 3s ease-in-out infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+@keyframes winnerGlow {
+  0%, 100% { 
+    text-shadow: 0 4px 15px rgba(218, 165, 32, 0.5);
+    transform: scale(1);
+  }
+  50% { 
+    text-shadow: 
+      0 4px 15px rgba(218, 165, 32, 0.8),
+      0 0 30px rgba(218, 165, 32, 0.4);
+    transform: scale(1.05);
+  }
+}
+
+.resultDetails {
+  font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+  font-weight: 600;
+  color: #6A0DAD;
+  background: rgba(106, 13, 173, 0.08);
+  padding: clamp(0.8rem, 2vw, 1rem);
+  border-radius: 15px;
+  border: 1px solid rgba(106, 13, 173, 0.2);
+}
+
+/* Prediction Result Status */
+.correctPrediction,
+.incorrectPrediction {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.8rem, 2vw, 1rem);
+  padding: clamp(1.2rem, 2.5vw, 1.5rem);
+  border-radius: 15px;
+  font-weight: 700;
+  font-size: clamp(1rem, 2.2vw, 1.2rem);
+  margin-bottom: clamp(1rem, 2vw, 1.5rem);
+  position: relative;
+  overflow: hidden;
+}
+
+.correctPrediction {
   background: linear-gradient(135deg, #4caf50, #2e7d32);
   color: white;
   box-shadow: 0 12px 30px rgba(76, 175, 80, 0.4);
@@ -1037,8 +1340,7 @@
   }
 }
 
-/* Incorrect Prediction */
-.predictionIncorrect {
+.incorrectPrediction {
   background: linear-gradient(135deg, #f44336, #d32f2f);
   color: white;
   box-shadow: 0 12px 30px rgba(244, 67, 54, 0.4);
@@ -1056,30 +1358,21 @@
   }
 }
 
-/* Prediction Date */
-.predictionDate {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: clamp(0.9rem, 2vw, 1rem);
-  color: rgba(106, 13, 173, 0.7);
-  font-weight: 500;
-  padding: 0.8rem 1.2rem;
-  background: rgba(106, 13, 173, 0.08);
-  border-radius: 12px;
-  border: 1px solid rgba(106, 13, 173, 0.15);
-  margin-top: 1rem;
+.predictionIcon {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  animation: iconBounce 2s ease-in-out infinite;
 }
 
-.predictionDate .dateIcon {
-  font-size: 1.1rem;
-  animation: clockTick 2s ease-in-out infinite;
+@keyframes iconBounce {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.2) rotate(10deg); }
+  50% { transform: scale(1) rotate(0deg); }
+  75% { transform: scale(1.1) rotate(-5deg); }
 }
 
-@keyframes clockTick {
-  0%, 100% { transform: rotate(0deg); }
-  25% { transform: rotate(15deg); }
-  75% { transform: rotate(-15deg); }
+.predictionResultText {
+  flex: 1;
+  line-height: 1.4;
 }
 
 /* Prediction Statistics Section */
@@ -1310,6 +1603,64 @@
   .statsGrid {
     grid-template-columns: 1fr;
   }
+  
+  /* Match Summary Responsive */
+  .summaryCard {
+    padding: 1.5rem;
+  }
+  
+  .summaryCard::before {
+    font-size: 1.5rem;
+    top: 15px;
+    right: 15px;
+  }
+  
+  .summaryCard h3 {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+  }
+  
+  .winner {
+    font-size: 1.5rem;
+  }
+  
+  .resultDetails {
+    font-size: 1rem;
+    padding: 0.8rem;
+  }
+  
+  .predictionResult h4 {
+    font-size: 1.2rem;
+  }
+  
+  .predictionMade,
+  .actualResult {
+    padding: 0.8rem;
+  }
+  
+  .predictionValue,
+  .actualValue {
+    font-size: 1.1rem;
+  }
+  
+  .correctPrediction,
+  .incorrectPrediction {
+    padding: 1rem;
+    font-size: 0.95rem;
+  }
+  
+  .predictionIcon {
+    font-size: 1.3rem;
+  }
+  
+  .communityPredictionsResult {
+    padding: 1.2rem;
+  }
+  
+  .predictionsStats p {
+    font-size: 0.9rem;
+    padding: 0.8rem;
+  }
 }
 
 @media (max-width: 576px) {
@@ -1349,20 +1700,376 @@
 }
 
 @media (max-width: 480px) {
-  .confidenceStars {
+  .overviewTab {
+    padding: 0.6rem;
+    border-radius: 12px;
+    margin: 0.4rem;
+    min-height: 400px;
+    max-width: calc(100vw - 1rem);
+    overflow-x: hidden;
+    word-wrap: break-word;
+  }
+  
+  .overviewTab::before {
+    font-size: 0.9rem;
+    top: 6px;
+    right: 8px;
+  }
+  
+  .matchTeams {
+    padding: 0.6rem;
+    gap: 0.4rem;
+    grid-template-columns: 1fr;
+    text-align: center;
+    max-width: 100%;
+    overflow: hidden;
+  }
+  
+  .homeTeam,
+  .awayTeam {
+    padding: 0.6rem;
+    max-width: 100%;
+    min-width: 0;
+    flex-shrink: 1;
+  }
+  
+  .teamLogo {
+    width: 40px;
+    height: 40px;
+    border-width: 2px;
+    flex-shrink: 0;
+  }
+  
+  .teamName {
+    font-size: 0.85rem;
+    line-height: 1.2;
+    word-break: break-word;
+    hyphens: auto;
+    max-width: 100%;
+    overflow-wrap: break-word;
+  }
+  
+  .matchVs {
+    order: 2;
+    margin: 0.4rem 0;
+    flex-shrink: 0;
+  }
+  
+  .vsText {
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+  }
+  
+  .matchScore {
+    font-size: 1.2rem;
+    gap: 0.25rem;
+    flex-wrap: wrap;
     justify-content: center;
   }
   
-  .predictionDate {
+  .scoreDivider {
+    font-size: 0.9rem;
+  }
+  
+  .matchInfo {
+    grid-template-columns: 1fr;
+    gap: 0.6rem;
+    margin-top: 0.8rem;
+    max-width: 100%;
+  }
+  
+  .infoCard {
+    padding: 0.6rem;
+    border-radius: 10px;
+    max-width: 100%;
+    min-width: 0;
+    word-wrap: break-word;
+  }
+  
+  .infoLabel {
+    font-size: 0.7rem;
+    margin-bottom: 0.25rem;
+  }
+  
+  .infoValue {
+    font-size: 0.85rem;
+    word-break: break-word;
+    hyphens: auto;
+  }
+  
+  .matchStatus {
+    padding: 0.5rem 0.8rem;
+    font-size: 0.75rem;
+    border-radius: 12px;
+    max-width: fit-content;
+    margin: 0 auto;
+  }
+  
+  /* Timeline Mobile Adjustments */
+  .timelineContainer,
+  .timelineUnavailable,
+  .liveTimeline,
+  .finishedTimeline {
+    padding: 1rem;
+    border-radius: 15px;
+    margin: 1rem 0;
+  }
+  
+  .finishedIndicator,
+  .liveIndicator {
+    padding: 0.8rem 1.2rem;
+    font-size: 0.9rem;
+    border-radius: 15px;
+    margin-bottom: 1rem;
+  }
+  
+  .finishedIcon {
+    font-size: 1rem;
+  }
+  
+  .liveDot {
+    width: 8px;
+    height: 8px;
+  }
+  
+  .timelineEvent {
+    padding: 0.8rem 1rem;
+    margin: 0.5rem 0;
+    border-radius: 10px;
     flex-direction: column;
-    text-align: center;
+    align-items: flex-start;
     gap: 0.3rem;
   }
   
+  /* Prediction Section Mobile */
+  .predictionSection {
+    padding: 1rem;
+    border-radius: 15px;
+    margin: 1rem 0;
+  }
+  
+  .predictionSection::before {
+    font-size: 1.2rem;
+    top: 10px;
+    right: 12px;
+  }
+  
+  .predictionHeader {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    gap: 0.5rem;
+  }
+  
+  .predictionIcon {
+    font-size: 1.2rem;
+  }
+  
+  .userPrediction {
+    padding: 1rem;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+  }
+  
+  .predictionDetails {
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+  }
+  
+  .predictionItem {
+    padding: 0.6rem;
+    border-radius: 10px;
+    gap: 0.3rem;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .predictionLabel {
+    font-size: 0.75rem;
+  }
+  
+  .predictionValue {
+    font-size: 0.9rem;
+  }
+  
+  .confidenceStars {
+    gap: 0.1rem;
+  }
+  
+  .confidenceStar {
+    font-size: 0.8rem;
+  }
+  
+  .predictionDate {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.7rem;
+    border-radius: 8px;
+    margin-top: 0.8rem;
+  }
+  
+  .predictionStats {
+    padding: 1rem;
+    border-radius: 12px;
+    margin: 1rem 0;
+  }
+  
   .statsHeader {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    gap: 0.5rem;
+  }
+  
+  .statsIcon {
+    font-size: 1.2rem;
+  }
+  
+  .statsGrid {
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+  }
+  
+  /* Match Summary Mobile Optimized */
+  .summaryCard {
+    padding: 0.8rem;
+    border-radius: 12px;
+    margin: 0 0.2rem;
+  }
+  
+  .summaryCard::before {
+    font-size: 1.1rem;
+    top: 8px;
+    right: 8px;
+  }
+  
+  .summaryCard h3 {
+    font-size: 1rem;
+    margin-bottom: 0.8rem;
+    line-height: 1.2;
+  }
+  
+  .summaryCard h3::after {
+    width: 50px;
+    height: 2px;
+    bottom: -5px;
+  }
+  
+  .matchResult {
+    padding: 0.8rem;
+    margin-bottom: 0.8rem;
+    border-radius: 12px;
+  }
+  
+  .winner {
+    font-size: 1.1rem;
+    margin-bottom: 0.6rem;
+    flex-direction: column;
+    gap: 0.2rem;
+    line-height: 1.2;
+  }
+  
+  .resultDetails {
+    font-size: 0.8rem;
+    padding: 0.5rem;
+    border-radius: 8px;
+    line-height: 1.3;
+  }
+  
+  .predictionResult {
+    padding: 0.8rem;
+    margin-bottom: 0.8rem;
+    border-radius: 12px;
+  }
+  
+  .predictionResult h4 {
+    font-size: 1rem;
+    margin-bottom: 0.8rem;
+    gap: 0.3rem;
+  }
+  
+  .predictionMade,
+  .actualResult {
+    padding: 0.6rem;
+    border-radius: 8px;
+  }
+  
+  .predictionLabel,
+  .actualLabel {
+    font-size: 0.7rem;
+    margin-bottom: 0.3rem;
+  }
+  
+  .predictionValue,
+  .actualValue {
+    font-size: 0.85rem;
+    margin-bottom: 0.3rem;
+    line-height: 1.2;
+    word-wrap: break-word;
+  }
+  
+  .confidenceDisplay {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.4rem;
+    border-radius: 6px;
+  }
+  
+  .correctPrediction,
+  .incorrectPrediction {
+    padding: 0.6rem;
+    font-size: 0.8rem;
+    margin-bottom: 0.6rem;
+    border-radius: 10px;
     flex-direction: column;
     text-align: center;
-    gap: 0.5rem;
+    gap: 0.4rem;
+  }
+  
+  .predictionIcon {
+    font-size: 1.1rem;
+  }
+  
+  .predictionResultText {
+    line-height: 1.3;
+    word-wrap: break-word;
+  }
+  
+  .predictionTimestamp {
+    padding: 0.5rem;
+    border-radius: 8px;
+    margin-bottom: 0.6rem;
+  }
+  
+  .predictionTimestamp small {
+    font-size: 0.7rem;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+  
+  .communityPredictionsResult {
+    padding: 0.8rem;
+    border-radius: 12px;
+  }
+  
+  .communityPredictionsResult h4 {
+    font-size: 1rem;
+    margin-bottom: 0.8rem;
+  }
+  
+  .predictionsStats {
+    gap: 0.6rem;
+  }
+  
+  .predictionsStats p {
+    font-size: 0.75rem;
+    padding: 0.5rem;
+    border-radius: 8px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.2rem;
+    line-height: 1.3;
+  }
+  
+  .predictionsStats strong {
+    font-size: 0.8rem;
   }
 }
 
