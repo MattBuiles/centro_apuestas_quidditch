@@ -9,16 +9,14 @@ import { matchResultsService } from '@/services/matchResultsService';
 import { useAuth } from '@/context/AuthContext';
 
 // Import subcomponents
-import {
-  MatchOverview,
-  MatchPredictions,
-  MatchStats,
-  MatchLineups,
-  MatchHeadToHead,
-  MatchBetting,
-  MatchDetailedAnalysis,
-  MatchRelatedMatches
-} from './components';
+import MatchOverview from './components/MatchOverview';
+import MatchPredictions from './components/MatchPredictions';
+import MatchStats from './components/MatchStats';
+import MatchLineups from './components/MatchLineups';
+import MatchHeadToHead from './components/MatchHeadToHead';
+import MatchBetting from './components/MatchBetting';
+import MatchDetailedAnalysis from './components/MatchDetailedAnalysis';
+import MatchRelatedMatches from './components/MatchRelatedMatches';
 
 import styles from './MatchDetailPage.module.css';
 
