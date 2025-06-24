@@ -534,6 +534,312 @@
   }
 }
 
+/* VS Stats Center Content Styles */
+.comparisonTitle {
+  margin-bottom: clamp(0.5rem, 1vw, 0.7rem);
+  text-align: center;
+  position: relative;
+}
+
+.magicalVs {
+  font-size: clamp(0.7rem, 1.8vw, 1.2rem);
+  font-weight: 900;
+  color: #6A0DAD;
+  text-shadow: 
+    0 0 7px rgba(106, 13, 173, 0.8),
+    0 0 14px rgba(156, 39, 176, 0.6),
+    0 1px 5px rgba(106, 13, 173, 0.5);
+  animation: magicalVsGlow 2s ease-in-out infinite;
+  letter-spacing: 1px;
+  position: relative;
+  display: inline-block;
+}
+
+@keyframes magicalVsGlow {
+  0%, 100% { 
+    text-shadow: 
+      0 0 7px rgba(106, 13, 173, 0.8),
+      0 0 14px rgba(156, 39, 176, 0.6),
+      0 1px 5px rgba(106, 13, 173, 0.5);
+    transform: scale(1);
+  }
+  50% { 
+    text-shadow: 
+      0 0 10px rgba(106, 13, 173, 1),
+      0 0 21px rgba(156, 39, 176, 0.8),
+      0 1px 7px rgba(106, 13, 173, 0.8);
+    transform: scale(1.05);
+  }
+}
+
+.magicalVs::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  background: radial-gradient(circle, 
+    rgba(106, 13, 173, 0.1) 0%,
+    rgba(156, 39, 176, 0.05) 50%,
+    transparent 100%);
+  border-radius: 50%;
+  animation: magicalAura 3s ease-in-out infinite;
+  z-index: -1;
+}
+
+@keyframes magicalAura {
+  0%, 100% { 
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  50% { 
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+/* Overall Comparison Section */
+.overallComparison {
+  width: 100%;
+  position: relative;
+}
+
+.powerMeter {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(106, 13, 173, 0.08) 50%,
+    rgba(255, 255, 255, 0.85) 100%);
+  border-radius: 7px;
+  padding: clamp(0.5rem, 1vw, 0.7rem);
+  border: 1px solid rgba(106, 13, 173, 0.3);
+  backdrop-filter: blur(5px);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 
+    0 3px 10px rgba(106, 13, 173, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.powerMeter::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent 0%,
+    rgba(106, 13, 173, 0.7) 20%,
+    rgba(156, 39, 176, 0.9) 50%,
+    rgba(106, 13, 173, 0.7) 80%,
+    transparent 100%);
+  animation: powerMeterGlow 3s ease-in-out infinite;
+}
+
+@keyframes powerMeterGlow {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.powerLabel {
+  text-align: center;
+  font-size: clamp(0.4rem, 0.9vw, 0.5rem);
+  font-weight: 700;
+  color: #6A0DAD;
+  margin-bottom: clamp(0.3rem, 0.7vw, 0.5rem);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 3px rgba(106, 13, 173, 0.4);
+  position: relative;
+}
+
+.powerLabel::after {
+  content: '⚡';
+  position: absolute;
+  right: -9px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.8em;
+  animation: lightningBlink 2s ease-in-out infinite;
+}
+
+@keyframes lightningBlink {
+  0%, 90% { opacity: 0.7; }
+  95% { opacity: 1; transform: translateY(-50%) scale(1.2); }
+  100% { opacity: 0.7; transform: translateY(-50%) scale(1); }
+}
+
+/* Power Bars Container */
+.powerBars {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.3rem, 0.7vw, 0.4rem);
+  position: relative;
+}
+
+.powerBars::before {
+  content: 'VS';
+  position: absolute;
+  right: clamp(0.2rem, 0.7vw, 0.3rem);
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: clamp(0.3rem, 0.5vw, 0.35rem);
+  font-weight: 800;
+  color: rgba(106, 13, 173, 0.6);
+  z-index: 3;
+}
+
+/* Home Team Power Bar */
+.homePowerBar {
+  position: relative;
+  background: linear-gradient(90deg, 
+    rgba(220, 53, 69, 0.1) 0%,
+    rgba(220, 53, 69, 0.05) 100%);
+  border-radius: 9px;
+  height: clamp(12px, 1.4vw, 16px);
+  overflow: hidden;
+  border: 1px solid rgba(220, 53, 69, 0.3);
+  backdrop-filter: blur(2px);
+  box-shadow: 
+    inset 0 1px 1px rgba(0, 0, 0, 0.1),
+    0 1px 4px rgba(220, 53, 69, 0.2);
+}
+
+.homePowerBar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 85%; /* Adjust based on actual power calculation */
+  background: linear-gradient(90deg, 
+    #DC3545 0%, 
+    #E74C3C 25%, 
+    #FF6B6B 50%,
+    #DC3545 75%,
+    #C82333 100%);
+  background-size: 200% 100%;
+  border-radius: 8px;
+  animation: homePowerGlow 3s ease-in-out infinite;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 0 5px rgba(220, 53, 69, 0.4);
+}
+
+@keyframes homePowerGlow {
+  0%, 100% { 
+    background-position: 0% 50%;
+    box-shadow: 
+      inset 0 1px 0 rgba(255, 255, 255, 0.3),
+      0 0 5px rgba(220, 53, 69, 0.4);
+  }
+  50% { 
+    background-position: 100% 50%;
+    box-shadow: 
+      inset 0 1px 0 rgba(255, 255, 255, 0.5),
+      0 0 9px rgba(220, 53, 69, 0.6);
+  }
+}
+
+.homePowerBar span {
+  position: absolute;
+  left: clamp(0.3rem, 0.7vw, 0.5rem);
+  top: 50%;
+  transform: translateY(-50%);
+  font-weight: 800;
+  font-size: clamp(0.3rem, 0.7vw, 0.4rem);
+  color: white;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.7);
+  z-index: 2;
+}
+
+/* Away Team Power Bar */
+.awayPowerBar {
+  position: relative;
+  background: linear-gradient(90deg, 
+    rgba(40, 167, 69, 0.1) 0%,
+    rgba(40, 167, 69, 0.05) 100%);
+  border-radius: 9px;
+  height: clamp(12px, 1.4vw, 16px);
+  overflow: hidden;
+  border: 1px solid rgba(40, 167, 69, 0.3);
+  backdrop-filter: blur(2px);
+  box-shadow: 
+    inset 0 1px 1px rgba(0, 0, 0, 0.1),
+    0 1px 4px rgba(40, 167, 69, 0.2);
+}
+
+.awayPowerBar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 78%; /* Adjust based on actual power calculation */
+  background: linear-gradient(90deg, 
+    #28A745 0%, 
+    #34CE57 25%, 
+    #6BCF7F 50%,
+    #28A745 75%,
+    #1E7E34 100%);
+  background-size: 200% 100%;
+  border-radius: 8px;
+  animation: awayPowerGlow 3s ease-in-out infinite;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 0 5px rgba(40, 167, 69, 0.4);
+}
+
+@keyframes awayPowerGlow {
+  0%, 100% { 
+    background-position: 0% 50%;
+    box-shadow: 
+      inset 0 1px 0 rgba(255, 255, 255, 0.3),
+      0 0 5px rgba(40, 167, 69, 0.4);
+  }
+  50% { 
+    background-position: 100% 50%;
+    box-shadow: 
+      inset 0 1px 0 rgba(255, 255, 255, 0.5),
+      0 0 9px rgba(40, 167, 69, 0.6);
+  }
+}
+
+.awayPowerBar span {
+  position: absolute;
+  left: clamp(0.3rem, 0.7vw, 0.5rem);
+  top: 50%;
+  transform: translateY(-50%);
+  font-weight: 800;
+  font-size: clamp(0.3rem, 0.7vw, 0.4rem);
+  color: white;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.7);
+  z-index: 2;
+}
+
+/* Power Bar Shine Effects */
+.homePowerBar::after,
+.awayPowerBar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%,
+    rgba(255, 255, 255, 0.6) 50%,
+    transparent 100%);
+  animation: powerBarShine 4s ease-in-out infinite 1s;
+  border-radius: 8px;
+}
+
+@keyframes powerBarShine {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
 /* Responsive Design */
 @media (max-width: 992px) {
   .comparisonGrid {
@@ -582,14 +888,17 @@
     padding: 1.5rem;
   }
   
-  .statBar {
-    height: 22px;
+  .powerMeter {
+    padding: 1rem;
   }
   
-  .teamHeader {
-    flex-direction: column;
-    text-align: center;
-    gap: 0.8rem;
+  .powerBars {
+    gap: 1rem;
+  }
+  
+  .homePowerBar,
+  .awayPowerBar {
+    height: 35px;
   }
 }
 
@@ -651,6 +960,34 @@
     padding: 2rem 1rem;
     border-radius: 15px;
   }
+    .magicalVs {
+    font-size: 0.7rem;
+    letter-spacing: 0.4px;
+  }
+  
+  .powerMeter {
+    padding: 0.35rem;
+  }
+  
+  .powerLabel {
+    font-size: 0.35rem;
+    margin-bottom: 0.3rem;
+  }
+  
+  .powerBars {
+    gap: 0.3rem;
+  }
+  
+  .homePowerBar,
+  .awayPowerBar {
+    height: 10px;
+  }
+  
+  .homePowerBar span,
+  .awayPowerBar span {
+    font-size: 0.3rem;
+    left: 0.3rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -672,5 +1009,33 @@
   .statValue {
     font-size: 0.8rem;
     right: 0.6rem;
+  }
+  
+  .magicalVs {
+    font-size: 1.8rem;
+  }
+  
+  .powerMeter {
+    padding: 0.8rem;
+  }
+  
+  .powerLabel {
+    font-size: 0.9rem;
+  }
+  
+  .powerLabel::after {
+    right: -20px;
+    font-size: 1em;
+  }
+  
+  .homePowerBar,
+  .awayPowerBar {
+    height: 28px;
+  }
+  
+  .homePowerBar span,
+  .awayPowerBar span {
+    font-size: 0.8rem;
+    left: 0.6rem;
   }
 }
