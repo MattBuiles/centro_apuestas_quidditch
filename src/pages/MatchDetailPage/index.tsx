@@ -2,14 +2,25 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Button from '@/components/common/Button';
 import TeamLogo from '@/components/teams/TeamLogo';
-import LiveMatchViewer from '@/components/matches/LiveMatchViewer';
-import MatchResultDetail from '@/components/matches/MatchResultDetail';
 import { Team, Match } from '@/types/league';
 import { virtualTimeManager } from '@/services/virtualTimeManager';
 import { PredictionsService, MatchPredictionStats, Prediction, FinishedMatchData } from '@/services/predictionsService';
 import { matchResultsService } from '@/services/matchResultsService';
-import styles from './MatchDetailPage.module.css';
 import { useAuth } from '@/context/AuthContext';
+
+// Import subcomponents
+import {
+  MatchOverview,
+  MatchPredictions,
+  MatchStats,
+  MatchLineups,
+  MatchHeadToHead,
+  MatchBetting,
+  MatchDetailedAnalysis,
+  MatchRelatedMatches
+} from './components';
+
+import styles from './MatchDetailPage.module.css';
 
 // Tab definitions with magical icons
 type TabType = 'overview' | 'predictions' | 'stats' | 'lineups' | 'head-to-head' | 'betting' | 'detailed-analysis';
@@ -148,7 +159,7 @@ const MatchDetailPage = () => {
   const [predictionStats, setPredictionStats] = useState<MatchPredictionStats | null>(null);
   const [userPrediction, setUserPrediction] = useState<Prediction | null>(null);
   const [isPredicting, setIsPredicting] = useState(false);
-    // Related matches state
+  // Related matches state
   const [relatedMatches, setRelatedMatches] = useState<Match[]>([]);
   // State for finished match data
   const [finishedMatchData, setFinishedMatchData] = useState<FinishedMatchData | null>(null);  // State for detailed match results
@@ -355,6 +366,7 @@ const MatchDetailPage = () => {
         setFinishedMatchData(matchData);
       }
     }  }, [matchId, match, realMatch, predictionStats, predictionsService]);
+  
   // Listen for prediction updates when matches finish
   useEffect(() => {    const handlePredictionsUpdate = (event: CustomEvent) => {
       console.log(`🎪 PREDICTIONS UPDATE EVENT RECEIVED:`, event.detail);
@@ -394,6 +406,7 @@ const MatchDetailPage = () => {
   const handleTabClick = (tabId: TabType) => {
     setActiveTab(tabId);
   };
+  
   const handlePrediction = async (winner: 'home' | 'away' | 'draw') => {
     if (!match || !isAuthenticated) return;
     
@@ -670,1063 +683,74 @@ const MatchDetailPage = () => {
       </nav>
 
       {/* Tab Content */}
-      <main className={styles.tabContent}>        {activeTab === 'overview' && (
-          <div className={styles.overviewTab}>
-            <div className={styles.sectionCard}>
-              <h2 className={styles.sectionTitle}>
-                <span className={styles.sectionIcon}>⚡</span>
-                Cronología en Vivo
-              </h2>
-              
-              {match.status === 'upcoming' && (
-                <div className={styles.timelineUnavailable}>
-                  <div className={styles.unavailableIcon}>⏰</div>
-                  <h3>Cronología No Disponible</h3>
-                  <p>
-                    La cronología en vivo estará disponible cuando el duelo mágico comience. 
-                    Mientras tanto, puedes revisar las predicciones y estadísticas de los equipos.
-                  </p>
-                  <div className={styles.upcomingMatchInfo}>
-                    <div className={styles.matchCountdown}>
-                      <span className={styles.countdownLabel}>Inicio programado:</span>
-                      <span className={styles.countdownTime}>{match.date} a las {match.time}</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {match.status === 'live' && (
-                <div className={styles.liveTimeline}>
-                  {realMatch && homeTeam && awayTeam ? (
-                    <>
-                      {!showLiveSimulation && (
-                        <div className={styles.liveReadyCard}>
-                          <div className={styles.liveReadyIcon}>🔴</div>
-                          <h3>Partido Listo para Comenzar</h3>
-                          <p>La cronología en vivo comenzará cuando inicies la simulación del duelo.</p>
-                          <Button 
-                            onClick={handleStartMatch} 
-                            className={styles.startMatchButton}
-                            isLoading={isStartingMatch}
-                            disabled={isStartingMatch}
-                          >
-                            <span className={styles.actionIcon}>�</span>
-                            {isStartingMatch ? 'Invocando la Magia...' : 'Iniciar Cronología'}
-                          </Button>
-                        </div>
-                      )}
-
-                      {showLiveSimulation && (
-                        <div className={styles.liveTimelineContainer}>
-                          <div className={styles.timelineHeader}>
-                            <div className={styles.liveIndicator}>
-                              <span className={styles.liveDot}></span>
-                              EN VIVO
-                            </div>
-                            <div className={styles.currentMinute}>
-                              Minuto: {realMatch.currentMinute || 0}'
-                            </div>
-                          </div>
-                          
-                          <LiveMatchViewer 
-                            match={realMatch} 
-                            homeTeam={homeTeam} 
-                            awayTeam={awayTeam}
-                            refreshInterval={3}
-                            onMatchEnd={(endedMatchState) => {
-                              console.log('Match ended:', endedMatchState);
-                              virtualTimeManager.finalizarPartidoEnVivo(realMatch.id);
-                              setShowLiveSimulation(false);
-                              window.location.reload();
-                            }}
-                          />
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <div className={styles.timelineError}>
-                      <div className={styles.errorIcon}>⚠️</div>
-                      <h3>Error al Cargar Cronología</h3>
-                      <p>No se pudieron cargar los datos del partido en vivo.</p>
-                    </div>
-                  )}
-                </div>
-              )}              {match.status === 'finished' && (
-                <div className={styles.finishedTimeline}>
-                  <div className={styles.timelineHeader}>
-                    <div className={styles.finishedIndicator}>
-                      <span className={styles.finishedIcon}>🏁</span>
-                      FINALIZADO
-                    </div>
-                    <div className={styles.finalScore}>
-                      {match.homeTeam} {match.homeScore} - {match.awayTeam} {match.awayScore}
-                    </div>
-                  </div>
-                  
-                  <div className={styles.matchSummary}>
-                    <div className={styles.summaryCard}>
-                      <h3>Resumen del Duelo</h3>
-                      <div className={styles.matchResult}>
-                        <div className={styles.winner}>
-                          🏆 {match.homeScore > match.awayScore ? match.homeTeam : match.awayTeam}
-                        </div>
-                        <div className={styles.resultDetails}>
-                          <span>Victoria por {Math.abs(match.homeScore - match.awayScore)} puntos</span>
-                        </div>
-                      </div>
-                        {userPrediction && (
-                        <div className={styles.predictionResult}>
-                          <h4>🔮 Tu Predicción</h4>
-                          <div className={styles.predictionDetails}>
-                            <div className={styles.predictionMade}>
-                              <span className={styles.predictionLabel}>Predijiste:</span>
-                              <span className={styles.predictionValue}>
-                                {userPrediction.predictedWinner === 'home' ? match.homeTeam :
-                                 userPrediction.predictedWinner === 'away' ? match.awayTeam :
-                                 'Empate'}
-                              </span>
-                              <span className={styles.confidenceDisplay}>
-                                (Confianza: {userPrediction.confidence}/5 ⭐)
-                              </span>
-                            </div>
-                            <div className={styles.actualResult}>
-                              <span className={styles.actualLabel}>Resultado real:</span>
-                              <span className={styles.actualValue}>
-                                {match.homeScore > match.awayScore ? match.homeTeam :
-                                 match.awayScore > match.homeScore ? match.awayTeam :
-                                 'Empate'}
-                              </span>
-                            </div>
-                          </div>
-                          <div className={userPrediction.isCorrect ? styles.correctPrediction : styles.incorrectPrediction}>
-                            <span className={styles.predictionIcon}>
-                              {userPrediction.isCorrect ? '🎯' : '❌'}
-                            </span>
-                            <span className={styles.predictionResultText}>
-                              {userPrediction.isCorrect ? 
-                                '¡Excelente! Tu predicción fue acertada' : 
-                                `Tu predicción fue incorrecta. Predijiste ${
-                                  userPrediction.predictedWinner === 'home' ? match.homeTeam :
-                                  userPrediction.predictedWinner === 'away' ? match.awayTeam :
-                                  'Empate'
-                                } pero ganó ${
-                                  match.homeScore > match.awayScore ? match.homeTeam :
-                                  match.awayScore > match.homeScore ? match.awayTeam :
-                                  'fue empate'
-                                }`
-                              }
-                            </span>
-                          </div>
-                          <div className={styles.predictionTimestamp}>
-                            <small>📅 Predicción realizada: {new Date(userPrediction.timestamp).toLocaleString('es-ES')}</small>
-                          </div>
-                        </div>
-                      )}
-
-                      {finishedMatchData && (
-                        <div className={styles.communityPredictionsResult}>
-                          <h4>Resultados de Predicciones</h4>
-                          <div className={styles.predictionsStats}>
-                            <p>📊 Total de predicciones: <strong>{finishedMatchData.predictions.totalPredictions}</strong></p>
-                            <p>🎯 Predicciones correctas: <strong>
-                              {finishedMatchData.winner === 'home' ? finishedMatchData.predictions.homeWinPredictions :
-                               finishedMatchData.winner === 'away' ? finishedMatchData.predictions.awayWinPredictions :
-                               finishedMatchData.predictions.drawPredictions}
-                            </strong></p>
-                            <p>✨ Finalizado el: <strong>{new Date(finishedMatchData.finishedAt).toLocaleString('es-ES')}</strong></p>
-                          </div>
-                        </div>
-                      )}                    </div>
-                    
-                    {/* Show detailed timeline only for non-finished matches */}
-                    {match.status !== 'finished' && (
-                      <div className={styles.timelineHistoryCard}>
-                        <h4>Cronología del Partido</h4>
-                        <div className={styles.timelineHistory}>
-                          {finishedMatchData && finishedMatchData.timeline ? (
-                            finishedMatchData.timeline.map((event, index) => (
-                              <div key={index} className={styles.timelineEvent}>
-                                <span className={styles.eventTime}>{event.minute}'</span>
-                                <span className={styles.eventDescription}>{event.event}</span>
-                                {event.score && (
-                                  <span className={styles.eventScore}>
-                                    {event.score.home} - {event.score.away}
-                                  </span>
-                                )}
-                              </div>
-                            ))
-                          ) : (
-                            <>
-                              <div className={styles.timelineEvent}>
-                                <span className={styles.eventTime}>0'</span>
-                                <span className={styles.eventDescription}>🏃‍♂️ Inicio del duelo mágico</span>
-                              </div>
-                              <div className={styles.timelineEvent}>
-                                <span className={styles.eventTime}>Final</span>
-                                <span className={styles.eventDescription}>
-                                  🟡 Snitch capturada - {match.homeScore > match.awayScore ? match.homeTeam : match.awayTeam} obtiene la victoria
-                                </span>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                        <div className={styles.timelineNote}>
-                          <small>
-                            {finishedMatchData ? 
-                              '✨ Cronología completa guardada del partido simulado' : 
-                              '💡 La cronología detallada estará disponible en futuras simulaciones'}
-                          </small>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+      <main className={styles.tabContent}>
+        {activeTab === 'overview' && (
+          <MatchOverview
+            match={match}
+            realMatch={realMatch}
+            homeTeam={homeTeam}
+            awayTeam={awayTeam}
+            showLiveSimulation={showLiveSimulation}
+            isStartingMatch={isStartingMatch}
+            userPrediction={userPrediction}
+            finishedMatchData={finishedMatchData}
+            onStartMatch={handleStartMatch}
+            onMatchEnd={(endedMatchState) => {
+              console.log('Match ended:', endedMatchState);
+              virtualTimeManager.finalizarPartidoEnVivo(realMatch!.id);
+              setShowLiveSimulation(false);
+              window.location.reload();
+            }}
+          />
+        )}        {activeTab === 'predictions' && (
+          <MatchPredictions
+            match={match}
+            userPrediction={userPrediction}
+            predictionStats={predictionStats}
+            isAuthenticated={isAuthenticated}
+            isPredicting={isPredicting}
+            canPredict={!!canPredict()}
+            onPrediction={handlePrediction}
+          />
         )}
 
-        {activeTab === 'predictions' && (
-          <div className={styles.predictionsTab}>
-            <div className={styles.sectionCard}>
-              <h2 className={styles.sectionTitle}>
-                <span className={styles.sectionIcon}>🔮</span>
-                Predicciones Mágicas
-              </h2>
-                {userPrediction ? (
-                <div className={styles.userPredictionCard}>
-                  <h3>Tu Visión del Futuro</h3>
-                  <div className={styles.predictionDisplay}>
-                    <span className={styles.predictionTeam}>
-                      {userPrediction.predictedWinner === 'home' ? match.homeTeam :
-                       userPrediction.predictedWinner === 'away' ? match.awayTeam :
-                       'Empate'}
-                    </span>
-                    <span className={styles.confidenceLevel}>
-                      Confianza: {userPrediction.confidence}/5 ⭐
-                    </span>
-                  </div>
-                  
-                  {/* Show prediction result if match is finished */}
-                  {match.status === 'finished' && userPrediction.isCorrect !== undefined && (
-                    <div className={styles.predictionResultSection}>
-                      <h4>🔮 Resultado de tu Predicción</h4>
-                      <div className={styles.predictionComparison}>
-                        <div className={styles.predictionMade}>
-                          <span className={styles.predictionLabel}>Tu predicción:</span>
-                          <span className={styles.predictionValue}>
-                            {userPrediction.predictedWinner === 'home' ? match.homeTeam :
-                             userPrediction.predictedWinner === 'away' ? match.awayTeam :
-                             'Empate'}
-                          </span>
-                        </div>
-                        <div className={styles.actualResult}>
-                          <span className={styles.actualLabel}>Resultado real:</span>
-                          <span className={styles.actualValue}>
-                            {match.homeScore > match.awayScore ? match.homeTeam :
-                             match.awayScore > match.homeScore ? match.awayTeam :
-                             'Empate'}
-                          </span>
-                        </div>
-                      </div>
-                      <div className={userPrediction.isCorrect ? styles.correctPrediction : styles.incorrectPrediction}>
-                        <span className={styles.predictionIcon}>
-                          {userPrediction.isCorrect ? '🎯' : '❌'}
-                        </span>
-                        <span className={styles.predictionResultText}>
-                          {userPrediction.isCorrect ? 
-                            '¡Excelente! Tu predicción fue acertada. Eres un verdadero vidente del Quidditch.' : 
-                            'Tu predicción fue incorrecta esta vez. Las estrellas pueden ser difíciles de interpretar.'
-                          }
-                        </span>
-                      </div>
-                      <div className={styles.predictionTimestamp}>
-                        <small>📅 Predicción realizada: {new Date(userPrediction.timestamp).toLocaleString('es-ES')}</small>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                canPredict() && isAuthenticated && (
-                  <div className={styles.predictionInterface}>
-                    <h3>¿Qué dice tu bola de cristal?</h3>
-                    <p>Consulta las estrellas y haz tu predicción sobre este duelo épico.</p>
-                    <div className={styles.predictionButtons}>
-                      <Button 
-                        variant="outline"
-                        onClick={() => handlePrediction('home')}
-                        disabled={isPredicting}
-                        className={styles.predictionButton}
-                      >
-                        <TeamLogo teamName={match.homeTeam} size="sm" />
-                        {match.homeTeam}
-                      </Button>
-                      <Button 
-                        variant="outline"
-                        onClick={() => handlePrediction('draw')}
-                        disabled={isPredicting}
-                        className={styles.predictionButton}
-                      >
-                        <span className={styles.drawIcon}>⚖️</span>
-                        Empate
-                      </Button>
-                      <Button 
-                        variant="outline"
-                        onClick={() => handlePrediction('away')}
-                        disabled={isPredicting}
-                        className={styles.predictionButton}
-                      >
-                        <TeamLogo teamName={match.awayTeam} size="sm" />
-                        {match.awayTeam}
-                      </Button>
-                    </div>
-                  </div>
-                )
-              )}
-
-              {!isAuthenticated && (
-                <div className={styles.authPrompt}>
-                  <p>
-                    <Link to="/login" className={styles.authLink}>
-                      Inicia sesión
-                    </Link> 
-                    para desbloquear el poder de las predicciones mágicas.
-                  </p>
-                </div>
-              )}
-
-              {predictionStats && (
-                <div className={styles.communityPredictions}>
-                  <h3>Sabiduría de la Comunidad</h3>
-                  <div className={styles.predictionStats}>
-                    <div className={styles.predictionBars}>
-                      <div 
-                        className={styles.predictionBar}
-                        style={{width: `${predictionStats.homeWinPercentage}%`}}
-                      >
-                        <span>{match.homeTeam}</span>
-                        <span>{predictionStats.homeWinPercentage.toFixed(1)}%</span>
-                      </div>
-                      <div 
-                        className={styles.predictionBar}
-                        style={{width: `${predictionStats.drawPercentage}%`}}
-                      >
-                        <span>Empate</span>
-                        <span>{predictionStats.drawPercentage.toFixed(1)}%</span>
-                      </div>
-                      <div 
-                        className={styles.predictionBar}
-                        style={{width: `${predictionStats.awayWinPercentage}%`}}
-                      >
-                        <span>{match.awayTeam}</span>
-                        <span>{predictionStats.awayWinPercentage.toFixed(1)}%</span>
-                      </div>
-                    </div>
-                    <p className={styles.totalPredictions}>
-                      {predictionStats.totalPredictions} magos han consultado sus cristales
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}        {activeTab === 'stats' && (
-          <div className={styles.statsTab}>
-            <div className={styles.sectionCard}>
-              <h2 className={styles.sectionTitle}>
-                <span className={styles.sectionIcon}>⚡</span>
-                Análisis Místico de Rendimiento
-              </h2>
-              <div className={styles.statsContainer}>
-                {homeTeam && awayTeam ? (
-                  <div className={styles.teamsComparison}>
-                    <div className={styles.comparisonGrid}>
-                      <div className={styles.teamStats}>
-                        <div className={styles.teamStatsHeader}>
-                          <TeamLogo teamName={homeTeam.name} size="md" />
-                          <h3>{homeTeam.name}</h3>
-                        </div>
-                        <div className={styles.statsList}>
-                          <div className={styles.statItem}>
-                            <span className={styles.statLabel}>Fuerza de Ataque</span>
-                            <div className={styles.statBar}>
-                              <div 
-                                className={styles.statFill} 
-                                style={{width: `${homeTeam.attackStrength}%`}}
-                              ></div>
-                              <span className={styles.statBarValue}>{homeTeam.attackStrength}</span>
-                            </div>
-                          </div>
-                          <div className={styles.statItem}>
-                            <span className={styles.statLabel}>Fuerza Defensiva</span>
-                            <div className={styles.statBar}>
-                              <div 
-                                className={styles.statFill} 
-                                style={{width: `${homeTeam.defenseStrength}%`}}
-                              ></div>                              <span className={styles.statBarValue}>{homeTeam.defenseStrength}</span>
-                            </div>
-                          </div>
-                          <div className={styles.statItem}>
-                            <span className={styles.statLabel}>Habilidad Buscador</span>
-                            <div className={styles.statBar}>
-                              <div 
-                                className={styles.statFill} 
-                                style={{width: `${homeTeam.seekerSkill}%`}}
-                              ></div>
-                              <span className={styles.statBarValue}>{homeTeam.seekerSkill}</span>
-                            </div>
-                          </div>
-                          <div className={styles.statItem}>
-                            <span className={styles.statLabel}>Habilidad Cazadores</span>
-                            <div className={styles.statBar}>
-                              <div 
-                                className={styles.statFill} 
-                                style={{width: `${homeTeam.chaserSkill}%`}}
-                              ></div>
-                              <span className={styles.statBarValue}>{homeTeam.chaserSkill}</span>
-                            </div>
-                          </div>
-                          <div className={styles.statItem}>
-                            <span className={styles.statLabel}>Habilidad Guardián</span>
-                            <div className={styles.statBar}>
-                              <div 
-                                className={styles.statFill} 
-                                style={{width: `${homeTeam.keeperSkill}%`}}
-                              ></div>
-                              <span className={styles.statBarValue}>{homeTeam.keeperSkill}</span>
-                            </div>
-                          </div>
-                          <div className={styles.statItem}>
-                            <span className={styles.statLabel}>Habilidad Golpeadores</span>
-                            <div className={styles.statBar}>
-                              <div 
-                                className={styles.statFill} 
-                                style={{width: `${homeTeam.beaterSkill}%`}}
-                              ></div>
-                              <span className={styles.statBarValue}>{homeTeam.beaterSkill}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className={styles.vsStatsCenter}>
-                        <div className={styles.comparisonTitle}>
-                          <span className={styles.magicalVs}>⚡ VS ⚡</span>
-                        </div>
-                        <div className={styles.overallComparison}>
-                          <div className={styles.powerMeter}>
-                            <div className={styles.powerLabel}>Poder Mágico Total</div>
-                            <div className={styles.powerBars}>
-                              <div className={styles.homePowerBar}>
-                                <span>{Math.round((homeTeam.attackStrength + homeTeam.defenseStrength + homeTeam.seekerSkill) / 3)}</span>
-                              </div>
-                              <div className={styles.awayPowerBar}>
-                                <span>{Math.round((awayTeam.attackStrength + awayTeam.defenseStrength + awayTeam.seekerSkill) / 3)}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className={styles.teamStats}>
-                        <div className={styles.teamStatsHeader}>
-                          <TeamLogo teamName={awayTeam.name} size="md" />
-                          <h3>{awayTeam.name}</h3>
-                        </div>
-                        <div className={styles.statsList}>
-                          <div className={styles.statItem}>
-                            <span className={styles.statLabel}>Fuerza de Ataque</span>
-                            <div className={styles.statBar}>
-                              <div 
-                                className={styles.statFill} 
-                                style={{width: `${awayTeam.attackStrength}%`}}
-                              ></div>                              <span className={styles.statBarValue}>{awayTeam.attackStrength}</span>
-                            </div>
-                          </div>
-                          <div className={styles.statItem}>
-                            <span className={styles.statLabel}>Fuerza Defensiva</span>
-                            <div className={styles.statBar}>
-                              <div 
-                                className={styles.statFill} 
-                                style={{width: `${awayTeam.defenseStrength}%`}}
-                              ></div>
-                              <span className={styles.statBarValue}>{awayTeam.defenseStrength}</span>
-                            </div>
-                          </div>
-                          <div className={styles.statItem}>
-                            <span className={styles.statLabel}>Habilidad Buscador</span>
-                            <div className={styles.statBar}>
-                              <div 
-                                className={styles.statFill} 
-                                style={{width: `${awayTeam.seekerSkill}%`}}
-                              ></div>
-                              <span className={styles.statBarValue}>{awayTeam.seekerSkill}</span>
-                            </div>
-                          </div>
-                          <div className={styles.statItem}>
-                            <span className={styles.statLabel}>Habilidad Cazadores</span>
-                            <div className={styles.statBar}>
-                              <div 
-                                className={styles.statFill} 
-                                style={{width: `${awayTeam.chaserSkill}%`}}
-                              ></div>
-                              <span className={styles.statBarValue}>{awayTeam.chaserSkill}</span>
-                            </div>
-                          </div>
-                          <div className={styles.statItem}>
-                            <span className={styles.statLabel}>Habilidad Guardián</span>
-                            <div className={styles.statBar}>
-                              <div 
-                                className={styles.statFill} 
-                                style={{width: `${awayTeam.keeperSkill}%`}}
-                              ></div>
-                              <span className={styles.statBarValue}>{awayTeam.keeperSkill}</span>
-                            </div>
-                          </div>
-                          <div className={styles.statItem}>
-                            <span className={styles.statLabel}>Habilidad Golpeadores</span>
-                            <div className={styles.statBar}>
-                              <div 
-                                className={styles.statFill} 
-                                style={{width: `${awayTeam.beaterSkill}%`}}
-                              ></div>
-                              <span className={styles.statBarValue}>{awayTeam.beaterSkill}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className={styles.comingSoon}>
-                    <div className={styles.comingSoonIcon}>⚡</div>
-                    <h3>Cargando Análisis Mágico</h3>
-                    <p>Los pergaminos con las estadísticas detalladas están siendo preparados por nuestros escribas mágicos.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}        {activeTab === 'lineups' && (
-          <div className={styles.lineupsTab}>
-            <div className={styles.sectionCard}>
-              <h2 className={styles.sectionTitle}>
-                <span className={styles.sectionIcon}>🏆</span>
-                Formaciones Mágicas
-              </h2>
-              <div className={styles.lineupsContainer}>
-                {homeTeam && awayTeam ? (
-                  <div className={styles.lineupsGrid}>
-                    <div className={styles.teamLineup}>
-                      <div className={styles.lineupHeader}>
-                        <TeamLogo teamName={homeTeam.name} size="lg" />
-                        <h3>{homeTeam.name}</h3>
-                        <span className={styles.teamType}>Equipo Local</span>
-                      </div>
-                      <div className={styles.positionsList}>
-                        {(() => {
-                          const rosterData = getTeamRosterData(homeTeam.name);
-                          const roster = rosterData.roster;
-                          
-                          return (
-                            <>
-                              {/* Guardián */}
-                              <div className={styles.positionGroup}>
-                                <h4 className={styles.positionTitle}>
-                                  <span className={styles.positionIcon}>🥅</span>
-                                  Guardián
-                                </h4>
-                                {roster.filter(player => player.position === 'Guardián').map(player => (
-                                  <div key={player.id} className={styles.playerCard}>
-                                    <div className={styles.playerHeader}>
-                                      <div className={styles.playerName}>{player.name}</div>
-                                      <div className={styles.playerNumber}>#{player.number}</div>
-                                    </div>
-                                    <div className={styles.playerStats}>
-                                      <span className={styles.playerStat}>Habilidad: {homeTeam.keeperSkill}</span>
-                                      <span className={styles.playerStat}>Años activo: {player.yearsActive}</span>
-                                      <span className={styles.playerStat}>Especialidad: Paradas Mágicas</span>
-                                    </div>
-                                    {player.achievements.length > 0 && (
-                                      <div className={styles.playerAchievements}>
-                                        <span className={styles.achievementLabel}>🏆 {player.achievements[0]}</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-
-                              {/* Cazadores */}
-                              <div className={styles.positionGroup}>
-                                <h4 className={styles.positionTitle}>
-                                  <span className={styles.positionIcon}>⚡</span>
-                                  Cazadores
-                                </h4>
-                                {roster.filter(player => player.position === 'Cazador' || player.position === 'Cazadora').map(player => (
-                                  <div key={player.id} className={styles.playerCard}>
-                                    <div className={styles.playerHeader}>
-                                      <div className={styles.playerName}>{player.name}</div>
-                                      <div className={styles.playerNumber}>#{player.number}</div>
-                                    </div>
-                                    <div className={styles.playerStats}>
-                                      <span className={styles.playerStat}>Habilidad: {homeTeam.chaserSkill}</span>
-                                      <span className={styles.playerStat}>Años activo: {player.yearsActive}</span>
-                                      <span className={styles.playerStat}>Especialidad: Anotación</span>
-                                    </div>
-                                    {player.achievements.length > 0 && (
-                                      <div className={styles.playerAchievements}>
-                                        <span className={styles.achievementLabel}>🏆 {player.achievements[0]}</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-
-                              {/* Golpeadores */}
-                              <div className={styles.positionGroup}>
-                                <h4 className={styles.positionTitle}>
-                                  <span className={styles.positionIcon}>🏏</span>
-                                  Golpeadores
-                                </h4>
-                                {roster.filter(player => player.position === 'Golpeador').map(player => (
-                                  <div key={player.id} className={styles.playerCard}>
-                                    <div className={styles.playerHeader}>
-                                      <div className={styles.playerName}>{player.name}</div>
-                                      <div className={styles.playerNumber}>#{player.number}</div>
-                                    </div>
-                                    <div className={styles.playerStats}>
-                                      <span className={styles.playerStat}>Habilidad: {homeTeam.beaterSkill}</span>
-                                      <span className={styles.playerStat}>Años activo: {player.yearsActive}</span>
-                                      <span className={styles.playerStat}>Especialidad: Defensa</span>
-                                    </div>
-                                    {player.achievements.length > 0 && (
-                                      <div className={styles.playerAchievements}>
-                                        <span className={styles.achievementLabel}>🏆 {player.achievements[0]}</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-
-                              {/* Buscador */}
-                              <div className={styles.positionGroup}>
-                                <h4 className={styles.positionTitle}>
-                                  <span className={styles.positionIcon}>🟡</span>
-                                  Buscador
-                                </h4>
-                                {roster.filter(player => player.position === 'Buscador' || player.position === 'Buscadora').map(player => (
-                                  <div key={player.id} className={styles.playerCard}>
-                                    <div className={styles.playerHeader}>
-                                      <div className={styles.playerName}>{player.name}</div>
-                                      <div className={styles.playerNumber}>#{player.number}</div>
-                                    </div>
-                                    <div className={styles.playerStats}>
-                                      <span className={styles.playerStat}>Habilidad: {homeTeam.seekerSkill}</span>
-                                      <span className={styles.playerStat}>Años activo: {player.yearsActive}</span>
-                                      <span className={styles.playerStat}>Especialidad: Captura de Snitch</span>
-                                    </div>
-                                    {player.achievements.length > 0 && (
-                                      <div className={styles.playerAchievements}>
-                                        <span className={styles.achievementLabel}>🏆 {player.achievements[0]}</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-                            </>
-                          );
-                        })()}
-                      </div>
-                    </div>
-
-                    <div className={styles.lineupVs}>
-                      <div className={styles.fieldVisualization}>
-                        <div className={styles.quidditchField}>
-                          <div className={styles.fieldCenter}>
-                            <span className={styles.fieldIcon}>🏟️</span>
-                            <span className={styles.fieldLabel}>Campo de Quidditch</span>
-                          </div>
-                          <div className={styles.fieldGoals}>
-                            <div className={styles.goalLeft}>🥅</div>
-                            <div className={styles.goalRight}>🥅</div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className={styles.teamLineup}>
-                      <div className={styles.lineupHeader}>
-                        <TeamLogo teamName={awayTeam.name} size="lg" />
-                        <h3>{awayTeam.name}</h3>
-                        <span className={styles.teamType}>Equipo Visitante</span>
-                      </div>
-                      <div className={styles.positionsList}>
-                        {(() => {
-                          const rosterData = getTeamRosterData(awayTeam.name);
-                          const roster = rosterData.roster;
-                          
-                          return (
-                            <>
-                              {/* Guardián */}
-                              <div className={styles.positionGroup}>
-                                <h4 className={styles.positionTitle}>
-                                  <span className={styles.positionIcon}>🥅</span>
-                                  Guardián
-                                </h4>
-                                {roster.filter(player => player.position === 'Guardián').map(player => (
-                                  <div key={player.id} className={styles.playerCard}>
-                                    <div className={styles.playerHeader}>
-                                      <div className={styles.playerName}>{player.name}</div>
-                                      <div className={styles.playerNumber}>#{player.number}</div>
-                                    </div>
-                                    <div className={styles.playerStats}>
-                                      <span className={styles.playerStat}>Habilidad: {awayTeam.keeperSkill}</span>
-                                      <span className={styles.playerStat}>Años activo: {player.yearsActive}</span>
-                                      <span className={styles.playerStat}>Especialidad: Paradas Mágicas</span>
-                                    </div>
-                                    {player.achievements.length > 0 && (
-                                      <div className={styles.playerAchievements}>
-                                        <span className={styles.achievementLabel}>🏆 {player.achievements[0]}</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-
-                              {/* Cazadores */}
-                              <div className={styles.positionGroup}>
-                                <h4 className={styles.positionTitle}>
-                                  <span className={styles.positionIcon}>⚡</span>
-                                  Cazadores
-                                </h4>
-                                {roster.filter(player => player.position === 'Cazador' || player.position === 'Cazadora').map(player => (
-                                  <div key={player.id} className={styles.playerCard}>
-                                    <div className={styles.playerHeader}>
-                                      <div className={styles.playerName}>{player.name}</div>
-                                      <div className={styles.playerNumber}>#{player.number}</div>
-                                    </div>
-                                    <div className={styles.playerStats}>
-                                      <span className={styles.playerStat}>Habilidad: {awayTeam.chaserSkill}</span>
-                                      <span className={styles.playerStat}>Años activo: {player.yearsActive}</span>
-                                      <span className={styles.playerStat}>Especialidad: Anotación</span>
-                                    </div>
-                                    {player.achievements.length > 0 && (
-                                      <div className={styles.playerAchievements}>
-                                        <span className={styles.achievementLabel}>🏆 {player.achievements[0]}</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-
-                              {/* Golpeadores */}
-                              <div className={styles.positionGroup}>
-                                <h4 className={styles.positionTitle}>
-                                  <span className={styles.positionIcon}>🏏</span>
-                                  Golpeadores
-                                </h4>
-                                {roster.filter(player => player.position === 'Golpeador').map(player => (
-                                  <div key={player.id} className={styles.playerCard}>
-                                    <div className={styles.playerHeader}>
-                                      <div className={styles.playerName}>{player.name}</div>
-                                      <div className={styles.playerNumber}>#{player.number}</div>
-                                    </div>
-                                    <div className={styles.playerStats}>
-                                      <span className={styles.playerStat}>Habilidad: {awayTeam.beaterSkill}</span>
-                                      <span className={styles.playerStat}>Años activo: {player.yearsActive}</span>
-                                      <span className={styles.playerStat}>Especialidad: Defensa</span>
-                                    </div>
-                                    {player.achievements.length > 0 && (
-                                      <div className={styles.playerAchievements}>
-                                        <span className={styles.achievementLabel}>🏆 {player.achievements[0]}</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-
-                              {/* Buscador */}
-                              <div className={styles.positionGroup}>
-                                <h4 className={styles.positionTitle}>
-                                  <span className={styles.positionIcon}>🟡</span>
-                                  Buscador
-                                </h4>
-                                {roster.filter(player => player.position === 'Buscador' || player.position === 'Buscadora').map(player => (
-                                  <div key={player.id} className={styles.playerCard}>
-                                    <div className={styles.playerHeader}>
-                                      <div className={styles.playerName}>{player.name}</div>
-                                      <div className={styles.playerNumber}>#{player.number}</div>
-                                    </div>
-                                    <div className={styles.playerStats}>
-                                      <span className={styles.playerStat}>Habilidad: {awayTeam.seekerSkill}</span>
-                                      <span className={styles.playerStat}>Años activo: {player.yearsActive}</span>
-                                      <span className={styles.playerStat}>Especialidad: Captura de Snitch</span>
-                                    </div>
-                                    {player.achievements.length > 0 && (
-                                      <div className={styles.playerAchievements}>
-                                        <span className={styles.achievementLabel}>🏆 {player.achievements[0]}</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-                            </>
-                          );
-                        })()}
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className={styles.comingSoon}>
-                    <div className={styles.comingSoonIcon}>🏆</div>
-                    <h3>Cargando Alineaciones</h3>
-                    <p>Los entrenadores están finalizando sus estrategias. Las formaciones estarán disponibles pronto.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}{activeTab === 'head-to-head' && (
-          <div className={styles.headToHeadTab}>
-            <div className={styles.sectionCard}>
-              <h2 className={styles.sectionTitle}>
-                <span className={styles.sectionIcon}>🔥</span>
-                Historial de Duelos Épicos
-              </h2>
-              <div className={styles.h2hContainer}>
-                {homeTeam && awayTeam ? (
-                  <div className={styles.historyContent}>
-                    <div className={styles.historyHeader}>
-                      <div className={styles.historyTeams}>
-                        <div className={styles.historyTeam}>
-                          <TeamLogo teamName={homeTeam.name} size="lg" />
-                          <span className={styles.historyTeamName}>{homeTeam.name}</span>
-                        </div>
-                        <div className={styles.historyVs}>
-                          <span className={styles.historyVsText}>HISTORIAL</span>
-                          <div className={styles.historyRecord}>
-                            <div className={styles.recordStats}>
-                              <div className={styles.recordStat}>
-                                <span className={styles.recordNumber}>7</span>
-                                <span className={styles.recordLabel}>Victorias</span>
-                              </div>
-                              <div className={styles.recordSeparator}>-</div>
-                              <div className={styles.recordStat}>
-                                <span className={styles.recordNumber}>2</span>
-                                <span className={styles.recordLabel}>Empates</span>
-                              </div>
-                              <div className={styles.recordSeparator}>-</div>
-                              <div className={styles.recordStat}>
-                                <span className={styles.recordNumber}>5</span>
-                                <span className={styles.recordLabel}>Victorias</span>
-                              </div>
-                            </div>
-                            <div className={styles.totalMatches}>
-                              14 encuentros disputados
-                            </div>
-                          </div>
-                        </div>
-                        <div className={styles.historyTeam}>
-                          <TeamLogo teamName={awayTeam.name} size="lg" />
-                          <span className={styles.historyTeamName}>{awayTeam.name}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className={styles.historyStats}>
-                      <div className={styles.historyStatCard}>
-                        <h4>Últimos 5 Encuentros</h4>
-                        <div className={styles.recentMatches}>
-                          {[
-                            { result: 'W', score: '180-120', date: '2025-05-15', venue: 'Hogwarts' },
-                            { result: 'L', score: '90-150', date: '2025-03-22', venue: 'Slytherin Dungeons' },
-                            { result: 'W', score: '200-170', date: '2025-01-18', venue: 'Hogwarts' },
-                            { result: 'W', score: '160-130', date: '2024-11-25', venue: 'Neutral' },
-                            { result: 'L', score: '110-140', date: '2024-10-07', venue: 'Slytherin Dungeons' }
-                          ].map((match, index) => (
-                            <div key={index} className={styles.recentMatch}>
-                              <div className={`${styles.matchResult} ${match.result === 'W' ? styles.win : styles.loss}`}>
-                                {match.result}
-                              </div>
-                              <div className={styles.matchDetails}>
-                                <span className={styles.matchScore}>{match.score}</span>
-                                <span className={styles.matchDate}>{match.date}</span>
-                                <span className={styles.matchVenue}>{match.venue}</span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className={styles.historyStatCard}>
-                        <h4>Estadísticas de Enfrentamientos</h4>
-                        <div className={styles.comparisonStats}>
-                          <div className={styles.comparisonStat}>
-                            <span className={styles.statName}>Promedio de Puntos (Local)</span>
-                            <div className={styles.statComparison}>
-                              <div className={styles.statBar}>
-                                <div className={styles.homeStatBar} style={{width: '65%'}}>145</div>
-                                <div className={styles.awayStatBar} style={{width: '55%'}}>125</div>
-                              </div>
-                            </div>
-                          </div>
-                          <div className={styles.comparisonStat}>
-                            <span className={styles.statName}>Capturas de Snitch</span>
-                            <div className={styles.statComparison}>
-                              <div className={styles.statBar}>
-                                <div className={styles.homeStatBar} style={{width: '60%'}}>8</div>
-                                <div className={styles.awayStatBar} style={{width: '40%'}}>6</div>
-                              </div>
-                            </div>
-                          </div>
-                          <div className={styles.comparisonStat}>
-                            <span className={styles.statName}>Partidos de más de 200 pts</span>
-                            <div className={styles.statComparison}>
-                              <div className={styles.statBar}>
-                                <div className={styles.homeStatBar} style={{width: '50%'}}>3</div>
-                                <div className={styles.awayStatBar} style={{width: '33%'}}>2</div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className={styles.legendaryMatches}>
-                      <h4>Encuentros Legendarios</h4>
-                      <div className={styles.legendaryMatchesList}>
-                        <div className={styles.legendaryMatch}>
-                          <div className={styles.legendaryMatchHeader}>
-                            <span className={styles.legendaryIcon}>🏆</span>
-                            <span className={styles.legendaryTitle}>La Final de los Milenios</span>
-                            <span className={styles.legendaryDate}>2024-06-15</span>
-                          </div>
-                          <div className={styles.legendaryMatchDetails}>
-                            <span className={styles.legendaryScore}>230 - 220</span>
-                            <p className={styles.legendaryDescription}>
-                              Un enfrentamiento épico que duró 4 horas. La Snitch fue capturada en el último minuto 
-                              tras una persecución que recorrió todo el estadio.
-                            </p>
-                          </div>
-                        </div>
-                        <div className={styles.legendaryMatch}>
-                          <div className={styles.legendaryMatchHeader}>
-                            <span className={styles.legendaryIcon}>⚡</span>
-                            <span className={styles.legendaryTitle}>El Duelo de los Rayos</span>
-                            <span className={styles.legendaryDate}>2023-12-03</span>
-                          </div>
-                          <div className={styles.legendaryMatchDetails}>
-                            <span className={styles.legendaryScore}>180 - 30</span>
-                            <p className={styles.legendaryDescription}>
-                              Una demostración de dominación absoluta con 15 goles consecutivos 
-                              antes de que la Snitch fuera capturada.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className={styles.comingSoon}>
-                    <div className={styles.comingSoonIcon}>🔥</div>
-                    <h3>Cargando Historial</h3>
-                    <p>Los archivos de la historia están siendo consultados para revelar los encuentros legendarios.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}        {activeTab === 'betting' && canBet() && (
-          <div className={styles.bettingTab}>
-            <div className={styles.sectionCard}>
-              <h2 className={styles.sectionTitle}>
-                <span className={styles.sectionIcon}>💰</span>
-                Mercados de Apuestas Mágicas
-              </h2>
-              <div className={styles.bettingContainer}>
-                <div className={styles.comingSoon}>
-                  <div className={styles.comingSoonIcon}>💎</div>
-                  <h3>Apuestas Disponibles</h3>
-                  <p>Los mercados de apuestas están siendo preparados por nuestros goblins financieros de Gringotts.</p>
-                  <div className={styles.featuresPreview}>
-                    <ul>
-                      <li>🏆 Ganador del partido</li>
-                      <li>🎯 Total de puntos anotados</li>
-                      <li>⚡ Primer equipo en anotar</li>
-                      <li>🟡 Tiempo de captura de la Snitch</li>
-                      <li>📊 Apuestas especiales y combinadas</li>
-                    </ul>
-                  </div>
-                  <Link to={`/betting/${match.id}`}>
-                    <Button className={styles.bettingCta}>
-                      <span className={styles.actionIcon}>🎲</span>
-                      Ir a Apuestas Detalladas
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}        {activeTab === 'detailed-analysis' && hasDetailedResults && match && (
-          <div className={styles.detailedAnalysisTab}>
-            <MatchResultDetail matchId={match.id} />
-          </div>
+        {activeTab === 'stats' && (
+          <MatchStats
+            homeTeam={homeTeam}
+            awayTeam={awayTeam}
+          />
         )}
 
-        {activeTab === 'detailed-analysis' && !hasDetailedResults && (
-          <div className={styles.detailedAnalysisTab}>
-            <div style={{ padding: '2rem', textAlign: 'center' }}>
-              <h3>No hay análisis detallado disponible</h3>
-              <p>Este partido no tiene resultados detallados guardados. Los análisis detallados están disponibles para partidos simulados.</p>
-            </div>
-          </div>
+        {activeTab === 'lineups' && (
+          <MatchLineups
+            homeTeam={homeTeam}
+            awayTeam={awayTeam}
+            getTeamRosterData={getTeamRosterData}
+          />
+        )}
+
+        {activeTab === 'head-to-head' && (
+          <MatchHeadToHead
+            homeTeam={homeTeam}
+            awayTeam={awayTeam}
+          />
+        )}        {activeTab === 'betting' && (
+          <MatchBetting
+            match={match}
+            canBet={!!canBet()}
+          />
+        )}
+
+        {activeTab === 'detailed-analysis' && (
+          <MatchDetailedAnalysis
+            match={match}
+            hasDetailedResults={hasDetailedResults}
+          />
         )}
       </main>
 
       {/* Related Matches */}
-      {relatedMatches.length > 0 && (
-        <section className={styles.relatedMatches}>
-          <h2 className={styles.sectionTitle}>
-            <span className={styles.sectionIcon}>⚡</span>
-            Próximos Duelos Mágicos
-          </h2>
-          <div className={styles.relatedMatchesGrid}>            {relatedMatches.map((relatedMatch) => {
-              // Get the season data to resolve team IDs to team names
-              const timeState = virtualTimeManager.getState();
-              const homeTeamData = timeState.temporadaActiva?.equipos.find(t => t.id === relatedMatch.localId);
-              const awayTeamData = timeState.temporadaActiva?.equipos.find(t => t.id === relatedMatch.visitanteId);
-              const homeTeamName = homeTeamData?.name || relatedMatch.localId;
-              const awayTeamName = awayTeamData?.name || relatedMatch.visitanteId;
-              return (
-                <Link 
-                  key={relatedMatch.id} 
-                  to={`/matches/${relatedMatch.id}`} 
-                  className={styles.relatedMatchCard}
-                >
-                  <div className={styles.relatedMatchHeader}>
-                    <div className={styles.relatedMatchTeams}>
-                      <TeamLogo teamName={homeTeamName} size="sm" />
-                      <span className={styles.relatedMatchVs}>vs</span>
-                      <TeamLogo teamName={awayTeamName} size="sm" />
-                    </div>
-                    <div className={styles.relatedMatchInfo}>
-                      <span className={styles.relatedMatchName}>
-                        {homeTeamName} vs {awayTeamName}
-                      </span>
-                      <span className={styles.relatedMatchDate}>
-                        {new Date(relatedMatch.fecha).toLocaleDateString('es-ES')}
-                      </span>
-                    </div>
-                  </div>
-                  <div className={styles.relatedMatchFooter}>
-                    <span className={styles.relatedMatchAction}>Ver Detalles ✨</span>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
-      )}
+      <MatchRelatedMatches relatedMatches={relatedMatches} />
     </div>
   );
 };
