@@ -36,30 +36,52 @@
 
 2. **Instalar las dependencias**:
    ```bash
+   # Frontend
    npm install
+   
+   # Backend
+   cd backend
+   npm install
+   cp .env.example .env
    ```
 
 ### 🏃‍♂️ Comandos de Ejecución
 
 #### Desarrollo Local
+
+**Opción 1: Solo Frontend (Modo actual)**
 ```bash
 npm run dev
 ```
-- Inicia el servidor de desarrollo en `http://localhost:3000`
-- Se abrirá automáticamente en tu navegador
-- Recarga automática al detectar cambios (Hot Module Replacement)
-- Herramientas de desarrollo habilitadas
+- Inicia el servidor de desarrollo en `http://localhost:5173`
+- Funciona completamente en el cliente
+- Usa datos simulados y localStorage
+
+**Opción 2: Frontend + Backend (Nueva arquitectura)**
+```bash
+# Terminal 1 - Backend
+cd backend
+npm run dev
+
+# Terminal 2 - Frontend
+npm run dev
+```
+- **Frontend**: `http://localhost:5173`
+- **Backend API**: `http://localhost:3001`
+- **Health Check**: `http://localhost:3001/health`
+- **Teams API**: `http://localhost:3001/api/teams`
 
 #### Producción
 ```bash
-# Compilar para producción
+# Frontend
 npm run build
-
-# Previsualizar la compilación
 npm run preview
+
+# Backend
+cd backend
+npm run build
+npm start
 ```
-- `build`: Genera archivos optimizados en la carpeta `dist/`
-- `preview`: Sirve la versión compilada localmente para testing
 
 #### Linting
 ```bash
@@ -97,7 +119,26 @@ src/
 │   ├── matches/        # Componentes de partidos
 │   └── teams/          # Componentes de equipos
 ├── pages/              # Páginas de la aplicación
-├── services/           # Lógica de negocio y APIs
+├── services/           # Lógica de negocio y APIs simuladas
+│   ├── quidditchSystem.ts        # Sistema central de Quidditch
+│   ├── virtualTimeManager.ts    # Gestión de tiempo virtual
+│   ├── betResolutionService.ts  # Resolución de apuestas
+│   └── predictionsService.ts    # Sistema de predicciones
+├── types/              # Definiciones TypeScript
+├── context/            # Contextos de React
+└── styles/             # Estilos globales
+
+backend/                # Backend API (Nueva arquitectura)
+├── src/
+│   ├── controllers/    # Controladores de rutas
+│   ├── routes/         # Definición de endpoints
+│   ├── services/       # Lógica de negocio del servidor
+│   ├── database/       # Configuración de base de datos
+│   ├── middleware/     # Middleware personalizado
+│   └── types/          # Tipos compartidos
+├── database/           # Archivos SQLite
+└── dist/               # Código compilado
+```
 ├── context/            # Contextos de React (AuthContext)
 ├── types/              # Definiciones de TypeScript
 ├── styles/             # Estilos globales y variables CSS

@@ -1,0 +1,60 @@
+import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
+import { JWTPayload, ApiResponse } from '../types';
+
+interface AuthenticatedRequest extends Request {
+  user?: JWTPayload;
+}
+
+export const authenticate = async (
+  req: AuthenticatedRequest,
+  res: Response<ApiResponse>,
+  next: NextFunction
+) => {
+  try {
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        error: 'Access denied. No token provided.',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JWTPayload;
+    req.user = decoded;
+    next();
+  } catch (error) {
+    res.status(401).json({
+      success: false,
+      error: 'Invalid token.',
+      timestamp: new Date().toISOString()
+    });
+  }
+};
+
+export const authorize = (...roles: string[]) => {
+  return (req: AuthenticatedRequest, res: Response<ApiResponse>, next: NextFunction) => {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        error: 'Access denied. Not authenticated.',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied. Insufficient permissions.',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    next();
+  };
+};
+
+// Export the interface for use in route handlers
+export { AuthenticatedRequest };

@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { apiClient } from '../utils/apiClient';
+import { FEATURES } from '../config/features';
 
 interface User {
   id: string;
@@ -478,64 +480,204 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     localStorage.removeItem(`credentials_${userId}`);
   };
   useEffect(() => {
-    // Check if user is stored in localStorage
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      const parsedUser = JSON.parse(storedUser);      setUser(parsedUser);
-      // Load user bets from localStorage
-      loadUserBets(parsedUser.id);
-      // Load user transactions from localStorage
-      loadUserTransactions(parsedUser.id);
-    }
-    setIsLoading(false);
-  }, []);const login = async (email: string, password: string, remember = false) => {
+    const checkAuth = async () => {
+      try {
+        // Check localStorage first, then sessionStorage
+        let storedUser = localStorage.getItem('user');
+        let storedToken = localStorage.getItem('auth_token');
+        
+        if (!storedUser) {
+          storedUser = sessionStorage.getItem('user');
+          storedToken = sessionStorage.getItem('auth_token');
+        }
+
+        if (storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+
+          if (FEATURES.USE_BACKEND_AUTH && storedToken) {
+            // Verify token with backend
+            try {
+              apiClient.setToken(storedToken);
+              const response = await apiClient.get<User>('/auth/me');
+              
+              if (response.success && response.data) {
+                // Update user data from backend
+                const backendUser: User = {
+                  id: response.data.id,
+                  username: response.data.username,
+                  email: response.data.email,
+                  balance: response.data.balance || parsedUser.balance,
+                  role: response.data.role,
+                  avatar: response.data.avatar || parsedUser.avatar
+                };
+                
+                setUser(backendUser);
+                
+                // Update stored user data
+                if (localStorage.getItem('user')) {
+                  localStorage.setItem('user', JSON.stringify(backendUser));
+                } else {
+                  sessionStorage.setItem('user', JSON.stringify(backendUser));
+                }
+              } else {
+                // Token invalid, clear auth data
+                apiClient.clearToken();
+                localStorage.removeItem('user');
+                localStorage.removeItem('auth_token');
+                sessionStorage.removeItem('user');
+                sessionStorage.removeItem('auth_token');
+              }
+            } catch (error) {
+              console.warn('Backend auth verification failed, using stored user data:', error);
+              // Fallback to local user data
+              setUser(parsedUser);
+              loadUserBets(parsedUser.id);
+              loadUserTransactions(parsedUser.id);
+            }
+          } else {
+            // Local authentication or no token
+            setUser(parsedUser);
+            loadUserBets(parsedUser.id);
+            loadUserTransactions(parsedUser.id);
+          }
+        }
+      } catch (error) {
+        console.error('Error checking authentication:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, []);  const login = async (email: string, password: string, remember = false) => {
     setIsLoading(true);
     setError(null);
+    
     try {
-      // Buscar la cuenta por email en las cuentas actuales
-      const account = findAccountByEmail(email);
-      
-      if (!account) {
-        throw new Error('Credenciales incorrectas. Verifica tu email y contraseña.');
-      }
+      if (FEATURES.USE_BACKEND_AUTH) {
+        // Backend authentication
+        const response = await apiClient.post<{
+          user: User;
+          tokens: { accessToken: string };
+        }>('/auth/login', { email, password });
 
-      // Verificar la contraseña
-      if (account.password !== password) {
-        throw new Error('Credenciales incorrectas. Verifica tu email y contraseña.');
-      }      // Login exitoso
-      setUser(account.user);
-      
-      // Cargar apuestas del usuario
-      loadUserBets(account.user.id);
-      
-      // Cargar transacciones del usuario
-      loadUserTransactions(account.user.id);
-      
-      // Guardar credenciales del usuario
-      saveUserCredentials(account.user.id, password);
+        if (response.success && response.data) {
+          const { user: backendUser, tokens } = response.data;
+          
+          // Set token in apiClient
+          apiClient.setToken(tokens.accessToken);
+          
+          // Convert backend user to our User interface
+          const user: User = {
+            id: backendUser.id,
+            username: backendUser.username,
+            email: backendUser.email,
+            balance: backendUser.balance || 0,
+            role: backendUser.role,
+            avatar: backendUser.avatar
+          };
+          
+          setUser(user);
+          
+          // Store user in localStorage/sessionStorage
+          if (remember) {
+            localStorage.setItem('user', JSON.stringify(user));
+            localStorage.setItem('auth_token', tokens.accessToken);
+          } else {
+            sessionStorage.setItem('user', JSON.stringify(user));
+            sessionStorage.setItem('auth_token', tokens.accessToken);
+          }
 
-      // Store user in localStorage if remember is checked
-      if (remember) {
-        localStorage.setItem('user', JSON.stringify(account.user));
+          // Navigate based on role
+          if (user.role === 'admin') {
+            navigate('/account');
+          } else {
+            navigate('/');
+          }
+        } else {
+          throw new Error('Login failed - invalid response from server');
+        }
       } else {
-        sessionStorage.setItem('user', JSON.stringify(account.user));
-      }
+        // Local authentication (fallback)
+        const account = findAccountByEmail(email);
+        
+        if (!account) {
+          throw new Error('Credenciales incorrectas. Verifica tu email y contraseña.');
+        }
 
-      // Navegar según el rol
-      if (account.user.role === 'admin') {
-        navigate('/account');
-      } else {
-        navigate('/');
+        if (account.password !== password) {
+          throw new Error('Credenciales incorrectas. Verifica tu email y contraseña.');
+        }
+
+        // Login exitoso
+        setUser(account.user);
+        
+        // Cargar apuestas del usuario
+        loadUserBets(account.user.id);
+        
+        // Cargar transacciones del usuario
+        loadUserTransactions(account.user.id);
+        
+        // Guardar credenciales del usuario
+        saveUserCredentials(account.user.id, password);
+
+        // Store user in localStorage if remember is checked
+        if (remember) {
+          localStorage.setItem('user', JSON.stringify(account.user));
+        } else {
+          sessionStorage.setItem('user', JSON.stringify(account.user));
+        }
+
+        // Navegar según el rol
+        if (account.user.role === 'admin') {
+          navigate('/account');
+        } else {
+          navigate('/');
+        }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al iniciar sesión. Por favor, verifica tus credenciales.');
+      if (err instanceof Error && err.message.includes('Failed to fetch')) {
+        // Network error - try local fallback
+        console.warn('Backend unavailable, falling back to local authentication');
+        setError('Servidor no disponible. Usando autenticación local.');
+        
+        try {
+          const account = findAccountByEmail(email);
+          
+          if (!account || account.password !== password) {
+            throw new Error('Credenciales incorrectas. Verifica tu email y contraseña.');
+          }
+
+          setUser(account.user);
+          loadUserBets(account.user.id);
+          loadUserTransactions(account.user.id);
+          saveUserCredentials(account.user.id, password);
+
+          if (remember) {
+            localStorage.setItem('user', JSON.stringify(account.user));
+          } else {
+            sessionStorage.setItem('user', JSON.stringify(account.user));
+          }
+
+          if (account.user.role === 'admin') {
+            navigate('/account');
+          } else {
+            navigate('/');
+          }
+        } catch (localErr) {
+          setError(localErr instanceof Error ? localErr.message : 'Error al iniciar sesión.');
+        }
+      } else {
+        setError(err instanceof Error ? err.message : 'Error al iniciar sesión. Por favor, verifica tus credenciales.');
+      }
       console.error(err);
     } finally {
       setIsLoading(false);
     }
-  };  const register = async (username: string, email: string, password: string, _birthdate: string) => {
+  };  const register = async (username: string, email: string, password: string, birthdate: string) => {
     setIsLoading(true);
     setError(null);
+    
     try {
       // Validar la contraseña
       const passwordError = validatePassword(password);
@@ -543,52 +685,134 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         throw new Error(passwordError);
       }
 
-      // Verificar si el email ya está registrado
-      const existingAccount = findAccountByEmail(email);
-      if (existingAccount) {
-        throw new Error('Email ya registrado');
+      if (FEATURES.USE_BACKEND_AUTH) {
+        // Backend registration
+        const response = await apiClient.post<{
+          user: User;
+          tokens: { accessToken: string };
+        }>('/auth/register', { username, email, password, birthdate });
+
+        if (response.success && response.data) {
+          const { user: backendUser, tokens } = response.data;
+          
+          // Set token in apiClient
+          apiClient.setToken(tokens.accessToken);
+          
+          // Convert backend user to our User interface
+          const user: User = {
+            id: backendUser.id,
+            username: backendUser.username,
+            email: backendUser.email,
+            balance: backendUser.balance || 150, // Starting balance
+            role: backendUser.role,
+            avatar: backendUser.avatar || '/src/assets/User_Logo.png'
+          };
+          
+          setUser(user);
+          
+          // Store user in sessionStorage
+          sessionStorage.setItem('user', JSON.stringify(user));
+          sessionStorage.setItem('auth_token', tokens.accessToken);
+          
+          navigate('/');
+        } else {
+          throw new Error('Registration failed - invalid response from server');
+        }
+      } else {
+        // Local registration (fallback)
+        // Verificar si el email ya está registrado
+        const existingAccount = findAccountByEmail(email);
+        if (existingAccount) {
+          throw new Error('Email ya registrado');
+        }
+
+        // Crear nueva cuenta
+        const newUser: User = {
+          id: Date.now().toString(), // ID único basado en timestamp
+          username,
+          email,
+          balance: 150, // Starting balance for new users
+          role: 'user',
+          avatar: '/src/assets/User_Logo.png',
+        };
+
+        const newAccount: UserAccount = {
+          user: newUser,
+          password
+        };
+
+        // Agregar la nueva cuenta a la lista de cuentas actuales
+        setCurrentAccounts(prev => [...prev, newAccount]);
+
+        setUser(newUser);
+        
+        // Guardar credenciales del usuario registrado
+        saveUserCredentials(newUser.id, password);
+        
+        sessionStorage.setItem('user', JSON.stringify(newUser));
+        navigate('/');
       }
-
-      // Crear nueva cuenta
-      const newUser: User = {
-        id: Date.now().toString(), // ID único basado en timestamp
-        username,
-        email,
-        balance: 150, // Starting balance for new users
-        role: 'user',
-        avatar: '/src/assets/User_Logo.png',
-      };
-
-      const newAccount: UserAccount = {
-        user: newUser,
-        password
-      };
-
-      // Agregar la nueva cuenta a la lista de cuentas actuales
-      setCurrentAccounts(prev => [...prev, newAccount]);
-
-      setUser(newUser);
-      
-      // Guardar credenciales del usuario registrado
-      saveUserCredentials(newUser.id, password);
-      
-      sessionStorage.setItem('user', JSON.stringify(newUser));
-      navigate('/');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al registrarse. Por favor, inténtalo de nuevo.');
+      if (err instanceof Error && err.message.includes('Failed to fetch')) {
+        // Network error - try local fallback
+        console.warn('Backend unavailable, falling back to local registration');
+        setError('Servidor no disponible. Usando registro local.');
+        
+        try {
+          const existingAccount = findAccountByEmail(email);
+          if (existingAccount) {
+            throw new Error('Email ya registrado');
+          }
+
+          const newUser: User = {
+            id: Date.now().toString(),
+            username,
+            email,
+            balance: 150,
+            role: 'user',
+            avatar: '/src/assets/User_Logo.png',
+          };
+
+          const newAccount: UserAccount = {
+            user: newUser,
+            password
+          };
+
+          setCurrentAccounts(prev => [...prev, newAccount]);
+          setUser(newUser);
+          saveUserCredentials(newUser.id, password);
+          sessionStorage.setItem('user', JSON.stringify(newUser));
+          navigate('/');
+        } catch (localErr) {
+          setError(localErr instanceof Error ? localErr.message : 'Error al registrarse.');
+        }
+      } else {
+        setError(err instanceof Error ? err.message : 'Error al registrarse. Por favor, inténtalo de nuevo.');
+      }
       console.error(err);
     } finally {
       setIsLoading(false);
     }
-  };const logout = () => {
+  };  const logout = () => {
     if (user) {
       clearUserCredentials(user.id);
     }
+    
+    // Clear user state
     setUser(null);
     setUserBets([]); // Limpiar apuestas al cerrar sesión
     setUserTransactions([]); // Limpiar transacciones al cerrar sesión
+    
+    // Clear authentication data
+    if (FEATURES.USE_BACKEND_AUTH) {
+      apiClient.clearToken();
+    }
+    
     localStorage.removeItem('user');
+    localStorage.removeItem('auth_token');
     sessionStorage.removeItem('user');
+    sessionStorage.removeItem('auth_token');
+    
     navigate('/login');
   };
   const updateUserBalance = (newBalance: number) => {
