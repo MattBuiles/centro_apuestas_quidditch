@@ -576,6 +576,17 @@ export class Database {
 
   // ============== MATCHES METHODS ==============
   
+  public async getAllTeams(): Promise<unknown[]> {
+    const sql = `
+      SELECT 
+        id, name, logo, founded, description, stadium, colors,
+        matches_played, wins, losses, draws, points_for, points_against, snitch_catches
+      FROM teams
+      ORDER BY name ASC
+    `;
+    return await this.all(sql);
+  }
+
   public async getAllMatches(): Promise<unknown[]> {
     const sql = `
       SELECT 
@@ -787,5 +798,181 @@ export class Database {
       WHERE id = ?
     `;
     return await this.run(sql, [newBalance, userId]);
+  }
+
+  // ============== BETS METHODS ==============
+  
+  public async createBet(betData: {
+    id: string;
+    userId: string;
+    matchId: string;
+    type: string;
+    prediction: string;
+    odds: number;
+    amount: number;
+    potentialWin: number;
+  }): Promise<{ lastID?: number; changes?: number }> {
+    const sql = `
+      INSERT INTO bets (id, user_id, match_id, type, prediction, odds, amount, potential_win, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+    `;
+    return await this.run(sql, [
+      betData.id,
+      betData.userId,
+      betData.matchId,
+      betData.type,
+      betData.prediction,
+      betData.odds,
+      betData.amount,
+      betData.potentialWin
+    ]);
+  }
+
+  public async getBetsByUser(userId: string): Promise<unknown[]> {
+    const sql = `
+      SELECT 
+        b.*,
+        m.date as matchDate,
+        ht.name as homeTeamName,
+        at.name as awayTeamName,
+        u.username
+      FROM bets b
+      JOIN matches m ON b.match_id = m.id
+      JOIN teams ht ON m.home_team_id = ht.id
+      JOIN teams at ON m.away_team_id = at.id
+      JOIN users u ON b.user_id = u.id
+      WHERE b.user_id = ?
+      ORDER BY b.placed_at DESC
+    `;
+    return await this.all(sql, [userId]);
+  }
+
+  public async getBetsByMatch(matchId: string): Promise<unknown[]> {
+    const sql = `
+      SELECT 
+        b.*,
+        u.username
+      FROM bets b
+      JOIN users u ON b.user_id = u.id
+      WHERE b.match_id = ?
+      ORDER BY b.placed_at DESC
+    `;
+    return await this.all(sql, [matchId]);
+  }
+
+  public async updateBetStatus(betId: string, status: string, resolvedAt?: string): Promise<{ lastID?: number; changes?: number }> {
+    const sql = `
+      UPDATE bets 
+      SET status = ?, resolved_at = ?
+      WHERE id = ?
+    `;
+    return await this.run(sql, [status, resolvedAt || new Date().toISOString(), betId]);
+  }
+
+  public async getAllBets(): Promise<unknown[]> {
+    const sql = `
+      SELECT 
+        b.*,
+        u.username,
+        m.date as matchDate,
+        ht.name as homeTeamName,
+        at.name as awayTeamName
+      FROM bets b
+      JOIN users u ON b.user_id = u.id
+      JOIN matches m ON b.match_id = m.id
+      JOIN teams ht ON m.home_team_id = ht.id
+      JOIN teams at ON m.away_team_id = at.id
+      ORDER BY b.placed_at DESC
+    `;
+    return await this.all(sql);
+  }
+
+  // ============== PREDICTIONS METHODS ==============
+  
+  public async createPrediction(predictionData: {
+    id: string;
+    userId: string;
+    matchId: string;
+    prediction: string;
+    confidence: number;
+  }): Promise<{ lastID?: number; changes?: number }> {
+    const sql = `
+      INSERT INTO predictions (id, user_id, match_id, prediction, confidence, status)
+      VALUES (?, ?, ?, ?, ?, 'pending')
+    `;
+    return await this.run(sql, [
+      predictionData.id,
+      predictionData.userId,
+      predictionData.matchId,
+      predictionData.prediction,
+      predictionData.confidence
+    ]);
+  }
+
+  public async getPredictionsByUser(userId: string): Promise<unknown[]> {
+    const sql = `
+      SELECT 
+        p.*,
+        m.date as matchDate,
+        ht.name as homeTeamName,
+        at.name as awayTeamName,
+        u.username
+      FROM predictions p
+      JOIN matches m ON p.match_id = m.id
+      JOIN teams ht ON m.home_team_id = ht.id
+      JOIN teams at ON m.away_team_id = at.id
+      JOIN users u ON p.user_id = u.id
+      WHERE p.user_id = ?
+      ORDER BY p.created_at DESC
+    `;
+    return await this.all(sql, [userId]);
+  }
+
+  public async getPredictionsByMatch(matchId: string): Promise<unknown[]> {
+    const sql = `
+      SELECT 
+        p.*,
+        u.username
+      FROM predictions p
+      JOIN users u ON p.user_id = u.id
+      WHERE p.match_id = ?
+      ORDER BY p.created_at DESC
+    `;
+    return await this.all(sql, [matchId]);
+  }
+
+  public async updatePredictionStatus(predictionId: string, status: string, points: number, resolvedAt?: string): Promise<{ lastID?: number; changes?: number }> {
+    const sql = `
+      UPDATE predictions 
+      SET status = ?, points = ?, resolved_at = ?
+      WHERE id = ?
+    `;
+    return await this.run(sql, [status, points, resolvedAt || new Date().toISOString(), predictionId]);
+  }
+
+  public async getAllPredictions(): Promise<unknown[]> {
+    const sql = `
+      SELECT 
+        p.*,
+        u.username,
+        m.date as matchDate,
+        ht.name as homeTeamName,
+        at.name as awayTeamName
+      FROM predictions p
+      JOIN users u ON p.user_id = u.id
+      JOIN matches m ON p.match_id = m.id
+      JOIN teams ht ON m.home_team_id = ht.id
+      JOIN teams at ON m.away_team_id = at.id
+      ORDER BY p.created_at DESC
+    `;
+    return await this.all(sql);
+  }
+
+  public async getUserPredictionForMatch(userId: string, matchId: string): Promise<unknown> {
+    const sql = `
+      SELECT * FROM predictions 
+      WHERE user_id = ? AND match_id = ?
+    `;
+    return await this.get(sql, [userId, matchId]);
   }
 }

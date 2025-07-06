@@ -72,138 +72,6 @@ app.get('/api/teams', async (req, res) => {
   }
 });
 
-// Mock data para teams
-const generateMockTeams = () => {
-  return [
-    {
-      id: 'gryffindor',
-      name: 'Gryffindor',
-      house: 'Gryffindor',
-      fuerzaAtaque: 85,
-      fuerzaDefensa: 80,
-      attackStrength: 85,
-      defenseStrength: 80,
-      seekerSkill: 90,
-      chaserSkill: 85,
-      keeperSkill: 80,
-      beaterSkill: 75,
-      logo: '/images/gryffindor-logo.png',
-      colors: {
-        primary: '#740001',
-        secondary: '#D3A625'
-      },
-      venue: 'Campo de Quidditch de Hogwarts',
-      founded: 990,
-      slogan: 'Coraje, valentía y determinación'
-    },
-    {
-      id: 'slytherin',
-      name: 'Slytherin',
-      house: 'Slytherin',
-      fuerzaAtaque: 90,
-      fuerzaDefensa: 85,
-      attackStrength: 90,
-      defenseStrength: 85,
-      seekerSkill: 85,
-      chaserSkill: 90,
-      keeperSkill: 85,
-      beaterSkill: 80,
-      logo: '/images/slytherin-logo.png',
-      colors: {
-        primary: '#1A472A',
-        secondary: '#AAAAAA'
-      },
-      venue: 'Campo de Quidditch de Hogwarts',
-      founded: 990,
-      slogan: 'Astucia, ambición y liderazgo'
-    },
-    {
-      id: 'ravenclaw',
-      name: 'Ravenclaw',
-      house: 'Ravenclaw',
-      fuerzaAtaque: 80,
-      fuerzaDefensa: 90,
-      attackStrength: 80,
-      defenseStrength: 90,
-      seekerSkill: 95,
-      chaserSkill: 80,
-      keeperSkill: 85,
-      beaterSkill: 70,
-      logo: '/images/ravenclaw-logo.png',
-      colors: {
-        primary: '#0E1A40',
-        secondary: '#946B2D'
-      },
-      venue: 'Campo de Quidditch de Hogwarts',
-      founded: 990,
-      slogan: 'Sabiduría, ingenio e inteligencia'
-    },
-    {
-      id: 'hufflepuff',
-      name: 'Hufflepuff',
-      house: 'Hufflepuff',
-      fuerzaAtaque: 75,
-      fuerzaDefensa: 95,
-      attackStrength: 75,
-      defenseStrength: 95,
-      seekerSkill: 80,
-      chaserSkill: 75,
-      keeperSkill: 95,
-      beaterSkill: 85,
-      logo: '/images/hufflepuff-logo.png',
-      colors: {
-        primary: '#ECB939',
-        secondary: '#372E29'
-      },
-      venue: 'Campo de Quidditch de Hogwarts',
-      founded: 990,
-      slogan: 'Lealtad, trabajo duro y paciencia'
-    },
-    {
-      id: 'chudley-cannons',
-      name: 'Chudley Cannons',
-      house: null,
-      fuerzaAtaque: 70,
-      fuerzaDefensa: 65,
-      attackStrength: 70,
-      defenseStrength: 65,
-      seekerSkill: 75,
-      chaserSkill: 70,
-      keeperSkill: 65,
-      beaterSkill: 70,
-      logo: '/images/chudley-cannons-logo.png',
-      colors: {
-        primary: '#FFA500',
-        secondary: '#000000'
-      },
-      venue: 'Cannon Stadium',
-      founded: 1892,
-      slogan: 'Let\'s all just keep our fingers crossed and hope for the best'
-    },
-    {
-      id: 'holyhead-harpies',
-      name: 'Holyhead Harpies',
-      house: null,
-      fuerzaAtaque: 88,
-      fuerzaDefensa: 78,
-      attackStrength: 88,
-      defenseStrength: 78,
-      seekerSkill: 85,
-      chaserSkill: 90,
-      keeperSkill: 75,
-      beaterSkill: 80,
-      logo: '/images/holyhead-harpies-logo.png',
-      colors: {
-        primary: '#008000',
-        secondary: '#FFFFFF'
-      },
-      venue: 'Harpies Ground',
-      founded: 1203,
-      slogan: 'Soar to Victory'
-    }
-  ];
-};
-
 // GET /api/matches - Obtener todos los partidos
 app.get('/api/matches', async (req, res) => {
   try {
@@ -665,6 +533,417 @@ app.get('/api/auth/me', async (req, res) => {
       success: false,
       error: 'Internal server error',
       message: 'Failed to retrieve profile',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// ============== BETS ENDPOINTS ==============
+
+// GET /api/bets - Obtener todas las apuestas (admin) o del usuario actual
+app.get('/api/bets', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        success: false,
+        error: 'No token provided',
+        message: 'Authorization header is required',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    const token = authHeader.substring(7);
+    const jwtSecret = process.env.JWT_SECRET || 'your-super-secret-jwt-key';
+    
+    try {
+      const decoded = jwt.verify(token, jwtSecret) as any;
+      const db = Database.getInstance();
+      
+      let bets;
+      if (decoded.role === 'admin') {
+        bets = await db.getAllBets();
+      } else {
+        bets = await db.getBetsByUser(decoded.userId);
+      }
+      
+      return res.json({
+        success: true,
+        data: bets,
+        count: bets.length,
+        message: 'Bets retrieved successfully',
+        timestamp: new Date().toISOString()
+      });
+    } catch (jwtError) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid token',
+        message: 'Token is invalid or expired',
+        timestamp: new Date().toISOString()
+      });
+    }
+  } catch (error) {
+    console.error('Error fetching bets:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: 'Failed to retrieve bets',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// POST /api/bets - Crear una nueva apuesta
+app.post('/api/bets', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        success: false,
+        error: 'No token provided',
+        message: 'Authorization header is required',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    const token = authHeader.substring(7);
+    const jwtSecret = process.env.JWT_SECRET || 'your-super-secret-jwt-key';
+    
+    try {
+      const decoded = jwt.verify(token, jwtSecret) as any;
+      const { matchId, type, prediction, odds, amount } = req.body;
+      
+      // Validaciones
+      if (!matchId || !type || !prediction || !odds || !amount) {
+        return res.status(400).json({
+          success: false,
+          error: 'Missing required fields',
+          message: 'matchId, type, prediction, odds, and amount are required',
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      if (amount <= 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid amount',
+          message: 'Amount must be greater than 0',
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      const db = Database.getInstance();
+      
+      // Verificar balance del usuario
+      const user = await db.getUserById(decoded.userId) as any;
+      if (!user || user.balance < amount) {
+        return res.status(400).json({
+          success: false,
+          error: 'Insufficient balance',
+          message: 'User does not have enough balance for this bet',
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      // Verificar que el partido existe y no ha terminado
+      const match = await db.getMatchById(matchId) as any;
+      if (!match) {
+        return res.status(404).json({
+          success: false,
+          error: 'Match not found',
+          message: 'The specified match does not exist',
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      if (match.status === 'finished') {
+        return res.status(400).json({
+          success: false,
+          error: 'Match finished',
+          message: 'Cannot place bet on a finished match',
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      const betId = uuidv4();
+      const potentialWin = amount * odds;
+
+      // Crear la apuesta
+      await db.createBet({
+        id: betId,
+        userId: decoded.userId,
+        matchId,
+        type,
+        prediction,
+        odds,
+        amount,
+        potentialWin
+      });
+
+      // Actualizar balance del usuario
+      await db.updateUserBalance(decoded.userId, user.balance - amount);
+
+      return res.status(201).json({
+        success: true,
+        data: {
+          id: betId,
+          matchId,
+          type,
+          prediction,
+          odds,
+          amount,
+          potentialWin,
+          status: 'pending'
+        },
+        message: 'Bet placed successfully',
+        timestamp: new Date().toISOString()
+      });
+    } catch (jwtError) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid token',
+        message: 'Token is invalid or expired',
+        timestamp: new Date().toISOString()
+      });
+    }
+  } catch (error) {
+    console.error('Error creating bet:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: 'Failed to create bet',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// GET /api/matches/:id/bets - Obtener apuestas de un partido específico
+app.get('/api/matches/:id/bets', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const db = Database.getInstance();
+    const bets = await db.getBetsByMatch(id);
+
+    return res.json({
+      success: true,
+      data: bets,
+      count: bets.length,
+      message: 'Match bets retrieved successfully',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error fetching match bets:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: 'Failed to retrieve match bets',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// ============== PREDICTIONS ENDPOINTS ==============
+
+// GET /api/predictions - Obtener todas las predicciones (admin) o del usuario actual
+app.get('/api/predictions', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        success: false,
+        error: 'No token provided',
+        message: 'Authorization header is required',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    const token = authHeader.substring(7);
+    const jwtSecret = process.env.JWT_SECRET || 'your-super-secret-jwt-key';
+    
+    try {
+      const decoded = jwt.verify(token, jwtSecret) as any;
+      const db = Database.getInstance();
+      
+      let predictions;
+      if (decoded.role === 'admin') {
+        predictions = await db.getAllPredictions();
+      } else {
+        predictions = await db.getPredictionsByUser(decoded.userId);
+      }
+      
+      return res.json({
+        success: true,
+        data: predictions,
+        count: predictions.length,
+        message: 'Predictions retrieved successfully',
+        timestamp: new Date().toISOString()
+      });
+    } catch (jwtError) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid token',
+        message: 'Token is invalid or expired',
+        timestamp: new Date().toISOString()
+      });
+    }
+  } catch (error) {
+    console.error('Error fetching predictions:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: 'Failed to retrieve predictions',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// POST /api/predictions - Crear una nueva predicción
+app.post('/api/predictions', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        success: false,
+        error: 'No token provided',
+        message: 'Authorization header is required',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    const token = authHeader.substring(7);
+    const jwtSecret = process.env.JWT_SECRET || 'your-super-secret-jwt-key';
+    
+    try {
+      const decoded = jwt.verify(token, jwtSecret) as any;
+      const { matchId, prediction, confidence = 3 } = req.body;
+      
+      // Validaciones
+      if (!matchId || !prediction) {
+        return res.status(400).json({
+          success: false,
+          error: 'Missing required fields',
+          message: 'matchId and prediction are required',
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      if (!['home', 'away', 'draw'].includes(prediction)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid prediction',
+          message: 'Prediction must be "home", "away", or "draw"',
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      if (confidence < 1 || confidence > 5) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid confidence',
+          message: 'Confidence must be between 1 and 5',
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      const db = Database.getInstance();
+      
+      // Verificar que el partido existe y no ha terminado
+      const match = await db.getMatchById(matchId) as any;
+      if (!match) {
+        return res.status(404).json({
+          success: false,
+          error: 'Match not found',
+          message: 'The specified match does not exist',
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      if (match.status === 'finished') {
+        return res.status(400).json({
+          success: false,
+          error: 'Match finished',
+          message: 'Cannot make prediction on a finished match',
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      // Verificar si ya existe una predicción del usuario para este partido
+      const existingPrediction = await db.getUserPredictionForMatch(decoded.userId, matchId);
+      if (existingPrediction) {
+        return res.status(409).json({
+          success: false,
+          error: 'Prediction already exists',
+          message: 'User already has a prediction for this match',
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      const predictionId = uuidv4();
+
+      // Crear la predicción
+      await db.createPrediction({
+        id: predictionId,
+        userId: decoded.userId,
+        matchId,
+        prediction,
+        confidence
+      });
+
+      return res.status(201).json({
+        success: true,
+        data: {
+          id: predictionId,
+          matchId,
+          prediction,
+          confidence,
+          status: 'pending'
+        },
+        message: 'Prediction created successfully',
+        timestamp: new Date().toISOString()
+      });
+    } catch (jwtError) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid token',
+        message: 'Token is invalid or expired',
+        timestamp: new Date().toISOString()
+      });
+    }
+  } catch (error) {
+    console.error('Error creating prediction:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: 'Failed to create prediction',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// GET /api/matches/:id/predictions - Obtener predicciones de un partido específico
+app.get('/api/matches/:id/predictions', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const db = Database.getInstance();
+    const predictions = await db.getPredictionsByMatch(id);
+
+    return res.json({
+      success: true,
+      data: predictions,
+      count: predictions.length,
+      message: 'Match predictions retrieved successfully',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error fetching match predictions:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: 'Failed to retrieve match predictions',
       timestamp: new Date().toISOString()
     });
   }

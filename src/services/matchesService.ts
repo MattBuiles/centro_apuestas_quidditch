@@ -27,63 +27,7 @@ interface BackendMatch {
   }>;
 }
 
-// Mock data para fallback cuando el backend no esté disponible
-const generateMockMatches = (): Match[] => {
-  const teams = [
-    { id: 'gryffindor', name: 'Gryffindor' },
-    { id: 'slytherin', name: 'Slytherin' },
-    { id: 'ravenclaw', name: 'Ravenclaw' },
-    { id: 'hufflepuff', name: 'Hufflepuff' },
-    { id: 'chudley-cannons', name: 'Chudley Cannons' },
-    { id: 'holyhead-harpies', name: 'Holyhead Harpies' }
-  ];
-
-  const matches: Match[] = [];
-  const currentDate = new Date();
-
-  for (let i = 0; i < 8; i++) {
-    const homeTeam = teams[Math.floor(Math.random() * teams.length)];
-    let awayTeam = teams[Math.floor(Math.random() * teams.length)];
-    while (awayTeam.id === homeTeam.id) {
-      awayTeam = teams[Math.floor(Math.random() * teams.length)];
-    }
-
-    const matchDate = new Date(currentDate.getTime() + (Math.random() * 30 - 15) * 24 * 60 * 60 * 1000);
-    const isPast = matchDate < currentDate;
-    const isLive = !isPast && Math.random() < 0.15;
-
-    const status = isPast ? 'finished' : isLive ? 'live' : 'scheduled';
-    const homeScore = isPast || isLive ? Math.floor(Math.random() * 200) + 50 : 0;
-    const awayScore = isPast || isLive ? Math.floor(Math.random() * 200) + 50 : 0;
-
-    matches.push({
-      id: `mock-match-${i + 1}`,
-      localId: homeTeam.id,
-      visitanteId: awayTeam.id,
-      homeTeamId: homeTeam.id,
-      awayTeamId: awayTeam.id,
-      fecha: matchDate,
-      date: matchDate,
-      eventos: [],
-      events: [],
-      status,
-      homeScore,
-      awayScore,
-      duration: isPast ? Math.floor(Math.random() * 60) + 30 : 0,
-      round: Math.floor(i / 4) + 1,
-      matchday: (i % 4) + 1,
-      venue: `${homeTeam.name} Stadium`,
-      attendance: Math.floor(Math.random() * 50000) + 10000,
-      weather: 'sunny',
-      snitchCaught: isPast && Math.random() < 0.8,
-      snitchCaughtAt: isPast && Math.random() < 0.8 ? Math.floor(Math.random() * 60) + 10 : undefined,
-      currentMinute: isLive ? Math.floor(Math.random() * 90) + 1 : undefined,
-      isLive: isLive
-    });
-  }
-
-  return matches.sort((a, b) => a.fecha.getTime() - b.fecha.getTime());
-};
+// Método eliminado: generateMockMatches - Ya no se usan datos mock
 
 // Convertir match del backend al formato frontend
 const adaptBackendMatch = (backendMatch: BackendMatch): Match => {
@@ -144,18 +88,10 @@ export const getMatches = async (): Promise<Match[]> => {
       }
     } catch (error) {
       console.error('❌ Error fetching matches from backend:', error);
-      
-      if (FEATURES.SHOW_FALLBACK_MESSAGES) {
-        console.warn('🔄 Falling back to local mock data for matches');
-      }
-      
-      return generateMockMatches();
+      throw new Error('Backend unavailable - matches cannot be retrieved');
     }
   } else {
-    if (FEATURES.DEBUG_API) {
-      console.log('📍 Using local mock data for matches (backend disabled)');
-    }
-    return generateMockMatches();
+    throw new Error('Backend API is disabled - matches cannot be retrieved');
   }
 };
 
@@ -178,22 +114,10 @@ export const getMatchDetails = async (matchId: string): Promise<Match | null> =>
       }
     } catch (error) {
       console.error(`❌ Error fetching match details for ${matchId}:`, error);
-      
-      if (FEATURES.SHOW_FALLBACK_MESSAGES) {
-        console.warn('🔄 Falling back to local mock data for match details');
-      }
-      
-      // Fallback: buscar en datos locales
-      const localMatches = generateMockMatches();
-      return localMatches.find(m => m.id === matchId) || null;
+      throw new Error(`Match ${matchId} not found or backend unavailable`);
     }
   } else {
-    if (FEATURES.DEBUG_API) {
-      console.log(`📍 Using local mock data for match ${matchId} (backend disabled)`);
-    }
-    
-    const localMatches = generateMockMatches();
-    return localMatches.find(m => m.id === matchId) || null;
+    throw new Error('Backend API is disabled - matches cannot be retrieved');
   }
 };
 
@@ -217,21 +141,10 @@ export const getLiveMatches = async (): Promise<Match[]> => {
       }
     } catch (error) {
       console.error('❌ Error fetching live matches from backend:', error);
-      
-      if (FEATURES.SHOW_FALLBACK_MESSAGES) {
-        console.warn('🔄 Falling back to local mock data for live matches');
-      }
-      
-      const localMatches = generateMockMatches();
-      return localMatches.filter(m => m.status === 'live');
+      throw new Error('Live matches cannot be retrieved - backend unavailable');
     }
   } else {
-    if (FEATURES.DEBUG_API) {
-      console.log('📍 Using local mock data for live matches (backend disabled)');
-    }
-    
-    const localMatches = generateMockMatches();
-    return localMatches.filter(m => m.status === 'live');
+    throw new Error('Backend API is disabled - live matches cannot be retrieved');
   }
 };
 
@@ -255,20 +168,9 @@ export const getUpcomingMatches = async (limit: number = 10): Promise<Match[]> =
       }
     } catch (error) {
       console.error('❌ Error fetching upcoming matches from backend:', error);
-      
-      if (FEATURES.SHOW_FALLBACK_MESSAGES) {
-        console.warn('🔄 Falling back to local mock data for upcoming matches');
-      }
-      
-      const localMatches = generateMockMatches();
-      return localMatches.filter(m => m.status === 'scheduled').slice(0, limit);
+      throw new Error('Upcoming matches cannot be retrieved - backend unavailable');
     }
   } else {
-    if (FEATURES.DEBUG_API) {
-      console.log(`📍 Using local mock data for ${limit} upcoming matches (backend disabled)`);
-    }
-    
-    const localMatches = generateMockMatches();
-    return localMatches.filter(m => m.status === 'scheduled').slice(0, limit);
+    throw new Error('Backend API is disabled - upcoming matches cannot be retrieved');
   }
 };
