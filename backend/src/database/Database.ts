@@ -193,6 +193,112 @@ export class Database {
         UNIQUE(user_id, match_id)
       );
 
+      -- Historical seasons table (for keeping complete history across multiple seasons)
+      CREATE TABLE IF NOT EXISTS historical_seasons (
+        id TEXT PRIMARY KEY,
+        original_season_id TEXT NOT NULL,
+        name TEXT NOT NULL,
+        start_date DATETIME NOT NULL,
+        end_date DATETIME NOT NULL,
+        status TEXT DEFAULT 'completed',
+        archived_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        total_teams INTEGER DEFAULT 0,
+        total_matches INTEGER DEFAULT 0,
+        total_bets INTEGER DEFAULT 0,
+        total_predictions INTEGER DEFAULT 0,
+        total_revenue REAL DEFAULT 0,
+        champion_team_id TEXT,
+        champion_team_name TEXT,
+        FOREIGN KEY (champion_team_id) REFERENCES teams(id)
+      );
+
+      -- Historical team statistics (aggregated across all seasons)
+      CREATE TABLE IF NOT EXISTS historical_team_stats (
+        id TEXT PRIMARY KEY,
+        team_id TEXT NOT NULL,
+        team_name TEXT NOT NULL,
+        total_seasons INTEGER DEFAULT 0,
+        total_matches INTEGER DEFAULT 0,
+        total_wins INTEGER DEFAULT 0,
+        total_losses INTEGER DEFAULT 0,
+        total_draws INTEGER DEFAULT 0,
+        total_points_for INTEGER DEFAULT 0,
+        total_points_against INTEGER DEFAULT 0,
+        total_snitch_catches INTEGER DEFAULT 0,
+        championships_won INTEGER DEFAULT 0,
+        best_season_position INTEGER,
+        worst_season_position INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (team_id) REFERENCES teams(id)
+      );
+
+      -- Historical user statistics (aggregated across all activity)
+      CREATE TABLE IF NOT EXISTS historical_user_stats (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        username TEXT NOT NULL,
+        total_bets INTEGER DEFAULT 0,
+        total_amount_bet REAL DEFAULT 0,
+        total_winnings REAL DEFAULT 0,
+        total_losses REAL DEFAULT 0,
+        best_winning_streak INTEGER DEFAULT 0,
+        current_winning_streak INTEGER DEFAULT 0,
+        favorite_team_id TEXT,
+        favorite_bet_type TEXT,
+        most_successful_bet_type TEXT,
+        total_predictions INTEGER DEFAULT 0,
+        correct_predictions INTEGER DEFAULT 0,
+        prediction_accuracy REAL DEFAULT 0,
+        account_created DATETIME,
+        last_activity DATETIME,
+        total_seasons_active INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id),
+        FOREIGN KEY (favorite_team_id) REFERENCES teams(id)
+      );
+
+      -- Expanded bet types for comprehensive betting system
+      CREATE TABLE IF NOT EXISTS bet_types (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        description TEXT NOT NULL,
+        category TEXT NOT NULL, -- 'winner', 'score', 'special', 'duration', 'player'
+        base_odds REAL DEFAULT 2.0,
+        risk_level TEXT CHECK(risk_level IN ('low', 'medium', 'high')) DEFAULT 'medium',
+        is_active BOOLEAN DEFAULT TRUE,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+
+      -- User transactions history
+      CREATE TABLE IF NOT EXISTS user_transactions (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        type TEXT CHECK(type IN ('deposit', 'withdrawal', 'bet_placed', 'bet_won', 'bet_lost', 'refund', 'bonus')) NOT NULL,
+        amount REAL NOT NULL,
+        balance_before REAL NOT NULL,
+        balance_after REAL NOT NULL,
+        description TEXT,
+        reference_id TEXT, -- bet_id, match_id, etc.
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      );
+
+      -- Admin activity logs
+      CREATE TABLE IF NOT EXISTS admin_logs (
+        id TEXT PRIMARY KEY,
+        admin_user_id TEXT NOT NULL,
+        action TEXT NOT NULL,
+        target_type TEXT, -- 'user', 'match', 'bet', 'season', 'system'
+        target_id TEXT,
+        description TEXT,
+        ip_address TEXT,
+        user_agent TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (admin_user_id) REFERENCES users(id)
+      );
+
       -- Standings table
       CREATE TABLE IF NOT EXISTS standings (
         season_id TEXT,
@@ -320,8 +426,54 @@ export class Database {
     console.log('🌱 Initial data seeded successfully');
     console.log('👤 Default admin user created: admin@quidditch.com / admin123');
 
+    // Seed bet types
+    await this.seedBetTypes();
+
     // Create a sample season
     await this.createSampleSeason();
+  }
+
+  private async seedBetTypes(): Promise<void> {
+    if (!this.db) throw new Error('Database not connected');
+
+    console.log('🎲 Seeding bet types...');
+
+    const betTypes = [
+      // Winner bets
+      { id: 'winner-home', name: 'Ganador Local', description: 'El equipo local gana el partido', category: 'winner', base_odds: 2.15, risk_level: 'low' },
+      { id: 'winner-away', name: 'Ganador Visitante', description: 'El equipo visitante gana el partido', category: 'winner', base_odds: 1.90, risk_level: 'low' },
+      { id: 'winner-draw', name: 'Empate', description: 'El partido termina en empate', category: 'winner', base_odds: 8.50, risk_level: 'high' },
+      
+      // Score bets
+      { id: 'total-over-300', name: 'Más de 300 puntos', description: 'Puntuación total mayor a 300', category: 'score', base_odds: 1.75, risk_level: 'medium' },
+      { id: 'total-under-200', name: 'Menos de 200 puntos', description: 'Puntuación total menor a 200', category: 'score', base_odds: 2.50, risk_level: 'medium' },
+      { id: 'exact-score', name: 'Puntuación Exacta', description: 'Predicción exacta del marcador final', category: 'score', base_odds: 12.50, risk_level: 'high' },
+      
+      // Snitch bets
+      { id: 'snitch-home', name: 'Snitch por Local', description: 'El equipo local captura la Snitch Dorada', category: 'special', base_odds: 1.85, risk_level: 'medium' },
+      { id: 'snitch-away', name: 'Snitch por Visitante', description: 'El equipo visitante captura la Snitch Dorada', category: 'special', base_odds: 2.10, risk_level: 'medium' },
+      
+      // Duration bets
+      { id: 'duration-short', name: 'Partido Corto', description: 'Duración menor a 30 minutos', category: 'duration', base_odds: 7.50, risk_level: 'high' },
+      { id: 'duration-medium', name: 'Duración Media', description: 'Duración entre 30-60 minutos', category: 'duration', base_odds: 3.25, risk_level: 'medium' },
+      { id: 'duration-long', name: 'Partido Largo', description: 'Duración mayor a 60 minutos', category: 'duration', base_odds: 2.10, risk_level: 'medium' },
+      
+      // Special events
+      { id: 'expulsion', name: 'Expulsión', description: 'Un jugador será expulsado durante el partido', category: 'special', base_odds: 5.25, risk_level: 'high' },
+      { id: 'broom-break', name: 'Escoba Rota', description: 'Se romperá una escoba durante el partido', category: 'special', base_odds: 4.50, risk_level: 'high' },
+      { id: 'seeker-fall', name: 'Caída de Buscador', description: 'Un buscador caerá de su escoba', category: 'special', base_odds: 3.75, risk_level: 'medium' },
+      { id: 'bludger-referee', name: 'Bludger al Árbitro', description: 'Una bludger golpeará al árbitro', category: 'special', base_odds: 12.50, risk_level: 'high' },
+      { id: 'first-score', name: 'Primer Gol', description: 'Primer equipo en anotar', category: 'special', base_odds: 1.95, risk_level: 'low' }
+    ];
+
+    for (const betType of betTypes) {
+      await this.run(`
+        INSERT OR IGNORE INTO bet_types (id, name, description, category, base_odds, risk_level)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `, [betType.id, betType.name, betType.description, betType.category, betType.base_odds, betType.risk_level]);
+    }
+
+    console.log(`✅ Seeded ${betTypes.length} bet types`);
   }
 
   private async createSampleSeason(): Promise<void> {
@@ -974,5 +1126,291 @@ export class Database {
       WHERE user_id = ? AND match_id = ?
     `;
     return await this.get(sql, [userId, matchId]);
+  }
+
+  // ============== ADMIN STATISTICS METHODS ==============
+  
+  public async getAllUsers(): Promise<unknown[]> {
+    const sql = `
+      SELECT 
+        u.id, u.username, u.email, u.role, u.balance, u.created_at, u.updated_at,
+        COUNT(DISTINCT b.id) as total_bets,
+        COALESCE(SUM(CASE WHEN b.status = 'won' THEN b.potential_win - b.amount ELSE 0 END), 0) as total_winnings,
+        COALESCE(SUM(CASE WHEN b.status = 'lost' THEN b.amount ELSE 0 END), 0) as total_losses,
+        COUNT(DISTINCT p.id) as total_predictions,
+        COUNT(CASE WHEN p.status = 'correct' THEN 1 END) as correct_predictions
+      FROM users u
+      LEFT JOIN bets b ON u.id = b.user_id
+      LEFT JOIN predictions p ON u.id = p.user_id
+      WHERE u.role = 'user'
+      GROUP BY u.id
+      ORDER BY u.created_at DESC
+    `;
+    return await this.all(sql);
+  }
+
+  public async getBetStatistics(): Promise<unknown> {
+    const sql = `
+      SELECT 
+        COUNT(*) as total_bets,
+        SUM(amount) as total_amount,
+        AVG(amount) as average_bet,
+        COUNT(CASE WHEN status = 'won' THEN 1 END) as won_bets,
+        COUNT(CASE WHEN status = 'lost' THEN 1 END) as lost_bets,
+        COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_bets,
+        SUM(CASE WHEN status = 'won' THEN potential_win - amount ELSE 0 END) as total_winnings_paid,
+        SUM(CASE WHEN status = 'lost' THEN amount ELSE 0 END) as total_losses_collected
+      FROM bets
+    `;
+    return await this.get(sql);
+  }
+
+  public async getBetStatisticsByDateRange(startDate: string, endDate: string): Promise<unknown[]> {
+    const sql = `
+      SELECT 
+        DATE(placed_at) as date,
+        COUNT(*) as total_bets,
+        SUM(amount) as total_amount,
+        COUNT(CASE WHEN status = 'won' THEN 1 END) as won_bets,
+        COUNT(CASE WHEN status = 'lost' THEN 1 END) as lost_bets
+      FROM bets
+      WHERE DATE(placed_at) BETWEEN ? AND ?
+      GROUP BY DATE(placed_at)
+      ORDER BY date DESC
+    `;
+    return await this.all(sql, [startDate, endDate]);
+  }
+
+  public async getTopUsersByBets(limit: number = 10): Promise<unknown[]> {
+    const sql = `
+      SELECT 
+        u.username,
+        COUNT(b.id) as bet_count,
+        SUM(b.amount) as total_amount,
+        COUNT(CASE WHEN b.status = 'won' THEN 1 END) as won_count,
+        COUNT(CASE WHEN b.status = 'lost' THEN 1 END) as lost_count,
+        SUM(CASE WHEN b.status = 'won' THEN b.potential_win - b.amount ELSE 0 END) as net_winnings
+      FROM users u
+      JOIN bets b ON u.id = b.user_id
+      WHERE u.role = 'user'
+      GROUP BY u.id, u.username
+      ORDER BY bet_count DESC
+      LIMIT ?
+    `;
+    return await this.all(sql, [limit]);
+  }
+
+  public async getTopMatchesByBets(limit: number = 10): Promise<unknown[]> {
+    const sql = `
+      SELECT 
+        m.id,
+        ht.name as home_team,
+        at.name as away_team,
+        m.date,
+        COUNT(b.id) as bet_count,
+        SUM(b.amount) as total_amount
+      FROM matches m
+      JOIN teams ht ON m.home_team_id = ht.id
+      JOIN teams at ON m.away_team_id = at.id
+      LEFT JOIN bets b ON m.id = b.match_id
+      GROUP BY m.id
+      HAVING bet_count > 0
+      ORDER BY bet_count DESC
+      LIMIT ?
+    `;
+    return await this.all(sql, [limit]);
+  }
+
+  public async getBetTypeStatistics(): Promise<unknown[]> {
+    const sql = `
+      SELECT 
+        bt.name,
+        bt.category,
+        COUNT(b.id) as bet_count,
+        SUM(b.amount) as total_amount,
+        AVG(b.odds) as average_odds,
+        COUNT(CASE WHEN b.status = 'won' THEN 1 END) as won_count,
+        COUNT(CASE WHEN b.status = 'lost' THEN 1 END) as lost_count
+      FROM bet_types bt
+      LEFT JOIN bets b ON bt.id = b.type
+      WHERE bt.is_active = TRUE
+      GROUP BY bt.id, bt.name, bt.category
+      ORDER BY bet_count DESC
+    `;
+    return await this.all(sql);
+  }
+
+  // ============== USER TRANSACTIONS METHODS ==============
+  
+  public async createTransaction(transactionData: {
+    id: string;
+    userId: string;
+    type: string;
+    amount: number;
+    balanceBefore: number;
+    balanceAfter: number;
+    description?: string;
+    referenceId?: string;
+  }): Promise<{ lastID?: number; changes?: number }> {
+    const sql = `
+      INSERT INTO user_transactions (id, user_id, type, amount, balance_before, balance_after, description, reference_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+    return await this.run(sql, [
+      transactionData.id,
+      transactionData.userId,
+      transactionData.type,
+      transactionData.amount,
+      transactionData.balanceBefore,
+      transactionData.balanceAfter,
+      transactionData.description || '',
+      transactionData.referenceId || null
+    ]);
+  }
+
+  public async getUserTransactions(userId: string, limit: number = 50): Promise<unknown[]> {
+    const sql = `
+      SELECT * FROM user_transactions
+      WHERE user_id = ?
+      ORDER BY created_at DESC
+      LIMIT ?
+    `;
+    return await this.all(sql, [userId, limit]);
+  }
+
+  // ============== ADMIN LOGS METHODS ==============
+  
+  public async createAdminLog(logData: {
+    id: string;
+    adminUserId: string;
+    action: string;
+    targetType?: string;
+    targetId?: string;
+    description?: string;
+    ipAddress?: string;
+    userAgent?: string;
+  }): Promise<{ lastID?: number; changes?: number }> {
+    const sql = `
+      INSERT INTO admin_logs (id, admin_user_id, action, target_type, target_id, description, ip_address, user_agent)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+    return await this.run(sql, [
+      logData.id,
+      logData.adminUserId,
+      logData.action,
+      logData.targetType || null,
+      logData.targetId || null,
+      logData.description || '',
+      logData.ipAddress || null,
+      logData.userAgent || null
+    ]);
+  }
+
+  public async getAdminLogs(limit: number = 100): Promise<unknown[]> {
+    const sql = `
+      SELECT 
+        al.*,
+        u.username as admin_username
+      FROM admin_logs al
+      JOIN users u ON al.admin_user_id = u.id
+      ORDER BY al.created_at DESC
+      LIMIT ?
+    `;
+    return await this.all(sql, [limit]);
+  }
+
+  // ============== HISTORICAL DATA METHODS ==============
+  
+  public async archiveCompletedSeason(seasonId: string): Promise<void> {
+    const season = await this.getSeasonById(seasonId) as any;
+    if (!season) return;
+
+    // Archive season
+    const historicalSeasonId = `hist-${seasonId}-${Date.now()}`;
+    await this.run(`
+      INSERT INTO historical_seasons (
+        id, original_season_id, name, start_date, end_date, 
+        total_teams, total_matches, total_bets, total_predictions, champion_team_id, champion_team_name
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      historicalSeasonId,
+      seasonId,
+      season.name,
+      season.start_date,
+      season.end_date,
+      season.teamsCount || 0,
+      season.matchesCount || 0,
+      0, // Will be calculated
+      0, // Will be calculated
+      null, // Will be determined from standings
+      null
+    ]);
+
+    // Update team historical stats
+    await this.updateHistoricalTeamStats();
+    
+    // Update user historical stats
+    await this.updateHistoricalUserStats();
+  }
+
+  private async updateHistoricalTeamStats(): Promise<void> {
+    // Complex query to aggregate all team statistics across all seasons
+    const sql = `
+      INSERT OR REPLACE INTO historical_team_stats (
+        id, team_id, team_name, total_seasons, total_matches, total_wins, 
+        total_losses, total_draws, total_points_for, total_points_against, 
+        total_snitch_catches, championships_won
+      )
+      SELECT 
+        'hist-' || t.id as id,
+        t.id as team_id,
+        t.name as team_name,
+        COUNT(DISTINCT st.season_id) as total_seasons,
+        SUM(t.matches_played) as total_matches,
+        SUM(t.wins) as total_wins,
+        SUM(t.losses) as total_losses,
+        SUM(t.draws) as total_draws,
+        SUM(t.points_for) as total_points_for,
+        SUM(t.points_against) as total_points_against,
+        SUM(t.snitch_catches) as total_snitch_catches,
+        COUNT(CASE WHEN st.position = 1 THEN 1 END) as championships_won
+      FROM teams t
+      LEFT JOIN season_teams st_rel ON t.id = st_rel.team_id
+      LEFT JOIN standings st ON t.id = st.team_id
+      GROUP BY t.id, t.name
+    `;
+    await this.run(sql);
+  }
+
+  private async updateHistoricalUserStats(): Promise<void> {
+    // Complex query to aggregate all user statistics
+    const sql = `
+      INSERT OR REPLACE INTO historical_user_stats (
+        id, user_id, username, total_bets, total_amount_bet, total_winnings,
+        total_losses, total_predictions, correct_predictions, prediction_accuracy, account_created
+      )
+      SELECT 
+        'hist-' || u.id as id,
+        u.id as user_id,
+        u.username,
+        COUNT(DISTINCT b.id) as total_bets,
+        COALESCE(SUM(b.amount), 0) as total_amount_bet,
+        COALESCE(SUM(CASE WHEN b.status = 'won' THEN b.potential_win - b.amount ELSE 0 END), 0) as total_winnings,
+        COALESCE(SUM(CASE WHEN b.status = 'lost' THEN b.amount ELSE 0 END), 0) as total_losses,
+        COUNT(DISTINCT p.id) as total_predictions,
+        COUNT(CASE WHEN p.status = 'correct' THEN 1 END) as correct_predictions,
+        CASE 
+          WHEN COUNT(DISTINCT p.id) > 0 
+          THEN (COUNT(CASE WHEN p.status = 'correct' THEN 1 END) * 100.0 / COUNT(DISTINCT p.id))
+          ELSE 0 
+        END as prediction_accuracy,
+        u.created_at as account_created
+      FROM users u
+      LEFT JOIN bets b ON u.id = b.user_id
+      LEFT JOIN predictions p ON u.id = p.user_id
+      WHERE u.role = 'user'
+      GROUP BY u.id, u.username, u.created_at
+    `;
+    await this.run(sql);
   }
 }

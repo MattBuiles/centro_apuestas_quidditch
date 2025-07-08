@@ -949,6 +949,210 @@ app.get('/api/matches/:id/predictions', async (req, res) => {
   }
 });
 
+// GET /api/teams/:id - Get individual team details
+app.get('/api/teams/:id', async (req, res): Promise<void> => {
+  try {
+    const db = Database.getInstance();
+    const { id } = req.params;
+    
+    // Get team basic info
+    const team = await db.get('SELECT * FROM teams WHERE id = ?', [id]);
+    
+    if (!team) {
+      res.status(404).json({
+        success: false,
+        error: 'Team not found',
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    // Get team statistics (current season)
+    const currentSeason = await db.get('SELECT id FROM seasons ORDER BY created_at DESC LIMIT 1');
+    let teamStats = null;
+    
+    if (currentSeason) {
+      teamStats = await db.get(`
+        SELECT 
+          position,
+          points,
+          matches_played,
+          wins,
+          losses,
+          draws,
+          points_for,
+          points_against,
+          (points_for - points_against) as point_difference,
+          snitch_catches
+        FROM standings 
+        WHERE team_id = ? AND season_id = ?
+      `, [id, (currentSeason as { id: string }).id]);
+    }
+
+    // Get historical stats
+    const historicalStats = await db.get(`
+      SELECT 
+        total_seasons,
+        total_matches,
+        total_wins,
+        total_losses,
+        total_draws,
+        total_points_for,
+        total_points_against,
+        total_snitch_catches,
+        championship_titles,
+        runner_up_titles,
+        third_place_titles
+      FROM historical_team_stats 
+      WHERE team_id = ?
+    `, [id]);
+
+    // Get upcoming matches for this team
+    const upcomingMatches = await db.all(`
+      SELECT 
+        m.*,
+        ht.name as homeTeamName,
+        ht.logo as homeTeamLogo,
+        at.name as awayTeamName,
+        at.logo as awayTeamLogo,
+        s.name as seasonName
+      FROM matches m
+      LEFT JOIN teams ht ON m.home_team_id = ht.id
+      LEFT JOIN teams at ON m.away_team_id = at.id
+      LEFT JOIN seasons s ON m.season_id = s.id
+      WHERE (m.home_team_id = ? OR m.away_team_id = ?) 
+        AND m.status IN ('scheduled', 'upcoming')
+      ORDER BY m.match_date ASC
+      LIMIT 5
+    `, [id, id]);
+
+    // Mock roster data (since we don't have player tables yet)
+    const mockRosters: Record<string, any[]> = {
+      'gryffindor': [
+        { id: 'hp', name: 'Harry Potter', position: 'Buscador', number: 7, yearsActive: 6, achievements: ["Buscador más joven en un siglo"] },
+        { id: 'kg', name: 'Katie Bell', position: 'Cazadora', number: 6, yearsActive: 4, achievements: ["100+ goles en su carrera"] },
+        { id: 'aw', name: 'Angelina Johnson', position: 'Cazadora', number: 8, yearsActive: 5, achievements: ["Capitana del equipo"] },
+        { id: 'oj', name: 'Oliver Wood', position: 'Guardián', number: 1, yearsActive: 7, achievements: ["Mejor parada del siglo"] },
+        { id: 'fw', name: 'Fred Weasley', position: 'Golpeador', number: 4, yearsActive: 6, achievements: ["Dúo dinámico"] },
+        { id: 'gw', name: 'George Weasley', position: 'Golpeador', number: 5, yearsActive: 6, achievements: ["Dúo dinámico"] },
+        { id: 'ag', name: 'Alicia Spinnet', position: 'Cazadora', number: 9, yearsActive: 4, achievements: ["Velocidad excepcional"] }
+      ],
+      'slytherin': [
+        { id: 'dm', name: 'Draco Malfoy', position: 'Buscador', number: 7, yearsActive: 5, achievements: ["Heredero del legado"] },
+        { id: 'mf', name: 'Marcus Flint', position: 'Cazador', number: 8, yearsActive: 6, achievements: ["Capitán implacable"] },
+        { id: 'ab', name: 'Adrian Pucey', position: 'Cazador', number: 9, yearsActive: 4, achievements: ["Precisión letal"] },
+        { id: 'mv', name: 'Miles Bletchley', position: 'Guardián', number: 1, yearsActive: 5, achievements: ["Muro inquebrantable"] },
+        { id: 'vc', name: 'Vincent Crabbe', position: 'Golpeador', number: 4, yearsActive: 4, achievements: ["Fuerza bruta"] },
+        { id: 'gg', name: 'Gregory Goyle', position: 'Golpeador', number: 5, yearsActive: 4, achievements: ["Intimidación pura"] },
+        { id: 'gh', name: 'Graham Montague', position: 'Cazador', number: 6, yearsActive: 3, achievements: ["Nuevo talento"] }
+      ],
+      'ravenclaw': [
+        { id: 'cc', name: 'Cho Chang', position: 'Buscadora', number: 7, yearsActive: 4, achievements: ["Gracia en vuelo"] },
+        { id: 'rd', name: 'Roger Davies', position: 'Cazador', number: 8, yearsActive: 5, achievements: ["Capitán estratega"] },
+        { id: 'jf', name: 'Jeremy Stretton', position: 'Cazador', number: 9, yearsActive: 3, achievements: ["Ojo de águila"] },
+        { id: 'gp', name: 'Grant Page', position: 'Guardián', number: 1, yearsActive: 4, achievements: ["Reflejos de felino"] },
+        { id: 'ra', name: 'Randolph Burrow', position: 'Golpeador', number: 4, yearsActive: 5, achievements: ["Precisión calculada"] },
+        { id: 'ja', name: 'Jason Samuels', position: 'Golpeador', number: 5, yearsActive: 4, achievements: ["Tácticas brillantes"] },
+        { id: 'dc', name: 'Duncan Inglebee', position: 'Cazador', number: 6, yearsActive: 3, achievements: ["Promesa del futuro"] }
+      ],
+      'hufflepuff': [
+        { id: 'cd', name: 'Cedric Diggory', position: 'Buscador', number: 7, yearsActive: 5, achievements: ["Campeón de corazón noble"] },
+        { id: 'zs', name: 'Zacharias Smith', position: 'Cazador', number: 8, yearsActive: 3, achievements: ["Determinación inquebrantable"] },
+        { id: 'hs', name: 'Heidi Macavoy', position: 'Cazadora', number: 9, yearsActive: 4, achievements: ["Espíritu de equipo"] },
+        { id: 'hm', name: 'Herbert Fleet', position: 'Guardián', number: 1, yearsActive: 5, achievements: ["Lealtad absoluta"] },
+        { id: 'ac', name: 'Anthony Rickett', position: 'Golpeador', number: 4, yearsActive: 4, achievements: ["Trabajo duro"] },
+        { id: 'mc', name: 'Michael McManus', position: 'Golpeador', number: 5, yearsActive: 3, achievements: ["Perseverancia"] },
+        { id: 'tc', name: 'Tamsin Applebee', position: 'Cazadora', number: 6, yearsActive: 4, achievements: ["Corazón valiente"] }
+      ]
+    };
+
+    const roster = mockRosters[id] || [];
+
+    // Historical idols (mock data for now)
+    const typedTeam = team as { name: string; [key: string]: unknown };
+    const historicalIdols = [
+      { 
+        name: `Legendary ${typedTeam.name} Player`, 
+        period: '1990-2000', 
+        achievements: ['Team Legend', 'Hall of Fame'], 
+        description: `The greatest ${typedTeam.name} player of all time.` 
+      }
+    ];
+
+    const responseData = {
+      ...(team as Record<string, unknown>),
+      currentStats: teamStats,
+      historicalStats: historicalStats,
+      upcomingMatches: upcomingMatches,
+      roster: roster,
+      historicalIdols: historicalIdols
+    };
+
+    res.json({
+      success: true,
+      data: responseData,
+      timestamp: new Date().toISOString()
+    });
+    return;
+  } catch (error) {
+    console.error('Error fetching team details:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch team details',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// GET /api/standings/historical - Get historical standings across all seasons
+app.get('/api/standings/historical', async (req, res) => {
+  try {
+    const db = Database.getInstance();
+    
+    // Get historical team statistics
+    const historicalStats = await db.all(`
+      SELECT 
+        team_id,
+        team_name,
+        total_seasons as seasonsPlayed,
+        total_matches as totalPlayed,
+        total_wins as totalWins,
+        total_losses as totalLosses,
+        total_draws as totalDraws,
+        (total_wins * 3 + total_draws) as totalPoints,
+        total_points_for as totalGoalsFor,
+        total_points_against as totalGoalsAgainst,
+        championship_titles as championships,
+        runner_up_titles as runnerUps,
+        third_place_titles as thirdPlaces
+      FROM historical_team_stats
+      WHERE total_seasons > 0
+      ORDER BY totalPoints DESC, (total_points_for - total_points_against) DESC, total_points_for DESC
+    `);
+
+    // Add position to each team
+    const historicalTable = historicalStats.map((team, index) => ({
+      ...(team as Record<string, unknown>),
+      teamId: (team as { team_id: string }).team_id,
+      teamName: (team as { team_name: string }).team_name,
+      position: index + 1
+    }));
+
+    res.json({
+      success: true,
+      data: historicalTable,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error fetching historical standings:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch historical standings',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 // Error handling
 app.use((req: express.Request, res: express.Response) => {
   res.status(404).json({

@@ -6,6 +6,7 @@ import { getTeamLogo, getTeamInitial } from '@/assets/teamLogos';
 import { virtualTimeManager } from '@/services/virtualTimeManager';
 import { standingsCalculator } from '@/services/standingsCalculator';
 import { Season } from '@/types/league';
+import { apiClient } from '@/utils/apiClient';
 import styles from './TeamsPage.module.css';
 
 // Team data interface
@@ -73,9 +74,39 @@ const TeamsPage: React.FC = () => {  const [teams, setTeams] = useState<TeamData
     loadTeamsFromSimulation();
   }, []);
 
-  const loadTeamsFromSimulation = () => {
+  const loadTeamsFromSimulation = async () => {
     setIsLoading(true);
     
+    try {
+      // First try to get teams from backend
+      const response = await apiClient.get('/teams') as { data?: { success?: boolean; data?: unknown[] } };
+      if (response.data?.success && response.data?.data) {
+        const backendTeams = response.data.data.map((team: unknown) => {
+          const teamData = team as Record<string, unknown>;
+          return {
+            id: String(teamData.id || ''),
+            name: String(teamData.name || ''),
+            logoChar: String(teamData.name || '').charAt(0).toUpperCase(),
+            stats: {
+              wins: Number(teamData.wins) || 0,
+              losses: Number(teamData.losses) || 0,
+              draws: Number(teamData.draws) || 0,
+              points: Number(teamData.points) || 0,
+              played: Number(teamData.matches_played) || 0,
+              goalsFor: Number(teamData.goals_for) || 0,
+              goalsAgainst: Number(teamData.goals_against) || 0
+            }
+          };
+        });
+        setTeams(backendTeams);
+        setIsLoading(false);
+        return;
+      }
+    } catch (error) {
+      console.warn('Failed to load teams from backend, falling back to local data:', error);
+    }
+
+    // Fallback to local simulation data
     const timeState = virtualTimeManager.getState();
     if (timeState.temporadaActiva) {
       setSeason(timeState.temporadaActiva);
@@ -84,7 +115,9 @@ const TeamsPage: React.FC = () => {  const [teams, setTeams] = useState<TeamData
       const standings = standingsCalculator.calculateStandings(
         timeState.temporadaActiva.equipos,
         timeState.temporadaActiva.partidos.filter(match => match.status === 'finished')
-      );      // Convert teams to TeamData format and sort alphabetically
+      );      
+      
+      // Convert teams to TeamData format and sort alphabetically
       const teamsData: TeamData[] = timeState.temporadaActiva.equipos
         .sort((a, b) => a.name.localeCompare(b.name)) // Sort alphabetically by name
         .map(team => {
@@ -116,7 +149,7 @@ const TeamsPage: React.FC = () => {  const [teams, setTeams] = useState<TeamData
       
       setTeams(teamsData);
     } else {
-      // Fallback to mock data if no simulation
+      // Final fallback to mock data if no simulation
       setTeams(mockTeams);
     }
     
