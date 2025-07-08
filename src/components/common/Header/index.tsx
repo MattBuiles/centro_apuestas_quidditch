@@ -3,6 +3,7 @@ import { Link, NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import Button from '../Button'
 import Logo from '../Logo'
+import Portal from '../Portal'
 import userLogoSrc from '@/assets/User_Logo.png'
 import styles from './Header.module.css'
 
@@ -261,30 +262,32 @@ const Header = () => {
 
       {/* Logout Confirmation Modal */}
       {showLogoutModal && (
-        <div className={styles.modal}>
-          <div className={styles.modalContent}>
-            <h3 className={styles.modalTitle}>
-              🚪 ¿Seguro que quieres cerrar sesión?
-            </h3>
-            <div className={styles.modalButtons}>
-              <Button
-                variant="outline"
-                onClick={handleCancelLogout}
-                size="sm"
-              >
-                Cancelar
-              </Button>
-              <Button
-                variant="primary"
-                onClick={handleConfirmLogout}
-                size="sm"
-                className="bg-red-600 hover:bg-red-700"
-              >
-                Aceptar
-              </Button>
+        <Portal>
+          <div className={styles.modal}>
+            <div className={styles.modalContent}>
+              <h3 className={styles.modalTitle}>
+                🚪 ¿Seguro que quieres cerrar sesión?
+              </h3>
+              <div className={styles.modalButtons}>
+                <Button
+                  variant="outline"
+                  onClick={handleCancelLogout}
+                  size="sm"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={handleConfirmLogout}
+                  size="sm"
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  Aceptar
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
+        </Portal>
       )}
     </header>
   )
