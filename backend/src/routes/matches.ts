@@ -1,74 +1,13 @@
 import { Router } from 'express';
-import { Match } from '../types';
+import { Database } from '../database/Database';
 
 const router = Router();
 
-// Mock data para desarrollo - en un caso real esto vendría de la base de datos
-const generateMockMatches = (): Match[] => {
-  const teams = [
-    { id: 'gryffindor', name: 'Gryffindor' },
-    { id: 'slytherin', name: 'Slytherin' }, 
-    { id: 'ravenclaw', name: 'Ravenclaw' },
-    { id: 'hufflepuff', name: 'Hufflepuff' },
-    { id: 'chudley-cannons', name: 'Chudley Cannons' },
-    { id: 'holyhead-harpies', name: 'Holyhead Harpies' }
-  ];
-
-  const matches: Match[] = [];
-  const currentDate = new Date();
-
-  // Generar partidos de ejemplo
-  for (let i = 0; i < 10; i++) {
-    const homeTeam = teams[Math.floor(Math.random() * teams.length)];
-    let awayTeam = teams[Math.floor(Math.random() * teams.length)];
-    while (awayTeam.id === homeTeam.id) {
-      awayTeam = teams[Math.floor(Math.random() * teams.length)];
-    }
-
-    const matchDate = new Date(currentDate.getTime() + (Math.random() * 30 - 15) * 24 * 60 * 60 * 1000);
-    const isPast = matchDate < currentDate;
-    const isLive = !isPast && Math.random() < 0.1; // 10% chance de estar en vivo
-
-    const status = isPast ? 'finished' : isLive ? 'live' : 'scheduled';
-    const homeScore = isPast || isLive ? Math.floor(Math.random() * 200) + 50 : 0;
-    const awayScore = isPast || isLive ? Math.floor(Math.random() * 200) + 50 : 0;
-
-    matches.push({
-      id: `match-${i + 1}`,
-      seasonId: 'season-2024',
-      homeTeamId: homeTeam.id,
-      awayTeamId: awayTeam.id,
-      date: matchDate,
-      status,
-      homeScore,
-      awayScore,
-      duration: isPast ? Math.floor(Math.random() * 60) + 30 : undefined,
-      snitchCaught: isPast && Math.random() < 0.8,
-      snitchCaughtBy: isPast && Math.random() < 0.8 ? (Math.random() < 0.5 ? homeTeam.id : awayTeam.id) : undefined,
-      events: [],
-      odds: {
-        homeWin: 1.5 + Math.random() * 2,
-        awayWin: 1.5 + Math.random() * 2,
-        draw: 5.0 + Math.random() * 5,
-        totalPoints: {
-          over150: 1.8 + Math.random() * 0.4,
-          under150: 1.8 + Math.random() * 0.4
-        },
-        snitchCatch: {
-          home: 1.9 + Math.random() * 0.2,
-          away: 1.9 + Math.random() * 0.2
-        }
-      }
-    });
-  }
-
-  return matches.sort((a, b) => a.date.getTime() - b.date.getTime());
-};
-
-// GET /api/matches - Obtener todos los partidos
-router.get('/', (req, res) => {
+// GET /api/matches - Get all matches
+router.get('/', async (req, res) => {
   try {
-    const matches = generateMockMatches();
+    const db = Database.getInstance();
+    const matches = await db.getAllMatches();
     
     res.json({
       success: true,
@@ -87,23 +26,22 @@ router.get('/', (req, res) => {
   }
 });
 
-// GET /api/matches/:id - Obtener un partido específico
-router.get('/:id', (req, res) => {
+// GET /api/matches/:id - Get specific match
+router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const matches = generateMockMatches();
-    const match = matches.find(m => m.id === id);
-
+    const db = Database.getInstance();
+    const match = await db.getMatchById(id);
+    
     if (!match) {
       return res.status(404).json({
         success: false,
         error: 'Match not found',
-        message: `Match with ID ${id} does not exist`,
         timestamp: new Date().toISOString()
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: match,
       message: 'Match retrieved successfully',
@@ -111,7 +49,7 @@ router.get('/:id', (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching match:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Internal server error',
       message: 'Failed to retrieve match',
@@ -120,41 +58,40 @@ router.get('/:id', (req, res) => {
   }
 });
 
-// GET /api/matches/status/live - Obtener partidos en vivo
-router.get('/status/live', (req, res) => {
+// GET /api/matches/status/:status - Get matches by status
+router.get('/status/:status', async (req, res) => {
   try {
-    const matches = generateMockMatches();
-    const liveMatches = matches.filter(m => m.status === 'live');
+    const { status } = req.params;
+    const db = Database.getInstance();
+    const matches = await db.getMatchesByStatus(status);
     
     res.json({
       success: true,
-      data: liveMatches,
-      message: 'Live matches retrieved successfully',
+      data: matches,
+      message: `${status} matches retrieved successfully`,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error('Error fetching live matches:', error);
+    console.error(`Error fetching ${req.params.status} matches:`, error);
     res.status(500).json({
       success: false,
       error: 'Internal server error',
-      message: 'Failed to retrieve live matches',
+      message: `Failed to retrieve ${req.params.status} matches`,
       timestamp: new Date().toISOString()
     });
   }
 });
 
-// GET /api/matches/status/upcoming - Obtener próximos partidos
-router.get('/status/upcoming', (req, res) => {
+// GET /api/matches/upcoming/:limit - Get upcoming matches with limit
+router.get('/upcoming/:limit', async (req, res) => {
   try {
-    const { limit = 10 } = req.query;
-    const matches = generateMockMatches();
-    const upcomingMatches = matches
-      .filter(m => m.status === 'scheduled')
-      .slice(0, parseInt(limit as string));
+    const limit = parseInt(req.params.limit) || 10;
+    const db = Database.getInstance();
+    const matches = await db.getUpcomingMatches(limit);
     
     res.json({
       success: true,
-      data: upcomingMatches,
+      data: matches,
       message: 'Upcoming matches retrieved successfully',
       timestamp: new Date().toISOString()
     });

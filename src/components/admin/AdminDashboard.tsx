@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Card from '@/components/common/Card';
 import Button from '@/components/common/Button';
+import { apiClient } from '@/utils/apiClient';
 import styles from './AdminDashboard.module.css';
 
 interface DashboardStats {
@@ -11,34 +12,36 @@ interface DashboardStats {
   totalRevenue: number;
   averageBetAmount: number;
   winRate: number;
+  pendingBets: number;
+  totalPredictions: number;
+  totalMatches: number;
+  recentUsers: number;
 }
 
-interface RecentActivity {
-  id: number;
-  type: 'user_register' | 'bet_placed' | 'match_completed' | 'high_risk_bet' | 'irregular_activity';
+interface ActivityItem {
+  id: string;
+  type: 'user_register' | 'bet_placed' | 'bet_won' | 'bet_lost' | 'match_completed' | 'prediction_made';
   user: string;
   description: string;
-  timestamp: string;
-  amount?: number;
-  riskLevel?: 'low' | 'medium' | 'high' | 'critical';
-}
-
-interface RiskAlert {
-  id: number;
-  type: 'high_amount' | 'suspicious_pattern' | 'rapid_betting' | 'unusual_timing';
-  user: string;
-  description: string;
-  riskLevel: 'medium' | 'high' | 'critical';
   timestamp: string;
   amount?: number;
 }
 
 interface TopUser {
   username: string;
-  betsThisWeek: number;
+  totalBets: number;
   totalAmount: number;
   winRate: number;
-  riskScore: number;
+}
+
+interface RecentBet {
+  id: string;
+  username: string;
+  matchName: string;
+  amount: number;
+  odds: number;
+  status: string;
+  placedAt: string;
 }
 
 const AdminDashboard = () => {
@@ -49,536 +52,403 @@ const AdminDashboard = () => {
     totalRevenue: 0,
     averageBetAmount: 0,
     winRate: 0,
+    pendingBets: 0,
+    totalPredictions: 0,
+    totalMatches: 0,
+    recentUsers: 0,
   });
 
-  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
-  const [riskAlerts, setRiskAlerts] = useState<RiskAlert[]>([]);
+  const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
   const [topUsers, setTopUsers] = useState<TopUser[]>([]);
+  const [recentBets, setRecentBets] = useState<RecentBet[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate loading dashboard data
-    const loadDashboardData = async () => {
-      setIsLoading(true);
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock data
-      setStats({
-        totalUsers: 342,
-        activeUsers: 127,
-        totalBets: 1547,
-        totalRevenue: 47250,
-        averageBetAmount: 85,
-        winRate: 42.3,
-      });
-
-      setRecentActivity([
-        {
-          id: 1,
-          type: 'user_register',
-          user: 'HermioneGranger91',
-          description: 'Nuevo usuario registrado',
-          timestamp: '2025-06-21 14:30',
-        },
-        {
-          id: 2,
-          type: 'bet_placed',
-          user: 'RonWeasley22',
-          description: 'Apuesta realizada en Gryffindor vs Slytherin',
-          timestamp: '2025-06-21 14:15',
-          amount: 150,
-        },
-        {
-          id: 3,
-          type: 'match_completed',
-          user: 'Sistema',
-          description: 'Partido Hufflepuff vs Ravenclaw finalizado',
-          timestamp: '2025-06-21 13:45',
-        },
-        {
-          id: 4,
-          type: 'bet_placed',
-          user: 'LunaLovegood',
-          description: 'Apuesta realizada en Hufflepuff vs Ravenclaw',
-          timestamp: '2025-06-21 13:20',
-          amount: 75,
-        },
-        {
-          id: 5,
-          type: 'user_register',
-          user: 'NevilleLongbottom',
-          description: 'Nuevo usuario registrado',
-          timestamp: '2025-06-21 12:55',
-        },
-        {
-          id: 6,
-          type: 'high_risk_bet',
-          user: 'DracoMalfoy',
-          description: 'Apuesta de alto riesgo detectada',
-          timestamp: '2025-06-21 11:10',
-          amount: 1000,
-          riskLevel: 'high',
-        },
-        {
-          id: 7,
-          type: 'irregular_activity',
-          user: 'SeverusSnape',
-          description: 'Actividad irregular detectada en la cuenta',
-          timestamp: '2025-06-21 10:05',
-          amount: 500,
-          riskLevel: 'critical',
-        },
-      ]);
-
-      setRiskAlerts([
-        {
-          id: 1,
-          type: 'high_amount',
-          user: 'DracoMalfoy',
-          description: 'Apuesta de alto monto detectada',
-          riskLevel: 'high',
-          timestamp: '2025-06-21 11:10',
-          amount: 1000,
-        },
-        {
-          id: 2,
-          type: 'suspicious_pattern',
-          user: 'SeverusSnape',
-          description: 'Patrón de apuestas sospechoso detectado',
-          riskLevel: 'critical',
-          timestamp: '2025-06-21 10:05',
-          amount: 500,
-        },
-      ]);
-
-      setTopUsers([
-        {
-          username: 'HarryPotter',
-          betsThisWeek: 25,
-          totalAmount: 1500,
-          winRate: 48.5,
-          riskScore: 10,
-        },
-        {
-          username: 'HermioneGranger',
-          betsThisWeek: 20,
-          totalAmount: 1200,
-          winRate: 55.2,
-          riskScore: 8,
-        },
-        {
-          username: 'RonWeasley',
-          betsThisWeek: 18,
-          totalAmount: 900,
-          winRate: 45.0,
-          riskScore: 6,
-        },
-        {
-          username: 'DracoMalfoy',
-          betsThisWeek: 15,
-          totalAmount: 3000,
-          winRate: 40.0,
-          riskScore: 9,
-        },
-      ]);
-
-      setIsLoading(false);
-    };
-
     loadDashboardData();
   }, []);
 
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case 'user_register':
-        return '👤';
-      case 'bet_placed':
-        return '💰';
-      case 'match_completed':
-        return '⚡';
-      case 'high_risk_bet':
-        return '🚨';
-      case 'irregular_activity':
-        return '❗';
-      default:
-        return '📊';
+  const loadDashboardData = async () => {
+    setIsLoading(true);
+    
+    try {
+      // Load multiple data sources in parallel
+      const [usersResponse, betsResponse, statisticsResponse, matchesResponse] = await Promise.all([
+        apiClient.get('/users'),
+        apiClient.get('/bets?limit=50'),
+        apiClient.get('/bets/statistics'),
+        apiClient.get('/matches'),
+      ]);
+
+      // Process users data
+      const users = usersResponse.data?.data || [];
+      const totalUsers = users.length;
+      const activeUsers = users.filter((user: any) => user.last_bet_date).length;
+      const recentUsers = users.filter((user: any) => {
+        const createdDate = new Date(user.created_at);
+        const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        return createdDate > weekAgo;
+      }).length;
+
+      // Process bets data
+      const bets = betsResponse.data?.data || [];
+      const totalBets = bets.length;
+      const pendingBets = bets.filter((bet: any) => bet.status === 'pending').length;
+      const resolvedBets = bets.filter((bet: any) => bet.status !== 'pending');
+      const wonBets = bets.filter((bet: any) => bet.status === 'won').length;
+      const totalRevenue = bets.reduce((sum: number, bet: any) => sum + bet.amount, 0);
+      const averageBetAmount = totalBets > 0 ? totalRevenue / totalBets : 0;
+      const winRate = resolvedBets.length > 0 ? (wonBets / resolvedBets.length) * 100 : 0;
+
+      // Process matches data
+      const matches = matchesResponse.data || [];
+      const totalMatches = matches.length;
+
+      // Process statistics data
+      const statistics = statisticsResponse.data || {};
+
+      // Set dashboard stats
+      setStats({
+        totalUsers,
+        activeUsers,
+        totalBets,
+        totalRevenue,
+        averageBetAmount,
+        winRate,
+        pendingBets,
+        totalPredictions: 0, // Would need separate predictions endpoint
+        totalMatches,
+        recentUsers,
+      });
+
+      // Create recent activity from bets data
+      const recentActivityItems: ActivityItem[] = bets.slice(0, 10).map((bet: any, index: number) => ({
+        id: `bet-${index}`,
+        type: 'bet_placed' as const,
+        user: bet.username,
+        description: `Apuesta realizada en ${bet.homeTeamName} vs ${bet.awayTeamName}`,
+        timestamp: bet.placed_at,
+        amount: bet.amount,
+      }));
+
+      setRecentActivity(recentActivityItems);
+
+      // Calculate top users
+      const userStats = users.reduce((acc: Record<string, any>, user: any) => {
+        if (!acc[user.username]) {
+          acc[user.username] = {
+            username: user.username,
+            totalBets: user.total_bets || 0,
+            totalAmount: 0,
+            wonBets: 0,
+          };
+        }
+        return acc;
+      }, {});
+
+      // Add bet data to user stats
+      bets.forEach((bet: any) => {
+        if (userStats[bet.username]) {
+          userStats[bet.username].totalAmount += bet.amount;
+          if (bet.status === 'won') {
+            userStats[bet.username].wonBets++;
+          }
+        }
+      });
+
+      const topUsersList = Object.values(userStats)
+        .map((user: any) => ({
+          username: user.username,
+          totalBets: user.totalBets,
+          totalAmount: user.totalAmount,
+          winRate: user.totalBets > 0 ? (user.wonBets / user.totalBets) * 100 : 0,
+        }))
+        .sort((a, b) => b.totalAmount - a.totalAmount)
+        .slice(0, 5);
+
+      setTopUsers(topUsersList);
+
+      // Set recent bets
+      const recentBetsList: RecentBet[] = bets.slice(0, 10).map((bet: any) => ({
+        id: bet.id,
+        username: bet.username,
+        matchName: `${bet.homeTeamName} vs ${bet.awayTeamName}`,
+        amount: bet.amount,
+        odds: bet.odds,
+        status: bet.status,
+        placedAt: bet.placed_at,
+      }));
+
+      setRecentBets(recentBetsList);
+
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
     }
+    
+    setIsLoading(false);
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-CO', {
+    return new Intl.NumberFormat('es-ES', {
       style: 'currency',
-      currency: 'COP',
+      currency: 'EUR',
       minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(amount);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('es-ES', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'user_register': return '👤';
+      case 'bet_placed': return '🎯';
+      case 'bet_won': return '✅';
+      case 'bet_lost': return '❌';
+      case 'match_completed': return '⚽';
+      case 'prediction_made': return '🔮';
+      default: return '📊';
+    }
+  };
+
+  const getStatusBadgeClass = (status: string) => {
+    switch (status) {
+      case 'won': return styles.statusWon;
+      case 'lost': return styles.statusLost;
+      case 'pending': return styles.statusPending;
+      default: return '';
+    }
   };
 
   if (isLoading) {
     return (
-      <div className={styles.dashboardContainer}>
-        <div className={styles.loading}>
-          <div className={styles.loadingSpinner}></div>
-          <p>Cargando panel de administración...</p>
-        </div>
+      <div className={styles.loadingContainer}>
+        <div className={styles.loadingSpinner}></div>
+        <p>Cargando panel de administración...</p>
       </div>
     );
   }
 
   return (
-    <div className={styles.dashboardContainer}>
+    <div className={styles.adminDashboard}>
       <div className={styles.header}>
         <h1 className={styles.title}>
-          <span className={styles.titleIcon}>🏰</span>
+          <span className={styles.icon}>📊</span>
           Panel de Administración
         </h1>
-        <p className={styles.subtitle}>Centro de Apuestas Quidditch - Dashboard</p>
+        <p className={styles.subtitle}>
+          Vista general del estado de la plataforma de apuestas
+        </p>
+        <Button
+          variant="secondary"
+          onClick={loadDashboardData}
+          className={styles.refreshButton}
+        >
+          🔄 Actualizar
+        </Button>
       </div>
 
-      {/* Statistics Cards */}
+      {/* Main Statistics Grid */}
       <div className={styles.statsGrid}>
-        <Card className={`${styles.statCard} ${styles.users}`}>
+        <Card className={styles.statCard}>
+          <div className={styles.statIcon}>👥</div>
           <div className={styles.statContent}>
-            <div className={styles.statIcon}>👥</div>
-            <div className={styles.statInfo}>
-              <div className={styles.statValue}>{stats.totalUsers.toLocaleString()}</div>
-              <div className={styles.statLabel}>Usuarios Totales</div>
-            </div>
-          </div>
-          <div className={styles.statChange}>
-            <span className={styles.changePositive}>+12% este mes</span>
+            <h3>{stats.totalUsers}</h3>
+            <p>Total Usuarios</p>
+            <span className={styles.statSubtext}>+{stats.recentUsers} esta semana</span>
           </div>
         </Card>
 
-        <Card className={`${styles.statCard} ${styles.active}`}>
+        <Card className={styles.statCard}>
+          <div className={styles.statIcon}>✅</div>
           <div className={styles.statContent}>
-            <div className={styles.statIcon}>⚡</div>
-            <div className={styles.statInfo}>
-              <div className={styles.statValue}>{stats.activeUsers}</div>
-              <div className={styles.statLabel}>Usuarios Activos</div>
-            </div>
-          </div>
-          <div className={styles.statChange}>
-            <span className={styles.changePositive}>+8% hoy</span>
+            <h3>{stats.activeUsers}</h3>
+            <p>Usuarios Activos</p>
+            <span className={styles.statSubtext}>
+              {stats.totalUsers > 0 ? Math.round((stats.activeUsers / stats.totalUsers) * 100) : 0}% del total
+            </span>
           </div>
         </Card>
 
-        <Card className={`${styles.statCard} ${styles.bets}`}>
+        <Card className={styles.statCard}>
+          <div className={styles.statIcon}>🎯</div>
           <div className={styles.statContent}>
-            <div className={styles.statIcon}>🎯</div>
-            <div className={styles.statInfo}>
-              <div className={styles.statValue}>{stats.totalBets.toLocaleString()}</div>
-              <div className={styles.statLabel}>Apuestas Totales</div>
-            </div>
-          </div>
-          <div className={styles.statChange}>
-            <span className={styles.changePositive}>+156 hoy</span>
+            <h3>{stats.totalBets}</h3>
+            <p>Total Apuestas</p>
+            <span className={styles.statSubtext}>{stats.pendingBets} pendientes</span>
           </div>
         </Card>
 
-        <Card className={`${styles.statCard} ${styles.revenue}`}>
+        <Card className={styles.statCard}>
+          <div className={styles.statIcon}>💰</div>
           <div className={styles.statContent}>
-            <div className={styles.statIcon}>💎</div>
-            <div className={styles.statInfo}>
-              <div className={styles.statValue}>{formatCurrency(stats.totalRevenue)}</div>
-              <div className={styles.statLabel}>Ingresos Totales</div>
-            </div>
-          </div>
-          <div className={styles.statChange}>
-            <span className={styles.changePositive}>+23% este mes</span>
+            <h3>{formatCurrency(stats.totalRevenue)}</h3>
+            <p>Volumen Total</p>
+            <span className={styles.statSubtext}>
+              {formatCurrency(stats.averageBetAmount)} promedio
+            </span>
           </div>
         </Card>
 
-        <Card className={`${styles.statCard} ${styles.average}`}>
+        <Card className={styles.statCard}>
+          <div className={styles.statIcon}>📈</div>
           <div className={styles.statContent}>
-            <div className={styles.statIcon}>📊</div>
-            <div className={styles.statInfo}>
-              <div className={styles.statValue}>{formatCurrency(stats.averageBetAmount)}</div>
-              <div className={styles.statLabel}>Apuesta Promedio</div>
-            </div>
-          </div>
-          <div className={styles.statChange}>
-            <span className={styles.changeNeutral}>Sin cambios</span>
+            <h3>{stats.winRate.toFixed(1)}%</h3>
+            <p>Tasa de Acierto</p>
+            <span className={styles.statSubtext}>Global de usuarios</span>
           </div>
         </Card>
 
-        <Card className={`${styles.statCard} ${styles.winRate}`}>
+        <Card className={styles.statCard}>
+          <div className={styles.statIcon}>⚽</div>
           <div className={styles.statContent}>
-            <div className={styles.statIcon}>🏆</div>
-            <div className={styles.statInfo}>
-              <div className={styles.statValue}>{stats.winRate}%</div>
-              <div className={styles.statLabel}>Tasa de Ganancia</div>
-            </div>
-          </div>
-          <div className={styles.statChange}>
-            <span className={styles.changeNegative}>-2% este mes</span>
+            <h3>{stats.totalMatches}</h3>
+            <p>Total Partidos</p>
+            <span className={styles.statSubtext}>En la base de datos</span>
           </div>
         </Card>
       </div>
 
-      {/* Charts Section */}
-      <div className={styles.chartsSection}>
-        <div className={styles.chartContainer}>
-          <Card className={styles.chartCard}>
-            <h3 className={styles.chartTitle}>Apuestas por Día</h3>
-            <div className={styles.chartPlaceholder}>
-              <div className={styles.chartBars}>
-                <div className={styles.bar} style={{ height: '60%' }}>
-                  <span className={styles.barLabel}>L</span>
-                  <span className={styles.barValue}>142</span>
-                </div>
-                <div className={styles.bar} style={{ height: '80%' }}>
-                  <span className={styles.barLabel}>M</span>
-                  <span className={styles.barValue}>189</span>
-                </div>
-                <div className={styles.bar} style={{ height: '45%' }}>
-                  <span className={styles.barLabel}>M</span>
-                  <span className={styles.barValue}>108</span>
-                </div>
-                <div className={styles.bar} style={{ height: '90%' }}>
-                  <span className={styles.barLabel}>J</span>
-                  <span className={styles.barValue}>215</span>
-                </div>
-                <div className={styles.bar} style={{ height: '70%' }}>
-                  <span className={styles.barLabel}>V</span>
-                  <span className={styles.barValue}>167</span>
-                </div>
-                <div className={styles.bar} style={{ height: '95%' }}>
-                  <span className={styles.barLabel}>S</span>
-                  <span className={styles.barValue}>228</span>
-                </div>
-                <div className={styles.bar} style={{ height: '85%' }}>
-                  <span className={styles.barLabel}>D</span>
-                  <span className={styles.barValue}>201</span>
-                </div>
-              </div>
-            </div>
-          </Card>
-        </div>
-
-        <div className={styles.chartContainer}>
-          <Card className={styles.chartCard}>
-            <h3 className={styles.chartTitle}>Equipos Más Populares</h3>
-            <div className={styles.popularTeams}>
-              <div className={styles.teamItem}>
-                <span className={styles.teamName}>🦁 Gryffindor</span>
-                <div className={styles.teamBar}>
-                  <div className={styles.teamProgress} style={{ width: '95%' }}></div>
-                </div>
-                <span className={styles.teamPercentage}>95%</span>
-              </div>
-              <div className={styles.teamItem}>
-                <span className={styles.teamName}>🐍 Slytherin</span>
-                <div className={styles.teamBar}>
-                  <div className={styles.teamProgress} style={{ width: '78%' }}></div>
-                </div>
-                <span className={styles.teamPercentage}>78%</span>
-              </div>
-              <div className={styles.teamItem}>
-                <span className={styles.teamName}>🦅 Ravenclaw</span>
-                <div className={styles.teamBar}>
-                  <div className={styles.teamProgress} style={{ width: '65%' }}></div>
-                </div>
-                <span className={styles.teamPercentage}>65%</span>
-              </div>
-              <div className={styles.teamItem}>
-                <span className={styles.teamName}>🦡 Hufflepuff</span>
-                <div className={styles.teamBar}>
-                  <div className={styles.teamProgress} style={{ width: '52%' }}></div>
-                </div>
-                <span className={styles.teamPercentage}>52%</span>
-              </div>
-            </div>
-          </Card>        </div>
-      </div>
-
-      {/* Risk Analysis and Quick Links Section */}
-      <div className={styles.analysisSection}>
-        {/* Risk Analysis */}
-        <Card className={styles.riskAnalysisCard}>
-          <h3 className={styles.sectionTitle}>
-            <span className={styles.sectionIcon}>🚨</span>
-            Análisis de Riesgo
-          </h3>
-          <div className={styles.riskMetrics}>
-            <div className={styles.riskMetric}>
-              <div className={styles.riskIcon}>⚠️</div>
-              <div className={styles.riskInfo}>
-                <div className={styles.riskValue}>{riskAlerts.filter(alert => alert.riskLevel === 'high' || alert.riskLevel === 'critical').length}</div>
-                <div className={styles.riskLabel}>Alertas Críticas</div>
-              </div>
-            </div>
-            <div className={styles.riskMetric}>
-              <div className={styles.riskIcon}>💰</div>
-              <div className={styles.riskInfo}>
-                <div className={styles.riskValue}>{recentActivity.filter(activity => activity.amount && activity.amount > 300).length}</div>
-                <div className={styles.riskLabel}>Apuestas Alto Monto</div>
-              </div>
-            </div>
-            <div className={styles.riskMetric}>
-              <div className={styles.riskIcon}>🔍</div>
-              <div className={styles.riskInfo}>
-                <div className={styles.riskValue}>{topUsers.filter(user => user.riskScore > 7).length}</div>
-                <div className={styles.riskLabel}>Usuarios de Riesgo</div>
-              </div>
-            </div>
-          </div>
-          <div className={styles.quickActionButtons}>
-            <Link to="/account/bets-statistics">
-              <Button variant="primary" size="sm">
-                📊 Ver Estadísticas Completas
-              </Button>
-            </Link>
-            <Link to="/account/bets-history">
-              <Button variant="outline" size="sm">
-                📋 Historial Detallado
-              </Button>
+      {/* Main Content Grid */}
+      <div className={styles.contentGrid}>
+        {/* Recent Activity */}
+        <Card className={styles.activityCard}>
+          <div className={styles.cardHeader}>
+            <h3>Actividad Reciente</h3>
+            <Link to="/admin/bets" className={styles.viewAllLink}>
+              Ver todo →
             </Link>
           </div>
-        </Card>
-
-        {/* Top Users This Week */}
-        <Card className={styles.topUsersCard}>
-          <h3 className={styles.sectionTitle}>
-            <span className={styles.sectionIcon}>⏱️</span>
-            Usuarios Más Activos (Semana)
-          </h3>
-          <div className={styles.topUsersList}>
-            {topUsers.slice(0, 5).map((user, index) => (
-              <div key={index} className={styles.topUserItem}>
-                <div className={styles.topUserRank}>#{index + 1}</div>
-                <div className={styles.topUserInfo}>
-                  <div className={styles.topUserName}>{user.username}</div>
-                  <div className={styles.topUserStats}>
-                    {user.betsThisWeek} apuestas • {formatCurrency(user.totalAmount)}
+          <div className={styles.activityList}>
+            {recentActivity.map((activity) => (
+              <div key={activity.id} className={styles.activityItem}>
+                <div className={styles.activityIcon}>
+                  {getActivityIcon(activity.type)}
+                </div>
+                <div className={styles.activityContent}>
+                  <div className={styles.activityDescription}>
+                    <strong>{activity.user}</strong> - {activity.description}
                   </div>
-                </div>
-                <div className={styles.topUserMetrics}>
-                  <div className={styles.topUserWinRate}>{user.winRate}% acierto</div>
-                  <div className={`${styles.topUserRisk} ${user.riskScore > 7 ? styles.highRisk : user.riskScore > 5 ? styles.mediumRisk : styles.lowRisk}`}>
-                    Riesgo: {user.riskScore}/10
+                  <div className={styles.activityMeta}>
+                    <span className={styles.activityTime}>
+                      {formatDate(activity.timestamp)}
+                    </span>
+                    {activity.amount && (
+                      <span className={styles.activityAmount}>
+                        {formatCurrency(activity.amount)}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
             ))}
           </div>
         </Card>
-      </div>
 
-      {/* Platform Performance Metrics */}
-      <Card className={styles.performanceCard}>
-        <h3 className={styles.sectionTitle}>
-          <span className={styles.sectionIcon}>🧾</span>
-          Métricas de Rendimiento de la Plataforma
-        </h3>
-        <div className={styles.performanceGrid}>
-          <div className={styles.performanceMetric}>
-            <div className={styles.performanceIcon}>📈</div>
-            <div className={styles.performanceInfo}>
-              <div className={styles.performanceValue}>{((stats.totalRevenue / stats.totalBets) * 100).toFixed(1)}%</div>
-              <div className={styles.performanceLabel}>Margen de Ganancia</div>
-            </div>
+        {/* Top Users */}
+        <Card className={styles.topUsersCard}>
+          <div className={styles.cardHeader}>
+            <h3>Top Usuarios</h3>
+            <Link to="/admin/users" className={styles.viewAllLink}>
+              Ver todos →
+            </Link>
           </div>
-          <div className={styles.performanceMetric}>
-            <div className={styles.performanceIcon}>💸</div>
-            <div className={styles.performanceInfo}>
-              <div className={styles.performanceValue}>{formatCurrency(topUsers.reduce((sum, user) => sum + user.totalAmount, 0) / topUsers.length)}</div>
-              <div className={styles.performanceLabel}>Gasto Promedio por Usuario Activo</div>
-            </div>
-          </div>
-          <div className={styles.performanceMetric}>
-            <div className={styles.performanceIcon}>⏰</div>
-            <div className={styles.performanceInfo}>
-              <div className={styles.performanceValue}>{(recentActivity.filter(a => a.type === 'bet_placed').length / 24).toFixed(1)}</div>
-              <div className={styles.performanceLabel}>Apuestas por Hora (Promedio)</div>
-            </div>
-          </div>
-          <div className={styles.performanceMetric}>
-            <div className={styles.performanceIcon}>🎯</div>
-            <div className={styles.performanceInfo}>
-              <div className={styles.performanceValue}>{((stats.activeUsers / stats.totalUsers) * 100).toFixed(1)}%</div>
-              <div className={styles.performanceLabel}>Tasa de Usuarios Activos</div>
-            </div>
-          </div>
-        </div>
-      </Card>
-
-      {/* Recent Activity */}
-      <Card className={styles.activityCard}>
-        <h3 className={styles.sectionTitle}>
-          <span className={styles.sectionIcon}>📈</span>
-          Actividad Reciente
-        </h3>
-        <div className={styles.activityList}>
-          {recentActivity.map((activity) => (
-            <div key={activity.id} className={styles.activityItem}>
-              <div className={styles.activityIcon}>
-                {getActivityIcon(activity.type)}
-              </div>
-              <div className={styles.activityContent}>
-                <div className={styles.activityUser}>{activity.user}</div>
-                <div className={styles.activityDescription}>{activity.description}</div>
-                {activity.amount && (
-                  <div className={styles.activityAmount}>
-                    {formatCurrency(activity.amount)}
+          <div className={styles.topUsersList}>
+            {topUsers.map((user, index) => (
+              <div key={user.username} className={styles.topUserItem}>
+                <div className={styles.userRank}>#{index + 1}</div>
+                <div className={styles.userAvatar}>
+                  {user.username.charAt(0).toUpperCase()}
+                </div>
+                <div className={styles.userInfo}>
+                  <div className={styles.username}>{user.username}</div>
+                  <div className={styles.userStats}>
+                    {user.totalBets} apuestas • {formatCurrency(user.totalAmount)}
                   </div>
-                )}
-              </div>
-              <div className={styles.activityTime}>
-                {activity.timestamp}
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
-
-      {/* Risk Alerts */}
-      <Card className={styles.riskAlertsCard}>
-        <h3 className={styles.sectionTitle}>
-          <span className={styles.sectionIcon}>⚠️</span>
-          Alertas de Riesgo
-        </h3>
-        <div className={styles.riskAlertsList}>
-          {riskAlerts.map((alert) => (
-            <div key={alert.id} className={styles.riskAlertItem}>
-              <div className={styles.riskAlertIcon}>
-                {alert.type === 'high_amount' && '💰'}
-                {alert.type === 'suspicious_pattern' && '📉'}
-                {alert.type === 'rapid_betting' && '⚡'}
-                {alert.type === 'unusual_timing' && '🕒'}
-              </div>
-              <div className={styles.riskAlertContent}>
-                <div className={styles.riskAlertUser}>{alert.user}</div>
-                <div className={styles.riskAlertDescription}>{alert.description}</div>
-                <div className={styles.riskAlertTimestamp}>{alert.timestamp}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
-
-      {/* Top Users */}
-      <Card className={styles.topUsersCard}>
-        <h3 className={styles.sectionTitle}>
-          <span className={styles.sectionIcon}>🌟</span>
-          Usuarios Más Activos
-        </h3>
-        <div className={styles.topUsersList}>
-          {topUsers.map((user) => (
-            <div key={user.username} className={styles.topUserItem}>
-              <div className={styles.topUserInfo}>
-                <div className={styles.topUserName}>{user.username}</div>
-                <div className={styles.topUserStats}>
-                  <span className={styles.topUserBets}>{user.betsThisWeek} Apuestas</span>
-                  <span className={styles.topUserAmount}>{formatCurrency(user.totalAmount)}</span>
-                  <span className={styles.topUserWinRate}>{user.winRate}% Win Rate</span>
+                </div>
+                <div className={styles.userWinRate}>
+                  {user.winRate.toFixed(1)}%
                 </div>
               </div>
-              <div className={styles.topUserRisk}>
-                Riesgo: {user.riskScore}              </div>
+            ))}
+          </div>
+        </Card>
+
+        {/* Recent Bets */}
+        <Card className={styles.recentBetsCard}>
+          <div className={styles.cardHeader}>
+            <h3>Apuestas Recientes</h3>
+            <Link to="/admin/bets/history" className={styles.viewAllLink}>
+              Ver historial →
+            </Link>
+          </div>
+          <div className={styles.recentBetsList}>
+            {recentBets.map((bet) => (
+              <div key={bet.id} className={styles.recentBetItem}>
+                <div className={styles.betUser}>
+                  <div className={styles.userAvatar}>
+                    {bet.username.charAt(0).toUpperCase()}
+                  </div>
+                  <span>{bet.username}</span>
+                </div>
+                <div className={styles.betMatch}>{bet.matchName}</div>
+                <div className={styles.betAmount}>{formatCurrency(bet.amount)}</div>
+                <div className={styles.betOdds}>{bet.odds.toFixed(2)}</div>
+                <div className={styles.betStatus}>
+                  <span className={`${styles.statusBadge} ${getStatusBadgeClass(bet.status)}`}>
+                    {bet.status === 'won' ? 'Ganada' : 
+                     bet.status === 'lost' ? 'Perdida' :
+                     bet.status === 'pending' ? 'Pendiente' : 'Cancelada'}
+                  </span>
+                </div>
+                <div className={styles.betTime}>{formatDate(bet.placedAt)}</div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+
+      {/* Quick Actions */}
+      <Card className={styles.quickActionsCard}>
+        <h3>Acciones Rápidas</h3>
+        <div className={styles.quickActions}>
+          <Link to="/admin/users" className={styles.quickAction}>
+            <div className={styles.actionIcon}>👥</div>
+            <div className={styles.actionText}>
+              <h4>Gestionar Usuarios</h4>
+              <p>Ver y administrar cuentas de usuario</p>
             </div>
-          ))}
+          </Link>
+          
+          <Link to="/admin/bets" className={styles.quickAction}>
+            <div className={styles.actionIcon}>🎯</div>
+            <div className={styles.actionText}>
+              <h4>Ver Apuestas</h4>
+              <p>Monitorear apuestas y estadísticas</p>
+            </div>
+          </Link>
+          
+          <Link to="/admin/matches" className={styles.quickAction}>
+            <div className={styles.actionIcon}>⚽</div>
+            <div className={styles.actionText}>
+              <h4>Administrar Partidos</h4>
+              <p>Gestionar partidos y resultados</p>
+            </div>
+          </Link>
+          
+          <Link to="/admin/reports" className={styles.quickAction}>
+            <div className={styles.actionIcon}>📊</div>
+            <div className={styles.actionText}>
+              <h4>Informes</h4>
+              <p>Generar reportes detallados</p>
+            </div>
+          </Link>
         </div>
       </Card>
     </div>

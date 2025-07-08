@@ -5,6 +5,7 @@ import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
 import AdminMessage from '@/components/common/AdminMessage';
 import { virtualTimeManager } from '@/services/virtualTimeManager';
+import { apiClient } from '@/utils/apiClient';
 import { Match, Season } from '@/types/league';
 import { useAuth } from '@/context/AuthContext';
 
@@ -37,19 +38,7 @@ interface BettingMatch {
 const BettingPage: React.FC = () => {
   const { matchId: paramMatchId } = useParams<{ matchId?: string }>();
   const { user, canBet, placeBet, getTodayBetsCount, canPlaceBet } = useAuth(); // Get user for balance and betting permissions
-  // Show admin message if user cannot bet
-  if (!canBet) {
-    return (
-      <AdminMessage 
-        title="Funcionalidad Restringida"
-        message="Los administradores no pueden realizar apuestas. Tu rol está destinado a la gestión y supervisión del sistema de apuestas de Quidditch."
-        redirectTo="/account"
-        redirectLabel="Ir al Panel de Administración"
-        icon="⚡"
-      />
-    );
-  }
-
+  
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedMatch, setSelectedMatch] = useState<string | undefined>(paramMatchId || '');
   const [selectedBets, setSelectedBets] = useState<BetOption[]>([]);
@@ -69,47 +58,87 @@ const BettingPage: React.FC = () => {
     loadMatchesFromSimulation();
   }, [paramMatchId]);
 
-  const loadMatchesFromSimulation = () => {
+  // Show admin message if user cannot bet
+  if (!canBet) {
+    return (
+      <AdminMessage 
+        title="Funcionalidad Restringida"
+        message="Los administradores no pueden realizar apuestas. Tu rol está destinado a la gestión y supervisión del sistema de apuestas de Quidditch."
+        redirectTo="/account"
+        redirectLabel="Ir al Panel de Administración"
+        icon="⚡"
+      />
+    );
+  }
+
+  const loadMatchesFromSimulation = async () => {
     setIsLoading(true);
     
-    const timeState = virtualTimeManager.getState();
-    if (timeState.temporadaActiva) {
-      setSeason(timeState.temporadaActiva);
-        // Get only NON-FINISHED matches that can be bet on (scheduled, live, or upcoming)
-      // Filter out any matches that are completed or finished
-      const bettableMatches = timeState.temporadaActiva.partidos
-        .filter(match => {
-          // Only allow betting on matches that are NOT finished
-          const allowedStatuses = ['scheduled', 'live', 'upcoming'];
-          const isNotFinished = !['finished', 'completed', 'ended'].includes(match.status);
-          return allowedStatuses.includes(match.status) || isNotFinished;
-        })
-        .map((match: Match) => {
-          const homeTeam = timeState.temporadaActiva!.equipos.find(t => t.id === match.localId);
-          const awayTeam = timeState.temporadaActiva!.equipos.find(t => t.id === match.visitanteId);
-          
-          return {
+    try {
+      // First try to load from backend
+      const response = await apiClient.get('/matches');
+      
+      if (response.success && response.data) {
+        const backendMatches = response.data;
+        const bettableMatches = backendMatches
+          .filter((match: any) => {
+            // Only allow betting on upcoming and live matches
+            return ['scheduled', 'live', 'upcoming'].includes(match.status);
+          })
+          .map((match: any) => ({
             id: match.id,
-            name: `${homeTeam?.name || match.localId} vs ${awayTeam?.name || match.visitanteId}`,
-            date: new Date(match.fecha).toLocaleDateString('es-ES', {
+            name: `${match.homeTeamName} vs ${match.awayTeamName}`,
+            date: new Date(match.date).toLocaleDateString('es-ES', {
               month: 'short',
               day: 'numeric',
               hour: '2-digit',
               minute: '2-digit'
             }),
-            homeTeam: homeTeam?.name || match.localId,
-            awayTeam: awayTeam?.name || match.visitanteId,
+            homeTeam: match.homeTeamName,
+            awayTeam: match.awayTeamName,
             status: match.status === 'live' ? 'live' : 'upcoming'
-          } as BettingMatch;
-        });
-      
-      setMatches(bettableMatches);
-    } else {      // Fallback to mock data
-      const mockAsBettingMatches: BettingMatch[] = mockMatchesForBetting.map(mock => ({
-        ...mock,
-        status: 'upcoming' as const
-      }));
-      setMatches(mockAsBettingMatches);
+          } as BettingMatch));
+        
+        setMatches(bettableMatches);
+      } else {
+        // Fallback to simulation data
+        const timeState = virtualTimeManager.getState();
+        if (timeState.temporadaActiva) {
+          setSeason(timeState.temporadaActiva);
+          const bettableMatches = timeState.temporadaActiva.partidos
+            .filter(match => {
+              const allowedStatuses = ['scheduled', 'live', 'upcoming'];
+              const isNotFinished = !['finished', 'completed', 'ended'].includes(match.status);
+              return allowedStatuses.includes(match.status) || isNotFinished;
+            })
+            .map((match: Match) => {
+              const homeTeam = timeState.temporadaActiva!.equipos.find(t => t.id === match.localId);
+              const awayTeam = timeState.temporadaActiva!.equipos.find(t => t.id === match.visitanteId);
+              
+              return {
+                id: match.id,
+                name: `${homeTeam?.name || match.localId} vs ${awayTeam?.name || match.visitanteId}`,
+                date: new Date(match.fecha).toLocaleDateString('es-ES', {
+                  month: 'short',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                }),
+                homeTeam: homeTeam?.name || match.localId,
+                awayTeam: awayTeam?.name || match.visitanteId,
+                status: match.status === 'live' ? 'live' : 'upcoming'
+              } as BettingMatch;
+            });
+          
+          setMatches(bettableMatches);
+        } else {
+          // No data available
+          setMatches([]);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading matches for betting:', error);
+      setMatches([]);
     }
     
     setIsLoading(false);
@@ -738,12 +767,4 @@ const BettingPage: React.FC = () => {
     </div>
   );
 };
-
-// Mock data
-const mockMatchesForBetting = [
-  { id: '1', name: 'Gryffindor vs Slytherin', date: 'Hoy 19:00', homeTeam: 'Gryffindor', awayTeam: 'Slytherin' },
-  { id: '2', name: 'Hufflepuff vs Ravenclaw', date: 'Mañana 17:30', homeTeam: 'Hufflepuff', awayTeam: 'Ravenclaw' },
-  { id: '3', name: 'Chudley Cannons vs Holyhead Harpies', date: 'Domingo 15:00', homeTeam: 'Chudley Cannons', awayTeam: 'Holyhead Harpies' },
-];
-
 export default BettingPage;

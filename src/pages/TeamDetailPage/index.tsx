@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import Card from '@/components/common/Card';
 import TeamLogo from '@/components/teams/TeamLogo';
+import { apiClient } from '@/utils/apiClient';
 import styles from './TeamDetailPage.module.css';
 
 interface Player {
@@ -689,15 +690,58 @@ const TeamDetailPage = () => {
   const [activeTab, setActiveTab] = useState('historia');
 
   useEffect(() => {
-    setIsLoading(true);
-    setTimeout(() => {
-      if (teamId && mockTeamDetails[teamId]) {
-        setTeam(mockTeamDetails[teamId]);
-      } else {
-        setTeam(null);
+    const loadTeamDetails = async () => {
+      if (!teamId) return;
+      
+      setIsLoading(true);
+      
+      try {
+        // Try to get team from backend first
+        const response = await apiClient.get(`/teams/${teamId}`) as { 
+          data?: { success?: boolean; data?: Record<string, unknown> } 
+        };
+        
+        if (response.data?.success && response.data?.data) {
+          const teamData = response.data.data;
+          
+          // Transform backend data to match frontend interface
+          const transformedTeam: TeamDetails = {
+            id: String(teamData.id || teamId),
+            name: String(teamData.name || ''),
+            slogan: String(teamData.slogan || 'A proud Quidditch team'),
+            history: String(teamData.history || 'This team has a rich history in Quidditch.'),
+            wins: Number(teamData.wins) || 0,
+            losses: Number(teamData.losses) || 0,
+            draws: Number(teamData.draws) || 0,
+            titles: Number(teamData.titles) || 0,
+            founded: Number(teamData.founded) || 1000,
+            stadium: String(teamData.stadium || 'Unknown Stadium'),
+            colors: Array.isArray(teamData.colors) ? teamData.colors.map(String) : ['Unknown'],
+            achievements: Array.isArray(teamData.achievements) ? teamData.achievements.map(String) : [],
+            roster: [], // TODO: Load from backend
+            upcomingMatches: [], // TODO: Load from backend
+            historicalIdols: [] // TODO: Load from backend
+          };
+          
+          setTeam(transformedTeam);
+        } else {
+          throw new Error('Team not found in backend');
+        }
+      } catch (error) {
+        console.warn(`Failed to load team ${teamId} from backend, falling back to mock data:`, error);
+        
+        // Fallback to mock data
+        if (teamId && mockTeamDetails[teamId]) {
+          setTeam(mockTeamDetails[teamId]);
+        } else {
+          setTeam(null);
+        }
       }
+      
       setIsLoading(false);
-    }, 1000);
+    };
+
+    loadTeamDetails();
   }, [teamId]);
 
   const handleTabClick = (tabName: string) => {

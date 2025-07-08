@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Card from '@/components/common/Card';
 import Button from '@/components/common/Button';
+import { apiClient } from '@/utils/apiClient';
 import styles from './AdminBetsHistory.module.css';
 
 interface BetRecord {
-  id: number;
+  id: string;
   userId: string;
   username: string;
-  matchId: number;
+  matchId: string;
   matchName: string;
   prediction: string;
   amount: number;
@@ -23,9 +24,7 @@ interface FilterOptions {
   status: string;
   dateFrom: string;
   dateTo: string;
-  minAmount: string;
-  maxAmount: string;
-  username: string;
+  user: string;
 }
 
 const AdminBetsHistory = () => {
@@ -39,13 +38,8 @@ const AdminBetsHistory = () => {
     status: 'all',
     dateFrom: '',
     dateTo: '',
-    minAmount: '',
-    maxAmount: '',
-    username: '',
+    user: ''
   });
-
-  const [showExportModal, setShowExportModal] = useState(false);
-  const [exportFormat, setExportFormat] = useState('csv');
 
   useEffect(() => {
     loadBetsData();
@@ -58,123 +52,38 @@ const AdminBetsHistory = () => {
   const loadBetsData = async () => {
     setIsLoading(true);
     
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1200));
+    try {
+      // Fetch betting history from backend
+      const response = await apiClient.get('/bets?limit=1000');
+      
+      if (response.success) {
+        // Transform backend data to match frontend interface
+        const backendBets = response.data?.data || [];
+        const transformedBets: BetRecord[] = backendBets.map((bet: any) => ({
+          id: bet.id,
+          userId: bet.user_id,
+          username: bet.username,
+          matchId: bet.match_id,
+          matchName: `${bet.homeTeamName} vs ${bet.awayTeamName}`,
+          prediction: bet.prediction,
+          amount: bet.amount,
+          odds: bet.odds,
+          potentialWin: bet.potential_win,
+          status: bet.status,
+          placedAt: bet.placed_at,
+          resolvedAt: bet.resolved_at,
+        }));
+        
+        setBets(transformedBets);
+      } else {
+        console.error('Failed to load betting history');
+        setBets([]);
+      }
+    } catch (error) {
+      console.error('Error loading betting history:', error);
+      setBets([]);
+    }
     
-    // Mock data
-    const mockBets: BetRecord[] = [
-      {
-        id: 1,
-        userId: 'user_001',
-        username: 'HermioneGranger91',
-        matchId: 101,
-        matchName: 'Gryffindor vs Slytherin',
-        prediction: 'Gryffindor',
-        amount: 150,
-        odds: 1.8,
-        potentialWin: 270,
-        status: 'won',
-        placedAt: '2025-06-20 14:30:00',
-        resolvedAt: '2025-06-20 16:45:00',
-      },
-      {
-        id: 2,
-        userId: 'user_002',
-        username: 'RonWeasley22',
-        matchId: 102,
-        matchName: 'Hufflepuff vs Ravenclaw',
-        prediction: 'Hufflepuff',
-        amount: 75,
-        odds: 2.1,
-        potentialWin: 157.5,
-        status: 'lost',
-        placedAt: '2025-06-20 13:15:00',
-        resolvedAt: '2025-06-20 15:30:00',
-      },
-      {
-        id: 3,
-        userId: 'user_003',
-        username: 'LunaLovegood',
-        matchId: 103,
-        matchName: 'Gryffindor vs Hufflepuff',
-        prediction: 'Empate',
-        amount: 200,
-        odds: 3.2,
-        potentialWin: 640,
-        status: 'pending',
-        placedAt: '2025-06-21 10:00:00',
-      },
-      {
-        id: 4,
-        userId: 'user_004',
-        username: 'NevilleLongbottom',
-        matchId: 101,
-        matchName: 'Gryffindor vs Slytherin',
-        prediction: 'Slytherin',
-        amount: 100,
-        odds: 2.5,
-        potentialWin: 250,
-        status: 'lost',
-        placedAt: '2025-06-20 14:00:00',
-        resolvedAt: '2025-06-20 16:45:00',
-      },
-      {
-        id: 5,
-        userId: 'user_005',
-        username: 'GinnyWeasley',
-        matchId: 104,
-        matchName: 'Ravenclaw vs Slytherin',
-        prediction: 'Ravenclaw',
-        amount: 125,
-        odds: 1.9,
-        potentialWin: 237.5,
-        status: 'pending',
-        placedAt: '2025-06-21 09:30:00',
-      },
-      {
-        id: 6,
-        userId: 'user_006',
-        username: 'DracoMalfoy',
-        matchId: 102,
-        matchName: 'Hufflepuff vs Ravenclaw',
-        prediction: 'Ravenclaw',
-        amount: 300,
-        odds: 1.7,
-        potentialWin: 510,
-        status: 'won',
-        placedAt: '2025-06-20 12:45:00',
-        resolvedAt: '2025-06-20 15:30:00',
-      },
-      {
-        id: 7,
-        userId: 'user_007',
-        username: 'CedricDiggory',
-        matchId: 105,
-        matchName: 'Hufflepuff vs Gryffindor',
-        prediction: 'Hufflepuff',
-        amount: 180,
-        odds: 2.3,
-        potentialWin: 414,
-        status: 'cancelled',
-        placedAt: '2025-06-19 16:20:00',
-      },
-      {
-        id: 8,
-        userId: 'user_008',
-        username: 'ChoChang',
-        matchId: 106,
-        matchName: 'Ravenclaw vs Gryffindor',
-        prediction: 'Ravenclaw',
-        amount: 95,
-        odds: 2.8,
-        potentialWin: 266,
-        status: 'won',
-        placedAt: '2025-06-19 11:15:00',
-        resolvedAt: '2025-06-19 14:00:00',
-      },
-    ];
-
-    setBets(mockBets);
     setIsLoading(false);
   };
 
@@ -186,112 +95,25 @@ const AdminBetsHistory = () => {
       filtered = filtered.filter(bet => bet.status === filters.status);
     }
 
-    // Date range filter
-    if (filters.dateFrom) {
-      filtered = filtered.filter(bet => bet.placedAt >= filters.dateFrom);
-    }
-    if (filters.dateTo) {
-      filtered = filtered.filter(bet => bet.placedAt <= filters.dateTo + ' 23:59:59');
-    }
-
-    // Amount range filter
-    if (filters.minAmount) {
-      filtered = filtered.filter(bet => bet.amount >= Number(filters.minAmount));
-    }
-    if (filters.maxAmount) {
-      filtered = filtered.filter(bet => bet.amount <= Number(filters.maxAmount));
-    }
-
-    // Username filter
-    if (filters.username) {
+    // User filter
+    if (filters.user) {
+      const searchTerm = filters.user.toLowerCase();
       filtered = filtered.filter(bet => 
-        bet.username.toLowerCase().includes(filters.username.toLowerCase())
+        bet.username.toLowerCase().includes(searchTerm) ||
+        bet.userId.toLowerCase().includes(searchTerm)
       );
     }
 
-    setFilteredBets(filtered);
-    setCurrentPage(1); // Reset to first page when filtering
-  };
-
-  const handleFilterChange = (key: keyof FilterOptions, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-  };
-
-  const resetFilters = () => {
-    setFilters({
-      status: 'all',
-      dateFrom: '',
-      dateTo: '',
-      minAmount: '',
-      maxAmount: '',
-      username: '',
-    });
-  };
-
-  const handleExport = () => {
-    // Simulate export functionality
-    console.log(`Exporting ${filteredBets.length} records as ${exportFormat}`);
-    
-    if (exportFormat === 'csv') {
-      const headers = ['ID', 'Usuario', 'Partido', 'Predicción', 'Monto', 'Cuotas', 'Estado', 'Fecha'];
-      const csvContent = [
-        headers.join(','),
-        ...filteredBets.map(bet => [
-          bet.id,
-          bet.username,
-          bet.matchName,
-          bet.prediction,
-          bet.amount,
-          bet.odds,
-          bet.status,
-          bet.placedAt
-        ].join(','))
-      ].join('\n');
-      
-      const blob = new Blob([csvContent], { type: 'text/csv' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `historial_apuestas_${new Date().toISOString().split('T')[0]}.csv`;
-      a.click();
-      window.URL.revokeObjectURL(url);
+    // Date range filters
+    if (filters.dateFrom) {
+      filtered = filtered.filter(bet => new Date(bet.placedAt) >= new Date(filters.dateFrom));
     }
-    
-    setShowExportModal(false);
-  };
+    if (filters.dateTo) {
+      filtered = filtered.filter(bet => new Date(bet.placedAt) <= new Date(filters.dateTo + 'T23:59:59'));
+    }
 
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      pending: { label: 'Pendiente', className: styles.statusPending },
-      won: { label: 'Ganada', className: styles.statusWon },
-      lost: { label: 'Perdida', className: styles.statusLost },
-      cancelled: { label: 'Cancelada', className: styles.statusCancelled },
-    };
-    
-    const config = statusConfig[status as keyof typeof statusConfig];
-    return (
-      <span className={`${styles.statusBadge} ${config.className}`}>
-        {config.label}
-      </span>
-    );
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency: 'COP',
-      minimumFractionDigits: 0,
-    }).format(amount);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString('es-CO', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    setFilteredBets(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
   };
 
   // Pagination
@@ -300,156 +122,166 @@ const AdminBetsHistory = () => {
   const endIndex = startIndex + itemsPerPage;
   const currentBets = filteredBets.slice(startIndex, endIndex);
 
-  // Statistics
-  const stats = {
-    total: filteredBets.length,
-    totalAmount: filteredBets.reduce((sum, bet) => sum + bet.amount, 0),
-    wonCount: filteredBets.filter(bet => bet.status === 'won').length,
-    lostCount: filteredBets.filter(bet => bet.status === 'lost').length,
-    pendingCount: filteredBets.filter(bet => bet.status === 'pending').length,
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('es-ES', {
+      style: 'currency',
+      currency: 'EUR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getStatusBadgeClass = (status: string) => {
+    switch (status) {
+      case 'won': return styles.statusWon;
+      case 'lost': return styles.statusLost;
+      case 'pending': return styles.statusPending;
+      case 'cancelled': return styles.statusCancelled;
+      default: return '';
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'won': return 'Ganada';
+      case 'lost': return 'Perdida';
+      case 'pending': return 'Pendiente';
+      case 'cancelled': return 'Cancelada';
+      default: return status;
+    }
   };
 
   if (isLoading) {
     return (
-      <div className={styles.container}>
-        <div className={styles.loading}>
-          <div className={styles.loadingSpinner}></div>
-          <p>Cargando historial de apuestas...</p>
-        </div>
+      <div className={styles.loadingContainer}>
+        <div className={styles.loadingSpinner}></div>
+        <p>Cargando historial de apuestas...</p>
       </div>
     );
   }
 
   return (
-    <div className={styles.container}>      <div className={styles.header}>
+    <div className={styles.adminBetsHistory}>
+      <div className={styles.header}>
         <h1 className={styles.title}>
-          <span className={styles.titleIcon}>📊</span>
-          Historial Global de Apuestas
+          <span className={styles.icon}>📜</span>
+          Historial de Apuestas
         </h1>
-        <p className={styles.subtitle}>Gestión y análisis detallado de todas las apuestas del sistema con filtros en tiempo real</p>
-        <div className={styles.headerActions}>
-          <Link to="/account/bets-statistics">
-            <Button variant="primary">
-              📈 Ver Estadísticas Avanzadas
-            </Button>
-          </Link>
-        </div>
+        <p className={styles.subtitle}>
+          Registro completo de todas las apuestas realizadas en la plataforma
+        </p>
       </div>
 
-      {/* Statistics Cards */}
+      {/* Quick Stats */}
       <div className={styles.statsGrid}>
-        <Card className={`${styles.statCard} ${styles.total}`}>
-          <div className={styles.statIcon}>📈</div>
-          <div className={styles.statInfo}>
-            <div className={styles.statValue}>{stats.total}</div>
-            <div className={styles.statLabel}>Total Apuestas</div>
+        <Card className={styles.statCard}>
+          <div className={styles.statIcon}>🎯</div>
+          <div className={styles.statContent}>
+            <h3>{bets.length}</h3>
+            <p>Total Apuestas</p>
           </div>
         </Card>
-        <Card className={`${styles.statCard} ${styles.amount}`}>
-          <div className={styles.statIcon}>💰</div>
-          <div className={styles.statInfo}>
-            <div className={styles.statValue}>{formatCurrency(stats.totalAmount)}</div>
-            <div className={styles.statLabel}>Monto Total</div>
+        
+        <Card className={styles.statCard}>
+          <div className={styles.statIcon}>✅</div>
+          <div className={styles.statContent}>
+            <h3>{bets.filter(bet => bet.status === 'won').length}</h3>
+            <p>Apuestas Ganadas</p>
           </div>
         </Card>
-        <Card className={`${styles.statCard} ${styles.won}`}>
-          <div className={styles.statIcon}>🏆</div>
-          <div className={styles.statInfo}>
-            <div className={styles.statValue}>{stats.wonCount}</div>
-            <div className={styles.statLabel}>Apuestas Ganadas</div>
+        
+        <Card className={styles.statCard}>
+          <div className={styles.statIcon}>❌</div>
+          <div className={styles.statContent}>
+            <h3>{bets.filter(bet => bet.status === 'lost').length}</h3>
+            <p>Apuestas Perdidas</p>
           </div>
         </Card>
-        <Card className={`${styles.statCard} ${styles.pending}`}>
+        
+        <Card className={styles.statCard}>
           <div className={styles.statIcon}>⏳</div>
-          <div className={styles.statInfo}>
-            <div className={styles.statValue}>{stats.pendingCount}</div>
-            <div className={styles.statLabel}>Pendientes</div>
+          <div className={styles.statContent}>
+            <h3>{bets.filter(bet => bet.status === 'pending').length}</h3>
+            <p>Apuestas Pendientes</p>
           </div>
         </Card>
       </div>
 
       {/* Filters */}
       <Card className={styles.filtersCard}>
-        <h3 className={styles.filtersTitle}>
-          <span className={styles.filterIcon}>🔍</span>
-          Filtros de Búsqueda
-        </h3>
-        <div className={styles.filtersGrid}>
+        <div className={styles.filtersHeader}>
+          <h3>Filtros de Búsqueda</h3>
+        </div>
+        <div className={styles.filtersContent}>
           <div className={styles.filterGroup}>
-            <label className={styles.filterLabel}>Estado:</label>
+            <label>Estado:</label>
             <select
-              className={styles.filterSelect}
               value={filters.status}
-              onChange={(e) => handleFilterChange('status', e.target.value)}
+              onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+              className={styles.filterSelect}
             >
-              <option value="all">Todos los estados</option>
-              <option value="pending">Pendiente</option>
-              <option value="won">Ganada</option>
-              <option value="lost">Perdida</option>
-              <option value="cancelled">Cancelada</option>
+              <option value="all">Todos</option>
+              <option value="won">Ganadas</option>
+              <option value="lost">Perdidas</option>
+              <option value="pending">Pendientes</option>
+              <option value="cancelled">Canceladas</option>
             </select>
           </div>
-          
+
           <div className={styles.filterGroup}>
-            <label className={styles.filterLabel}>Desde:</label>
-            <input
-              type="date"
-              className={styles.filterInput}
-              value={filters.dateFrom}
-              onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
-            />
-          </div>
-          
-          <div className={styles.filterGroup}>
-            <label className={styles.filterLabel}>Hasta:</label>
-            <input
-              type="date"
-              className={styles.filterInput}
-              value={filters.dateTo}
-              onChange={(e) => handleFilterChange('dateTo', e.target.value)}
-            />
-          </div>
-          
-          <div className={styles.filterGroup}>
-            <label className={styles.filterLabel}>Monto mínimo:</label>
-            <input
-              type="number"
-              className={styles.filterInput}
-              placeholder="0"
-              value={filters.minAmount}
-              onChange={(e) => handleFilterChange('minAmount', e.target.value)}
-            />
-          </div>
-          
-          <div className={styles.filterGroup}>
-            <label className={styles.filterLabel}>Monto máximo:</label>
-            <input
-              type="number"
-              className={styles.filterInput}
-              placeholder="Sin límite"
-              value={filters.maxAmount}
-              onChange={(e) => handleFilterChange('maxAmount', e.target.value)}
-            />
-          </div>
-          
-          <div className={styles.filterGroup}>
-            <label className={styles.filterLabel}>Usuario:</label>
+            <label>Usuario:</label>
             <input
               type="text"
+              placeholder="Buscar por usuario..."
+              value={filters.user}
+              onChange={(e) => setFilters(prev => ({ ...prev, user: e.target.value }))}
               className={styles.filterInput}
-              placeholder="Buscar por nombre..."
-              value={filters.username}
-              onChange={(e) => handleFilterChange('username', e.target.value)}
             />
           </div>
-        </div>
-        
-        <div className={styles.filtersActions}>
-          <Button variant="outline" onClick={resetFilters}>
+
+          <div className={styles.filterGroup}>
+            <label>Desde:</label>
+            <input
+              type="date"
+              value={filters.dateFrom}
+              onChange={(e) => setFilters(prev => ({ ...prev, dateFrom: e.target.value }))}
+              className={styles.filterInput}
+            />
+          </div>
+
+          <div className={styles.filterGroup}>
+            <label>Hasta:</label>
+            <input
+              type="date"
+              value={filters.dateTo}
+              onChange={(e) => setFilters(prev => ({ ...prev, dateTo: e.target.value }))}
+              className={styles.filterInput}
+            />
+          </div>
+
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setFilters({
+                status: 'all',
+                dateFrom: '',
+                dateTo: '',
+                user: ''
+              });
+            }}
+            className={styles.clearFiltersButton}
+          >
             Limpiar Filtros
-          </Button>
-          <Button onClick={() => setShowExportModal(true)}>
-            📥 Exportar Datos
           </Button>
         </div>
       </Card>
@@ -457,9 +289,16 @@ const AdminBetsHistory = () => {
       {/* Bets Table */}
       <Card className={styles.tableCard}>
         <div className={styles.tableHeader}>
-          <h3 className={styles.tableTitle}>
-            Registro de Apuestas ({filteredBets.length} resultados)
-          </h3>
+          <h3>Historial de Apuestas ({filteredBets.length})</h3>
+          <div className={styles.tableActions}>
+            <Button
+              variant="secondary"
+              onClick={loadBetsData}
+              className={styles.refreshButton}
+            >
+              🔄 Actualizar
+            </Button>
+          </div>
         </div>
         
         <div className={styles.tableContainer}>
@@ -470,25 +309,75 @@ const AdminBetsHistory = () => {
                 <th>Usuario</th>
                 <th>Partido</th>
                 <th>Predicción</th>
-                <th>Monto</th>
-                <th>Cuotas</th>
+                <th>Cantidad</th>
+                <th>Cuota</th>
                 <th>Ganancia Potencial</th>
                 <th>Estado</th>
                 <th>Fecha</th>
+                <th>Resuelto</th>
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {currentBets.map((bet) => (
-                <tr key={bet.id} className={styles.tableRow}>
-                  <td className={styles.cellId}>#{bet.id}</td>
-                  <td className={styles.cellUser}>{bet.username}</td>
-                  <td className={styles.cellMatch}>{bet.matchName}</td>
-                  <td className={styles.cellPrediction}>{bet.prediction}</td>
-                  <td className={styles.cellAmount}>{formatCurrency(bet.amount)}</td>
-                  <td className={styles.cellOdds}>{bet.odds}x</td>
-                  <td className={styles.cellPotential}>{formatCurrency(bet.potentialWin)}</td>
-                  <td className={styles.cellStatus}>{getStatusBadge(bet.status)}</td>
-                  <td className={styles.cellDate}>{formatDate(bet.placedAt)}</td>
+                <tr key={bet.id}>
+                  <td className={styles.betId}>#{bet.id.slice(0, 8)}</td>
+                  <td>
+                    <div className={styles.userCell}>
+                      <div className={styles.userAvatar}>
+                        {bet.username.charAt(0).toUpperCase()}
+                      </div>
+                      <div className={styles.userInfo}>
+                        <div className={styles.username}>{bet.username}</div>
+                        <div className={styles.userId}>ID: {bet.userId.slice(0, 8)}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div className={styles.matchCell}>
+                      <div className={styles.matchName}>{bet.matchName}</div>
+                      <div className={styles.matchId}>Match: {bet.matchId.slice(0, 8)}</div>
+                    </div>
+                  </td>
+                  <td>
+                    <span className={styles.predictionBadge}>
+                      {bet.prediction}
+                    </span>
+                  </td>
+                  <td className={styles.amount}>{formatCurrency(bet.amount)}</td>
+                  <td className={styles.odds}>{bet.odds.toFixed(2)}</td>
+                  <td className={styles.potentialWin}>{formatCurrency(bet.potentialWin)}</td>
+                  <td>
+                    <span className={`${styles.statusBadge} ${getStatusBadgeClass(bet.status)}`}>
+                      {getStatusText(bet.status)}
+                    </span>
+                  </td>
+                  <td className={styles.date}>{formatDate(bet.placedAt)}</td>
+                  <td className={styles.resolvedDate}>
+                    {bet.resolvedAt ? formatDate(bet.resolvedAt) : '-'}
+                  </td>
+                  <td>
+                    <div className={styles.actionButtons}>
+                      <Link
+                        to={`/admin/bets/${bet.id}`}
+                        className={styles.viewButton}
+                      >
+                        👁️
+                      </Link>
+                      <Link
+                        to={`/admin/users/${bet.userId}`}
+                        className={styles.userButton}
+                      >
+                        👤
+                      </Link>
+                      <Link
+                        to={`/match/${bet.matchId}`}
+                        className={styles.matchButton}
+                      >
+                        ⚽
+                      </Link>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -496,75 +385,67 @@ const AdminBetsHistory = () => {
         </div>
 
         {/* Pagination */}
-        <div className={styles.pagination}>
-          <div className={styles.paginationInfo}>
-            Mostrando {startIndex + 1}-{Math.min(endIndex, filteredBets.length)} de {filteredBets.length} resultados
-          </div>
-          <div className={styles.paginationControls}>
+        {totalPages > 1 && (
+          <div className={styles.pagination}>
             <Button
-              variant="outline"
+              variant="secondary"
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
-              onClick={() => setCurrentPage(prev => prev - 1)}
+              className={styles.paginationButton}
             >
               ← Anterior
             </Button>
-            <span className={styles.pageNumbers}>
-              Página {currentPage} de {totalPages}
-            </span>
+            
+            <div className={styles.pageInfo}>
+              <span>Página {currentPage} de {totalPages}</span>
+              <span className={styles.resultsInfo}>
+                Mostrando {startIndex + 1}-{Math.min(endIndex, filteredBets.length)} de {filteredBets.length} apuestas
+              </span>
+            </div>
+            
             <Button
-              variant="outline"
+              variant="secondary"
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
               disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage(prev => prev + 1)}
+              className={styles.paginationButton}
             >
               Siguiente →
             </Button>
           </div>
-        </div>
+        )}
       </Card>
 
-      {/* Export Modal */}
-      {showExportModal && (
-        <div className={styles.modal}>
-          <div className={styles.modalContent}>
-            <h3 className={styles.modalTitle}>Exportar Datos</h3>
-            <p className={styles.modalDescription}>
-              Se exportarán {filteredBets.length} registros de apuestas.
-            </p>
-            
-            <div className={styles.exportOptions}>
-              <label className={styles.radioLabel}>
-                <input
-                  type="radio"
-                  name="exportFormat"
-                  value="csv"
-                  checked={exportFormat === 'csv'}
-                  onChange={(e) => setExportFormat(e.target.value)}
-                />
-                <span className={styles.radioText}>CSV (Excel)</span>
-              </label>
-              <label className={styles.radioLabel}>
-                <input
-                  type="radio"
-                  name="exportFormat"
-                  value="json"
-                  checked={exportFormat === 'json'}
-                  onChange={(e) => setExportFormat(e.target.value)}
-                />
-                <span className={styles.radioText}>JSON</span>
-              </label>
-            </div>
-            
-            <div className={styles.modalActions}>
-              <Button variant="outline" onClick={() => setShowExportModal(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleExport}>
-                Exportar
-              </Button>
-            </div>
+      {/* Summary Section */}
+      <Card className={styles.summaryCard}>
+        <h3>Resumen de Resultados Filtrados</h3>
+        <div className={styles.summaryContent}>
+          <div className={styles.summaryItem}>
+            <span className={styles.summaryLabel}>Total de apuestas:</span>
+            <span className={styles.summaryValue}>{filteredBets.length}</span>
+          </div>
+          <div className={styles.summaryItem}>
+            <span className={styles.summaryLabel}>Volumen total:</span>
+            <span className={styles.summaryValue}>
+              {formatCurrency(filteredBets.reduce((sum, bet) => sum + bet.amount, 0))}
+            </span>
+          </div>
+          <div className={styles.summaryItem}>
+            <span className={styles.summaryLabel}>Ganancias potenciales:</span>
+            <span className={styles.summaryValue}>
+              {formatCurrency(filteredBets.reduce((sum, bet) => sum + bet.potentialWin, 0))}
+            </span>
+          </div>
+          <div className={styles.summaryItem}>
+            <span className={styles.summaryLabel}>Tasa de éxito:</span>
+            <span className={styles.summaryValue}>
+              {filteredBets.length > 0 
+                ? `${((filteredBets.filter(bet => bet.status === 'won').length / filteredBets.filter(bet => bet.status !== 'pending').length) * 100).toFixed(1)}%`
+                : 'N/A'
+              }
+            </span>
           </div>
         </div>
-      )}
+      </Card>
     </div>
   );
 };

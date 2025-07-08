@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Card from '@/components/common/Card';
 import Button from '@/components/common/Button';
+import { apiClient } from '@/utils/apiClient';
 import styles from './AdminUsersManagement.module.css';
 
 interface User {
@@ -14,6 +15,9 @@ interface User {
   lastLogin: string;
   totalBets: number;
   totalWinnings: number;
+  totalLosses?: number;
+  correctPredictions?: number;
+  totalPredictions?: number;
 }
 
 interface FilterOptions {
@@ -68,112 +72,42 @@ const AdminUsersManagement = () => {
   const loadUsersData = async () => {
     setIsLoading(true);
     
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      // Fetch users from backend
+      const response = await apiClient.get('/users?limit=1000');
+      
+      if (response.success) {
+        // Transform backend data to match frontend interface
+        const backendUsers = response.data?.data || [];
+        const transformedUsers: User[] = backendUsers.map((user: any) => ({
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          role: user.role,
+          status: 'active', // Backend doesn't have status field yet, default to active
+          balance: user.balance,
+          registrationDate: user.created_at,
+          lastLogin: user.last_bet_date || user.created_at,
+          totalBets: user.total_bets || 0,
+          totalWinnings: user.total_winnings || 0,
+          totalLosses: user.total_losses || 0,
+          correctPredictions: user.correct_predictions || 0,
+          totalPredictions: user.total_predictions || 0,
+        }));
+        
+        setUsers(transformedUsers);
+      } else {
+        console.error('Failed to load users data');
+        setUsers([]);
+      }
+    } catch (error) {
+      console.error('Error loading users data:', error);
+      setUsers([]);
+    }
     
-    // Mock data
-    const mockUsers: User[] = [
-      {
-        id: 'user_001',
-        username: 'HermioneGranger91',
-        email: 'hermione.granger@hogwarts.edu',
-        role: 'user',
-        status: 'active',
-        balance: 1250,
-        registrationDate: '2025-01-15',
-        lastLogin: '2025-06-21',
-        totalBets: 47,
-        totalWinnings: 2150,
-      },
-      {
-        id: 'user_002',
-        username: 'RonWeasley22',
-        email: 'ron.weasley@hogwarts.edu',
-        role: 'user',
-        status: 'active',
-        balance: 890,
-        registrationDate: '2025-01-18',
-        lastLogin: '2025-06-20',
-        totalBets: 32,
-        totalWinnings: 1456,
-      },
-      {
-        id: 'user_003',
-        username: 'LunaLovegood',
-        email: 'luna.lovegood@hogwarts.edu',
-        role: 'user',
-        status: 'active',
-        balance: 2100,
-        registrationDate: '2025-02-03',
-        lastLogin: '2025-06-21',
-        totalBets: 68,
-        totalWinnings: 3890,
-      },
-      {
-        id: 'user_004',
-        username: 'NevilleLongbottom',
-        email: 'neville.longbottom@hogwarts.edu',
-        role: 'user',
-        status: 'suspended',
-        balance: 150,
-        registrationDate: '2025-01-25',
-        lastLogin: '2025-06-15',
-        totalBets: 15,
-        totalWinnings: 230,
-      },
-      {
-        id: 'user_005',
-        username: 'GinnyWeasley',
-        email: 'ginny.weasley@hogwarts.edu',
-        role: 'user',
-        status: 'active',
-        balance: 1750,
-        registrationDate: '2025-02-10',
-        lastLogin: '2025-06-21',
-        totalBets: 55,
-        totalWinnings: 2890,
-      },
-      {
-        id: 'user_006',
-        username: 'DracoMalfoy',
-        email: 'draco.malfoy@slytherin.edu',
-        role: 'user',
-        status: 'active',
-        balance: 3200,
-        registrationDate: '2025-01-12',
-        lastLogin: '2025-06-20',
-        totalBets: 89,
-        totalWinnings: 5670,
-      },
-      {
-        id: 'user_007',
-        username: 'CedricDiggory',
-        email: 'cedric.diggory@hufflepuff.edu',
-        role: 'admin',
-        status: 'active',
-        balance: 0,
-        registrationDate: '2025-01-05',
-        lastLogin: '2025-06-21',
-        totalBets: 0,
-        totalWinnings: 0,
-      },
-      {
-        id: 'user_008',
-        username: 'ChoChang',
-        email: 'cho.chang@ravenclaw.edu',
-        role: 'user',
-        status: 'inactive',
-        balance: 450,
-        registrationDate: '2025-03-01',
-        lastLogin: '2025-05-20',
-        totalBets: 8,
-        totalWinnings: 120,
-      },
-    ];
-
-    setUsers(mockUsers);
     setIsLoading(false);
   };
+
   const applyFilters = useCallback(() => {
     let filtered = [...users];
 
@@ -197,22 +131,88 @@ const AdminUsersManagement = () => {
     }
 
     setFilteredUsers(filtered);
-    setCurrentPage(1);
+    setCurrentPage(1); // Reset to first page when filters change
   }, [users, filters]);
 
-  const handleFilterChange = (key: keyof FilterOptions, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+  // Pagination
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentUsers = filteredUsers.slice(startIndex, endIndex);
+
+  const handleCreateUser = async () => {
+    try {
+      const response = await apiClient.post('/auth/register', {
+        username: formData.username,
+        email: formData.email,
+        password: 'defaultPassword123', // You might want to generate a random password
+        role: formData.role
+      });
+
+      if (response.success) {
+        // If balance adjustment is needed
+        if (parseFloat(formData.balance) !== 1000) {
+          await apiClient.post(`/users/${response.data?.user.id}/adjust-balance`, {
+            amount: parseFloat(formData.balance) - 1000,
+            reason: 'Initial balance adjustment by admin'
+          });
+        }
+
+        await loadUsersData(); // Reload users
+        setShowCreateModal(false);
+        resetForm();
+      } else {
+        alert('Error creating user: ' + response.error);
+      }
+    } catch (error) {
+      console.error('Error creating user:', error);
+      alert('Error creating user');
+    }
   };
 
-  const resetFilters = () => {
-    setFilters({
-      role: 'all',
-      status: 'all',
-      search: '',
-    });
+  const handleEditUser = async () => {
+    if (!selectedUser) return;
+
+    try {
+      // Update user balance if changed
+      const balanceChange = parseFloat(formData.balance) - selectedUser.balance;
+      if (balanceChange !== 0) {
+        await apiClient.post(`/users/${selectedUser.id}/adjust-balance`, {
+          amount: balanceChange,
+          reason: 'Balance adjustment by admin'
+        });
+      }
+
+      await loadUsersData(); // Reload users
+      setShowEditModal(false);
+      setSelectedUser(null);
+      resetForm();
+    } catch (error) {
+      console.error('Error updating user:', error);
+      alert('Error updating user');
+    }
   };
 
-  const handleCreateUser = () => {
+  const handleDeleteUser = async () => {
+    if (!selectedUser) return;
+
+    try {
+      const response = await apiClient.delete(`/users/${selectedUser.id}`);
+      
+      if (response.success) {
+        await loadUsersData(); // Reload users
+        setShowDeleteModal(false);
+        setSelectedUser(null);
+      } else {
+        alert('Error deleting user: ' + response.error);
+      }
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      alert('Error deleting user');
+    }
+  };
+
+  const resetForm = () => {
     setFormData({
       username: '',
       email: '',
@@ -220,10 +220,9 @@ const AdminUsersManagement = () => {
       status: 'active',
       balance: '150',
     });
-    setShowCreateModal(true);
   };
 
-  const handleEditUser = (user: User) => {
+  const openEditModal = (user: User) => {
     setSelectedUser(user);
     setFormData({
       username: user.username,
@@ -235,356 +234,308 @@ const AdminUsersManagement = () => {
     setShowEditModal(true);
   };
 
-  const handleDeleteUser = (user: User) => {
+  const openDeleteModal = (user: User) => {
     setSelectedUser(user);
     setShowDeleteModal(true);
   };
-  const submitCreate = () => {
-    const newUser: User = {
-      id: `user_${Date.now()}`,
-      username: formData.username,
-      email: formData.email,
-      role: formData.role,
-      status: formData.status,
-      balance: Number(formData.balance),
-      registrationDate: new Date().toISOString().split('T')[0],
-      lastLogin: new Date().toISOString().split('T')[0],
-      totalBets: 0,
-      totalWinnings: 0,
-    };
-
-    setUsers(prev => [...prev, newUser]);
-    setShowCreateModal(false);
-    console.log('Usuario creado:', newUser);
-    
-    // Mostrar alerta de éxito
-    alert(`✨ ¡Usuario creado exitosamente! 🧙‍♂️\n\nSe ha creado el usuario "${formData.username}" con el rol de ${formData.role === 'admin' ? 'Administrador' : 'Usuario'}.`);
-  };
-  const submitEdit = () => {
-    if (!selectedUser) return;
-
-    const updatedUser: User = {
-      ...selectedUser,
-      username: formData.username,
-      email: formData.email,
-      role: formData.role,
-      status: formData.status,
-      balance: Number(formData.balance),
-    };
-
-    setUsers(prev => prev.map(user => 
-      user.id === selectedUser.id ? updatedUser : user
-    ));
-    setShowEditModal(false);
-    setSelectedUser(null);
-    console.log('Usuario actualizado:', updatedUser);
-    
-    // Mostrar alerta de éxito
-    alert(`📝 ¡Usuario actualizado correctamente! ⚡\n\nLos datos de "${formData.username}" han sido modificados exitosamente.`);
-  };
-  const confirmDelete = () => {
-    if (!selectedUser) return;
-
-    const deletedUserName = selectedUser.username;
-    setUsers(prev => prev.filter(user => user.id !== selectedUser.id));
-    setShowDeleteModal(false);
-    setSelectedUser(null);
-    console.log('Usuario eliminado:', selectedUser.id);
-    
-    // Mostrar alerta de éxito
-    alert(`🗑️ ¡Usuario eliminado exitosamente! 🏴‍☠️\n\nEl usuario "${deletedUserName}" ha sido eliminado del sistema de forma permanente.`);
-  };
-
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      active: { label: 'Activo', className: styles.statusActive },
-      suspended: { label: 'Suspendido', className: styles.statusSuspended },
-      inactive: { label: 'Inactivo', className: styles.statusInactive },
-    };
-    
-    const config = statusConfig[status as keyof typeof statusConfig];
-    return (
-      <span className={`${styles.statusBadge} ${config.className}`}>
-        {config.label}
-      </span>
-    );
-  };
-
-  const getRoleBadge = (role: string) => {
-    return (
-      <span className={`${styles.roleBadge} ${role === 'admin' ? styles.roleAdmin : styles.roleUser}`}>
-        {role === 'admin' ? '👑 Admin' : '👤 Usuario'}
-      </span>
-    );
-  };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-CO', {
+    return new Intl.NumberFormat('es-ES', {
       style: 'currency',
-      currency: 'COP',
+      currency: 'EUR',
       minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(amount);
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-CO');
+    return new Date(dateString).toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
   };
 
-  // Pagination
-  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentUsers = filteredUsers.slice(startIndex, endIndex);
+  const getStatusBadgeClass = (status: string) => {
+    switch (status) {
+      case 'active': return styles.statusActive;
+      case 'suspended': return styles.statusSuspended;
+      case 'inactive': return styles.statusInactive;
+      default: return '';
+    }
+  };
 
-  // Statistics
-  const stats = {
-    total: filteredUsers.length,
-    active: filteredUsers.filter(user => user.status === 'active').length,
-    admins: filteredUsers.filter(user => user.role === 'admin').length,
-    suspended: filteredUsers.filter(user => user.status === 'suspended').length,
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'active': return 'Activo';
+      case 'suspended': return 'Suspendido';
+      case 'inactive': return 'Inactivo';
+      default: return status;
+    }
   };
 
   if (isLoading) {
     return (
-      <div className={styles.container}>
-        <div className={styles.loading}>
-          <div className={styles.loadingSpinner}></div>
-          <p>Cargando gestión de usuarios...</p>
-        </div>
+      <div className={styles.loadingContainer}>
+        <div className={styles.loadingSpinner}></div>
+        <p>Cargando usuarios...</p>
       </div>
     );
   }
 
   return (
-    <div className={styles.container}>
+    <div className={styles.adminUsersManagement}>
       <div className={styles.header}>
         <h1 className={styles.title}>
-          <span className={styles.titleIcon}>👥</span>
+          <span className={styles.icon}>👥</span>
           Gestión de Usuarios
         </h1>
-        <p className={styles.subtitle}>Administrar cuentas y permisos del sistema</p>
+        <p className={styles.subtitle}>
+          Administrar usuarios registrados en la plataforma
+        </p>
+        <Button
+          variant="primary"
+          onClick={() => setShowCreateModal(true)}
+          className={styles.createButton}
+        >
+          <span className={styles.buttonIcon}>➕</span>
+          Nuevo Usuario
+        </Button>
       </div>
 
-      {/* Statistics Cards */}
-      <div className={styles.statsGrid}>
-        <Card className={`${styles.statCard} ${styles.total}`}>
-          <div className={styles.statIcon}>📊</div>
-          <div className={styles.statInfo}>
-            <div className={styles.statValue}>{stats.total}</div>
-            <div className={styles.statLabel}>Total Usuarios</div>
-          </div>
-        </Card>
-        <Card className={`${styles.statCard} ${styles.active}`}>
-          <div className={styles.statIcon}>✅</div>
-          <div className={styles.statInfo}>
-            <div className={styles.statValue}>{stats.active}</div>
-            <div className={styles.statLabel}>Usuarios Activos</div>
-          </div>
-        </Card>
-        <Card className={`${styles.statCard} ${styles.admins}`}>
-          <div className={styles.statIcon}>👑</div>
-          <div className={styles.statInfo}>
-            <div className={styles.statValue}>{stats.admins}</div>
-            <div className={styles.statLabel}>Administradores</div>
-          </div>
-        </Card>
-        <Card className={`${styles.statCard} ${styles.suspended}`}>
-          <div className={styles.statIcon}>⚠️</div>
-          <div className={styles.statInfo}>
-            <div className={styles.statValue}>{stats.suspended}</div>
-            <div className={styles.statLabel}>Suspendidos</div>
-          </div>
-        </Card>
-      </div>
-
-      {/* Filters and Actions */}
+      {/* Filters */}
       <Card className={styles.filtersCard}>
         <div className={styles.filtersHeader}>
-          <h3 className={styles.filtersTitle}>
-            <span className={styles.filterIcon}>🔍</span>
-            Filtros y Acciones
-          </h3>
-          <Button onClick={handleCreateUser} className={styles.createButton}>
-            ➕ Crear Usuario
-          </Button>
+          <h3>Filtros</h3>
         </div>
-        
-        <div className={styles.filtersGrid}>
+        <div className={styles.filtersContent}>
           <div className={styles.filterGroup}>
-            <label className={styles.filterLabel}>Rol:</label>
+            <label>Rol:</label>
             <select
-              className={styles.filterSelect}
               value={filters.role}
-              onChange={(e) => handleFilterChange('role', e.target.value)}
+              onChange={(e) => setFilters(prev => ({ ...prev, role: e.target.value }))}
+              className={styles.filterSelect}
             >
-              <option value="all">Todos los roles</option>
+              <option value="all">Todos</option>
               <option value="user">Usuario</option>
               <option value="admin">Administrador</option>
             </select>
           </div>
-          
+
           <div className={styles.filterGroup}>
-            <label className={styles.filterLabel}>Estado:</label>
+            <label>Estado:</label>
             <select
-              className={styles.filterSelect}
               value={filters.status}
-              onChange={(e) => handleFilterChange('status', e.target.value)}
+              onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+              className={styles.filterSelect}
             >
-              <option value="all">Todos los estados</option>
+              <option value="all">Todos</option>
               <option value="active">Activo</option>
               <option value="suspended">Suspendido</option>
               <option value="inactive">Inactivo</option>
             </select>
           </div>
-          
-          <div className={`${styles.filterGroup} ${styles.searchGroup}`}>
-            <label className={styles.filterLabel}>Buscar:</label>
+
+          <div className={styles.filterGroup}>
+            <label>Buscar:</label>
             <input
               type="text"
-              className={styles.filterInput}
-              placeholder="Nombre o email..."
+              placeholder="Usuario o email..."
               value={filters.search}
-              onChange={(e) => handleFilterChange('search', e.target.value)}
+              onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+              className={styles.filterInput}
             />
-          </div>
-          
-          <div className={styles.filterActions}>
-            <Button variant="outline" onClick={resetFilters}>
-              Limpiar
-            </Button>
           </div>
         </div>
       </Card>
 
-      {/* Users Grid */}
-      <div className={styles.usersGrid}>
-        {currentUsers.map((user) => (
-          <Card key={user.id} className={styles.userCard}>
-            <div className={styles.userHeader}>
-              <div className={styles.userInfo}>
-                <h3 className={styles.username}>{user.username}</h3>
-                <p className={styles.userEmail}>{user.email}</p>
-              </div>
-              <div className={styles.userBadges}>
-                {getRoleBadge(user.role)}
-                {getStatusBadge(user.status)}
-              </div>
-            </div>
-            
-            <div className={styles.userStats}>
-              <div className={styles.userStat}>
-                <span className={styles.statIcon}>💰</span>
-                <div>
-                  <div className={styles.statValue}>{formatCurrency(user.balance)}</div>
-                  <div className={styles.statLabel}>Saldo</div>
-                </div>
-              </div>
-              <div className={styles.userStat}>
-                <span className={styles.statIcon}>🎯</span>
-                <div>
-                  <div className={styles.statValue}>{user.totalBets}</div>
-                  <div className={styles.statLabel}>Apuestas</div>
-                </div>
-              </div>
-              <div className={styles.userStat}>
-                <span className={styles.statIcon}>🏆</span>
-                <div>
-                  <div className={styles.statValue}>{formatCurrency(user.totalWinnings)}</div>
-                  <div className={styles.statLabel}>Ganancias</div>
-                </div>
-              </div>
-            </div>
-            
-            <div className={styles.userDetails}>
-              <div className={styles.userDetail}>
-                <span className={styles.detailLabel}>Registro:</span>
-                <span className={styles.detailValue}>{formatDate(user.registrationDate)}</span>
-              </div>
-              <div className={styles.userDetail}>
-                <span className={styles.detailLabel}>Último acceso:</span>
-                <span className={styles.detailValue}>{formatDate(user.lastLogin)}</span>
-              </div>
-            </div>
-              <div className={styles.userActions}>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleEditUser(user)}
-              >
-                ✏️ Editar
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleDeleteUser(user)}
-                className={styles.deleteButton}
-              >
-                🗑️ Eliminar
-              </Button>
-            </div>
-          </Card>
-        ))}
+      {/* Summary Stats */}
+      <div className={styles.statsGrid}>
+        <Card className={styles.statCard}>
+          <div className={styles.statIcon}>👤</div>
+          <div className={styles.statContent}>
+            <h3>{users.length}</h3>
+            <p>Total Usuarios</p>
+          </div>
+        </Card>
+        
+        <Card className={styles.statCard}>
+          <div className={styles.statIcon}>✅</div>
+          <div className={styles.statContent}>
+            <h3>{users.filter(u => u.status === 'active').length}</h3>
+            <p>Usuarios Activos</p>
+          </div>
+        </Card>
+        
+        <Card className={styles.statCard}>
+          <div className={styles.statIcon}>🎯</div>
+          <div className={styles.statContent}>
+            <h3>{users.reduce((sum, u) => sum + u.totalBets, 0)}</h3>
+            <p>Total Apuestas</p>
+          </div>
+        </Card>
+        
+        <Card className={styles.statCard}>
+          <div className={styles.statIcon}>💰</div>
+          <div className={styles.statContent}>
+            <h3>{formatCurrency(users.reduce((sum, u) => sum + u.balance, 0))}</h3>
+            <p>Balance Total</p>
+          </div>
+        </Card>
       </div>
 
-      {/* Pagination */}
-      <Card className={styles.paginationCard}>
-        <div className={styles.paginationInfo}>
-          Mostrando {startIndex + 1}-{Math.min(endIndex, filteredUsers.length)} de {filteredUsers.length} usuarios
+      {/* Users Table */}
+      <Card className={styles.tableCard}>
+        <div className={styles.tableHeader}>
+          <h3>Usuarios ({filteredUsers.length})</h3>
         </div>
-        <div className={styles.paginationControls}>
-          <Button
-            variant="outline"
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage(prev => prev - 1)}
-          >
-            ← Anterior
-          </Button>
-          <span className={styles.pageNumbers}>
-            Página {currentPage} de {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage(prev => prev + 1)}
-          >
-            Siguiente →
-          </Button>
+        
+        <div className={styles.tableContainer}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Usuario</th>
+                <th>Email</th>
+                <th>Rol</th>
+                <th>Estado</th>
+                <th>Balance</th>
+                <th>Apuestas</th>
+                <th>Ganancias</th>
+                <th>Predicciones</th>
+                <th>Registro</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentUsers.map((user) => (
+                <tr key={user.id}>
+                  <td>
+                    <div className={styles.userCell}>
+                      <div className={styles.userAvatar}>
+                        {user.username.charAt(0).toUpperCase()}
+                      </div>
+                      <div className={styles.userInfo}>
+                        <div className={styles.username}>{user.username}</div>
+                        <div className={styles.userId}>ID: {user.id.slice(0, 8)}...</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>{user.email}</td>
+                  <td>
+                    <span className={`${styles.roleBadge} ${user.role === 'admin' ? styles.adminRole : styles.userRole}`}>
+                      {user.role === 'admin' ? 'Admin' : 'Usuario'}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`${styles.statusBadge} ${getStatusBadgeClass(user.status)}`}>
+                      {getStatusText(user.status)}
+                    </span>
+                  </td>
+                  <td>{formatCurrency(user.balance)}</td>
+                  <td>{user.totalBets}</td>
+                  <td className={styles.successText}>{formatCurrency(user.totalWinnings)}</td>
+                  <td>
+                    {user.totalPredictions > 0 
+                      ? `${user.correctPredictions}/${user.totalPredictions} (${((user.correctPredictions / user.totalPredictions) * 100).toFixed(1)}%)`
+                      : 'N/A'
+                    }
+                  </td>
+                  <td>{formatDate(user.registrationDate)}</td>
+                  <td>
+                    <div className={styles.actionButtons}>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => openEditModal(user)}
+                        className={styles.editButton}
+                      >
+                        ✏️
+                      </Button>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => openDeleteModal(user)}
+                        className={styles.deleteButton}
+                      >
+                        🗑️
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className={styles.pagination}>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+            >
+              ← Anterior
+            </Button>
+            
+            <div className={styles.pageInfo}>
+              Página {currentPage} de {totalPages}
+            </div>
+            
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+            >
+              Siguiente →
+            </Button>
+          </div>
+        )}
       </Card>
 
       {/* Create User Modal */}
       {showCreateModal && (
-        <div className={styles.modal}>
-          <div className={styles.modalContent}>
-            <h3 className={styles.modalTitle}>Crear Nuevo Usuario</h3>
+        <div className={styles.modalOverlay}>
+          <div className={styles.modal}>
+            <div className={styles.modalHeader}>
+              <h3>Crear Nuevo Usuario</h3>
+              <button
+                className={styles.closeButton}
+                onClick={() => setShowCreateModal(false)}
+              >
+                ✕
+              </button>
+            </div>
             
-            <div className={styles.formGrid}>
+            <div className={styles.modalContent}>
               <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Nombre de usuario:</label>
+                <label>Nombre de Usuario:</label>
                 <input
                   type="text"
-                  className={styles.formInput}
                   value={formData.username}
-                  onChange={(e) => setFormData({...formData, username: e.target.value})}
+                  onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
+                  className={styles.formInput}
                 />
               </div>
               
               <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Email:</label>
+                <label>Email:</label>
                 <input
                   type="email"
-                  className={styles.formInput}
                   value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                  className={styles.formInput}
                 />
               </div>
               
               <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Rol:</label>
+                <label>Rol:</label>
                 <select
-                  className={styles.formSelect}
                   value={formData.role}
-                  onChange={(e) => setFormData({...formData, role: e.target.value as 'user' | 'admin'})}
+                  onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value as 'user' | 'admin' }))}
+                  className={styles.formSelect}
                 >
                   <option value="user">Usuario</option>
                   <option value="admin">Administrador</option>
@@ -592,34 +543,30 @@ const AdminUsersManagement = () => {
               </div>
               
               <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Estado:</label>
-                <select
-                  className={styles.formSelect}
-                  value={formData.status}
-                  onChange={(e) => setFormData({...formData, status: e.target.value as 'active' | 'suspended' | 'inactive'})}
-                >
-                  <option value="active">Activo</option>
-                  <option value="suspended">Suspendido</option>
-                  <option value="inactive">Inactivo</option>
-                </select>
-              </div>
-              
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Saldo inicial:</label>
+                <label>Balance Inicial:</label>
                 <input
                   type="number"
-                  className={styles.formInput}
                   value={formData.balance}
-                  onChange={(e) => setFormData({...formData, balance: e.target.value})}
+                  onChange={(e) => setFormData(prev => ({ ...prev, balance: e.target.value }))}
+                  className={styles.formInput}
+                  min="0"
+                  step="10"
                 />
               </div>
             </div>
             
             <div className={styles.modalActions}>
-              <Button variant="outline" onClick={() => setShowCreateModal(false)}>
+              <Button
+                variant="secondary"
+                onClick={() => setShowCreateModal(false)}
+              >
                 Cancelar
               </Button>
-              <Button onClick={submitCreate}>
+              <Button
+                variant="primary"
+                onClick={handleCreateUser}
+                disabled={!formData.username || !formData.email}
+              >
                 Crear Usuario
               </Button>
             </div>
@@ -629,37 +576,45 @@ const AdminUsersManagement = () => {
 
       {/* Edit User Modal */}
       {showEditModal && selectedUser && (
-        <div className={styles.modal}>
-          <div className={styles.modalContent}>
-            <h3 className={styles.modalTitle}>Editar Usuario</h3>
+        <div className={styles.modalOverlay}>
+          <div className={styles.modal}>
+            <div className={styles.modalHeader}>
+              <h3>Editar Usuario</h3>
+              <button
+                className={styles.closeButton}
+                onClick={() => setShowEditModal(false)}
+              >
+                ✕
+              </button>
+            </div>
             
-            <div className={styles.formGrid}>
+            <div className={styles.modalContent}>
               <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Nombre de usuario:</label>
+                <label>Nombre de Usuario:</label>
                 <input
                   type="text"
-                  className={styles.formInput}
                   value={formData.username}
-                  onChange={(e) => setFormData({...formData, username: e.target.value})}
+                  disabled
+                  className={`${styles.formInput} ${styles.disabled}`}
                 />
               </div>
               
               <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Email:</label>
+                <label>Email:</label>
                 <input
                   type="email"
-                  className={styles.formInput}
                   value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  disabled
+                  className={`${styles.formInput} ${styles.disabled}`}
                 />
               </div>
               
               <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Rol:</label>
+                <label>Rol:</label>
                 <select
-                  className={styles.formSelect}
                   value={formData.role}
-                  onChange={(e) => setFormData({...formData, role: e.target.value as 'user' | 'admin'})}
+                  disabled
+                  className={`${styles.formSelect} ${styles.disabled}`}
                 >
                   <option value="user">Usuario</option>
                   <option value="admin">Administrador</option>
@@ -667,34 +622,29 @@ const AdminUsersManagement = () => {
               </div>
               
               <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Estado:</label>
-                <select
-                  className={styles.formSelect}
-                  value={formData.status}
-                  onChange={(e) => setFormData({...formData, status: e.target.value as 'active' | 'suspended' | 'inactive'})}
-                >
-                  <option value="active">Activo</option>
-                  <option value="suspended">Suspendido</option>
-                  <option value="inactive">Inactivo</option>
-                </select>
-              </div>
-              
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Saldo:</label>
+                <label>Balance:</label>
                 <input
                   type="number"
-                  className={styles.formInput}
                   value={formData.balance}
-                  onChange={(e) => setFormData({...formData, balance: e.target.value})}
+                  onChange={(e) => setFormData(prev => ({ ...prev, balance: e.target.value }))}
+                  className={styles.formInput}
+                  min="0"
+                  step="10"
                 />
               </div>
             </div>
             
             <div className={styles.modalActions}>
-              <Button variant="outline" onClick={() => setShowEditModal(false)}>
+              <Button
+                variant="secondary"
+                onClick={() => setShowEditModal(false)}
+              >
                 Cancelar
               </Button>
-              <Button onClick={submitEdit}>
+              <Button
+                variant="primary"
+                onClick={handleEditUser}
+              >
                 Guardar Cambios
               </Button>
             </div>
@@ -702,20 +652,36 @@ const AdminUsersManagement = () => {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete User Modal */}
       {showDeleteModal && selectedUser && (
-        <div className={styles.modal}>
-          <div className={styles.modalContent}>
-            <h3 className={styles.modalTitle}>Confirmar Eliminación</h3>
-            <p className={styles.modalDescription}>
-              ¿Estás seguro de que deseas eliminar al usuario <strong>{selectedUser.username}</strong>? 
-              Esta acción no se puede deshacer.
-            </p>
+        <div className={styles.modalOverlay}>
+          <div className={styles.modal}>
+            <div className={styles.modalHeader}>
+              <h3>Eliminar Usuario</h3>
+              <button
+                className={styles.closeButton}
+                onClick={() => setShowDeleteModal(false)}
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className={styles.modalContent}>
+              <p>¿Estás seguro de que quieres eliminar al usuario <strong>{selectedUser.username}</strong>?</p>
+              <p className={styles.warningText}>Esta acción no se puede deshacer.</p>
+            </div>
+            
             <div className={styles.modalActions}>
-              <Button variant="outline" onClick={() => setShowDeleteModal(false)}>
+              <Button
+                variant="secondary"
+                onClick={() => setShowDeleteModal(false)}
+              >
                 Cancelar
               </Button>
-              <Button onClick={confirmDelete} className={styles.deleteConfirmButton}>
+              <Button
+                variant="danger"
+                onClick={handleDeleteUser}
+              >
                 Eliminar Usuario
               </Button>
             </div>

@@ -4,9 +4,9 @@ import Button from '@/components/common/Button';
 import TeamLogo from '@/components/teams/TeamLogo';
 import { Team, Match } from '@/types/league';
 import { virtualTimeManager } from '@/services/virtualTimeManager';
-import { PredictionsService, MatchPredictionStats, Prediction, FinishedMatchData } from '@/services/predictionsService';
-import { matchResultsService } from '@/services/matchResultsService';
+import { PredictionsService, MatchPredictionStats, Prediction } from '@/services/predictionsService';
 import { useAuth } from '@/context/AuthContext';
+import { apiClient } from '@/utils/apiClient';
 
 // Import subcomponents
 import {
@@ -98,49 +98,7 @@ interface MatchDetails {
   location: string;
 }
 
-// Mock teams for live simulation
-const mockHomeTeam: Team = {
-  id: 'gryffindor',
-  name: 'Gryffindor',
-  house: 'Gryffindor',
-  fuerzaAtaque: 85,
-  fuerzaDefensa: 78,
-  attackStrength: 85,
-  defenseStrength: 78,
-  seekerSkill: 90,
-  chaserSkill: 85,
-  keeperSkill: 80,
-  beaterSkill: 75,
-  venue: 'Gryffindor Tower Pitch'
-};
-
-const mockAwayTeam: Team = {
-  id: 'slytherin',
-  name: 'Slytherin',
-  house: 'Slytherin',
-  fuerzaAtaque: 82,
-  fuerzaDefensa: 88,
-  attackStrength: 82,
-  defenseStrength: 88,
-  seekerSkill: 85,
-  chaserSkill: 80,
-  keeperSkill: 90,
-  beaterSkill: 85,
-  venue: 'Slytherin Dungeon Pitch'
-};
-
-const mockMatchDetail: MatchDetails = {
-  id: '1',
-  homeTeam: 'Gryffindor',
-  awayTeam: 'Slytherin',
-  homeScore: 120,
-  awayScore: 90,
-  status: 'live',
-  minute: "75'",
-  date: 'Hoy',
-  time: '19:00',
-  location: 'Campo de Quidditch de Hogwarts',
-};
+// Removed mock data - now using backend data exclusively
 
 const MatchDetailPage = () => {
   const { matchId } = useParams<{ matchId: string }>();
@@ -161,10 +119,6 @@ const MatchDetailPage = () => {
   const [isPredicting, setIsPredicting] = useState(false);
   // Related matches state
   const [relatedMatches, setRelatedMatches] = useState<Match[]>([]);
-  // State for finished match data
-  const [finishedMatchData, setFinishedMatchData] = useState<FinishedMatchData | null>(null);  // State for detailed match results
-  const [hasDetailedResults, setHasDetailedResults] = useState(false);
-  const [detailedMatchResult, setDetailedMatchResult] = useState<ReturnType<typeof matchResultsService.getMatchResult> | null>(null);
   
   // Helper function to get team roster data with real player names
   const getTeamRosterData = (teamName: string) => {
@@ -239,136 +193,153 @@ const MatchDetailPage = () => {
   };
 
   useEffect(() => {
-    // Get the real match from virtual time manager
-    setIsLoading(true);
-    
-    const timeState = virtualTimeManager.getState();
-    if (timeState.temporadaActiva && matchId) {
-      const foundMatch = timeState.temporadaActiva.partidos.find(p => p.id === matchId);
+    const loadMatchFromBackend = async () => {
+      if (!matchId) return;
       
-      if (foundMatch) {
-        setRealMatch(foundMatch);
+      setIsLoading(true);
+      
+      try {
+        // First try to get match from backend
+        const matchResponse = await apiClient.get(`/matches/${matchId}`);
         
-        // Find teams
-        const foundHomeTeam = timeState.temporadaActiva.equipos.find(t => t.id === foundMatch.localId);
-        const foundAwayTeam = timeState.temporadaActiva.equipos.find(t => t.id === foundMatch.visitanteId);
-          setHomeTeam(foundHomeTeam || mockHomeTeam);
-        setAwayTeam(foundAwayTeam || mockAwayTeam);
-        
-        // Check if detailed results are available for finished matches
-        let finalHomeScore = foundMatch.homeScore || 0;
-        let finalAwayScore = foundMatch.awayScore || 0;
-        
-        if (foundMatch.status === 'finished') {
-          const detailedResults = matchResultsService.getMatchResult(foundMatch.id);
-          setHasDetailedResults(detailedResults !== null);
-          setDetailedMatchResult(detailedResults);
+        if (matchResponse.success && matchResponse.data) {
+          const backendMatch = matchResponse.data as Record<string, unknown>;
           
-          // Use detailed results scores if available (more accurate)
-          if (detailedResults) {
-            finalHomeScore = detailedResults.finalScore.home;
-            finalAwayScore = detailedResults.finalScore.away;
+          // Load team details from backend
+          const [homeTeamResponse, awayTeamResponse] = await Promise.all([
+            apiClient.get(`/teams/${backendMatch.home_team_id}`),
+            apiClient.get(`/teams/${backendMatch.away_team_id}`)
+          ]);
+          
+          if (homeTeamResponse.success && awayTeamResponse.success) {
+            setHomeTeam(homeTeamResponse.data as Team);
+            setAwayTeam(awayTeamResponse.data as Team);
           }
-        } else {
-          setHasDetailedResults(false);
-          setDetailedMatchResult(null);
-        }
-
-        // Convert to MatchDetails format with correct scores
-        const matchDetails: MatchDetails = {
-          id: foundMatch.id,
-          homeTeam: foundHomeTeam?.name || foundMatch.localId,
-          awayTeam: foundAwayTeam?.name || foundMatch.visitanteId,
-          homeScore: finalHomeScore,
-          awayScore: finalAwayScore,
-          status: foundMatch.status === 'scheduled' ? 'upcoming' : 
-                 foundMatch.status === 'live' ? 'live' : 'finished',
-          minute: foundMatch.currentMinute?.toString(),
-          date: new Date(foundMatch.fecha).toLocaleDateString('es-ES'),
-          time: new Date(foundMatch.fecha).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
-          location: foundMatch.venue || 'Campo de Quidditch',
-        };
-        setMatch(matchDetails);
-        
-        // Load prediction data and ensure mock predictions exist
-        predictionsService.addMockPredictionsForMatch(foundMatch.id);
-        const stats = predictionsService.getMatchPredictionStats(foundMatch.id);
-        setPredictionStats(stats);
-        setUserPrediction(stats.userPrediction || null);// Set default tab based on match status
-        if (foundMatch.status === 'scheduled') {
-          setActiveTab('predictions'); // Show predictions for upcoming matches
-        } else {
-          setActiveTab('overview'); // Show timeline for live and finished matches
-        }
-        
-        // Check if match is already in live simulation
-        if (foundMatch.status === 'live') {
-          const liveState = virtualTimeManager.getEstadoPartidoEnVivo(foundMatch.id);
-          if (liveState) {
-            setShowLiveSimulation(true);
+          
+          // Convert backend match to MatchDetails format
+          const matchDetails: MatchDetails = {
+            id: String(backendMatch.id || ''),
+            homeTeam: String(backendMatch.homeTeamName || 'Unknown'),
+            awayTeam: String(backendMatch.awayTeamName || 'Unknown'),
+            homeScore: Number(backendMatch.home_score) || 0,
+            awayScore: Number(backendMatch.away_score) || 0,
+            status: String(backendMatch.status) === 'scheduled' ? 'upcoming' : 
+                   String(backendMatch.status) === 'live' ? 'live' : 'finished',
+            minute: backendMatch.current_minute ? String(backendMatch.current_minute) : undefined,
+            date: backendMatch.match_date ? new Date(String(backendMatch.match_date)).toLocaleDateString('es-ES') : 'Unknown',
+            time: backendMatch.match_date ? new Date(String(backendMatch.match_date)).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : 'Unknown',
+            location: String(backendMatch.venue || 'Campo de Quidditch'),
+          };
+          setMatch(matchDetails);
+          setRealMatch(backendMatch as unknown as Match);
+          
+          // Load prediction data
+          try {
+            const predictionStats = await predictionsService.getMatchPredictionStats(matchId);
+            setPredictionStats(predictionStats);
+            
+            const userPred = await predictionsService.getUserPrediction(matchId);
+            setUserPrediction(userPred);
+          } catch (error) {
+            console.warn('Failed to load prediction data:', error);
+            setPredictionStats(null);
+            setUserPrediction(null);
           }
+          
+          // Set default tab based on match status
+          if (String(backendMatch.status) === 'scheduled') {
+            setActiveTab('predictions');
+          } else {
+            setActiveTab('overview');
+          }
+          
+        } else {
+          // Fallback to virtual time manager
+          await loadMatchFromSimulation();
         }
-        
-        // Get related matches (next 2 upcoming matches)
-        const upcomingMatches = timeState.temporadaActiva.partidos
-          .filter(p => p.status === 'scheduled' && p.id !== foundMatch.id)
-          .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
-          .slice(0, 2);
-        setRelatedMatches(upcomingMatches);
-        
-      } else {
-        // Fallback to mock data if match not found
-        setMatch(mockMatchDetail);
-        setHomeTeam(mockHomeTeam);
-        setAwayTeam(mockAwayTeam);
+      } catch (error) {
+        console.warn('Failed to load match from backend, falling back to simulation:', error);
+        await loadMatchFromSimulation();
       }
-    } else {
-      // Fallback to mock data
-      setMatch(mockMatchDetail);
-      setHomeTeam(mockHomeTeam);
-      setAwayTeam(mockAwayTeam);
-    }
-    
-    setIsLoading(false);
+      
+      setIsLoading(false);
+    };
+
+    const loadMatchFromSimulation = async () => {
+      const timeState = virtualTimeManager.getState();
+      if (timeState.temporadaActiva && matchId) {
+        const foundMatch = timeState.temporadaActiva.partidos.find(p => p.id === matchId);
+        
+        if (foundMatch) {
+          setRealMatch(foundMatch);
+          
+          // Find teams from simulation
+          const foundHomeTeam = timeState.temporadaActiva.equipos.find(t => t.id === foundMatch.localId);
+          const foundAwayTeam = timeState.temporadaActiva.equipos.find(t => t.id === foundMatch.visitanteId);
+          
+          setHomeTeam(foundHomeTeam || null);
+          setAwayTeam(foundAwayTeam || null);
+          
+          // Convert to MatchDetails format
+          const matchDetails: MatchDetails = {
+            id: foundMatch.id,
+            homeTeam: foundHomeTeam?.name || foundMatch.localId,
+            awayTeam: foundAwayTeam?.name || foundMatch.visitanteId,
+            homeScore: foundMatch.homeScore || 0,
+            awayScore: foundMatch.awayScore || 0,
+            status: foundMatch.status === 'scheduled' ? 'upcoming' : 
+                   foundMatch.status === 'live' ? 'live' : 'finished',
+            minute: foundMatch.currentMinute?.toString(),
+            date: new Date(foundMatch.fecha).toLocaleDateString('es-ES'),
+            time: new Date(foundMatch.fecha).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+            location: foundMatch.venue || 'Campo de Quidditch',
+          };
+          setMatch(matchDetails);
+          
+          // Load prediction data
+          try {
+            const predictionStats = await predictionsService.getMatchPredictionStats(foundMatch.id);
+            setPredictionStats(predictionStats);
+            
+            const userPred = await predictionsService.getUserPrediction(foundMatch.id);
+            setUserPrediction(userPred);
+          } catch (error) {
+            console.warn('Failed to load prediction data:', error);
+            setPredictionStats(null);
+            setUserPrediction(null);
+          }
+          
+          // Set default tab
+          if (foundMatch.status === 'scheduled') {
+            setActiveTab('predictions');
+          } else {
+            setActiveTab('overview');
+          }
+          
+          // Check if match is live
+          if (foundMatch.status === 'live') {
+            const liveState = virtualTimeManager.getEstadoPartidoEnVivo(foundMatch.id);
+            if (liveState) {
+              setShowLiveSimulation(true);
+            }
+          }
+          
+          // Get related matches
+          const upcomingMatches = timeState.temporadaActiva.partidos
+            .filter(p => p.status === 'scheduled' && p.id !== foundMatch.id)
+            .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
+            .slice(0, 2);
+          setRelatedMatches(upcomingMatches);
+        }
+      }
+    };
+
+    loadMatchFromBackend();
   }, [matchId, predictionsService]);
 
-  // Check if we have saved finished match data
-  useEffect(() => {
-    if (matchId && match && match.status === 'finished') {
-      const savedData = predictionsService.getFinishedMatchData(matchId);
-      if (savedData) {
-        setFinishedMatchData(savedData);
-      } else if (realMatch) {
-        // Save current match data for future reference
-        const timelineEvents = [
-          { minute: 0, event: 'Inicio del partido', score: { home: 0, away: 0 } },
-          { minute: 45, event: 'Final del primer tiempo', score: { home: Math.floor(realMatch.homeScore! / 2), away: Math.floor(realMatch.awayScore! / 2) } },
-          { minute: 90, event: 'Final del partido', score: { home: realMatch.homeScore!, away: realMatch.awayScore! } }
-        ];
-
-        const winner: 'home' | 'away' | 'draw' = 
-          realMatch.homeScore! > realMatch.awayScore! ? 'home' :
-          realMatch.awayScore! > realMatch.homeScore! ? 'away' : 'draw';
-
-        const matchData: FinishedMatchData = {
-          matchId: realMatch.id,
-          finalScore: {
-            home: realMatch.homeScore!,
-            away: realMatch.awayScore!
-          },
-          winner,
-          timeline: timelineEvents,
-          predictions: predictionStats!,
-          finishedAt: new Date()
-        };
-
-        predictionsService.saveFinishedMatchData(matchData);
-        setFinishedMatchData(matchData);
-      }
-    }  }, [matchId, match, realMatch, predictionStats, predictionsService]);
-  
   // Listen for prediction updates when matches finish
-  useEffect(() => {    const handlePredictionsUpdate = (event: CustomEvent) => {
+  useEffect(() => {
+    const handlePredictionsUpdate = async (event: CustomEvent) => {
       console.log(`🎪 PREDICTIONS UPDATE EVENT RECEIVED:`, event.detail);
       const { matchId: updatedMatchId, result } = event.detail;
       
@@ -376,29 +347,27 @@ const MatchDetailPage = () => {
         console.log(`🔮 Processing predictions update for match ${matchId}, result: ${result}`);
         
         // Refresh user prediction to get updated isCorrect status
-        const updatedPrediction = predictionsService.getUserPrediction(matchId);
-        console.log(`📊 Updated prediction from service:`, updatedPrediction);
-        setUserPrediction(updatedPrediction);
-        
-        // Refresh prediction stats
-        const updatedStats = predictionsService.getMatchPredictionStats(matchId);
-        setPredictionStats(updatedStats);
-        
-        console.log(`🔄 About to reload page in 1 second...`);
-        // Force component re-render to show updated results
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
+        try {
+          const updatedPrediction = await predictionsService.getUserPrediction(matchId);
+          console.log(`📊 Updated prediction from service:`, updatedPrediction);
+          setUserPrediction(updatedPrediction);
+          
+          // Refresh prediction stats
+          const updatedStats = await predictionsService.getMatchPredictionStats(matchId);
+          setPredictionStats(updatedStats);
+        } catch (error) {
+          console.warn('Failed to refresh prediction data:', error);
+        }
       } else {
         console.log(`⚠️ Event is for different match: ${updatedMatchId} vs current ${matchId}`);
       }
     };
 
     if (typeof window !== 'undefined') {
-      window.addEventListener('predictionsUpdated', handlePredictionsUpdate as EventListener);
+      window.addEventListener('predictionsUpdated', handlePredictionsUpdate as unknown as EventListener);
       
       return () => {
-        window.removeEventListener('predictionsUpdated', handlePredictionsUpdate as EventListener);
+        window.removeEventListener('predictionsUpdated', handlePredictionsUpdate as unknown as EventListener);
       };
     }
   }, [matchId, predictionsService]);
@@ -419,11 +388,14 @@ const MatchDetailPage = () => {
     
     setIsPredicting(true);
     try {
-      const prediction = predictionsService.createPrediction(match.id, winner);
-      setUserPrediction(prediction);
+      await predictionsService.submitPrediction(match.id, winner, 3);
+      
       // Update prediction stats
-      const updatedStats = predictionsService.getMatchPredictionStats(match.id);
+      const updatedStats = await predictionsService.getMatchPredictionStats(match.id);
       setPredictionStats(updatedStats);
+      
+      const userPred = await predictionsService.getUserPrediction(match.id);
+      setUserPrediction(userPred);
     } catch (error) {
       console.error('Error creating prediction:', error);
     } finally {
@@ -483,7 +455,7 @@ const MatchDetailPage = () => {
   // Get available tabs based on match status and user permissions
   const availableTabs = getTabsForMatch().filter(tab => {
     if (tab.id === 'betting' && !canBet()) return false;
-    if (tab.id === 'detailed-analysis' && (!hasDetailedResults || match?.status !== 'finished')) return false;
+    if (tab.id === 'detailed-analysis' && match?.status !== 'finished') return false;
     return true;
   });
 
@@ -594,12 +566,9 @@ const MatchDetailPage = () => {
             <TeamLogo teamName={match.homeTeam} size="xl" className={styles.teamLogo} />
             <h2 className={styles.teamName}>{match.homeTeam}</h2>
             <div className={styles.teamScore}>{match.homeScore}</div>
-            {detailedMatchResult && match.status === 'finished' && (
+            {match.status === 'finished' && (
               <div className={styles.scoreBreakdown}>
-                <small>Quaffle: {detailedMatchResult.statistics.quaffleGoals.home * 10}pts</small>
-                {detailedMatchResult.statistics.snitchPoints.home > 0 && (
-                  <small>Snitch: {detailedMatchResult.statistics.snitchPoints.home}pts</small>
-                )}
+                <small>Partido finalizado</small>
               </div>
             )}
           </div>
@@ -619,11 +588,6 @@ const MatchDetailPage = () => {
                 <div className={styles.finalIndicator}>
                   <span className={styles.finalIcon}>🏁</span>
                   Final
-                  {detailedMatchResult && (
-                    <div className={styles.detailedIndicator}>
-                      <small>Duración: {detailedMatchResult.matchDuration}min</small>
-                    </div>
-                  )}
                 </div>
               )}
               {match.status === 'upcoming' && (
@@ -638,12 +602,9 @@ const MatchDetailPage = () => {
             <TeamLogo teamName={match.awayTeam} size="xl" className={styles.teamLogo} />
             <h2 className={styles.teamName}>{match.awayTeam}</h2>
             <div className={styles.teamScore}>{match.awayScore}</div>
-            {detailedMatchResult && match.status === 'finished' && (
+            {match.status === 'finished' && (
               <div className={styles.scoreBreakdown}>
-                <small>Quaffle: {detailedMatchResult.statistics.quaffleGoals.away * 10}pts</small>
-                {detailedMatchResult.statistics.snitchPoints.away > 0 && (
-                  <small>Snitch: {detailedMatchResult.statistics.snitchPoints.away}pts</small>
-                )}
+                <small>Partido finalizado</small>
               </div>
             )}
           </div>
@@ -693,7 +654,7 @@ const MatchDetailPage = () => {
             showLiveSimulation={showLiveSimulation}
             isStartingMatch={isStartingMatch}
             userPrediction={userPrediction}
-            finishedMatchData={finishedMatchData}
+            finishedMatchData={null}
             onStartMatch={handleStartMatch}
             onMatchEnd={(endedMatchState) => {
               console.log('Match ended:', endedMatchState);
@@ -744,7 +705,7 @@ const MatchDetailPage = () => {
         {activeTab === 'detailed-analysis' && (
           <MatchDetailedAnalysis
             match={match}
-            hasDetailedResults={hasDetailedResults}
+            hasDetailedResults={false}
           />
         )}
       </main>
