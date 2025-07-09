@@ -75,15 +75,45 @@ const BettingPage: React.FC = () => {
     const timeState = virtualTimeManager.getState();
     if (timeState.temporadaActiva) {
       setSeason(timeState.temporadaActiva);
-        // Get only NON-FINISHED matches that can be bet on (scheduled, live, or upcoming)
-      // Filter out any matches that are completed or finished
-      const bettableMatches = timeState.temporadaActiva.partidos
+      
+      // Get current date for filtering - use virtual time manager instead of real time
+      const today = virtualTimeManager.getFechaVirtualActual();
+      const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      
+      // Filter matches: only live, today, or the 5 closest upcoming matches
+      let bettableMatches = timeState.temporadaActiva.partidos
         .filter(match => {
-          // Only allow betting on matches that are NOT finished
-          const allowedStatuses = ['scheduled', 'live', 'upcoming'];
-          const isNotFinished = !['finished', 'completed', 'ended'].includes(match.status);
-          return allowedStatuses.includes(match.status) || isNotFinished;
+          // Exclude finished matches
+          if (['finished', 'completed', 'ended'].includes(match.status)) {
+            return false;
+          }
+          
+          // Always include live matches
+          if (match.status === 'live') {
+            return true;
+          }
+          
+          // Include matches from today onwards
+          const matchDate = new Date(match.fecha);
+          return matchDate >= startOfToday;
+        });
+
+      // Sort upcoming matches by date to get the closest ones first
+      const upcomingMatches = bettableMatches
+        .filter(match => match.status !== 'live')
+        .sort((a, b) => {
+          const dateA = new Date(a.fecha);
+          const dateB = new Date(b.fecha);
+          return dateA.getTime() - dateB.getTime();
         })
+        .slice(0, 5); // Limit to 5 closest upcoming matches
+
+      // Combine live matches with the 5 closest upcoming matches
+      const liveMatches = bettableMatches.filter(match => match.status === 'live');
+      bettableMatches = [...liveMatches, ...upcomingMatches];
+
+      // Transform matches to BettingMatch format
+      const formattedMatches = bettableMatches
         .map((match: Match) => {
           const homeTeam = timeState.temporadaActiva!.equipos.find(t => t.id === match.localId);
           const awayTeam = timeState.temporadaActiva!.equipos.find(t => t.id === match.visitanteId);
@@ -103,7 +133,7 @@ const BettingPage: React.FC = () => {
           } as BettingMatch;
         });
       
-      setMatches(bettableMatches);
+      setMatches(formattedMatches);
     } else {      // Fallback to mock data
       const mockAsBettingMatches: BettingMatch[] = mockMatchesForBetting.map(mock => ({
         ...mock,
