@@ -94,9 +94,6 @@ const MatchOverview: React.FC<MatchOverviewProps> = ({
                         <span className={styles.liveDot}></span>
                         EN VIVO
                       </div>
-                      <div className={styles.currentMinute}>
-                        Minuto: {realMatch.currentMinute || 0}'
-                      </div>
                     </div>
                     
                     <LiveMatchViewer 
