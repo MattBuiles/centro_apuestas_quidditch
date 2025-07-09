@@ -137,7 +137,7 @@ export class MatchResultsService {
     awayTeam: Team
   ): DetailedMatchResult {
     const events = matchState.eventos || [];
-    const minuteByMinute = this.createMinuteByMinuteChronology(events, matchState);
+    const minuteByMinute = this.createMinuteByMinuteChronology(events, matchState, homeTeam, awayTeam);
     const keyMoments = this.identifyKeyMoments(events, homeTeam, awayTeam);
     const statistics = this.calculateMatchStatistics(events, homeTeam, awayTeam, matchState);
 
@@ -179,7 +179,7 @@ export class MatchResultsService {
   /**
    * Creates minute-by-minute chronology
    */
-  private createMinuteByMinuteChronology(events: GameEvent[], matchState: MatchState): MinuteEvent[] {
+  private createMinuteByMinuteChronology(events: GameEvent[], matchState: MatchState, homeTeam: Team, awayTeam: Team): MinuteEvent[] {
     const minuteEvents: Map<number, MinuteEvent> = new Map();
     
     let currentHomeScore = 0;
@@ -206,9 +206,9 @@ export class MatchResultsService {
         
         // Update scores
         if (event.points && event.points > 0) {
-          if (event.teamId === matchState.matchId.split('-')[0]) {
+          if (event.teamId === homeTeam.id) {
             currentHomeScore += event.points;
-          } else {
+          } else if (event.teamId === awayTeam.id) {
             currentAwayScore += event.points;
           }
           
