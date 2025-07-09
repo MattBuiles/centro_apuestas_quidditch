@@ -240,6 +240,7 @@ export class VirtualTimeManager {
   }
   /**
    * Avanza hasta el próximo partido y lo pone en estado "live" listo para simular
+   * Si ya hay un partido en vivo, lo finaliza primero
    */
   async avanzarHastaProximoPartidoEnVivo(): Promise<{
     nuevaFecha: Date;
@@ -251,9 +252,26 @@ export class VirtualTimeManager {
     }
 
     const fechaAnterior = new Date(this.state.fechaVirtualActual);
+    
+    // Verificar si hay un partido en vivo y finalizarlo
+    const partidoEnVivoActual = this.state.temporadaActiva.partidos.find(partido => 
+      partido.status === 'live'
+    );
+    
+    if (partidoEnVivoActual) {
+      // Finalizar el partido en vivo actual
+      console.log(`🔴 Finalizando partido en vivo: ${partidoEnVivoActual.homeTeamId} vs ${partidoEnVivoActual.awayTeamId}`);
+      
+      // Simular hasta el final del partido
+      this.finalizarPartidoEnVivo(partidoEnVivoActual.id);
+      
+      // Marcar como simulado
+      this.state.partidosSimulados.add(partidoEnVivoActual.id);
+    }
+
     const nuevaFecha = this.calcularFechaProximoPartido();
 
-    // Obtear partido que debe ponerse en vivo
+    // Obtener partido que debe ponerse en vivo
     const proximoPartido = this.state.temporadaActiva.partidos.find(partido => {
       const fechaPartido = new Date(partido.fecha);
       return fechaPartido.getTime() === nuevaFecha.getTime() && 
@@ -261,7 +279,7 @@ export class VirtualTimeManager {
              partido.status === 'scheduled';
     });
 
-    // Simular partidos anteriores si los hay
+    // Simular partidos anteriores si los hay (excluyendo el próximo partido)
     const partidosParaSimular = this.obtenerPartidosPendientes(fechaAnterior, nuevaFecha);
     const partidosSimulados = partidosParaSimular.filter(p => p.id !== proximoPartido?.id);
     
@@ -277,6 +295,8 @@ export class VirtualTimeManager {
       proximoPartido.homeScore = 0;
       proximoPartido.awayScore = 0;
       proximoPartido.events = [];
+      
+      console.log(`🔴 Nuevo partido en vivo: ${proximoPartido.homeTeamId} vs ${proximoPartido.awayTeamId}`);
     }
 
     this.saveState();
@@ -284,7 +304,7 @@ export class VirtualTimeManager {
     return {
       nuevaFecha,
       partidoEnVivo: proximoPartido || null,
-      partidosSimulados
+      partidosSimulados: partidoEnVivoActual ? [...partidosSimulados, partidoEnVivoActual] : partidosSimulados
     };
   }
   getPartidosProximos(limite: number = 5): Match[] {
@@ -358,19 +378,45 @@ export class VirtualTimeManager {
    * Finaliza un partido que estaba en estado live y lo marca como terminado
    */
   finalizarPartidoEnVivo(partidoId: string): void {
-    const estado = this.state.partidosEnVivo.get(partidoId);
-    if (!estado || !this.state.temporadaActiva) return;
+    if (!this.state.temporadaActiva) return;
 
     const partido = this.state.temporadaActiva.partidos.find(p => p.id === partidoId);
-    if (!partido) return;
+    if (!partido || partido.status !== 'live') return;
 
-    // Actualizar partido con resultados finales
-    partido.status = 'finished';
-    partido.homeScore = estado.golesLocal;
-    partido.awayScore = estado.golesVisitante;
-    partido.events = estado.eventos;
-    partido.currentMinute = estado.minuto;
-    partido.snitchCaught = estado.snitchCaught;    // Resolve bets and predictions for the finished match
+    let estado = this.state.partidosEnVivo.get(partidoId);
+    
+    // Si no hay estado en vivo (partido marcado como live pero no simulado activamente),
+    // simular el partido completo antes de finalizarlo
+    if (!estado) {
+      console.log(`⚡ Partido ${partidoId} está en 'live' pero sin simulación activa. Simulando completo...`);
+      
+      // Obtener los equipos de la temporada activa
+      const equipoLocal = this.state.temporadaActiva.teams.find(e => e.id === partido.homeTeamId);
+      const equipoVisitante = this.state.temporadaActiva.teams.find(e => e.id === partido.awayTeamId);
+      
+      if (equipoLocal && equipoVisitante) {
+        const resultado = quidditchSimulator.simulateMatch(equipoLocal, equipoVisitante, partidoId);
+        
+        // Actualizar partido con resultados de la simulación
+        partido.homeScore = resultado.homeScore;
+        partido.awayScore = resultado.awayScore;
+        partido.events = resultado.events;
+        partido.currentMinute = resultado.duration;
+        partido.snitchCaught = resultado.snitchCaught;
+        partido.status = 'finished';
+      } else {
+        console.error(`❌ No se pudieron encontrar los equipos para el partido ${partidoId}`);
+        return;
+      }
+    } else {
+      // Actualizar partido con resultados finales del estado en vivo
+      partido.status = 'finished';
+      partido.homeScore = estado.golesLocal;
+      partido.awayScore = estado.golesVisitante;
+      partido.events = estado.eventos;
+      partido.currentMinute = estado.minuto;
+      partido.snitchCaught = estado.snitchCaught;
+    }    // Resolve bets and predictions for the finished match
     console.log(`💰 Match ${partidoId} finished, resolving bets and predictions...`);      // Determine match result for predictions
     const actualResult: 'home' | 'away' | 'draw' = 
       partido.homeScore! > partido.awayScore! ? 'home' :
