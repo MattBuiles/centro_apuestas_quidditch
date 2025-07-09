@@ -17,7 +17,6 @@ const UserIcon = () => <span className={styles.icon}>👤</span>;
 const WalletIcon = () => <span className={styles.icon}>💰</span>;
 const BetIcon = () => <span className={styles.icon}>🎯</span>;
 const HistoryIcon = () => <span className={styles.icon}>📊</span>;
-const SettingsIcon = () => <span className={styles.icon}>⚙️</span>;
 const TrophyIcon = () => <span className={styles.icon}>🏆</span>;
 
 // Define sub-components for each account section
@@ -778,92 +777,6 @@ const BetsSection = () => {
     );
 };
 
-const SettingsSection = () => {
-    const [notifications, setNotifications] = useState({
-        matchReminders: true,
-        betResults: true,
-        promotions: false
-    });
-
-    return (
-        <div className={styles.sectionContent}>
-            <h2 className={styles.sectionTitle}>
-                <SettingsIcon />
-                Configuración Mágica
-            </h2>
-
-            <div className={styles.settingsGrid}>
-                <Card className={styles.card}>
-                    <h3 className={styles.cardTitle}>Notificaciones</h3>
-                    <div className={styles.settingsGroup}>
-                        <div className={styles.settingItem}>
-                            <label className={styles.settingLabel}>Recordatorios de partidos</label>                            <input
-                                type="checkbox"
-                                checked={notifications.matchReminders}
-                                onChange={(e) => setNotifications({
-                                    ...notifications,
-                                    matchReminders: e.target.checked
-                                })}
-                                className={styles.checkbox}
-                            />
-                        </div>
-                        <div className={styles.settingItem}>
-                            <label className={styles.settingLabel}>Resultados de apuestas</label>
-                            <input
-                                type="checkbox"
-                                checked={notifications.betResults}
-                                onChange={(e) => setNotifications({
-                                    ...notifications,
-                                    betResults: e.target.checked
-                                })}
-                                className={styles.checkbox}
-                            />
-                        </div>
-                        <div className={styles.settingItem}>
-                            <label className={styles.settingLabel}>Promociones especiales</label>
-                            <input
-                                type="checkbox"
-                                checked={notifications.promotions}
-                                onChange={(e) => setNotifications({
-                                    ...notifications,
-                                    promotions: e.target.checked
-                                })}
-                                className={styles.checkbox}
-                            />
-                        </div>
-                    </div>
-                </Card>
-
-                <Card className={styles.card}>
-                    <h3 className={styles.cardTitle}>Preferencias</h3>
-                    <div className={styles.settingsGroup}>
-                        <div className={styles.formGroup}>
-                            <label className={styles.formLabel}>Tema</label>
-                            <select className={styles.select}>
-                                <option>Modo Claro</option>
-                                <option>Modo Oscuro</option>
-                                <option>Automático</option>
-                            </select>
-                        </div>
-                        <div className={styles.formGroup}>
-                            <label className={styles.formLabel}>Idioma</label>
-                            <select className={styles.select}>
-                                <option>Español</option>
-                                <option>English</option>
-                                <option>Français</option>
-                            </select>
-                        </div>
-                    </div>
-                </Card>
-            </div>
-
-            <div className={styles.saveButtonContainer}>
-                <Button>Guardar Configuración</Button>
-            </div>
-        </div>
-    );
-};
-
 
 const AccountPage = () => {
   const { user, logout } = useAuth();
@@ -1052,7 +965,6 @@ const RegularAccountPage = ({ user, logout }: { user: any; logout: () => void })
     const path = location.pathname;
     if (path === '/account/wallet') return 'wallet';
     if (path === '/account/bets') return 'bets';
-    if (path === '/account/settings') return 'settings';
     if (path === '/account' || path === '/account/') return 'profile';
     return 'profile';
   };
@@ -1062,8 +974,7 @@ const RegularAccountPage = ({ user, logout }: { user: any; logout: () => void })
   const navItems = [
     { path: '/account', label: 'Mi Perfil', icon: <UserIcon />, tab: 'profile' },
     { path: '/account/wallet', label: 'Monedero', icon: <WalletIcon />, tab: 'wallet' },
-    { path: '/account/bets', label: 'Mis Apuestas', icon: <BetIcon />, tab: 'bets' },
-    { path: '/account/settings', label: 'Configuración', icon: <SettingsIcon />, tab: 'settings' }
+    { path: '/account/bets', label: 'Mis Apuestas', icon: <BetIcon />, tab: 'bets' }
   ];
 
   return (
@@ -1114,7 +1025,6 @@ const RegularAccountPage = ({ user, logout }: { user: any; logout: () => void })
             <Route index element={<ProfileSection />} />
             <Route path="wallet" element={<WalletSection />} />
             <Route path="bets" element={<BetsSection />} />
-            <Route path="settings" element={<SettingsSection />} />
             <Route path="*" element={<Navigate to="/account" replace />} />
           </Routes>          <Outlet />
         </main>
