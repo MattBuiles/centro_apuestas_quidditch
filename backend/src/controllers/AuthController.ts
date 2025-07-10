@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { Database } from '../database/Database';
 import { User, UserPublic, ApiResponse, AuthTokens, LoginRequest, RegisterRequest } from '../types';
@@ -20,32 +20,40 @@ export class AuthController {
       ) as User | undefined;
 
       if (!user) {
-        return res.status(401).json({
+        res.status(401).json({
           success: false,
           error: 'Invalid credentials',
           timestamp: new Date().toISOString()
         });
+        return;
       }
 
       // Verify password
       const isValidPassword = await bcrypt.compare(password, user.password);
       if (!isValidPassword) {
-        return res.status(401).json({
+        res.status(401).json({
           success: false,
           error: 'Invalid credentials',
           timestamp: new Date().toISOString()
         });
+        return;
       }
 
       // Generate JWT token
+      const jwtSecret = process.env.JWT_SECRET;
+      if (!jwtSecret) {
+        throw new Error('JWT_SECRET environment variable is not set');
+      }
+      
       const token = jwt.sign(
         { userId: user.id, email: user.email, role: user.role },
-        process.env.JWT_SECRET!,
-        { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+        jwtSecret,
+        { expiresIn: process.env.JWT_EXPIRES_IN || '7d' } as jwt.SignOptions
       );
 
       // Remove password from user object
-      const { password: _, ...userWithoutPassword } = user;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password: _password, ...userWithoutPassword } = user;
 
       res.json({
         success: true,
@@ -68,7 +76,7 @@ export class AuthController {
     }
   };
 
-  public register = async (req: Request<{}, ApiResponse<{ user: UserPublic; tokens: AuthTokens }>, RegisterRequest>, res: Response) => {
+  public register = async (req: Request, res: Response): Promise<void> => {
     try {
       const { username, email, password } = req.body;
 
@@ -79,11 +87,12 @@ export class AuthController {
       );
 
       if (existingUser) {
-        return res.status(409).json({
+        res.status(409).json({
           success: false,
           error: 'User already exists with this email or username',
           timestamp: new Date().toISOString()
         });
+        return;
       }
 
       // Hash password
@@ -104,14 +113,20 @@ export class AuthController {
       ) as User;
 
       // Generate JWT token
+      const jwtSecret = process.env.JWT_SECRET;
+      if (!jwtSecret) {
+        throw new Error('JWT_SECRET environment variable is not set');
+      }
+      
       const token = jwt.sign(
         { userId: newUser.id, email: newUser.email, role: newUser.role },
-        process.env.JWT_SECRET!,
-        { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+        jwtSecret,
+        { expiresIn: process.env.JWT_EXPIRES_IN || '7d' } as jwt.SignOptions
       );
 
       // Remove password from user object
-      const { password: _, ...userWithoutPassword } = newUser;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password: _password, ...userWithoutPassword } = newUser;
 
       res.status(201).json({
         success: true,
@@ -143,14 +158,15 @@ export class AuthController {
     });
   };
 
-  public getProfile = async (req: AuthenticatedRequest, res: Response<ApiResponse<UserPublic>>) => {
+  public getProfile = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
       if (!req.user) {
-        return res.status(401).json({
+        res.status(401).json({
           success: false,
           error: 'Not authenticated',
           timestamp: new Date().toISOString()
         });
+        return;
       }
 
       const user = await this.db.get(
@@ -159,11 +175,12 @@ export class AuthController {
       ) as UserPublic;
 
       if (!user) {
-        return res.status(404).json({
+        res.status(404).json({
           success: false,
           error: 'User not found',
           timestamp: new Date().toISOString()
         });
+        return;
       }
 
       res.json({
