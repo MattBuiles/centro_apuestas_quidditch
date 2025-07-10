@@ -12,6 +12,7 @@ import { errorHandler } from './middleware/errorHandler';
 import { notFound } from './middleware/notFound';
 import { Database } from './database/Database';
 import { WebSocketService } from './services/WebSocketService';
+import { VirtualTimeService } from './services/VirtualTimeService';
 
 // Routes
 import authRoutes from './routes/auth';
@@ -97,7 +98,13 @@ async function startServer() {
     // Initialize WebSocket server
     const wsPort = parseInt(process.env.WS_PORT || '3002');
     const wss = new WebSocketServer({ port: wsPort });
-    const wsService = new WebSocketService(wss);
+    
+    // Initialize VirtualTimeService
+    const virtualTimeService = new VirtualTimeService();
+    await virtualTimeService.initialize();
+    
+    // Initialize WebSocketService with VirtualTimeService
+    new WebSocketService(wss, virtualTimeService);
     console.log(`🔌 WebSocket server running on port ${wsPort}`);
 
     // Graceful shutdown

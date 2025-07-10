@@ -224,6 +224,17 @@ export class Database {
       CREATE INDEX IF NOT EXISTS idx_predictions_match ON predictions(match_id);
       CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
       CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+
+      -- Virtual time state table
+      CREATE TABLE IF NOT EXISTS virtual_time_state (
+        id TEXT PRIMARY KEY,
+        current_date DATETIME NOT NULL,
+        active_season_id TEXT,
+        time_speed TEXT CHECK(time_speed IN ('slow', 'medium', 'fast')) DEFAULT 'medium',
+        auto_mode BOOLEAN DEFAULT FALSE,
+        last_update DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (active_season_id) REFERENCES seasons(id)
+      );
     `;
 
     const exec = promisify(this.db.exec.bind(this.db));

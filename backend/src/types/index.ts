@@ -188,7 +188,7 @@ export interface RegisterRequest {
 }
 
 export interface WebSocketMessage {
-  type: 'match_update' | 'bet_update' | 'prediction_update' | 'standings_update' | 'connection' | 'ping' | 'pong';
+  type: 'match_update' | 'bet_update' | 'prediction_update' | 'standings_update' | 'connection' | 'ping' | 'pong' | 'time_update' | 'subscribe' | 'get_time_state' | 'advance_time' | 'simulate_match';
   data: unknown;
   timestamp: string;
 }
@@ -200,6 +200,64 @@ export interface MatchLiveUpdate {
   awayScore: number;
   events: MatchEvent[];
   status: Match['status'];
+}
+
+export interface MatchResult {
+  matchId: string;
+  homeScore: number;
+  awayScore: number;
+  duration: number;
+  snitchCaught: boolean;
+  snitchCaughtBy: string | null;
+  events: MatchEvent[];
+  weather: string;
+  attendance: number;
+}
+
+export interface DatabaseRow {
+  [key: string]: string | number | boolean | null | undefined;
+}
+
+export interface TeamRow {
+  id: string;
+  name: string;
+  logo?: string;
+  founded?: number;
+  description?: string;
+  stadium?: string;
+  colors?: string;
+  matches_played?: number;
+  wins?: number;
+  losses?: number;
+  draws?: number;
+  points_for?: number;
+  points_against?: number;
+  snitch_catches?: number;
+  attack_strength?: number;
+  seeker_skill?: number;
+  [key: string]: string | number | boolean | null | undefined;
+}
+
+export interface MatchRow {
+  id: string;
+  season_id: string;
+  home_team_id: string;
+  away_team_id: string;
+  date: string;
+  status: string;
+  home_score?: number;
+  away_score?: number;
+  snitch_caught?: boolean;
+  snitch_caught_by?: string;
+  duration?: number;
+  odds_home_win?: number;
+  odds_away_win?: number;
+  odds_draw?: number;
+  odds_total_over?: number;
+  odds_total_under?: number;
+  odds_snitch_home?: number;
+  odds_snitch_away?: number;
+  [key: string]: string | number | boolean | null | undefined;
 }
 
 export interface AdminStats {
