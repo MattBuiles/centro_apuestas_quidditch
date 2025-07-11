@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { leagueTimeService, LeagueTimeInfo } from '@/services/leagueTimeService';
 import { FEATURES } from '@/config/features';
 import { Match } from '@/types/league';
+import { useAuth } from '@/context/AuthContext';
 import Button from '@/components/common/Button';
 import styles from './LeagueTimeControl.module.css';
 
@@ -18,17 +19,15 @@ const LeagueTimeControl: React.FC<VirtualTimeControlProps> = ({
   onTimeAdvanced,
   onSeasonReset
 }) => {
+  const { isBackendAuthenticated } = useAuth();
   const [leagueTimeInfo, setLeagueTimeInfo] = useState<LeagueTimeInfo | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isAdvancing, setIsAdvancing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadLeagueTimeInfo();
-  }, []);
-
   const loadLeagueTimeInfo = async () => {
-    if (!FEATURES.USE_BACKEND_LEAGUE_TIME) {
+    if (!FEATURES.USE_BACKEND_LEAGUE_TIME || !isBackendAuthenticated) {
+      setError('Backend de tiempo de liga no disponible. Usando modo local.');
       return;
     }
 
@@ -45,7 +44,35 @@ const LeagueTimeControl: React.FC<VirtualTimeControlProps> = ({
     }
   };
 
+  useEffect(() => {
+    const loadData = async () => {
+      if (!FEATURES.USE_BACKEND_LEAGUE_TIME || !isBackendAuthenticated) {
+        setError('Backend de tiempo de liga no disponible. Usando modo local.');
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+      try {
+        const info = await leagueTimeService.getLeagueTimeInfo();
+        setLeagueTimeInfo(info);
+      } catch (error) {
+        console.error('Error loading league time info:', error);
+        setError('Error cargando información del tiempo de liga');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, [isBackendAuthenticated]);
+
   const handleAdvanceOneDay = async () => {
+    if (!FEATURES.USE_BACKEND_LEAGUE_TIME || !isBackendAuthenticated) {
+      setError('Backend de tiempo de liga no disponible. Funcionalidad deshabilitada.');
+      return;
+    }
+
     setIsAdvancing(true);
     setError(null);
     try {
@@ -72,6 +99,11 @@ const LeagueTimeControl: React.FC<VirtualTimeControlProps> = ({
   };
 
   const handleAdvanceOneWeek = async () => {
+    if (!FEATURES.USE_BACKEND_LEAGUE_TIME || !isBackendAuthenticated) {
+      setError('Backend de tiempo de liga no disponible. Funcionalidad deshabilitada.');
+      return;
+    }
+
     setIsAdvancing(true);
     setError(null);
     try {
@@ -98,6 +130,11 @@ const LeagueTimeControl: React.FC<VirtualTimeControlProps> = ({
   };
 
   const handleAdvanceToNextMatch = async () => {
+    if (!FEATURES.USE_BACKEND_LEAGUE_TIME || !isBackendAuthenticated) {
+      setError('Backend de tiempo de liga no disponible. Funcionalidad deshabilitada.');
+      return;
+    }
+
     setIsAdvancing(true);
     setError(null);
     try {
@@ -123,6 +160,11 @@ const LeagueTimeControl: React.FC<VirtualTimeControlProps> = ({
   };
 
   const handleGenerateNewSeason = async () => {
+    if (!FEATURES.USE_BACKEND_LEAGUE_TIME || !isBackendAuthenticated) {
+      setError('Backend de tiempo de liga no disponible. Funcionalidad deshabilitada.');
+      return;
+    }
+
     setIsAdvancing(true);
     setError(null);
     try {
@@ -157,6 +199,16 @@ const LeagueTimeControl: React.FC<VirtualTimeControlProps> = ({
       <div className={styles.container}>
         <div className={styles.notice}>
           ⚠️ Control de tiempo de liga no está habilitado
+        </div>
+      </div>
+    );
+  }
+
+  if (!isBackendAuthenticated) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.notice}>
+          ⚠️ Autenticación con backend requerida para el control de tiempo de liga
         </div>
       </div>
     );

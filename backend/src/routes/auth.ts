@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { AuthController } from '../controllers/AuthController';
 import { validateRequest } from '../middleware/validation';
+import { authenticate } from '../middleware/auth';
 import { body } from 'express-validator';
 
 const router = Router();
@@ -22,6 +23,6 @@ const registerValidation = [
 router.post('/login', loginValidation, validateRequest, authController.login);
 router.post('/register', registerValidation, validateRequest, authController.register);
 router.post('/refresh', authController.refreshToken);
-router.get('/me', authController.getProfile);
+router.get('/me', authenticate, authController.getProfile);
 
 export default router;
