@@ -22,13 +22,14 @@ import seasonsRoutes from './routes/seasons';
 import betsRoutes from './routes/bets';
 import predictionsRoutes from './routes/predictions';
 import adminRoutes from './routes/admin';
+import virtualTimeRoutes from './routes/virtual-time';
+import leagueTimeRoutes from './routes/league-time';
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-const WS_PORT = process.env.WS_PORT || 3002;
 
 // Create HTTP server for WebSocket
 const server = createServer(app);
@@ -64,6 +65,37 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Extended health check with league time information
+app.get('/health/extended', async (req, res) => {
+  try {
+    const { LeagueTimeService } = await import('./services/LeagueTimeService');
+    const leagueTimeService = new LeagueTimeService();
+    await leagueTimeService.initialize();
+    const leagueTimeInfo = await leagueTimeService.getLeagueTimeInfo();
+    
+    res.status(200).json({
+      status: 'OK',
+      timestamp: new Date().toISOString(),
+      service: 'Quidditch Betting API',
+      version: '1.0.0',
+      leagueTime: {
+        currentDate: leagueTimeInfo.currentDate,
+        activeSeason: leagueTimeInfo.activeSeason?.name || 'No active season',
+        timeSpeed: leagueTimeInfo.timeSpeed,
+        autoMode: leagueTimeInfo.autoMode
+      }
+    });
+  } catch {
+    res.status(200).json({
+      status: 'OK',
+      timestamp: new Date().toISOString(),
+      service: 'Quidditch Betting API',
+      version: '1.0.0',
+      leagueTime: 'Error loading league time information'
+    });
+  }
+});
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
@@ -73,6 +105,8 @@ app.use('/api/seasons', seasonsRoutes);
 app.use('/api/bets', betsRoutes);
 app.use('/api/predictions', predictionsRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/virtual-time', virtualTimeRoutes);
+app.use('/api/league-time', leagueTimeRoutes);
 
 // Error handling
 app.use(notFound);

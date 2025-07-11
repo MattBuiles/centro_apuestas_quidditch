@@ -11,4 +11,7 @@ router.get('/', (req, res) => {
   });
 });
 
+// GET /api/seasons/league-time - Get league time information
+router.get('/league-time', seasonController.getLeagueTime);
+
 export default router;
