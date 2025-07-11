@@ -5,7 +5,8 @@ import Card from '@/components/common/Card';
 import { getTeamLogo, getTeamInitial } from '@/assets/teamLogos';
 import { leagueTimeService } from '@/services/leagueTimeService';
 import { standingsCalculator } from '@/services/standingsCalculator';
-import { Season, Team, Match } from '@/types/league';
+import { getTeams } from '@/services/teamsService';
+import { Season } from '@/types/league';
 import { apiClient } from '@/utils/apiClient';
 import { FEATURES } from '@/config/features';
 import styles from './TeamsPage.module.css';
@@ -72,94 +73,131 @@ const TeamsPage: React.FC = () => {  const [teams, setTeams] = useState<TeamData
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
+    console.log('🚀 TeamsPage montado, cargando equipos...');
+    console.log('🔧 FEATURES.USE_BACKEND_LEAGUE_TIME:', FEATURES.USE_BACKEND_LEAGUE_TIME);
     loadTeamsFromSimulation();
   }, []);
 
   const loadTeamsFromSimulation = async () => {
     setIsLoading(true);
+    console.log('🔍 Cargando equipos...');
     
     try {
-      // First try to get teams from backend
-      const response = await apiClient.get('/teams') as { data?: { success?: boolean; data?: unknown[] } };
-      if (response.data?.success && response.data?.data) {
-        const backendTeams = response.data.data.map((team: unknown) => {
-          const teamData = team as Record<string, unknown>;
-          return {
-            id: String(teamData.id || ''),
-            name: String(teamData.name || ''),
-            logoChar: String(teamData.name || '').charAt(0).toUpperCase(),
-            stats: {
-              wins: Number(teamData.wins) || 0,
-              losses: Number(teamData.losses) || 0,
-              draws: Number(teamData.draws) || 0,
-              points: Number(teamData.points) || 0,
-              played: Number(teamData.matches_played) || 0,
-              goalsFor: Number(teamData.goals_for) || 0,
-              goalsAgainst: Number(teamData.goals_against) || 0
-            }
-          };
-        });
+      // First try to get teams from backend API
+      console.log('📡 Intentando cargar desde backend API...');
+      const response = await apiClient.get('/teams');
+      console.log('📋 Respuesta del backend:', response);
+      
+      if (response.success && response.data && Array.isArray(response.data)) {
+        const backendTeams = response.data.map((team: any) => ({
+          id: String(team.id || team._id || ''),
+          name: String(team.name || ''),
+          logoChar: String(team.name || '').charAt(0).toUpperCase(),
+          stats: {
+            wins: Number(team.wins || team.victories || 0),
+            losses: Number(team.losses || team.defeats || 0),
+            draws: Number(team.draws || team.ties || 0),
+            points: Number(team.points || team.totalPoints || 0),
+            played: Number(team.matches_played || team.matchesPlayed || team.played || 0),
+            goalsFor: Number(team.goals_for || team.goalsFor || team.points_for || 0),
+            goalsAgainst: Number(team.goals_against || team.goalsAgainst || team.points_against || 0)
+          }
+        }));
+        
+        console.log('✅ Equipos cargados desde backend:', backendTeams);
         setTeams(backendTeams);
         setIsLoading(false);
         return;
       }
     } catch (error) {
-      console.warn('Failed to load teams from backend, falling back to league time service:', error);
+      console.warn('❌ Error al cargar desde backend, probando con teamsService:', error);
+    }
+
+    // Fallback to teamsService
+    try {
+      console.log('🔄 Intentando con teamsService...');
+      const teamsServiceData = await getTeams();
+      if (teamsServiceData && teamsServiceData.length > 0) {
+        const serviceTeams = teamsServiceData.map((team: any) => ({
+          id: String(team.id || ''),
+          name: String(team.name || ''),
+          logoChar: String(team.name || '').charAt(0).toUpperCase(),
+          stats: {
+            wins: Number(team.wins || 0),
+            losses: Number(team.losses || 0),
+            draws: Number(team.draws || 0),
+            points: Number(team.points || 0),
+            played: Number(team.played || 0),
+            goalsFor: Number(team.goalsFor || 0),
+            goalsAgainst: Number(team.goalsAgainst || 0)
+          }
+        }));
+        
+        console.log('✅ Equipos cargados desde teamsService:', serviceTeams);
+        setTeams(serviceTeams);
+        setIsLoading(false);
+        return;
+      }
+    } catch (serviceError) {
+      console.warn('❌ Error con teamsService:', serviceError);
     }
 
     // Fallback to league time service for team data
     if (FEATURES.USE_BACKEND_LEAGUE_TIME) {
       try {
+        console.log('🔄 Intentando con league time service...');
         const leagueInfo = await leagueTimeService.getLeagueTimeInfo();
-        if (leagueInfo.activeSeason) {
+        if (leagueInfo.activeSeason && leagueInfo.activeSeason.teams) {
           setSeason(leagueInfo.activeSeason);
           
           // Calculate standings to get team stats
           const standings = standingsCalculator.calculateStandings(
-            leagueInfo.activeSeason.teams, // Use 'teams' from backend
-            leagueInfo.activeSeason.matches.filter((match: { status: string }) => match.status === 'finished') // Use 'matches' from backend
-          );      
+            leagueInfo.activeSeason.teams,
+            leagueInfo.activeSeason.matches.filter((match: any) => match.status === 'finished')
+          );
           
           // Convert teams to TeamData format and sort alphabetically
-          const teamsData: TeamData[] = leagueInfo.activeSeason.teams // Use 'teams' from backend
-            .sort((a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name)) // Sort alphabetically by name
-            .map((team: { id: string; name: string }) => {
+          const teamsData: TeamData[] = leagueInfo.activeSeason.teams
+            .sort((a: any, b: any) => a.name.localeCompare(b.name))
+            .map((team: any) => {
               const standing = standings.find(s => s.teamId === team.id);
             
-            return {
-              id: team.id,
-              name: team.name,
-              logoChar: team.name.charAt(0).toUpperCase(),
-              stats: standing ? {
-                wins: standing.wins,
-                losses: standing.losses,
-                draws: standing.draws,
-                points: standing.points,
-                played: standing.matchesPlayed,
-                goalsFor: standing.goalsFor,
-                goalsAgainst: standing.goalsAgainst
-              } : {
-                wins: 0,
-                losses: 0,
-                draws: 0,
-                points: 0,
-                played: 0,
-                goalsFor: 0,
-                goalsAgainst: 0
-              }
-            };
-          });
+              return {
+                id: team.id,
+                name: team.name,
+                logoChar: team.name.charAt(0).toUpperCase(),
+                stats: standing ? {
+                  wins: standing.wins,
+                  losses: standing.losses,
+                  draws: standing.draws,
+                  points: standing.points,
+                  played: standing.matchesPlayed,
+                  goalsFor: standing.goalsFor,
+                  goalsAgainst: standing.goalsAgainst
+                } : {
+                  wins: 0,
+                  losses: 0,
+                  draws: 0,
+                  points: 0,
+                  played: 0,
+                  goalsFor: 0,
+                  goalsAgainst: 0
+                }
+              };
+            });
           
+          console.log('✅ Equipos cargados desde league time service:', teamsData);
           setTeams(teamsData);
           setIsLoading(false);
           return;
         }
       } catch (leagueError) {
-        console.warn('Failed to load teams from league time service:', leagueError);
+        console.warn('❌ Error con league time service:', leagueError);
       }
     }
     
-    // Final fallback to mock data if no backend or league data available
+    // Final fallback to mock data
+    console.log('📋 Usando datos mock como fallback');
     setTeams(mockTeams);
     setIsLoading(false);
   };
@@ -208,8 +246,10 @@ const TeamsPage: React.FC = () => {  const [teams, setTeams] = useState<TeamData
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <Button                size="sm" 
+              <Button 
+                size="sm" 
                 className={styles.searchButton}
+                onClick={() => {}}
                 aria-label="Buscar"
               >
                 🔍
@@ -220,7 +260,8 @@ const TeamsPage: React.FC = () => {  const [teams, setTeams] = useState<TeamData
       </section>
 
       {/* Teams Grid */}
-      <section className={styles.teamsSection}>        <div className={styles.teamsGrid}>
+      <section className={styles.teamsSection}>
+        <div className={styles.teamsGrid}>
           {isLoading ? (
             <div className={styles.loadingState}>
               <h3>⚡ Cargando equipos...</h3>
@@ -231,7 +272,7 @@ const TeamsPage: React.FC = () => {  const [teams, setTeams] = useState<TeamData
               <h3>🏟️ No se encontraron equipos</h3>
               <p>
                 Actualmente no hay equipos disponibles. 
-                {!season && "Inicia una temporada en la página de Partidos para ver los equipos en acción."}
+                {!season && " Inicia una temporada en la página de Partidos para ver los equipos en acción."}
               </p>
               {!season && (
                 <Link to="/matches">
@@ -242,7 +283,8 @@ const TeamsPage: React.FC = () => {  const [teams, setTeams] = useState<TeamData
               )}
             </div>
           ) : filteredTeams.length > 0 ? (
-            filteredTeams.map(team => (<Link 
+            filteredTeams.map(team => (
+              <Link 
                 key={team.id} 
                 to={`/teams/${team.id}`}
                 className={styles.teamCard}
@@ -264,7 +306,9 @@ const TeamsPage: React.FC = () => {  const [teams, setTeams] = useState<TeamData
                     )}
                   </div>
                   <h3 className={styles.teamName}>{team.name}</h3>
-                </div>                {/* Team Card Body */}
+                </div>
+                
+                {/* Team Card Body */}
                 <div className={styles.teamCardBody}>
                   {team.stats && team.stats.played > 0 ? (
                     <div className={styles.teamStats}>
@@ -293,7 +337,8 @@ const TeamsPage: React.FC = () => {  const [teams, setTeams] = useState<TeamData
                   )}
                 </div>
               </Link>
-            ))          ) : (
+            ))
+          ) : (
             <div className={styles.emptyState}>
               <h3>🔍 No se encontraron equipos</h3>
               <p>
