@@ -14,4 +14,7 @@ router.post('/advance', authenticate, leagueTimeController.advanceLeagueTime);
 // POST /api/league-time/generate-season - Generate a new season automatically (requires authentication)
 router.post('/generate-season', authenticate, leagueTimeController.generateSeason);
 
+// POST /api/league-time/reset-database - Reset database for new season (requires authentication)
+router.post('/reset-database', authenticate, leagueTimeController.resetDatabase);
+
 export default router;

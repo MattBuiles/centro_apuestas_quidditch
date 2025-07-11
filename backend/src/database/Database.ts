@@ -825,6 +825,49 @@ export class Database {
     return await this.all(sql, [limit]);
   }
 
+  public async getNextUnplayedMatch(currentVirtualTime: string): Promise<unknown> {
+    const sql = `
+      SELECT 
+        m.*,
+        ht.name as homeTeamName,
+        ht.logo as homeTeamLogo,
+        at.name as awayTeamName,
+        at.logo as awayTeamLogo,
+        s.name as seasonName
+      FROM matches m
+      JOIN teams ht ON m.home_team_id = ht.id
+      JOIN teams at ON m.away_team_id = at.id
+      JOIN seasons s ON m.season_id = s.id
+      WHERE m.status = 'scheduled' 
+        AND (m.home_score IS NULL OR m.away_score IS NULL)
+        AND m.date >= ?
+      ORDER BY m.date ASC
+      LIMIT 1
+    `;
+    return await this.get(sql, [currentVirtualTime]);
+  }
+
+  public async getUnplayedMatchesUntil(targetTime: string): Promise<unknown[]> {
+    const sql = `
+      SELECT 
+        m.*,
+        ht.name as homeTeamName,
+        ht.logo as homeTeamLogo,
+        at.name as awayTeamName,
+        at.logo as awayTeamLogo,
+        s.name as seasonName
+      FROM matches m
+      JOIN teams ht ON m.home_team_id = ht.id
+      JOIN teams at ON m.away_team_id = at.id
+      JOIN seasons s ON m.season_id = s.id
+      WHERE m.status = 'scheduled' 
+        AND (m.home_score IS NULL OR m.away_score IS NULL)
+        AND m.date <= ?
+      ORDER BY m.date ASC
+    `;
+    return await this.all(sql, [targetTime]);
+  }
+
   // ============== SEASONS METHODS ==============
   
   public async getAllSeasons(): Promise<unknown[]> {
@@ -1423,5 +1466,147 @@ export class Database {
       GROUP BY u.id, u.username, u.created_at
     `;
     await this.run(sql);
+  }
+
+  // ============== RESET METHODS ==============
+
+  /**
+   * Reset database for a fresh season - clears matches, events, bets, predictions
+   * but keeps users, teams, and basic configuration
+   */
+  public async resetForNewSeason(): Promise<void> {
+    if (!this.db) throw new Error('Database not connected');
+
+    console.log('🔄 Starting database reset for new season...');
+
+    try {
+      // Disable foreign key constraints first, outside of transaction
+      console.log('⚙️ Disabling foreign key constraints...');
+      await this.run('PRAGMA foreign_keys = OFF');
+
+      // Start transaction
+      await this.run('BEGIN TRANSACTION');
+
+      // Clear all betting data first (no dependencies)
+      console.log('🗑️ Clearing bets...');
+      await this.run('DELETE FROM bets');
+      
+      // Clear all predictions
+      console.log('🗑️ Clearing predictions...');
+      await this.run('DELETE FROM predictions');
+
+      // Clear all match-related data (cascading deletes will handle events)
+      console.log('🗑️ Clearing matches and events...');
+      await this.run('DELETE FROM match_events');
+      await this.run('DELETE FROM matches');
+      
+      // Clear season-related data
+      console.log('🗑️ Clearing seasons and standings...');
+      await this.run('DELETE FROM standings');
+      await this.run('DELETE FROM season_teams');
+      await this.run('DELETE FROM seasons');
+      
+      // Reset team statistics to zero
+      console.log('🔄 Resetting team statistics...');
+      await this.run(`
+        UPDATE teams SET 
+          matches_played = 0,
+          wins = 0,
+          losses = 0,
+          draws = 0,
+          points_for = 0,
+          points_against = 0,
+          snitch_catches = 0,
+          updated_at = CURRENT_TIMESTAMP
+      `);
+
+      // Reset user balances to default
+      console.log('💰 Resetting user balances...');
+      await this.run(`
+        UPDATE users SET 
+          balance = 1000.0,
+          updated_at = CURRENT_TIMESTAMP
+        WHERE role = 'user'
+      `);
+
+      // Clear historical stats (optional - you might want to keep these)
+      console.log('📊 Clearing historical statistics...');
+      await this.run('DELETE FROM historical_team_stats');
+      await this.run('DELETE FROM historical_user_stats');
+
+      // Clear user transactions
+      console.log('� Clearing user transactions...');
+      await this.run('DELETE FROM user_transactions');
+
+      // Clear admin logs  
+      console.log('📋 Clearing admin logs...');
+      await this.run('DELETE FROM admin_logs');
+
+      // Clear virtual time state
+      console.log('⏰ Resetting virtual time state...');
+      await this.run('DELETE FROM virtual_time_state');
+
+      // Commit transaction
+      await this.run('COMMIT');
+
+      // Re-enable foreign key constraints
+      console.log('⚙️ Re-enabling foreign key constraints...');
+      await this.run('PRAGMA foreign_keys = ON');
+
+      console.log('✅ Database reset completed successfully!');
+      console.log('🎯 Ready for new season generation');
+
+    } catch (error) {
+      // Rollback transaction on error
+      await this.run('ROLLBACK');
+      // Re-enable foreign key constraints even on error
+      await this.run('PRAGMA foreign_keys = ON');
+      console.error('❌ Error during database reset:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Complete database reset - removes everything including users and teams
+   * Use with extreme caution!
+   */
+  public async resetCompleteDatabase(): Promise<void> {
+    if (!this.db) throw new Error('Database not connected');
+
+    console.log('⚠️ Starting COMPLETE database reset...');
+
+    try {
+      // Start transaction
+      await this.run('BEGIN TRANSACTION');
+
+      // Get all table names
+      const tables = await this.all(`
+        SELECT name FROM sqlite_master 
+        WHERE type='table' AND name NOT LIKE 'sqlite_%'
+      `) as { name: string }[];
+
+      // Clear all tables
+      for (const table of tables) {
+        console.log(`🗑️ Clearing table: ${table.name}`);
+        await this.run(`DELETE FROM ${table.name}`);
+      }
+
+      // Commit transaction
+      await this.run('COMMIT');
+
+      console.log('✅ Complete database reset completed!');
+      console.log('🏗️ Re-seeding initial data...');
+
+      // Re-seed initial data
+      await this.seedInitialData();
+
+      console.log('✅ Database fully reset and re-seeded!');
+
+    } catch (error) {
+      // Rollback transaction on error
+      await this.run('ROLLBACK');
+      console.error('❌ Error during complete database reset:', error);
+      throw error;
+    }
   }
 }

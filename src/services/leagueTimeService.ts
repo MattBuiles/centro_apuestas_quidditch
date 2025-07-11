@@ -41,8 +41,17 @@ export interface AdvanceTimeResult {
 
 export interface GenerateSeasonResult {
   success: boolean;
-  season: Season;
+  season?: Season;
   message: string;
+}
+
+export interface ResetDatabaseResult {
+  success: boolean;
+  message: string;
+  data?: {
+    resetType: 'complete' | 'season';
+    newSeason?: Season;
+  };
 }
 
 /**
@@ -96,6 +105,82 @@ export class LeagueTimeService {
   }
 
   /**
+   * Advance time to the next unplayed match
+   */
+  async advanceToNextUnplayedMatch(): Promise<AdvanceTimeResult> {
+    if (!FEATURES.USE_BACKEND_LEAGUE_TIME || !isBackendAuthAvailable()) {
+      throw new Error('Backend league time service not available or not authenticated');
+    }
+
+    try {
+      const response = await apiClient.post<AdvanceTimeResult>('/league-time/advance', {
+        toNextMatch: true,
+        simulateMatches: false
+      });
+      
+      if (response.success && response.data) {
+        return response.data;
+      } else {
+        throw new Error(response.message || response.error || 'Failed to advance to next match');
+      }
+    } catch (error) {
+      console.error('Error advancing to next match:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Simulate all matches up to a certain time with complete event simulation
+   */
+  async simulateCompleteMatches(targetTime?: string): Promise<AdvanceTimeResult> {
+    if (!FEATURES.USE_BACKEND_LEAGUE_TIME || !isBackendAuthAvailable()) {
+      throw new Error('Backend league time service not available or not authenticated');
+    }
+
+    try {
+      const response = await apiClient.post<AdvanceTimeResult>('/league-time/advance', {
+        days: 0, // Don't advance time unless specified
+        simulateMatches: true,
+        targetTime: targetTime
+      });
+      
+      if (response.success && response.data) {
+        return response.data;
+      } else {
+        throw new Error(response.message || response.error || 'Failed to simulate matches');
+      }
+    } catch (error) {
+      console.error('Error simulating matches:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Simulate complete season (advance to end and simulate all matches)
+   */
+  async simulateCompleteSeason(): Promise<AdvanceTimeResult> {
+    if (!FEATURES.USE_BACKEND_LEAGUE_TIME || !isBackendAuthAvailable()) {
+      throw new Error('Backend league time service not available or not authenticated');
+    }
+
+    try {
+      const response = await apiClient.post<AdvanceTimeResult>('/league-time/advance', {
+        days: 365, // Advance a full year to ensure all matches are covered
+        simulateMatches: true
+      });
+      
+      if (response.success && response.data) {
+        return response.data;
+      } else {
+        throw new Error(response.message || response.error || 'Failed to simulate complete season');
+      }
+    } catch (error) {
+      console.error('Error simulating complete season:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Generate a new season automatically
    */
   async generateNewSeason(): Promise<GenerateSeasonResult> {
@@ -104,10 +189,15 @@ export class LeagueTimeService {
     }
 
     try {
-      const response = await apiClient.post<GenerateSeasonResult>('/league-time/generate-season', {});
+      const response = await apiClient.post<Season>('/league-time/generate-season', {});
       
-      if (response.success && response.data) {
-        return response.data;
+      if (response.success) {
+        // Return the response with proper structure
+        return {
+          success: response.data ? true : false,
+          season: response.data,
+          message: response.message || (response.data ? 'Season generated successfully' : 'No new season needed at this time')
+        };
       } else {
         throw new Error(response.message || response.error || 'Failed to generate season');
       }
@@ -175,6 +265,28 @@ export class LeagueTimeService {
       }
     } catch (error) {
       console.error('Error setting auto mode:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Reset database for a new season
+   */
+  async resetDatabaseForNewSeason(complete: boolean = false): Promise<ResetDatabaseResult> {
+    if (!FEATURES.USE_BACKEND_LEAGUE_TIME || !isBackendAuthAvailable()) {
+      throw new Error('Backend league time service not available or not authenticated');
+    }
+
+    try {
+      const response = await apiClient.post<ResetDatabaseResult>('/league-time/reset-database', { complete });
+      
+      if (response.success && response.data) {
+        return response.data;
+      } else {
+        throw new Error(response.message || response.error || 'Failed to reset database');
+      }
+    } catch (error) {
+      console.error('Error resetting database:', error);
       throw error;
     }
   }

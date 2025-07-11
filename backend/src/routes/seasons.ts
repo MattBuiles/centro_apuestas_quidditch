@@ -4,16 +4,22 @@ import { SeasonController } from '../controllers/SeasonController';
 const router = Router();
 const seasonController = new SeasonController();
 
-router.get('/', (req, res) => {
-  res.json({
-    success: true,
-    data: [],
-    message: 'Seasons endpoint - implement CRUD operations',
-    timestamp: new Date().toISOString()
-  });
-});
+// GET /api/seasons - Get all seasons
+router.get('/', seasonController.getAllSeasons);
+
+// GET /api/seasons/current - Get current active season
+router.get('/current', seasonController.getCurrentSeason);
 
 // GET /api/seasons/league-time - Get league time information
 router.get('/league-time', seasonController.getLeagueTime);
+
+// GET /api/seasons/:id - Get specific season
+router.get('/:id', seasonController.getSeasonById);
+
+// POST /api/seasons - Create new season
+router.post('/', seasonController.createSeason);
+
+// PUT /api/seasons/:id/activate - Activate season
+router.put('/:id/activate', seasonController.activateSeason);
 
 export default router;

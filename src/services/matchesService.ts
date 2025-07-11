@@ -174,3 +174,37 @@ export const getUpcomingMatches = async (limit: number = 10): Promise<Match[]> =
     throw new Error('Backend API is disabled - upcoming matches cannot be retrieved');
   }
 };
+
+// Obtener el próximo partido no simulado
+export const getNextUnplayedMatch = async (virtualTime?: string): Promise<Match | null> => {
+  if (FEATURES.USE_BACKEND_MATCHES) {
+    try {
+      if (FEATURES.DEBUG_API) {
+        console.log('🔄 Fetching next unplayed match from backend...');
+      }
+
+      const queryParam = virtualTime ? `?virtualTime=${encodeURIComponent(virtualTime)}` : '';
+      const response = await apiClient.get<BackendMatch>(`/matches/next-unplayed${queryParam}`);
+      
+      if (response.success && response.data) {
+        if (FEATURES.DEBUG_API) {
+          console.log('✅ Next unplayed match fetched from backend:', response.data.id);
+        }
+        return adaptBackendMatch(response.data);
+      } else if (response.success && response.data === null) {
+        // No unplayed matches found
+        if (FEATURES.DEBUG_API) {
+          console.log('✅ No unplayed matches found');
+        }
+        return null;
+      } else {
+        throw new Error('Backend response was not successful');
+      }
+    } catch (error) {
+      console.error('❌ Error fetching next unplayed match from backend:', error);
+      throw new Error('Next unplayed match cannot be retrieved - backend unavailable');
+    }
+  } else {
+    throw new Error('Backend API is disabled - next unplayed match cannot be retrieved');
+  }
+};

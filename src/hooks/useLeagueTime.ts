@@ -83,7 +83,8 @@ export const useLeagueTime = () => {
   // Obtener la fecha actual de liga como objeto Date
   const getCurrentLeagueDate = useCallback(() => {
     if (!leagueTimeInfo?.currentDate) {
-      return new Date();
+      console.warn('⚠️ No hay información de tiempo virtual disponible. Usando fecha por defecto.');
+      throw new Error('Tiempo virtual no disponible desde el backend');
     }
     return new Date(leagueTimeInfo.currentDate);
   }, [leagueTimeInfo]);
