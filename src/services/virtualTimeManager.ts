@@ -112,6 +112,20 @@ export class VirtualTimeManager {
       nuevaFecha.setHours(nuevaFecha.getHours() + horasAvanzar);
     }
 
+    // Verificar si hay partidos en vivo y finalizarlos antes de avanzar
+    const partidosEnVivo = this.getPartidosEnVivo();
+    let partidosFinalizados: Match[] = [];
+    
+    if (partidosEnVivo.length > 0) {
+      console.log(`🔴 Finalizando ${partidosEnVivo.length} partidos en vivo antes de avanzar el tiempo...`);
+      
+      for (const partido of partidosEnVivo) {
+        this.finalizarPartidoEnVivo(partido.id);
+        partidosFinalizados.push(partido);
+        console.log(`✅ Partido finalizado: ${partido.homeTeamId} vs ${partido.awayTeamId}`);
+      }
+    }
+
     // Actualizar fecha virtual
     this.state.fechaVirtualActual = nuevaFecha;
 
@@ -124,12 +138,15 @@ export class VirtualTimeManager {
       partidosSimulados = await this.simularPartidosPendientes(partidosDisparados);
     }
 
+    // Combinar partidos finalizados con partidos simulados
+    const todosLosPartidosSimulados = [...partidosFinalizados, ...partidosSimulados];
+
     this.saveState();
 
     return {
       nuevaFecha,
       partidosDisparados,
-      partidosSimulados
+      partidosSimulados: todosLosPartidosSimulados
     };
   }
 
@@ -391,8 +408,10 @@ export class VirtualTimeManager {
       console.log(`⚡ Partido ${partidoId} está en 'live' pero sin simulación activa. Simulando completo...`);
       
       // Obtener los equipos de la temporada activa
-      const equipoLocal = this.state.temporadaActiva.teams.find(e => e.id === partido.homeTeamId);
-      const equipoVisitante = this.state.temporadaActiva.teams.find(e => e.id === partido.awayTeamId);
+      const equipoLocal = this.state.temporadaActiva.equipos.find(e => e.id === partido.homeTeamId) || 
+                          this.state.temporadaActiva.equipos.find(e => e.id === partido.localId);
+      const equipoVisitante = this.state.temporadaActiva.equipos.find(e => e.id === partido.awayTeamId) ||
+                              this.state.temporadaActiva.equipos.find(e => e.id === partido.visitanteId);
       
       if (equipoLocal && equipoVisitante) {
         const resultado = quidditchSimulator.simulateMatch(equipoLocal, equipoVisitante, partidoId);
