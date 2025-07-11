@@ -24,6 +24,7 @@ const LeagueTimeControl: React.FC<VirtualTimeControlProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isAdvancing, setIsAdvancing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastActionMessage, setLastActionMessage] = useState<string | null>(null);
 
   const loadLeagueTimeInfo = async () => {
     if (!FEATURES.USE_BACKEND_LEAGUE_TIME || !isBackendAuthenticated) {
@@ -75,6 +76,7 @@ const LeagueTimeControl: React.FC<VirtualTimeControlProps> = ({
 
     setIsAdvancing(true);
     setError(null);
+    setLastActionMessage(null);
     try {
       const result = await leagueTimeService.advanceTime({
         days: 1,
@@ -83,6 +85,10 @@ const LeagueTimeControl: React.FC<VirtualTimeControlProps> = ({
 
       if (result.success) {
         await loadLeagueTimeInfo(); // Refresh info
+        setLastActionMessage(`✅ Tiempo avanzado 1 día. Partidos simulados: ${result.simulatedMatches.length}`);
+        
+        // Clear message after 3 seconds
+        setTimeout(() => setLastActionMessage(null), 3000);
         
         // Convert string IDs to Match objects if needed
         const simulatedMatches: Match[] = []; // For now, just an empty array
@@ -106,6 +112,7 @@ const LeagueTimeControl: React.FC<VirtualTimeControlProps> = ({
 
     setIsAdvancing(true);
     setError(null);
+    setLastActionMessage(null);
     try {
       const result = await leagueTimeService.advanceTime({
         days: 7,
@@ -114,6 +121,10 @@ const LeagueTimeControl: React.FC<VirtualTimeControlProps> = ({
 
       if (result.success) {
         await loadLeagueTimeInfo(); // Refresh info
+        setLastActionMessage(`✅ Tiempo avanzado 1 semana. Partidos simulados: ${result.simulatedMatches.length}`);
+        
+        // Clear message after 3 seconds
+        setTimeout(() => setLastActionMessage(null), 3000);
         
         // Convert string IDs to Match objects if needed
         const simulatedMatches: Match[] = []; // For now, just an empty array
@@ -137,6 +148,7 @@ const LeagueTimeControl: React.FC<VirtualTimeControlProps> = ({
 
     setIsAdvancing(true);
     setError(null);
+    setLastActionMessage(null);
     try {
       const result = await leagueTimeService.advanceTime({
         toNextMatch: true,
@@ -145,6 +157,10 @@ const LeagueTimeControl: React.FC<VirtualTimeControlProps> = ({
 
       if (result.success) {
         await loadLeagueTimeInfo(); // Refresh info
+        setLastActionMessage(`✅ Tiempo avanzado al próximo partido`);
+        
+        // Clear message after 3 seconds
+        setTimeout(() => setLastActionMessage(null), 3000);
         
         const simulatedMatches: Match[] = []; // For now, just an empty array
         onTimeAdvanced?.(new Date(result.newDate), simulatedMatches);
@@ -167,11 +183,17 @@ const LeagueTimeControl: React.FC<VirtualTimeControlProps> = ({
 
     setIsAdvancing(true);
     setError(null);
+    setLastActionMessage(null);
     try {
       const result = await leagueTimeService.generateNewSeason();
 
       if (result.success) {
         await loadLeagueTimeInfo(); // Refresh info
+        setLastActionMessage(`✅ Nueva temporada generada: ${result.season.name}`);
+        
+        // Clear message after 3 seconds
+        setTimeout(() => setLastActionMessage(null), 3000);
+        
         onSeasonReset?.();
       } else {
         setError(result.message);
@@ -179,6 +201,42 @@ const LeagueTimeControl: React.FC<VirtualTimeControlProps> = ({
     } catch (error) {
       console.error('Error generating new season:', error);
       setError('Error generando nueva temporada');
+    } finally {
+      setIsAdvancing(false);
+    }
+  };
+
+  const handleSimulateMatches = async () => {
+    if (!FEATURES.USE_BACKEND_LEAGUE_TIME || !isBackendAuthenticated) {
+      setError('Backend de tiempo de liga no disponible. Funcionalidad deshabilitada.');
+      return;
+    }
+
+    setIsAdvancing(true);
+    setError(null);
+    setLastActionMessage(null);
+    try {
+      const result = await leagueTimeService.advanceTime({
+        days: 0, // No avanzar tiempo, solo simular
+        simulateMatches: true
+      });
+
+      if (result.success) {
+        await loadLeagueTimeInfo(); // Refresh info
+        setLastActionMessage(`✅ Partidos simulados: ${result.simulatedMatches.length}`);
+        
+        // Clear message after 3 seconds
+        setTimeout(() => setLastActionMessage(null), 3000);
+        
+        // Convert string IDs to Match objects if needed
+        const simulatedMatches: Match[] = []; // For now, just an empty array
+        onTimeAdvanced?.(new Date(result.newDate), simulatedMatches);
+      } else {
+        setError(result.message);
+      }
+    } catch (error) {
+      console.error('Error simulating matches:', error);
+      setError('Error simulando partidos');
     } finally {
       setIsAdvancing(false);
     }
@@ -242,6 +300,12 @@ const LeagueTimeControl: React.FC<VirtualTimeControlProps> = ({
       {error && (
         <div className={styles.error}>
           ❌ {error}
+        </div>
+      )}
+
+      {lastActionMessage && (
+        <div className={styles.success}>
+          {lastActionMessage}
         </div>
       )}
 
@@ -312,6 +376,14 @@ const LeagueTimeControl: React.FC<VirtualTimeControlProps> = ({
               disabled={isAdvancing}
             >
               {isAdvancing ? '⏳' : '⚽'} Al próximo partido
+            </Button>
+
+            <Button
+              variant="magical"
+              onClick={handleSimulateMatches}
+              disabled={isAdvancing}
+            >
+              {isAdvancing ? '⏳' : '🎮'} Simular partidos
             </Button>
 
             <Button

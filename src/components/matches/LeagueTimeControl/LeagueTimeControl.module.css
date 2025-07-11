@@ -167,6 +167,22 @@
   font-size: 0.9rem;
 }
 
+.success {
+  background: #d4edda;
+  color: #155724;
+  padding: 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #c3e6cb;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .disabled {
   opacity: 0.5;
   pointer-events: none;

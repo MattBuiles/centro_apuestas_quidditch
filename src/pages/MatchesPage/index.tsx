@@ -1,46 +1,111 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import MatchCard from '@/components/matches/MatchCard'
 import LeagueTimeControl from '@/components/matches/LeagueTimeControl'
 import Button from '@/components/common/Button'
 import Card from '@/components/common/Card'
-import { leagueTimeService } from '@/services/leagueTimeService'
+import { useLeagueTime } from '@/hooks/useLeagueTime'
 import { Season, Match } from '@/types/league'
-import { FEATURES } from '@/config/features'
 import styles from './MatchesPage.module.css'
 
 const MatchesPage = () => {
   const [activeTab, setActiveTab] = useState('upcoming') // upcoming, live, today
   const [searchTerm, setSearchTerm] = useState('');
   const [season, setSeason] = useState<Season | null>(null);
+  
+  // Usar el hook de tiempo de liga
+  const { 
+    isLoading: isLoadingTime, 
+    error: timeError, 
+    getCurrentLeagueDate,
+    forceRefresh
+  } = useLeagueTime();
+
+  // Estado local para la carga de datos de partidos
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    initializeSeason();
-  }, []);  const initializeSeason = async () => {
-    setIsLoading(true);
-    setError(null);
-    
+  const initializeSeason = useCallback(async () => {
     try {
-      if (FEATURES.USE_BACKEND_LEAGUE_TIME) {
-        const leagueInfo = await leagueTimeService.getLeagueTimeInfo();
-        if (leagueInfo.activeSeason) {
-          setSeason(leagueInfo.activeSeason);
-        } else {
-          setError('No hay temporada activa');
-        }
-      } else {
-        setError('Backend de tiempo de liga no está habilitado');
+      setIsLoading(true);
+      setError(null);
+
+      // First get league time info for season data
+      const leagueTimeResponse = await fetch('http://localhost:3001/api/league-time');
+      if (!leagueTimeResponse.ok) {
+        throw new Error(`League time HTTP error! status: ${leagueTimeResponse.status}`);
       }
-    } catch (err) {
-      setError('Error inicializando la temporada: ' + (err instanceof Error ? err.message : 'Error desconocido'));
+      
+      const leagueTimeData = await leagueTimeResponse.json();
+
+      if (!leagueTimeData.success || !leagueTimeData.data) {
+        throw new Error('Invalid league time response format');
+      }
+
+      // Then get matches data separately
+      const matchesResponse = await fetch('http://localhost:3001/api/matches');
+      if (!matchesResponse.ok) {
+        throw new Error(`Matches HTTP error! status: ${matchesResponse.status}`);
+      }
+      
+      const matchesData = await matchesResponse.json();
+      
+      if (!matchesData.success || !matchesData.data) {
+        throw new Error('Invalid matches response format');
+      }
+
+      // Combine the data
+      const seasonData = leagueTimeData.data.activeSeason;
+      if (seasonData) {
+        // Transform matches to match expected structure
+        const transformedMatches = matchesData.data.map((match: {
+          id: string;
+          season_id: string;
+          home_team_id: string;
+          away_team_id: string;
+          date: string;
+          status: string;
+          home_score: number;
+          away_score: number;
+          duration: number | null;
+          snitch_caught: number;
+          snitch_caught_by: string | null;
+        }) => ({
+          id: match.id,
+          seasonId: match.season_id,
+          localId: match.home_team_id,
+          visitanteId: match.away_team_id,
+          date: match.date,
+          status: match.status,
+          homeScore: match.home_score,
+          awayScore: match.away_score,
+          currentMinute: match.duration,
+          snitchCaught: match.snitch_caught,
+          snitchCaughtBy: match.snitch_caught_by
+        }));
+
+        console.log('🎯 Transformed matches count:', transformedMatches.length);
+        seasonData.matches = transformedMatches;
+        setSeason(seasonData);
+        setError(null);
+      } else {
+        throw new Error('No active season found');
+      }
+
+    } catch (error) {
+      console.error('Error loading season data:', error);
+      setError('No se pudo cargar la información de partidos. Verifica que el backend esté funcionando.');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    initializeSeason();
+  }, [initializeSeason]); // Recargar cuando cambie la información de tiempo
+
   const handleTimeAdvanced = async (_newDate: Date, simulatedMatches: Match[]) => {
-    // Refresh season data when time advances
-    await initializeSeason();
+    // Forzar actualización del tiempo de liga
+    await forceRefresh();
     
     if (simulatedMatches.length > 0) {
       console.log(`✅ Se simularon ${simulatedMatches.length} partidos`);
@@ -49,14 +114,23 @@ const MatchesPage = () => {
 
   const handleSeasonReset = () => {
     // Reset season when virtual time is reset
-    initializeSeason();
-  };  const getFilteredMatches = () => {
+    forceRefresh();
+  };
+
+  const getFilteredMatches = () => {
     if (!season) {
       return [];
     }
 
     const partidos = season.matches || []; // Use 'matches' from backend
-    const fechaVirtual = new Date(); // Use current time for now
+    
+    // Usar tiempo del backend o fallback al tiempo actual
+    let fechaVirtual: Date;
+    try {
+      fechaVirtual = getCurrentLeagueDate();
+    } catch {
+      fechaVirtual = new Date();
+    }
 
     let filteredMatches: Match[] = [];
 
@@ -116,6 +190,7 @@ const MatchesPage = () => {
 
     return filteredMatches;
   };
+
   const formatMatchForCard = (match: Match) => {
     const homeTeam = season?.teams?.find(t => t.id === match.localId);
     const awayTeam = season?.teams?.find(t => t.id === match.visitanteId);
@@ -136,11 +211,13 @@ const MatchesPage = () => {
       awayScore: match.awayScore,
       minute: match.currentMinute?.toString()
     };
-  };  const getTabCounts = () => {
+  };
+
+  const getTabCounts = () => {
     if (!season) return { upcoming: 0, live: 0, today: 0 };
 
     const partidos = season.matches || []; // Use 'matches' from backend
-    const fechaVirtual = new Date(); // Use current time for now
+    const fechaVirtual = getCurrentLeagueDate(); // Usar el tiempo de liga en lugar del tiempo real
     
     const today = new Date(fechaVirtual);
     const startOfDay = new Date(today);
@@ -162,7 +239,11 @@ const MatchesPage = () => {
     };
   };
 
-  if (isLoading) {
+  // Mostrar error de tiempo si existe
+  const displayError = error || timeError;
+  const displayLoading = isLoading || isLoadingTime;
+
+  if (displayLoading) {
     return (
       <div className={styles.matchesPageContainer}>
         <div className="flex items-center justify-center min-h-96">
@@ -175,13 +256,13 @@ const MatchesPage = () => {
     );
   }
 
-  if (error) {
+  if (displayError) {
     return (
       <div className={styles.matchesPageContainer}>
         <Card className="p-8 text-center">
           <h2 className="text-xl font-bold text-red-600 mb-4">Error del Sistema</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <Button onClick={initializeSeason} variant="primary">
+          <p className="text-gray-600 mb-4">{displayError}</p>
+          <Button onClick={() => forceRefresh()} variant="primary">
             Reintentar
           </Button>
         </Card>
@@ -193,7 +274,8 @@ const MatchesPage = () => {
   const tabCounts = getTabCounts();
 
   return (
-    <div className={styles.matchesPageContainer}>      <section className={styles.heroSection}>
+    <div className={styles.matchesPageContainer}>
+      <section className={styles.heroSection}>
         <h1 className={styles.heroTitle}>Centro de Control de Liga</h1>
         <p className={styles.heroSubtitle}>
           Gestiona el tiempo virtual, simula partidos y sigue la evolución de la liga
@@ -213,25 +295,14 @@ const MatchesPage = () => {
               type="text" 
               id="match-search" 
               placeholder="Buscar equipos..." 
-              className={styles.searchInput}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              className={styles.searchInput}
             />
-            <Button variant="magical" size="sm">⌕</Button>
-          </div>
-          
-          <div className={styles.filterOptions}>
-            <div className="flex items-center gap-2 text-sm text-gray-600 bg-white/80 px-4 py-2 rounded-lg border border-gray-200">
-              <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
-              <span className="font-medium">{season?.name || 'Liga Quidditch'}</span>
-              <span className="text-xs text-gray-500">
-                ({season?.teams?.length || 0} equipos, {season?.matches?.length || 0} partidos)
-              </span>
-            </div>
           </div>
         </div>
 
-        <div className={styles.matchesTabs}>
+        <div className={styles.tabsContainer}>
           <Button 
             variant={activeTab === 'today' ? 'primary' : 'outline'} 
             onClick={() => setActiveTab('today')}
@@ -252,7 +323,8 @@ const MatchesPage = () => {
             size="sm"
           >
             🔴 En Vivo ({tabCounts.live})
-          </Button></div>
+          </Button>
+        </div>
 
         {/* Grid for matches */}
         <div className={styles.upcomingMatchesGrid}>
@@ -262,7 +334,8 @@ const MatchesPage = () => {
             ))
           ) : (
             <div className={styles.noMatchesContainer}>
-              <Card className="p-8 text-center">                <h3 className="text-lg font-semibold mb-2">
+              <Card className="p-8 text-center">
+                <h3 className="text-lg font-semibold mb-2">
                   {activeTab === 'upcoming' && 'No hay partidos próximos'}
                   {activeTab === 'live' && 'No hay partidos en vivo'}
                   {activeTab === 'today' && 'No hay partidos hoy'}
