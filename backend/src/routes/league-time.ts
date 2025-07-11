@@ -11,6 +11,9 @@ router.get('/', leagueTimeController.getLeagueTimeInfo);
 // POST /api/league-time/advance - Advance league time with automatic management (requires authentication)
 router.post('/advance', authenticate, leagueTimeController.advanceLeagueTime);
 
+// POST /api/league-time/advance-to-next-match - Advance to next unplayed match (requires authentication)
+router.post('/advance-to-next-match', authenticate, leagueTimeController.advanceToNextMatch);
+
 // POST /api/league-time/generate-season - Generate a new season automatically (requires authentication)
 router.post('/generate-season', authenticate, leagueTimeController.generateSeason);
 

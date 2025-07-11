@@ -139,10 +139,14 @@ const MatchDetailPage: React.FC = () => {
       const teams = await getTeams();
       
       // Debug logging to understand the data structure
-      console.log('🔍 Match data:', {
+      console.log('🔍 Match data received from backend:', {
+        id: matchData.id,
         homeTeamId: matchData.homeTeamId,
         awayTeamId: matchData.awayTeamId,
-        status: matchData.status
+        localId: matchData.localId,
+        visitanteId: matchData.visitanteId,
+        status: matchData.status,
+        fullMatchData: matchData
       });
       console.log('🔍 Available teams:', teams.map(t => ({ id: t.id, name: t.name })));
       

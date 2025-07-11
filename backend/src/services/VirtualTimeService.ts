@@ -139,6 +139,12 @@ export class VirtualTimeService {
     return { ...this.currentState };
   }
 
+  async setCurrentDate(newDate: Date): Promise<void> {
+    this.currentState.currentDate = newDate;
+    this.currentState.lastUpdate = new Date();
+    await this.saveState();
+  }
+
   async advanceTime(options: TimeAdvanceOptions): Promise<{
     newDate: Date;
     matchesSimulated: MatchResult[];
