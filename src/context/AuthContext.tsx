@@ -402,6 +402,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAdmin: boolean;
   canBet: boolean;
+  isBackendAuthenticated: boolean; // New property to indicate backend auth status
   login: (email: string, password: string, remember?: boolean) => Promise<void>;
   register: (username: string, email: string, password: string, birthdate: string) => Promise<void>;
   logout: () => void;
@@ -529,16 +530,27 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               }
             } catch (error) {
               console.warn('Backend auth verification failed, using stored user data:', error);
+              // Clear invalid token from apiClient
+              apiClient.clearToken();
+              // Also clear stored tokens since they're invalid
+              localStorage.removeItem('auth_token');
+              sessionStorage.removeItem('auth_token');
               // Fallback to local user data
               setUser(parsedUser);
               loadUserBets(parsedUser.id);
               loadUserTransactions(parsedUser.id);
+              
+              // Store flag to indicate we're using local auth fallback
+              sessionStorage.setItem('auth_fallback', 'true');
             }
           } else {
             // Local authentication or no token
             setUser(parsedUser);
             loadUserBets(parsedUser.id);
             loadUserTransactions(parsedUser.id);
+            
+            // Store flag to indicate we're using local auth
+            sessionStorage.setItem('auth_fallback', 'true');
           }
         }
       } catch (error) {
@@ -812,6 +824,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     localStorage.removeItem('auth_token');
     sessionStorage.removeItem('user');
     sessionStorage.removeItem('auth_token');
+    sessionStorage.removeItem('auth_fallback');
     
     navigate('/login');
   };
@@ -1084,6 +1097,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         isLoading,
         isAdmin: user?.role === 'admin',
         canBet: !!user && user.role !== 'admin',
+        isBackendAuthenticated: !!user && !sessionStorage.getItem('auth_fallback') && FEATURES.USE_BACKEND_AUTH,
         login,
         register,
         logout,

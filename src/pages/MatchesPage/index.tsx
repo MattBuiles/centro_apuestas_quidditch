@@ -98,8 +98,8 @@ const MatchesPage = () => {
     // Apply search filter (except for upcoming tab since we already limited it)
     if (searchTerm.trim() && activeTab !== 'upcoming') {
       filteredMatches = filteredMatches.filter(match => {
-        const homeTeam = season.equipos.find(t => t.id === match.localId)?.name || '';
-        const awayTeam = season.equipos.find(t => t.id === match.visitanteId)?.name || '';
+        const homeTeam = season.teams?.find(t => t.id === match.localId)?.name || '';
+        const awayTeam = season.teams?.find(t => t.id === match.visitanteId)?.name || '';
         return homeTeam.toLowerCase().includes(searchTerm.toLowerCase()) ||
                awayTeam.toLowerCase().includes(searchTerm.toLowerCase());
       });
@@ -108,8 +108,8 @@ const MatchesPage = () => {
     // Sort by date (except for upcoming since it's already sorted and limited)
     if (activeTab !== 'upcoming') {
       return filteredMatches.sort((a, b) => {
-        const dateA = new Date(a.fecha);
-        const dateB = new Date(b.fecha);
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
         return dateA.getTime() - dateB.getTime(); // Chronological order
       });
     }
@@ -117,8 +117,8 @@ const MatchesPage = () => {
     return filteredMatches;
   };
   const formatMatchForCard = (match: Match) => {
-    const homeTeam = season?.equipos.find(t => t.id === match.localId);
-    const awayTeam = season?.equipos.find(t => t.id === match.visitanteId);
+    const homeTeam = season?.teams?.find(t => t.id === match.localId);
+    const awayTeam = season?.teams?.find(t => t.id === match.visitanteId);
     
     // Map status to MatchCard expected values
     const cardStatus = match.status === 'scheduled' ? 'upcoming' as const : 
@@ -128,8 +128,8 @@ const MatchesPage = () => {
       id: match.id,
       homeTeam: homeTeam?.name || match.localId,
       awayTeam: awayTeam?.name || match.visitanteId,
-      date: new Date(match.fecha).toLocaleDateString('es-ES'),
-      time: new Date(match.fecha).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+      date: new Date(match.date).toLocaleDateString('es-ES'),
+      time: new Date(match.date).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
       league: 'Liga Profesional Quidditch',
       status: cardStatus,
       homeScore: match.homeScore,
@@ -149,14 +149,14 @@ const MatchesPage = () => {
     endOfDay.setHours(23, 59, 59, 999);
 
     // For upcoming matches, get all but limit the count to show only up to 5
-    const upcomingMatches = partidos.filter(m => new Date(m.fecha) > fechaVirtual && m.status === 'scheduled');
+    const upcomingMatches = partidos.filter(m => new Date(m.date) > fechaVirtual && m.status === 'scheduled');
     const upcomingCount = Math.min(upcomingMatches.length, 5);
 
     return {
       upcoming: upcomingCount,
       live: partidos.filter(m => m.status === 'live').length,
       today: partidos.filter(m => {
-        const matchDate = new Date(m.fecha);
+        const matchDate = new Date(m.date);
         return matchDate >= startOfDay && matchDate <= endOfDay;
       }).length
     };
@@ -225,7 +225,7 @@ const MatchesPage = () => {
               <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
               <span className="font-medium">{season?.name || 'Liga Quidditch'}</span>
               <span className="text-xs text-gray-500">
-                ({season?.equipos.length || 0} equipos, {season?.partidos.length || 0} partidos)
+                ({season?.teams?.length || 0} equipos, {season?.matches?.length || 0} partidos)
               </span>
             </div>
           </div>

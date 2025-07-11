@@ -1,5 +1,13 @@
 import { apiClient } from '../utils/apiClient';
 import { Season } from '../types/league';
+import { FEATURES } from '../config/features';
+
+// Helper function to check if backend authentication is available
+const isBackendAuthAvailable = (): boolean => {
+  return FEATURES.USE_BACKEND_AUTH && 
+         !sessionStorage.getItem('auth_fallback') &&
+         !!localStorage.getItem('auth_token') || !!sessionStorage.getItem('auth_token');
+};
 
 export interface LeagueTimeInfo {
   currentDate: string;
@@ -42,6 +50,10 @@ export class LeagueTimeService {
    * Get comprehensive league time information
    */
   async getLeagueTimeInfo(): Promise<LeagueTimeInfo> {
+    if (!FEATURES.USE_BACKEND_LEAGUE_TIME || !isBackendAuthAvailable()) {
+      throw new Error('Backend league time service not available or not authenticated');
+    }
+
     try {
       const response = await apiClient.get<LeagueTimeInfo>('/league-time');
       
@@ -60,6 +72,10 @@ export class LeagueTimeService {
    * Advance league time with automatic management
    */
   async advanceTime(options: AdvanceTimeOptions = {}): Promise<AdvanceTimeResult> {
+    if (!FEATURES.USE_BACKEND_LEAGUE_TIME || !isBackendAuthAvailable()) {
+      throw new Error('Backend league time service not available or not authenticated');
+    }
+
     try {
       const response = await apiClient.post<AdvanceTimeResult>('/league-time/advance', options);
       
@@ -78,6 +94,10 @@ export class LeagueTimeService {
    * Generate a new season automatically
    */
   async generateNewSeason(): Promise<GenerateSeasonResult> {
+    if (!FEATURES.USE_BACKEND_LEAGUE_TIME || !isBackendAuthAvailable()) {
+      throw new Error('Backend league time service not available or not authenticated');
+    }
+
     try {
       const response = await apiClient.post<GenerateSeasonResult>('/league-time/generate-season', {});
       
@@ -96,6 +116,10 @@ export class LeagueTimeService {
    * Reset league time (for testing/development)
    */
   async resetTime(): Promise<{ success: boolean; message: string }> {
+    if (!FEATURES.USE_BACKEND_LEAGUE_TIME || !isBackendAuthAvailable()) {
+      throw new Error('Backend league time service not available or not authenticated');
+    }
+
     try {
       const response = await apiClient.post<{ success: boolean; message: string }>('/league-time/reset', {});
       
@@ -114,6 +138,10 @@ export class LeagueTimeService {
    * Set time speed multiplier
    */
   async setTimeSpeed(speed: number): Promise<{ success: boolean; message: string }> {
+    if (!FEATURES.USE_BACKEND_LEAGUE_TIME || !isBackendAuthAvailable()) {
+      throw new Error('Backend league time service not available or not authenticated');
+    }
+
     try {
       const response = await apiClient.put<{ success: boolean; message: string }>('/league-time/speed', { speed });
       
