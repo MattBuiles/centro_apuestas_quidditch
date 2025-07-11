@@ -14,9 +14,11 @@ const MatchesPage = () => {
   
   // Usar el hook de tiempo de liga
   const { 
+    leagueTimeInfo, 
     isLoading: isLoadingTime, 
     error: timeError, 
     getCurrentLeagueDate,
+    hasActiveSeason,
     forceRefresh
   } = useLeagueTime();
 
@@ -25,85 +27,28 @@ const MatchesPage = () => {
   const [error, setError] = useState<string | null>(null);
 
   const initializeSeason = useCallback(async () => {
+    if (!leagueTimeInfo || !hasActiveSeason()) {
+      setError('No hay temporada activa');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    
     try {
-      setIsLoading(true);
-      setError(null);
-
-      // First get league time info for season data
-      const leagueTimeResponse = await fetch('http://localhost:3001/api/league-time');
-      if (!leagueTimeResponse.ok) {
-        throw new Error(`League time HTTP error! status: ${leagueTimeResponse.status}`);
-      }
-      
-      const leagueTimeData = await leagueTimeResponse.json();
-
-      if (!leagueTimeData.success || !leagueTimeData.data) {
-        throw new Error('Invalid league time response format');
-      }
-
-      // Then get matches data separately
-      const matchesResponse = await fetch('http://localhost:3001/api/matches');
-      if (!matchesResponse.ok) {
-        throw new Error(`Matches HTTP error! status: ${matchesResponse.status}`);
-      }
-      
-      const matchesData = await matchesResponse.json();
-      
-      if (!matchesData.success || !matchesData.data) {
-        throw new Error('Invalid matches response format');
-      }
-
-      // Combine the data
-      const seasonData = leagueTimeData.data.activeSeason;
-      if (seasonData) {
-        // Transform matches to match expected structure
-        const transformedMatches = matchesData.data.map((match: {
-          id: string;
-          season_id: string;
-          home_team_id: string;
-          away_team_id: string;
-          date: string;
-          status: string;
-          home_score: number;
-          away_score: number;
-          duration: number | null;
-          snitch_caught: number;
-          snitch_caught_by: string | null;
-        }) => ({
-          id: match.id,
-          seasonId: match.season_id,
-          localId: match.home_team_id,
-          visitanteId: match.away_team_id,
-          date: match.date,
-          status: match.status,
-          homeScore: match.home_score,
-          awayScore: match.away_score,
-          currentMinute: match.duration,
-          snitchCaught: match.snitch_caught,
-          snitchCaughtBy: match.snitch_caught_by
-        }));
-
-        console.log('🎯 Transformed matches count:', transformedMatches.length);
-        seasonData.matches = transformedMatches;
-        setSeason(seasonData);
-        setError(null);
-      } else {
-        throw new Error('No active season found');
-      }
-
-    } catch (error) {
-      console.error('Error loading season data:', error);
-      setError('No se pudo cargar la información de partidos. Verifica que el backend esté funcionando.');
+      setSeason(leagueTimeInfo.activeSeason);
+    } catch (err) {
+      setError('Error inicializando la temporada: ' + (err instanceof Error ? err.message : 'Error desconocido'));
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [leagueTimeInfo, hasActiveSeason]);
 
   useEffect(() => {
     initializeSeason();
   }, [initializeSeason]); // Recargar cuando cambie la información de tiempo
 
-  const handleTimeAdvanced = async (_newDate: Date, simulatedMatches: Match[]) => {
+  const handleTimeAdvanced = async (newDate: Date, simulatedMatches: Match[]) => {
     // Forzar actualización del tiempo de liga
     await forceRefresh();
     
@@ -123,14 +68,7 @@ const MatchesPage = () => {
     }
 
     const partidos = season.matches || []; // Use 'matches' from backend
-    
-    // Usar tiempo del backend o fallback al tiempo actual
-    let fechaVirtual: Date;
-    try {
-      fechaVirtual = getCurrentLeagueDate();
-    } catch {
-      fechaVirtual = new Date();
-    }
+    const fechaVirtual = getCurrentLeagueDate(); // Usar el tiempo de liga en lugar del tiempo real
 
     let filteredMatches: Match[] = [];
 

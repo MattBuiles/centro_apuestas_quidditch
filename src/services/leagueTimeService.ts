@@ -4,6 +4,11 @@ import { FEATURES } from '../config/features';
 
 // Helper function to check if backend authentication is available
 const isBackendAuthAvailable = (): boolean => {
+  // En desarrollo, permitir acceso sin autenticación
+  if (import.meta.env.DEV) {
+    return true;
+  }
+  
   return FEATURES.USE_BACKEND_AUTH && 
          !sessionStorage.getItem('auth_fallback') &&
          !!localStorage.getItem('auth_token') || !!sessionStorage.getItem('auth_token');
