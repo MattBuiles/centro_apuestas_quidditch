@@ -61,7 +61,7 @@ const ResultsPageBackend: React.FC = () => {
 
         const formattedResults: Result[] = finishedMatches.map(match => ({
           id: match.id,
-          date: match.fecha || match.date || '',
+          date: (match.fecha || match.date) ? new Date(match.fecha || match.date || '').toISOString() : '',
           homeTeam: timeInfo.activeSeason!.teams?.find(t => t.id === match.homeTeamId)?.name || 'Team',
           awayTeam: timeInfo.activeSeason!.teams?.find(t => t.id === match.awayTeamId)?.name || 'Team',
           homeScore: match.homeScore || 0,
