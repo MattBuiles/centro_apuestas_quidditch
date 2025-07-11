@@ -3,10 +3,11 @@ import { Link } from 'react-router-dom';
 import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
 import { getTeamLogo, getTeamInitial } from '@/assets/teamLogos';
-import { virtualTimeManager } from '@/services/virtualTimeManager';
+import { leagueTimeService } from '@/services/leagueTimeService';
 import { standingsCalculator } from '@/services/standingsCalculator';
-import { Season } from '@/types/league';
+import { Season, Team, Match } from '@/types/league';
 import { apiClient } from '@/utils/apiClient';
+import { FEATURES } from '@/config/features';
 import styles from './TeamsPage.module.css';
 
 // Team data interface
@@ -103,56 +104,63 @@ const TeamsPage: React.FC = () => {  const [teams, setTeams] = useState<TeamData
         return;
       }
     } catch (error) {
-      console.warn('Failed to load teams from backend, falling back to local data:', error);
+      console.warn('Failed to load teams from backend, falling back to league time service:', error);
     }
 
-    // Fallback to local simulation data
-    const timeState = virtualTimeManager.getState();
-    if (timeState.temporadaActiva) {
-      setSeason(timeState.temporadaActiva);
-      
-      // Calculate standings to get team stats
-      const standings = standingsCalculator.calculateStandings(
-        timeState.temporadaActiva.equipos,
-        timeState.temporadaActiva.partidos.filter(match => match.status === 'finished')
-      );      
-      
-      // Convert teams to TeamData format and sort alphabetically
-      const teamsData: TeamData[] = timeState.temporadaActiva.equipos
-        .sort((a, b) => a.name.localeCompare(b.name)) // Sort alphabetically by name
-        .map(team => {
-          const standing = standings.find(s => s.teamId === team.id);
-        
-        return {
-          id: team.id,
-          name: team.name,
-          logoChar: team.name.charAt(0).toUpperCase(),
-          stats: standing ? {
-            wins: standing.wins,
-            losses: standing.losses,
-            draws: standing.draws,
-            points: standing.points,
-            played: standing.matchesPlayed,
-            goalsFor: standing.goalsFor,
-            goalsAgainst: standing.goalsAgainst
-          } : {
-            wins: 0,
-            losses: 0,
-            draws: 0,
-            points: 0,
-            played: 0,
-            goalsFor: 0,
-            goalsAgainst: 0
-          }
-        };
-      });
-      
-      setTeams(teamsData);
-    } else {
-      // Final fallback to mock data if no simulation
-      setTeams(mockTeams);
+    // Fallback to league time service for team data
+    if (FEATURES.USE_BACKEND_LEAGUE_TIME) {
+      try {
+        const leagueInfo = await leagueTimeService.getLeagueTimeInfo();
+        if (leagueInfo.activeSeason) {
+          setSeason(leagueInfo.activeSeason);
+          
+          // Calculate standings to get team stats
+          const standings = standingsCalculator.calculateStandings(
+            leagueInfo.activeSeason.teams, // Use 'teams' from backend
+            leagueInfo.activeSeason.matches.filter((match: { status: string }) => match.status === 'finished') // Use 'matches' from backend
+          );      
+          
+          // Convert teams to TeamData format and sort alphabetically
+          const teamsData: TeamData[] = leagueInfo.activeSeason.teams // Use 'teams' from backend
+            .sort((a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name)) // Sort alphabetically by name
+            .map((team: { id: string; name: string }) => {
+              const standing = standings.find(s => s.teamId === team.id);
+            
+            return {
+              id: team.id,
+              name: team.name,
+              logoChar: team.name.charAt(0).toUpperCase(),
+              stats: standing ? {
+                wins: standing.wins,
+                losses: standing.losses,
+                draws: standing.draws,
+                points: standing.points,
+                played: standing.matchesPlayed,
+                goalsFor: standing.goalsFor,
+                goalsAgainst: standing.goalsAgainst
+              } : {
+                wins: 0,
+                losses: 0,
+                draws: 0,
+                points: 0,
+                played: 0,
+                goalsFor: 0,
+                goalsAgainst: 0
+              }
+            };
+          });
+          
+          setTeams(teamsData);
+          setIsLoading(false);
+          return;
+        }
+      } catch (leagueError) {
+        console.warn('Failed to load teams from league time service:', leagueError);
+      }
     }
     
+    // Final fallback to mock data if no backend or league data available
+    setTeams(mockTeams);
     setIsLoading(false);
   };
   const filteredTeams = teams.filter(team => {

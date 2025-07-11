@@ -43,16 +43,12 @@ export class LeagueTimeService {
    */
   async getLeagueTimeInfo(): Promise<LeagueTimeInfo> {
     try {
-      const response = await apiClient.get<{
-        success: boolean;
-        data: LeagueTimeInfo;
-        message: string;
-      }>('/league-time');
+      const response = await apiClient.get<LeagueTimeInfo>('/league-time');
       
-      if (response.data && response.data.success) {
-        return response.data.data;
+      if (response.success && response.data) {
+        return response.data;
       } else {
-        throw new Error(response.data?.message || 'Failed to get league time info');
+        throw new Error(response.message || response.error || 'Failed to get league time info');
       }
     } catch (error) {
       console.error('Error fetching league time info:', error);
@@ -65,16 +61,12 @@ export class LeagueTimeService {
    */
   async advanceTime(options: AdvanceTimeOptions = {}): Promise<AdvanceTimeResult> {
     try {
-      const response = await apiClient.post<{
-        success: boolean;
-        data: AdvanceTimeResult;
-        message: string;
-      }>('/league-time/advance', options);
+      const response = await apiClient.post<AdvanceTimeResult>('/league-time/advance', options);
       
-      if (response.data && response.data.success) {
-        return response.data.data;
+      if (response.success && response.data) {
+        return response.data;
       } else {
-        throw new Error(response.data?.message || 'Failed to advance time');
+        throw new Error(response.message || response.error || 'Failed to advance time');
       }
     } catch (error) {
       console.error('Error advancing league time:', error);
@@ -87,16 +79,12 @@ export class LeagueTimeService {
    */
   async generateNewSeason(): Promise<GenerateSeasonResult> {
     try {
-      const response = await apiClient.post<{
-        success: boolean;
-        data: GenerateSeasonResult;
-        message: string;
-      }>('/league-time/generate-season', {});
+      const response = await apiClient.post<GenerateSeasonResult>('/league-time/generate-season', {});
       
-      if (response.data && response.data.success) {
-        return response.data.data;
+      if (response.success && response.data) {
+        return response.data;
       } else {
-        throw new Error(response.data?.message || 'Failed to generate season');
+        throw new Error(response.message || response.error || 'Failed to generate season');
       }
     } catch (error) {
       console.error('Error generating new season:', error);
@@ -109,12 +97,13 @@ export class LeagueTimeService {
    */
   async resetTime(): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await apiClient.post<{
-        success: boolean;
-        message: string;
-      }>('/league-time/reset', {});
+      const response = await apiClient.post<{ success: boolean; message: string }>('/league-time/reset', {});
       
-      return response.data || { success: false, message: 'No response data' };
+      if (response.success && response.data) {
+        return response.data;
+      } else {
+        return { success: false, message: response.message || response.error || 'Failed to reset time' };
+      }
     } catch (error) {
       console.error('Error resetting league time:', error);
       throw error;
@@ -126,12 +115,13 @@ export class LeagueTimeService {
    */
   async setTimeSpeed(speed: number): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await apiClient.put<{
-        success: boolean;
-        message: string;
-      }>('/league-time/speed', { speed });
+      const response = await apiClient.put<{ success: boolean; message: string }>('/league-time/speed', { speed });
       
-      return response.data || { success: false, message: 'No response data' };
+      if (response.success && response.data) {
+        return response.data;
+      } else {
+        return { success: false, message: response.message || response.error || 'Failed to set time speed' };
+      }
     } catch (error) {
       console.error('Error setting time speed:', error);
       throw error;
@@ -143,12 +133,13 @@ export class LeagueTimeService {
    */
   async setAutoMode(enabled: boolean): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await apiClient.put<{
-        success: boolean;
-        message: string;
-      }>('/league-time/auto-mode', { enabled });
+      const response = await apiClient.put<{ success: boolean; message: string }>('/league-time/auto-mode', { enabled });
       
-      return response.data || { success: false, message: 'No response data' };
+      if (response.success && response.data) {
+        return response.data;
+      } else {
+        return { success: false, message: response.message || response.error || 'Failed to set auto mode' };
+      }
     } catch (error) {
       console.error('Error setting auto mode:', error);
       throw error;

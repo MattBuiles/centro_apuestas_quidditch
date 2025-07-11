@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 import MatchCard from '@/components/matches/MatchCard'
-import VirtualTimeControl from '@/components/matches/VirtualTimeControl'
+import LeagueTimeControl from '@/components/matches/LeagueTimeControl'
 import Button from '@/components/common/Button'
 import Card from '@/components/common/Card'
-import { virtualTimeManager } from '@/services/virtualTimeManager'
+import { leagueTimeService } from '@/services/leagueTimeService'
 import { Season, Match } from '@/types/league'
+import { FEATURES } from '@/config/features'
 import styles from './MatchesPage.module.css'
 
 const MatchesPage = () => {
@@ -21,21 +22,25 @@ const MatchesPage = () => {
     setError(null);
     
     try {
-      // This will automatically initialize a season if none exists
-      const temporadaActiva = virtualTimeManager.getTemporadaActivaOInicializar();
-      setSeason(temporadaActiva);
+      if (FEATURES.USE_BACKEND_LEAGUE_TIME) {
+        const leagueInfo = await leagueTimeService.getLeagueTimeInfo();
+        if (leagueInfo.activeSeason) {
+          setSeason(leagueInfo.activeSeason);
+        } else {
+          setError('No hay temporada activa');
+        }
+      } else {
+        setError('Backend de tiempo de liga no está habilitado');
+      }
     } catch (err) {
       setError('Error inicializando la temporada: ' + (err instanceof Error ? err.message : 'Error desconocido'));
     } finally {
       setIsLoading(false);
     }
   };
-  const handleTimeAdvanced = (_newDate: Date, simulatedMatches: Match[]) => {
+  const handleTimeAdvanced = async (_newDate: Date, simulatedMatches: Match[]) => {
     // Refresh season data when time advances
-    const timeState = virtualTimeManager.getState();
-    if (timeState.temporadaActiva) {
-      setSeason({ ...timeState.temporadaActiva });
-    }
+    await initializeSeason();
     
     if (simulatedMatches.length > 0) {
       console.log(`✅ Se simularon ${simulatedMatches.length} partidos`);
@@ -50,21 +55,21 @@ const MatchesPage = () => {
       return [];
     }
 
-    const partidos = season.partidos || [];
-    const fechaVirtual = virtualTimeManager.getFechaVirtualActual();
+    const partidos = season.matches || []; // Use 'matches' from backend
+    const fechaVirtual = new Date(); // Use current time for now
 
     let filteredMatches: Match[] = [];
 
     switch (activeTab) {
       case 'upcoming':
         filteredMatches = partidos.filter(match => {
-          const matchDate = new Date(match.fecha);
+          const matchDate = new Date(match.date); // Use 'date' from backend
           return matchDate > fechaVirtual && match.status === 'scheduled';
         });
         // Sort by date first to get the closest matches
         filteredMatches.sort((a, b) => {
-          const dateA = new Date(a.fecha);
-          const dateB = new Date(b.fecha);
+          const dateA = new Date(a.date); // Use 'date' from backend
+          const dateB = new Date(b.date); // Use 'date' from backend
           return dateA.getTime() - dateB.getTime(); // Chronological order
         });
         // Limit to only 5 closest upcoming matches
@@ -81,7 +86,7 @@ const MatchesPage = () => {
         endOfDay.setHours(23, 59, 59, 999);
         
         filteredMatches = partidos.filter(match => {
-          const matchDate = new Date(match.fecha);
+          const matchDate = new Date(match.date); // Use 'date' from backend
           return matchDate >= startOfDay && matchDate <= endOfDay;
         });
         break;
@@ -134,8 +139,8 @@ const MatchesPage = () => {
   };  const getTabCounts = () => {
     if (!season) return { upcoming: 0, live: 0, today: 0 };
 
-    const partidos = season.partidos || [];
-    const fechaVirtual = virtualTimeManager.getFechaVirtualActual();
+    const partidos = season.matches || []; // Use 'matches' from backend
+    const fechaVirtual = new Date(); // Use current time for now
     
     const today = new Date(fechaVirtual);
     const startOfDay = new Date(today);
@@ -195,8 +200,8 @@ const MatchesPage = () => {
         </p>
       </section>
 
-      {/* Virtual Time Control */}
-      <VirtualTimeControl 
+      {/* League Time Control */}
+      <LeagueTimeControl 
         onTimeAdvanced={handleTimeAdvanced}
         onSeasonReset={handleSeasonReset}
       />
