@@ -108,19 +108,87 @@ export class LeagueTimeController {
         return;
       }
       
-      const nextMatch = await db.getNextUnplayedMatch(currentState.currentDate.toISOString()) as {
+      let nextMatch = await db.getNextUnplayedMatch(currentState.currentDate.toISOString()) as {
         id: string;
         date: string;
         [key: string]: unknown;
       } | null;
       
       if (!nextMatch) {
-        res.json({
-          success: false,
-          message: 'No se encontraron partidos pendientes',
-          timestamp: new Date().toISOString()
-        });
-        return;
+        // No matches found relative to current time, try to find the next scheduled match regardless of time
+        console.log('No unplayed matches found relative to current time, searching for any scheduled matches...');
+        const nextScheduledMatch = await db.get(`
+          SELECT 
+            m.*,
+            ht.name as homeTeamName,
+            ht.logo as homeTeamLogo,
+            at.name as awayTeamName,
+            at.logo as awayTeamLogo,
+            s.name as seasonName
+          FROM matches m
+          JOIN teams ht ON m.home_team_id = ht.id
+          JOIN teams at ON m.away_team_id = at.id
+          JOIN seasons s ON m.season_id = s.id
+          WHERE m.status = 'scheduled' 
+            AND (m.home_score IS NULL OR m.away_score IS NULL)
+          ORDER BY m.date ASC
+          LIMIT 1
+        `) as {
+          id: string;
+          date: string;
+          [key: string]: unknown;
+        } | null;
+        
+        if (nextScheduledMatch) {
+          console.log('Found scheduled match:', nextScheduledMatch);
+          nextMatch = nextScheduledMatch;
+        } else {
+          // No matches found at all, try to generate a new season
+          console.log('No scheduled matches found, attempting to generate a new season...');
+          try {
+            const newSeason = await this.leagueTimeService.generateSeasonIfNeeded();
+            
+            if (newSeason) {
+              // Try to find the next match again after generating the season
+              const nextMatchAfterGeneration = await db.get(`
+                SELECT 
+                  m.*,
+                  ht.name as homeTeamName,
+                  ht.logo as homeTeamLogo,
+                  at.name as awayTeamName,
+                  at.logo as awayTeamLogo,
+                  s.name as seasonName
+                FROM matches m
+                JOIN teams ht ON m.home_team_id = ht.id
+                JOIN teams at ON m.away_team_id = at.id
+                JOIN seasons s ON m.season_id = s.id
+                WHERE m.status = 'scheduled' 
+                  AND (m.home_score IS NULL OR m.away_score IS NULL)
+                ORDER BY m.date ASC
+                LIMIT 1
+              `) as {
+                id: string;
+                date: string;
+                [key: string]: unknown;
+              } | null;
+              
+              if (nextMatchAfterGeneration) {
+                nextMatch = nextMatchAfterGeneration;
+              }
+            }
+          } catch (seasonError) {
+            console.error('Error generating new season:', seasonError);
+          }
+          
+          if (!nextMatch) {
+            res.json({
+              success: false,
+              message: 'No se encontraron partidos pendientes y no se pudo generar una nueva temporada',
+              timestamp: new Date().toISOString()
+            });
+            return;
+          }
+        }
       }
       
       // Advance time to that match date

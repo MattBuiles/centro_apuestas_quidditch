@@ -46,11 +46,19 @@ export interface GenerateSeasonResult {
 }
 
 export interface ResetDatabaseResult {
-  success: boolean;
   message: string;
-  data?: {
-    resetType: 'complete' | 'season';
-    newSeason?: Season;
+  newSeason: Season;
+  virtualTime: {
+    currentDate: string;
+    activeSeason: Season | null;
+    timeSpeed: 'slow' | 'medium' | 'fast';
+    autoMode: boolean;
+    lastUpdate: string;
+  };
+  stats: {
+    teamsCreated: number;
+    matchesGenerated: number;
+    seasonCreated: string;
   };
 }
 
@@ -275,7 +283,7 @@ export class LeagueTimeService {
     }
 
     try {
-      const response = await apiClient.post<ResetDatabaseResult>('/league-time/reset-database', { complete });
+      const response = await apiClient.post<ResetDatabaseResult>('/admin/reset-database', { complete });
       
       if (response.success && response.data) {
         return response.data;
