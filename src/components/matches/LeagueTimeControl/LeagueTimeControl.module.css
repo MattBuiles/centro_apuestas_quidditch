@@ -1,0 +1,240 @@
+/* League Time Control Styles */
+.timeControl {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 1px solid #dee2e6;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 1rem 0;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.timeControl:hover {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.timeInfo {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid #e9ecef;
+}
+
+.currentTime {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+}
+
+.seasonInfo {
+  font-size: 0.95rem;
+  color: #6c757d;
+  margin-bottom: 0.25rem;
+}
+
+.controls {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.timeButton {
+  min-width: 120px;
+  background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.timeButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #5f3dc4 0%, #9775fa 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(108, 92, 231, 0.3);
+}
+
+.timeButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.advanceButton {
+  background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+}
+
+.advanceButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #00a085 0%, #00b7b8 100%);
+  box-shadow: 0 4px 8px rgba(0, 184, 148, 0.3);
+}
+
+.resetButton {
+  background: linear-gradient(135deg, #e17055 0%, #fd79a8 100%);
+}
+
+.resetButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #d63031 0%, #e84393 100%);
+  box-shadow: 0 4px 8px rgba(225, 112, 85, 0.3);
+}
+
+.speedControl {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: white;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.speedLabel {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #6c757d;
+  white-space: nowrap;
+}
+
+.speedSlider {
+  width: 100px;
+  height: 4px;
+  background: #e9ecef;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.speedSlider::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #6c5ce7;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.speedSlider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: #6c5ce7;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.error {
+  background: #f8d7da;
+  color: #721c24;
+  padding: 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #f5c6cb;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.simulationResult {
+  background: #d1ecf1;
+  color: #0c5460;
+  padding: 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #bee5eb;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+
+.statusIndicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+}
+
+.statusConnected {
+  background-color: #28a745;
+}
+
+.statusDisconnected {
+  background-color: #dc3545;
+}
+
+.statusLoading {
+  background-color: #ffc107;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@media (max-width: 768px) {
+  .timeControl {
+    padding: 1rem;
+  }
+  
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .controls {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .timeButton {
+    width: 100%;
+    min-width: unset;
+  }
+  
+  .speedControl {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .speedSlider {
+    flex: 1;
+    max-width: 150px;
+  }
+}

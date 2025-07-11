@@ -3,8 +3,9 @@
  * Handles automatic resolution of bets when matches finish
  */
 
-import { virtualTimeManager } from './virtualTimeManager';
+import { leagueTimeService } from './leagueTimeService';
 import { matchResultsService } from './matchResultsService';
+import { FEATURES } from '@/config/features';
 
 // Import types from AuthContext
 interface UserBet {
@@ -158,47 +159,10 @@ class BetResolutionService {
       };
     }
 
-    // Fallback to virtual time manager
-    const timeState = virtualTimeManager.getState();
-    console.log(`🔍 Checking virtual time manager state for match ${matchId}...`);
+    // Note: VirtualTimeManager has been deprecated in favor of backend league time service
+    // Since backend league time is enabled, match results should come from backend
+    console.log(`⚠️ Could not find match ${matchId} in backend. This might indicate a sync issue.`);
     
-    if (timeState.temporadaActiva) {
-      const match = timeState.temporadaActiva.partidos.find(m => m.id === matchId);
-      console.log(`🔍 Found match in virtual time manager:`, match);
-      
-      if (match && match.status === 'finished') {
-        const homeTeam = timeState.temporadaActiva.equipos.find(t => t.id === match.localId);
-        const awayTeam = timeState.temporadaActiva.equipos.find(t => t.id === match.visitanteId);
-        
-        if (homeTeam && awayTeam) {
-          console.log(`✅ Found completed match in virtual time manager:`, {
-            homeTeam: homeTeam.name,
-            awayTeam: awayTeam.name,
-            score: `${match.homeScore || 0}-${match.awayScore || 0}`
-          });
-          
-          return {
-            matchId,
-            homeTeamId: homeTeam.id,
-            awayTeamId: awayTeam.id,
-            homeTeamName: homeTeam.name,
-            awayTeamName: awayTeam.name,
-            homeScore: match.homeScore || 0,
-            awayScore: match.awayScore || 0,
-            winner: (match.homeScore || 0) > (match.awayScore || 0) ? 'home' :
-                    (match.awayScore || 0) > (match.homeScore || 0) ? 'away' : 'draw',
-            snitchCaught: match.events?.some(e => e.type === 'SNITCH_CAUGHT') || false,
-            snitchCaughtBy: match.events?.find(e => e.type === 'SNITCH_CAUGHT')?.teamId,
-            duration: match.currentMinute || 90,
-            finalScore: {
-              home: match.homeScore || 0,
-              away: match.awayScore || 0
-            }
-          };
-        }
-      }
-    }
-
     console.warn(`❌ No match result found for matchId: ${matchId}`);
     return null;
   }

@@ -4,7 +4,6 @@ import styles from './BettingPage.module.css';
 import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
 import AdminMessage from '@/components/common/AdminMessage';
-import { virtualTimeManager } from '@/services/virtualTimeManager';
 import { apiClient } from '@/utils/apiClient';
 import { Match, Season } from '@/types/league';
 import { useAuth } from '@/context/AuthContext';
@@ -101,40 +100,9 @@ const BettingPage: React.FC = () => {
         
         setMatches(bettableMatches);
       } else {
-        // Fallback to simulation data
-        const timeState = virtualTimeManager.getState();
-        if (timeState.temporadaActiva) {
-          setSeason(timeState.temporadaActiva);
-          const bettableMatches = timeState.temporadaActiva.partidos
-            .filter(match => {
-              const allowedStatuses = ['scheduled', 'live', 'upcoming'];
-              const isNotFinished = !['finished', 'completed', 'ended'].includes(match.status);
-              return allowedStatuses.includes(match.status) || isNotFinished;
-            })
-            .map((match: Match) => {
-              const homeTeam = timeState.temporadaActiva!.equipos.find(t => t.id === match.localId);
-              const awayTeam = timeState.temporadaActiva!.equipos.find(t => t.id === match.visitanteId);
-              
-              return {
-                id: match.id,
-                name: `${homeTeam?.name || match.localId} vs ${awayTeam?.name || match.visitanteId}`,
-                date: new Date(match.fecha).toLocaleDateString('es-ES', {
-                  month: 'short',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                }),
-                homeTeam: homeTeam?.name || match.localId,
-                awayTeam: awayTeam?.name || match.visitanteId,
-                status: match.status === 'live' ? 'live' : 'upcoming'
-              } as BettingMatch;
-            });
-          
-          setMatches(bettableMatches);
-        } else {
-          // No data available
-          setMatches([]);
-        }
+        // No backend data available - betting requires backend integration
+        console.warn('No backend data available for betting');
+        setMatches([]);
       }
     } catch (error) {
       console.error('Error loading matches for betting:', error);

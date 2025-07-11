@@ -52,7 +52,19 @@ class ApiClient {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      return await response.json();
+      const data = await response.json();
+      
+      // If the backend response already has the ApiResponse structure, return it directly
+      if (data && typeof data === 'object' && 'success' in data) {
+        return data;
+      }
+      
+      // Otherwise, wrap it in ApiResponse structure
+      return {
+        success: true,
+        data,
+        timestamp: new Date().toISOString()
+      };
     } catch (error) {
       console.error(`API Error [${options.method || 'GET'}] ${url}:`, error);
       throw error;

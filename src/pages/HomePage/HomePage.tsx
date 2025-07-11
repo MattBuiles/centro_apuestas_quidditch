@@ -5,8 +5,9 @@ import Button from '@/components/common/Button'
 import CTAButton from '@/components/common/CTAButton'
 import TeamLogo from '@/components/teams/TeamLogo'
 import { useAuth } from '@/context/AuthContext'
-import { virtualTimeManager } from '@/services/virtualTimeManager'
+import { leagueTimeService } from '@/services/leagueTimeService'
 import { Match, Team } from '@/types/league'
+import { FEATURES } from '@/config/features'
 import welcomeLogo from '@/assets/Welcome_Logo.png'
 import styles from './HomePage.module.css'
 
@@ -15,18 +16,34 @@ const HomePage = () => {
   const [teams, setTeams] = useState<Team[]>([]);
   const { canBet, isAdmin } = useAuth();
   useEffect(() => {
-    // Load featured matches from the virtual time manager
-    // This will automatically initialize a season if none exists
-    const temporadaActiva = virtualTimeManager.getTemporadaActivaOInicializar();
+    // Load featured matches from league time service
+    const loadFeaturedMatches = async () => {
+      if (FEATURES.USE_BACKEND_LEAGUE_TIME) {
+        try {
+          const leagueInfo = await leagueTimeService.getLeagueTimeInfo();
+          if (leagueInfo.activeSeason) {
+            // Get next 3 upcoming matches - use 'matches' from backend
+            const upcomingMatches = leagueInfo.activeSeason.matches
+              .filter((match: Match) => match.status === 'scheduled')
+              .sort((a: Match, b: Match) => new Date(a.date).getTime() - new Date(b.date).getTime())
+              .slice(0, 3);
+            
+            setFeaturedMatches(upcomingMatches);
+            setTeams(leagueInfo.activeSeason.teams); // use 'teams' from backend
+          }
+        } catch (error) {
+          console.error('Failed to load league information:', error);
+          setFeaturedMatches([]);
+          setTeams([]);
+        }
+      } else {
+        // No backend available, use empty state
+        setFeaturedMatches([]);
+        setTeams([]);
+      }
+    };
     
-    // Get next 3 upcoming matches
-    const upcomingMatches = temporadaActiva.partidos
-      .filter(match => match.status === 'scheduled')
-      .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
-      .slice(0, 3);
-    
-    setFeaturedMatches(upcomingMatches);
-    setTeams(temporadaActiva.equipos);
+    loadFeaturedMatches();
   }, []);
 
   const getTeamName = (teamId: string) => {
@@ -38,8 +55,8 @@ const HomePage = () => {
     if (match.status === 'live') return 'En Vivo';
     if (match.status === 'finished') return 'Finalizado';
     
-    const matchDate = new Date(match.fecha);
-    const now = virtualTimeManager.getFechaVirtualActual();
+    const matchDate = new Date(match.date); // Use 'date' from backend
+    const now = new Date(); // Use real time for now
     const diffInHours = (matchDate.getTime() - now.getTime()) / (1000 * 60 * 60);
     
     if (diffInHours < 24) return 'Próximo';
@@ -241,7 +258,7 @@ const HomePage = () => {
                     <div className={styles.matchDate}>
                       <span className={styles.dateIcon}>📅</span>
                       <span>
-                        {new Date(match.fecha).toLocaleDateString('es-ES')} • {new Date(match.fecha).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(match.date).toLocaleDateString('es-ES')} • {new Date(match.date).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
                     <div className={styles.matchOdds}>

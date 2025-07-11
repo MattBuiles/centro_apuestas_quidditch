@@ -3,7 +3,7 @@ import { leagueTimeService, LeagueTimeInfo } from '@/services/leagueTimeService'
 import { FEATURES } from '@/config/features';
 import { Match } from '@/types/league';
 import Button from '@/components/common/Button';
-import styles from './VirtualTimeControl.module.css';
+import styles from './LeagueTimeControl.module.css';
 
 interface VirtualTimeControlProps {
   onTimeAdvanced?: (newDate: Date, simulatedMatches: Match[]) => void;
