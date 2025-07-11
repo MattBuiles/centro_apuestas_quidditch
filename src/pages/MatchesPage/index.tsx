@@ -175,10 +175,15 @@ const MatchesPage = () => {
     // Apply search filter (except for upcoming tab since we already limited it)
     if (searchTerm.trim() && activeTab !== 'upcoming') {
       filteredMatches = filteredMatches.filter(match => {
-        const homeTeam = season.teams?.find(t => t.id === match.localId)?.name || '';
-        const awayTeam = season.teams?.find(t => t.id === match.visitanteId)?.name || '';
-        return homeTeam.toLowerCase().includes(searchTerm.toLowerCase()) ||
-               awayTeam.toLowerCase().includes(searchTerm.toLowerCase());
+        const homeTeamName = season.teams?.find(t => t.id === match.localId)?.name || match.localId;
+        const awayTeamName = season.teams?.find(t => t.id === match.visitanteId)?.name || match.visitanteId;
+        
+        // Format names for better searching
+        const formatName = (name: string) => name.replace(/[-_]/g, ' ').toLowerCase();
+        const searchLower = searchTerm.toLowerCase();
+        
+        return formatName(homeTeamName).includes(searchLower) ||
+               formatName(awayTeamName).includes(searchLower);
       });
     }
 
@@ -198,14 +203,23 @@ const MatchesPage = () => {
     const homeTeam = season?.teams?.find(t => t.id === match.localId);
     const awayTeam = season?.teams?.find(t => t.id === match.visitanteId);
     
+    // Function to format team names for display
+    const formatTeamName = (teamName: string) => {
+      return teamName
+        .replace(/[-_]/g, ' ')
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
+    };
+    
     // Map status to MatchCard expected values
     const cardStatus = match.status === 'scheduled' ? 'upcoming' as const : 
                       match.status === 'live' ? 'live' as const :
                       match.status === 'finished' ? 'finished' as const : 'upcoming' as const;
       return {
       id: match.id,
-      homeTeam: homeTeam?.name || match.localId,
-      awayTeam: awayTeam?.name || match.visitanteId,
+      homeTeam: homeTeam?.name ? formatTeamName(homeTeam.name) : formatTeamName(match.localId),
+      awayTeam: awayTeam?.name ? formatTeamName(awayTeam.name) : formatTeamName(match.visitanteId),
       date: new Date(match.date).toLocaleDateString('es-ES'),
       time: new Date(match.date).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
       league: 'Liga Profesional Quidditch',
@@ -258,10 +272,11 @@ const MatchesPage = () => {
   if (displayLoading) {
     return (
       <div className={styles.matchesPageContainer}>
-        <div className="flex items-center justify-center min-h-96">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-primary mx-auto mb-4"></div>
-            <p>Cargando sistema de simulación...</p>
+        <div className={styles.loadingContainer}>
+          <div className={styles.loadingContent}>
+            <div className={styles.magicalSpinner}></div>
+            <h3 className={styles.loadingTitle}>⚡ Cargando sistema de simulación...</h3>
+            <p className={styles.loadingText}>Preparando los partidos mágicos de Quidditch</p>
           </div>
         </div>
       </div>
@@ -271,13 +286,18 @@ const MatchesPage = () => {
   if (displayError) {
     return (
       <div className={styles.matchesPageContainer}>
-        <Card className="p-8 text-center">
-          <h2 className="text-xl font-bold text-red-600 mb-4">Error del Sistema</h2>
-          <p className="text-gray-600 mb-4">{displayError}</p>
-          <Button onClick={() => forceRefresh()} variant="primary">
-            Reintentar
-          </Button>
-        </Card>
+        <div className={styles.errorContainer}>
+          <Card className={styles.errorCard}>
+            <div className={styles.errorContent}>
+              <div className={styles.errorIcon}>⚠️</div>
+              <h2 className={styles.errorTitle}>Error del Sistema Mágico</h2>
+              <p className={styles.errorMessage}>{displayError}</p>
+              <Button onClick={() => forceRefresh()} variant="primary" className={styles.retryButton}>
+                🔄 Reintentar Hechizo
+              </Button>
+            </div>
+          </Card>
+        </div>
       </div>
     );
   }
@@ -346,26 +366,34 @@ const MatchesPage = () => {
             ))
           ) : (
             <div className={styles.noMatchesContainer}>
-              <Card className="p-8 text-center">
-                <h3 className="text-lg font-semibold mb-2">
-                  {activeTab === 'upcoming' && 'No hay partidos próximos'}
-                  {activeTab === 'live' && 'No hay partidos en vivo'}
-                  {activeTab === 'today' && 'No hay partidos hoy'}
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  {activeTab === 'upcoming' && 'Avanza el tiempo virtual para generar los próximos 5 partidos más cercanos.'}
-                  {activeTab === 'live' && 'Inicia la simulación de un partido para verlo en vivo.'}
-                  {activeTab === 'today' && 'Avanza el tiempo hasta el día de un partido.'}
-                </p>
-                {searchTerm && (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => setSearchTerm('')}
-                  >
-                    Limpiar búsqueda
-                  </Button>
-                )}
+              <Card className={styles.noMatchesCard}>
+                <div className={styles.noMatchesContent}>
+                  <div className={styles.noMatchesIcon}>
+                    {activeTab === 'upcoming' && '⏰'}
+                    {activeTab === 'live' && '🔴'}
+                    {activeTab === 'today' && '📅'}
+                  </div>
+                  <h3 className={styles.noMatchesTitle}>
+                    {activeTab === 'upcoming' && 'No hay partidos próximos'}
+                    {activeTab === 'live' && 'No hay partidos en vivo'}
+                    {activeTab === 'today' && 'No hay partidos hoy'}
+                  </h3>
+                  <p className={styles.noMatchesText}>
+                    {activeTab === 'upcoming' && 'Avanza el tiempo virtual para generar los próximos 5 partidos más cercanos.'}
+                    {activeTab === 'live' && 'Inicia la simulación de un partido para verlo en vivo.'}
+                    {activeTab === 'today' && 'Avanza el tiempo hasta el día de un partido.'}
+                  </p>
+                  {searchTerm && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setSearchTerm('')}
+                      className={styles.clearSearchButton}
+                    >
+                      🔍 Limpiar búsqueda
+                    </Button>
+                  )}
+                </div>
               </Card>
             </div>
           )}
