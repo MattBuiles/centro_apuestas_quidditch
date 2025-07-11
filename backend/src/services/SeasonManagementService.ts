@@ -7,6 +7,7 @@ export interface SeasonCreateData {
   startDate: Date;
   endDate: Date;
   teamIds: string[];
+  status?: 'upcoming' | 'active' | 'finished';
 }
 
 export class SeasonManagementService {
@@ -14,12 +15,13 @@ export class SeasonManagementService {
 
   async createSeason(data: SeasonCreateData): Promise<Season> {
     const seasonId = uuidv4();
+    const status = data.status || 'upcoming'; // Default to 'upcoming' if not specified
     
     // Create season record
     await this.db.run(`
       INSERT INTO seasons (id, name, start_date, end_date, status)
       VALUES (?, ?, ?, ?, ?)
-    `, [seasonId, data.name, data.startDate.toISOString(), data.endDate.toISOString(), 'upcoming']);
+    `, [seasonId, data.name, data.startDate.toISOString(), data.endDate.toISOString(), status]);
 
     // Link teams to season
     for (const teamId of data.teamIds) {

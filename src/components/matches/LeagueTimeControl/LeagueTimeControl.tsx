@@ -271,17 +271,14 @@ const LeagueTimeControl: React.FC<VirtualTimeControlProps> = ({
     try {
       const result = await leagueTimeServiceWithRefresh.resetDatabaseForNewSeason(false);
 
-      if (result.success) {
-        setLastActionMessage(`✅ Base de datos reseteada para nueva temporada. ${result.data?.newSeason ? 'Nueva temporada creada.' : ''}`);
-        
-        // Clear message after 7 seconds
-        setTimeout(() => setLastActionMessage(null), 7000);
-        
-        // Trigger season reset callback
-        onSeasonReset?.();
-      } else {
-        setError(result.message);
-      }
+      // The result is now the data directly, not wrapped in success property
+      setLastActionMessage(`✅ Base de datos reseteada completamente. Nueva temporada: ${result.newSeason?.name || 'Temporada creada'}. Partidos generados: ${result.stats?.matchesGenerated || 0}`);
+      
+      // Clear message after 7 seconds
+      setTimeout(() => setLastActionMessage(null), 7000);
+      
+      // Trigger season reset callback
+      onSeasonReset?.();
     } catch (error) {
       console.error('Error resetting database:', error);
       setError('Error reseteando la base de datos');
