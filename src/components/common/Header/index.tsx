@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
+import { createPortal } from 'react-dom'
 import { useAuth } from '@/context/AuthContext'
 import Button from '../Button'
 import Logo from '../Logo'
@@ -24,6 +25,39 @@ const Header = () => {
 
   const handleCancelLogout = () => {
     setShowLogoutModal(false)
+  }
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (showLogoutModal) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [showLogoutModal])
+
+  // Close modal on escape key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showLogoutModal) {
+        setShowLogoutModal(false)
+      }
+    }
+
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [showLogoutModal])
+
+  // Handle click outside modal
+  const handleModalBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      setShowLogoutModal(false)
+    }
   }
 
   // Cierra el menú móvil cuando la ruta cambia
@@ -260,8 +294,8 @@ const Header = () => {
       </div>
 
       {/* Logout Confirmation Modal */}
-      {showLogoutModal && (
-        <div className={styles.modal}>
+      {showLogoutModal && createPortal(
+        <div className={styles.modal} onClick={handleModalBackdropClick}>
           <div className={styles.modalContent}>
             <h3 className={styles.modalTitle}>
               🚪 ¿Seguro que quieres cerrar sesión?
@@ -284,7 +318,8 @@ const Header = () => {
               </Button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </header>
   )
