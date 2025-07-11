@@ -3,9 +3,11 @@ import { quidditchSimulator } from './quidditchSimulator';
 import { liveMatchSimulator } from './liveMatchSimulator';
 import { quidditchLeagueManager } from './quidditchLeagueManager';
 import { predictionsService } from './predictionsService';
+import { FEATURES } from '@/config/features';
 
 /**
  * Virtual Time Manager
+ * @deprecated Use leagueTimeService instead when FEATURES.USE_BACKEND_LEAGUE_TIME is enabled
  * Handles the virtual time system for controlled match simulation
  * Following the interactive mode approach: user controls when matches happen
  */
@@ -40,6 +42,11 @@ export interface TimeAdvanceOptions {
 export class VirtualTimeManager {
   private state: VirtualTimeState;
   private readonly STORAGE_KEY = 'quidditch_virtual_time_state';  constructor() {
+    // Warn if backend is enabled but this local service is still being used
+    if (FEATURES.USE_BACKEND_LEAGUE_TIME) {
+      console.warn('⚠️ VirtualTimeManager is deprecated when USE_BACKEND_LEAGUE_TIME is enabled. Use leagueTimeService instead.');
+    }
+    
     console.log('🔧 VirtualTimeManager: Inicializando constructor...');
     this.state = this.loadState();
     console.log('🔧 VirtualTimeManager: Estado cargado:', {

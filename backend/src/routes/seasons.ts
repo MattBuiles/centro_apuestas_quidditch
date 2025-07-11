@@ -1,6 +1,8 @@
 import { Router } from 'express';
+import { SeasonController } from '../controllers/SeasonController';
 
 const router = Router();
+const seasonController = new SeasonController();
 
 router.get('/', (req, res) => {
   res.json({

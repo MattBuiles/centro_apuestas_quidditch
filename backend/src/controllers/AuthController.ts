@@ -9,7 +9,7 @@ import { AuthenticatedRequest } from '../middleware/auth';
 export class AuthController {
   private db = Database.getInstance();
 
-  public login = async (req: Request, res: Response): Promise<void> => {
+  public login = async (req: Request<object, ApiResponse<{ user: UserPublic; tokens: AuthTokens }>, LoginRequest>, res: Response): Promise<void> => {
     try {
       const { email, password } = req.body;
 
@@ -20,32 +20,42 @@ export class AuthController {
       ) as User | undefined;
 
       if (!user) {
-        return res.status(401).json({
+        res.status(401).json({
           success: false,
           error: 'Invalid credentials',
           timestamp: new Date().toISOString()
         });
+        return;
       }
 
       // Verify password
       const isValidPassword = await bcrypt.compare(password, user.password);
       if (!isValidPassword) {
-        return res.status(401).json({
+        res.status(401).json({
           success: false,
           error: 'Invalid credentials',
           timestamp: new Date().toISOString()
         });
+        return;
       }
 
       // Generate JWT token
-      const token = jwt.sign(
-        { userId: user.id, email: user.email, role: user.role },
-        process.env.JWT_SECRET!,
-        { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
-      );
+      const jwtSecret = process.env.JWT_SECRET;
+      if (!jwtSecret) {
+        res.status(500).json({
+          success: false,
+          error: 'JWT secret not configured',
+          timestamp: new Date().toISOString()
+        });
+        return;
+      }
+
+      const tokenPayload = { userId: user.id, email: user.email, role: user.role };
+      const token = jwt.sign(tokenPayload, jwtSecret, { expiresIn: '7d' });
 
       // Remove password from user object
-      const { password: _, ...userWithoutPassword } = user;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password: _password, ...userWithoutPassword } = user;
 
       res.json({
         success: true,
@@ -68,7 +78,7 @@ export class AuthController {
     }
   };
 
-  public register = async (req: Request<{}, ApiResponse<{ user: UserPublic; tokens: AuthTokens }>, RegisterRequest>, res: Response) => {
+  public register = async (req: Request<object, ApiResponse<{ user: UserPublic; tokens: AuthTokens }>, RegisterRequest>, res: Response): Promise<void> => {
     try {
       const { username, email, password } = req.body;
 
@@ -79,11 +89,12 @@ export class AuthController {
       );
 
       if (existingUser) {
-        return res.status(409).json({
+        res.status(409).json({
           success: false,
           error: 'User already exists with this email or username',
           timestamp: new Date().toISOString()
         });
+        return;
       }
 
       // Hash password
@@ -104,14 +115,22 @@ export class AuthController {
       ) as User;
 
       // Generate JWT token
-      const token = jwt.sign(
-        { userId: newUser.id, email: newUser.email, role: newUser.role },
-        process.env.JWT_SECRET!,
-        { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
-      );
+      const jwtSecret = process.env.JWT_SECRET;
+      if (!jwtSecret) {
+        res.status(500).json({
+          success: false,
+          error: 'JWT secret not configured',
+          timestamp: new Date().toISOString()
+        });
+        return;
+      }
+
+      const tokenPayload = { userId: newUser.id, email: newUser.email, role: newUser.role };
+      const token = jwt.sign(tokenPayload, jwtSecret, { expiresIn: '7d' });
 
       // Remove password from user object
-      const { password: _, ...userWithoutPassword } = newUser;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password: _password, ...userWithoutPassword } = newUser;
 
       res.status(201).json({
         success: true,
@@ -143,14 +162,15 @@ export class AuthController {
     });
   };
 
-  public getProfile = async (req: AuthenticatedRequest, res: Response<ApiResponse<UserPublic>>) => {
+  public getProfile = async (req: AuthenticatedRequest, res: Response<ApiResponse<UserPublic>>): Promise<void> => {
     try {
       if (!req.user) {
-        return res.status(401).json({
+        res.status(401).json({
           success: false,
           error: 'Not authenticated',
           timestamp: new Date().toISOString()
         });
+        return;
       }
 
       const user = await this.db.get(
@@ -159,11 +179,12 @@ export class AuthController {
       ) as UserPublic;
 
       if (!user) {
-        return res.status(404).json({
+        res.status(404).json({
           success: false,
           error: 'User not found',
           timestamp: new Date().toISOString()
         });
+        return;
       }
 
       res.json({

@@ -234,3 +234,56 @@ export interface JWTPayload {
   iat?: number;
   exp?: number;
 }
+
+// Database row interfaces for SQL queries
+export interface TeamRow {
+  id: string;
+  name: string;
+  logo?: string;
+  founded?: number;
+  description?: string;
+  stadium?: string;
+  colors?: string; // JSON string
+  matches_played?: number;
+  wins?: number;
+  losses?: number;
+  draws?: number;
+  points_for?: number;
+  points_against?: number;
+  snitch_catches?: number;
+  attack_strength?: number;
+  seeker_skill?: number;
+}
+
+export interface MatchRow {
+  id: string;
+  season_id: string;
+  home_team_id: string;
+  away_team_id: string;
+  date: string;
+  status: string;
+  home_score?: number;
+  away_score?: number;
+  snitch_caught?: boolean;
+  snitch_caught_by?: string;
+  duration?: number;
+  odds_home_win?: number;
+  odds_away_win?: number;
+  odds_draw?: number;
+  odds_total_over?: number;
+  odds_total_under?: number;
+  odds_snitch_home?: number;
+  odds_snitch_away?: number;
+}
+
+export interface MatchResult {
+  matchId: string;
+  homeScore: number;
+  awayScore: number;
+  duration: number;
+  snitchCaught: boolean;
+  snitchCaughtBy?: string;
+  events: MatchEvent[];
+  weather: 'sunny' | 'cloudy' | 'rainy' | 'stormy' | 'foggy' | 'windy';
+  attendance: number;
+}
