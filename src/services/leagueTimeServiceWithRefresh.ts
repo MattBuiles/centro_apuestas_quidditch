@@ -1,4 +1,4 @@
-import { leagueTimeService, AdvanceTimeOptions, AdvanceTimeResult, GenerateSeasonResult } from './leagueTimeService';
+import { leagueTimeService, AdvanceTimeOptions, AdvanceTimeResult, GenerateSeasonResult, ResetDatabaseResult } from './leagueTimeService';
 
 /**
  * Enhanced LeagueTimeService that automatically triggers UI refresh after actions
@@ -137,6 +137,86 @@ export class LeagueTimeServiceWithRefresh {
       return result;
     } catch (error) {
       console.error('❌ Error setting auto mode:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Advance time to next unplayed match with automatic refresh
+   */
+  async advanceToNextUnplayedMatch(): Promise<AdvanceTimeResult> {
+    console.log('⚽ Advancing to next unplayed match with automatic refresh...');
+    
+    try {
+      const result = await leagueTimeService.advanceToNextUnplayedMatch();
+      
+      // Trigger refresh after successful advance
+      await this.triggerRefresh();
+      
+      console.log('✅ Advanced to next match and UI refreshed');
+      return result;
+    } catch (error) {
+      console.error('❌ Error advancing to next match:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Simulate complete matches with automatic refresh
+   */
+  async simulateCompleteMatches(targetTime?: string): Promise<AdvanceTimeResult> {
+    console.log('🎮 Simulating complete matches with automatic refresh...');
+    
+    try {
+      const result = await leagueTimeService.simulateCompleteMatches(targetTime);
+      
+      // Trigger refresh after successful simulation
+      await this.triggerRefresh();
+      
+      console.log('✅ Matches simulated and UI refreshed');
+      return result;
+    } catch (error) {
+      console.error('❌ Error simulating matches:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Simulate complete season with automatic refresh
+   */
+  async simulateCompleteSeason(): Promise<AdvanceTimeResult> {
+    console.log('🏆 Simulating complete season with automatic refresh...');
+    
+    try {
+      const result = await leagueTimeService.simulateCompleteSeason();
+      
+      // Trigger refresh after successful simulation
+      await this.triggerRefresh();
+      
+      console.log('✅ Season simulated and UI refreshed');
+      return result;
+    } catch (error) {
+      console.error('❌ Error simulating season:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Reset database for new season with automatic refresh
+   */
+  async resetDatabaseForNewSeason(complete: boolean = false): Promise<ResetDatabaseResult> {
+    console.log('🔄 Resetting database for new season with automatic refresh...');
+    
+    try {
+      const result = await leagueTimeService.resetDatabaseForNewSeason(complete);
+      
+      // Trigger refresh after successful reset
+      await this.triggerRefresh();
+      
+      console.log('✅ Database reset and UI refreshed');
+      return result;
+    } catch (error) {
+      console.error('❌ Error resetting database:', error);
       throw error;
     }
   }

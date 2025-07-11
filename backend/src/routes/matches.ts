@@ -106,4 +106,41 @@ router.get('/upcoming/:limit', async (req, res) => {
   }
 });
 
+// GET /api/matches/next-unplayed - Get next unplayed match based on virtual time
+router.get('/next-unplayed', async (req, res) => {
+  try {
+    const db = Database.getInstance();
+    
+    // Get current virtual time from league time service
+    // For now, we'll use a query parameter or current time
+    const currentVirtualTime = req.query.virtualTime as string || new Date().toISOString();
+    
+    const nextMatch = await db.getNextUnplayedMatch(currentVirtualTime);
+    
+    if (!nextMatch) {
+      return res.json({
+        success: true,
+        data: null,
+        message: 'No unplayed matches found',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    return res.json({
+      success: true,
+      data: nextMatch,
+      message: 'Next unplayed match retrieved successfully',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error fetching next unplayed match:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: 'Failed to retrieve next unplayed match',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 export default router;

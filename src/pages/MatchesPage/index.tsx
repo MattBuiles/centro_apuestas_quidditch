@@ -122,14 +122,17 @@ const MatchesPage = () => {
       return [];
     }
 
-    const partidos = season.matches || []; // Use 'matches' from backend
+    const partidos = season.matches || [];
     
-    // Usar tiempo del backend o fallback al tiempo actual
+    // Usar tiempo virtual del backend exclusivamente
     let fechaVirtual: Date;
     try {
       fechaVirtual = getCurrentLeagueDate();
-    } catch {
-      fechaVirtual = new Date();
+    } catch (error) {
+      console.error('Error obteniendo fecha virtual del backend:', error);
+      // En caso de error, usar una fecha por defecto pero registrar el error
+      fechaVirtual = new Date('2024-01-01'); // Fecha de fallback consistente
+      setError('No se pudo obtener el tiempo virtual. Usando fecha por defecto.');
     }
 
     let filteredMatches: Match[] = [];
@@ -137,13 +140,13 @@ const MatchesPage = () => {
     switch (activeTab) {
       case 'upcoming':
         filteredMatches = partidos.filter(match => {
-          const matchDate = new Date(match.date); // Use 'date' from backend
+          const matchDate = new Date(match.date);
           return matchDate > fechaVirtual && match.status === 'scheduled';
         });
         // Sort by date first to get the closest matches
         filteredMatches.sort((a, b) => {
-          const dateA = new Date(a.date); // Use 'date' from backend
-          const dateB = new Date(b.date); // Use 'date' from backend
+          const dateA = new Date(a.date);
+          const dateB = new Date(b.date);
           return dateA.getTime() - dateB.getTime(); // Chronological order
         });
         // Limit to only 5 closest upcoming matches
@@ -160,7 +163,7 @@ const MatchesPage = () => {
         endOfDay.setHours(23, 59, 59, 999);
         
         filteredMatches = partidos.filter(match => {
-          const matchDate = new Date(match.date); // Use 'date' from backend
+          const matchDate = new Date(match.date);
           return matchDate >= startOfDay && matchDate <= endOfDay;
         });
         break;
@@ -216,8 +219,17 @@ const MatchesPage = () => {
   const getTabCounts = () => {
     if (!season) return { upcoming: 0, live: 0, today: 0 };
 
-    const partidos = season.matches || []; // Use 'matches' from backend
-    const fechaVirtual = getCurrentLeagueDate(); // Usar el tiempo de liga en lugar del tiempo real
+    const partidos = season.matches || [];
+    
+    // Usar tiempo virtual del backend exclusivamente
+    let fechaVirtual: Date;
+    try {
+      fechaVirtual = getCurrentLeagueDate();
+    } catch (error) {
+      console.error('Error obteniendo fecha virtual para conteos:', error);
+      // En caso de error, usar una fecha por defecto pero registrar el error
+      fechaVirtual = new Date('2024-01-01');
+    }
     
     const today = new Date(fechaVirtual);
     const startOfDay = new Date(today);
