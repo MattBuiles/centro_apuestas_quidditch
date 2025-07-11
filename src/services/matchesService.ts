@@ -5,19 +5,33 @@ import { FEATURES } from '../config/features';
 // Tipo para las respuestas del backend
 interface BackendMatch {
   id: string;
-  seasonId: string;
-  homeTeamId: string;
-  awayTeamId: string;
+  seasonId?: string;
+  season_id?: string;
+  homeTeamId?: string;
+  home_team_id?: string;
+  awayTeamId?: string;
+  away_team_id?: string;
   date: string;
   status: 'scheduled' | 'live' | 'finished' | 'postponed';
   homeScore?: number;
+  home_score?: number;
   awayScore?: number;
+  away_score?: number;
   snitchCaught?: boolean;
+  snitch_caught?: boolean;
   snitchCaughtBy?: string;
+  snitch_caught_by?: string;
   duration?: number;
+  // Additional fields from database joins
+  homeTeamName?: string;
+  awayTeamName?: string;
+  homeTeamLogo?: string;
+  awayTeamLogo?: string;
+  seasonName?: string;
   events: Array<{
     id: string;
     matchId: string;
+    match_id?: string;
     minute: number;
     type: string;
     team: string;
@@ -31,6 +45,27 @@ interface BackendMatch {
 
 // Convertir match del backend al formato frontend
 const adaptBackendMatch = (backendMatch: BackendMatch): Match => {
+  // Handle both camelCase and snake_case field names from backend
+  const homeTeamId = backendMatch.homeTeamId || backendMatch.home_team_id;
+  const awayTeamId = backendMatch.awayTeamId || backendMatch.away_team_id;
+  const homeScore = backendMatch.homeScore ?? backendMatch.home_score ?? 0;
+  const awayScore = backendMatch.awayScore ?? backendMatch.away_score ?? 0;
+  const snitchCaught = backendMatch.snitchCaught ?? backendMatch.snitch_caught ?? false;
+
+  // Debug logging to see what we receive from backend
+  if (FEATURES.DEBUG_API) {
+    console.log('🔍 Backend match data received:', {
+      id: backendMatch.id,
+      homeTeamId,
+      awayTeamId,
+      status: backendMatch.status,
+      rawHomeTeamId: backendMatch.homeTeamId,
+      rawHomeTeamIdSnake: backendMatch.home_team_id,
+      rawAwayTeamId: backendMatch.awayTeamId,
+      rawAwayTeamIdSnake: backendMatch.away_team_id,
+    });
+  }
+
   // Convertir eventos del backend al formato frontend
   const adaptedEvents = (backendMatch.events || []).map(event => ({
     id: event.id,
@@ -45,24 +80,24 @@ const adaptBackendMatch = (backendMatch: BackendMatch): Match => {
 
   return {
     id: backendMatch.id,
-    localId: backendMatch.homeTeamId,
-    visitanteId: backendMatch.awayTeamId,
-    homeTeamId: backendMatch.homeTeamId,
-    awayTeamId: backendMatch.awayTeamId,
+    localId: homeTeamId || '',
+    visitanteId: awayTeamId || '',
+    homeTeamId: homeTeamId || '',
+    awayTeamId: awayTeamId || '',
     fecha: new Date(backendMatch.date),
     date: new Date(backendMatch.date),
     eventos: adaptedEvents,
     events: adaptedEvents,
     status: backendMatch.status,
-    homeScore: backendMatch.homeScore || 0,
-    awayScore: backendMatch.awayScore || 0,
+    homeScore: homeScore,
+    awayScore: awayScore,
     duration: backendMatch.duration || 0,
     round: 1, // TODO: agregar al backend
     matchday: 1, // TODO: agregar al backend
     venue: `Stadium`, // TODO: agregar al backend
     attendance: Math.floor(Math.random() * 50000) + 10000, // TODO: agregar al backend
     weather: 'sunny', // TODO: agregar al backend
-    snitchCaught: backendMatch.snitchCaught || false,
+    snitchCaught: snitchCaught,
     snitchCaughtAt: undefined, // TODO: agregar al backend
     currentMinute: undefined, // TODO: agregar al backend para partidos en vivo
     isLive: backendMatch.status === 'live'

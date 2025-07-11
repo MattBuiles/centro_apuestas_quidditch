@@ -137,10 +137,57 @@ const LeagueTimeControl: React.FC<VirtualTimeControlProps> = ({
     }
   };
 
+  const isSeasonFinished = (): boolean => {
+    if (!leagueTimeInfo?.activeSeason?.matches) return false;
+    
+    const allMatches = leagueTimeInfo.activeSeason.matches;
+    return allMatches.length > 0 && allMatches.every(match => match.status === 'finished');
+  };
+
+  const handleStartNextSeason = async () => {
+    if (!FEATURES.USE_BACKEND_LEAGUE_TIME || !isBackendAuthenticated) {
+      setError('Backend de tiempo de liga no disponible. Funcionalidad deshabilitada.');
+      return;
+    }
+
+    setIsAdvancing(true);
+    setError(null);
+    setLastActionMessage(null);
+    try {
+      const result = await leagueTimeServiceWithRefresh.generateNewSeason();
+
+      if (result.success && result.season) {
+        setLastActionMessage(`✅ Nueva temporada iniciada: ${result.season.name}`);
+        
+        // Clear message after 3 seconds
+        setTimeout(() => setLastActionMessage(null), 3000);
+        
+        // Trigger season reset callback
+        onSeasonReset?.();
+      } else {
+        setError(result.message || 'Error iniciando nueva temporada');
+      }
+    } catch (error) {
+      console.error('Error starting next season:', error);
+      setError('Error iniciando nueva temporada');
+    } finally {
+      setIsAdvancing(false);
+    }
+  };
+
   const handleAdvanceToNextMatch = async () => {
     if (!FEATURES.USE_BACKEND_LEAGUE_TIME || !isBackendAuthenticated) {
       setError('Backend de tiempo de liga no disponible. Funcionalidad deshabilitada.');
       return;
+    }
+
+    // Check if there's already a live match that hasn't been simulated
+    if (leagueTimeInfo?.activeSeason?.matches) {
+      const liveMatches = leagueTimeInfo.activeSeason.matches.filter(m => m.status === 'live');
+      if (liveMatches.length > 0) {
+        setError('Ya hay un partido en vivo. Simúlalo antes de avanzar al siguiente.');
+        return;
+      }
     }
 
     setIsAdvancing(true);
@@ -163,72 +210,6 @@ const LeagueTimeControl: React.FC<VirtualTimeControlProps> = ({
     } catch (error) {
       console.error('Error advancing to next match:', error);
       setError('Error navegando al próximo partido');
-    } finally {
-      setIsAdvancing(false);
-    }
-  };
-
-  const handleGenerateNewSeason = async () => {
-    if (!FEATURES.USE_BACKEND_LEAGUE_TIME || !isBackendAuthenticated) {
-      setError('Backend de tiempo de liga no disponible. Funcionalidad deshabilitada.');
-      return;
-    }
-
-    setIsAdvancing(true);
-    setError(null);
-    setLastActionMessage(null);
-    try {
-      const result = await leagueTimeServiceWithRefresh.generateNewSeason();
-
-      if (result.success && result.season) {
-        // El servicio enhanced ya actualizó automáticamente el UI via callbacks
-        setLastActionMessage(`✅ Nueva temporada generada: ${result.season.name}`);
-        
-        // Clear message after 3 seconds
-        setTimeout(() => setLastActionMessage(null), 3000);
-        
-        onSeasonReset?.();
-      } else {
-        // No new season was needed - this is not an error
-        setLastActionMessage(`ℹ️ ${result.message}`);
-        
-        // Clear message after 3 seconds
-        setTimeout(() => setLastActionMessage(null), 3000);
-      }
-    } catch (error) {
-      console.error('Error generating new season:', error);
-      setError('Error generando nueva temporada');
-    } finally {
-      setIsAdvancing(false);
-    }
-  };
-
-  const handleSimulateMatches = async () => {
-    if (!FEATURES.USE_BACKEND_LEAGUE_TIME || !isBackendAuthenticated) {
-      setError('Backend de tiempo de liga no disponible. Funcionalidad deshabilitada.');
-      return;
-    }
-
-    setIsAdvancing(true);
-    setError(null);
-    setLastActionMessage(null);
-    try {
-      const result = await leagueTimeServiceWithRefresh.simulateCompleteMatches();
-
-      if (result.success) {
-        setLastActionMessage(`✅ Partidos simulados: ${result.simulatedMatches.length}`);
-        
-        // Clear message after 3 seconds
-        setTimeout(() => setLastActionMessage(null), 3000);
-        
-        const simulatedMatches: Match[] = [];
-        onTimeAdvanced?.(new Date(result.newDate), simulatedMatches);
-      } else {
-        setError(result.message);
-      }
-    } catch (error) {
-      console.error('Error simulating matches:', error);
-      setError('Error simulando partidos');
     } finally {
       setIsAdvancing(false);
     }
@@ -447,27 +428,21 @@ const LeagueTimeControl: React.FC<VirtualTimeControlProps> = ({
 
             <Button
               variant="magical"
-              onClick={handleSimulateMatches}
-              disabled={isAdvancing}
-            >
-              {isAdvancing ? '⏳' : '🎮'} Simular partidos
-            </Button>
-
-            <Button
-              variant="magical"
               onClick={handleSimulateCompleteSeason}
               disabled={isAdvancing}
             >
-              {isAdvancing ? '⏳' : '🏆'} Simular temporada completa
+              {isAdvancing ? '⏳' : '�'} Simular resto de temporada
             </Button>
 
-            <Button
-              variant="outline"
-              onClick={handleGenerateNewSeason}
-              disabled={isAdvancing}
-            >
-              {isAdvancing ? '⏳' : '🆕'} Nueva temporada
-            </Button>
+            {isSeasonFinished() && (
+              <Button
+                variant="primary"
+                onClick={handleStartNextSeason}
+                disabled={isAdvancing}
+              >
+                {isAdvancing ? '⏳' : '🆕'} Iniciar próxima temporada
+              </Button>
+            )}
 
             <Button
               variant="outline"

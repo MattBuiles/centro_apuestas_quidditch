@@ -33,6 +33,13 @@ export class LeagueTimeService {
   }
 
   /**
+   * Set the current virtual date
+   */
+  async setCurrentDate(newDate: Date): Promise<void> {
+    await this.virtualTimeService.setCurrentDate(newDate);
+  }
+
+  /**
    * Get comprehensive league time information
    */
   async getLeagueTimeInfo(): Promise<LeagueTimeInfo> {

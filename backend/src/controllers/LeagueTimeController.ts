@@ -49,7 +49,7 @@ export class LeagueTimeController {
   public advanceLeagueTime = async (req: Request, res: Response): Promise<void> => {
     try {
       await this.ensureInitialized();
-      const { days, hours, toNextMatch, simulateMatches, targetTime } = req.body;
+      const { days, hours, toNextMatch, simulateMatches } = req.body;
       
       const result = await this.leagueTimeService.advanceLeagueTime({
         days,
@@ -77,6 +77,76 @@ export class LeagueTimeController {
         success: false,
         error: 'Internal server error',
         message: 'Failed to advance league time',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
+
+  // POST /api/league-time/advance-to-next-match - Advance to next unplayed match and set it as live
+  public advanceToNextMatch = async (req: Request, res: Response): Promise<void> => {
+    try {
+      await this.ensureInitialized();
+      
+      // Get next scheduled match
+      const db = Database.getInstance();
+      const virtualTimeService = new (await import('../services/VirtualTimeService')).VirtualTimeService();
+      await virtualTimeService.initialize();
+      const currentState = await virtualTimeService.getCurrentState();
+      
+      // Check if there's already a live match
+      const liveMatches = await db.all(`
+        SELECT * FROM matches 
+        WHERE status = 'live'
+      `);
+      
+      if (liveMatches && liveMatches.length > 0) {
+        res.json({
+          success: false,
+          message: 'Ya hay un partido en vivo. Simúlalo antes de avanzar al siguiente.',
+          timestamp: new Date().toISOString()
+        });
+        return;
+      }
+      
+      const nextMatch = await db.getNextUnplayedMatch(currentState.currentDate.toISOString()) as {
+        id: string;
+        date: string;
+        [key: string]: unknown;
+      } | null;
+      
+      if (!nextMatch) {
+        res.json({
+          success: false,
+          message: 'No se encontraron partidos pendientes',
+          timestamp: new Date().toISOString()
+        });
+        return;
+      }
+      
+      // Advance time to that match date
+      const matchDate = new Date(nextMatch.date);
+      await this.leagueTimeService.setCurrentDate(matchDate);
+      
+      // Mark the match as live
+      await db.run(`UPDATE matches SET status = 'live' WHERE id = ?`, [nextMatch.id]);
+      
+      res.json({
+        success: true,
+        data: {
+          success: true,
+          newDate: matchDate.toISOString(),
+          simulatedMatches: [],
+          message: `Avanzado al próximo partido en ${matchDate.toLocaleDateString('es-ES')}`
+        },
+        message: 'Successfully advanced to next match',
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error advancing to next match:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error',
+        message: 'Failed to advance to next match',
         timestamp: new Date().toISOString()
       });
     }

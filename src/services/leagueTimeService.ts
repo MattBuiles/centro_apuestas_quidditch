@@ -105,31 +105,6 @@ export class LeagueTimeService {
   }
 
   /**
-   * Advance time to the next unplayed match
-   */
-  async advanceToNextUnplayedMatch(): Promise<AdvanceTimeResult> {
-    if (!FEATURES.USE_BACKEND_LEAGUE_TIME || !isBackendAuthAvailable()) {
-      throw new Error('Backend league time service not available or not authenticated');
-    }
-
-    try {
-      const response = await apiClient.post<AdvanceTimeResult>('/league-time/advance', {
-        toNextMatch: true,
-        simulateMatches: false
-      });
-      
-      if (response.success && response.data) {
-        return response.data;
-      } else {
-        throw new Error(response.message || response.error || 'Failed to advance to next match');
-      }
-    } catch (error) {
-      console.error('Error advancing to next match:', error);
-      throw error;
-    }
-  }
-
-  /**
    * Simulate all matches up to a certain time with complete event simulation
    */
   async simulateCompleteMatches(targetTime?: string): Promise<AdvanceTimeResult> {
@@ -265,6 +240,28 @@ export class LeagueTimeService {
       }
     } catch (error) {
       console.error('Error setting auto mode:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Advance time to next unplayed match
+   */
+  async advanceToNextUnplayedMatch(): Promise<AdvanceTimeResult> {
+    if (!FEATURES.USE_BACKEND_LEAGUE_TIME || !isBackendAuthAvailable()) {
+      throw new Error('Backend league time service not available or not authenticated');
+    }
+
+    try {
+      const response = await apiClient.post<AdvanceTimeResult>('/league-time/advance-to-next-match', {});
+      
+      if (response.success && response.data) {
+        return response.data;
+      } else {
+        throw new Error(response.message || response.error || 'Failed to advance to next match');
+      }
+    } catch (error) {
+      console.error('Error advancing to next unplayed match:', error);
       throw error;
     }
   }
