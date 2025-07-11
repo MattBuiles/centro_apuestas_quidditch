@@ -1,5 +1,5 @@
 {
-  "exec": "ts-node src/index-simple.ts",
+  "exec": "ts-node src/index.ts",
   "ext": "ts,js,json",
   "ignore": ["dist/", "node_modules/"],
   "env": {

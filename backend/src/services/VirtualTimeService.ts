@@ -290,7 +290,7 @@ export class VirtualTimeService {
       awayScore,
       duration,
       snitchCaught,
-      snitchCaughtBy,
+      snitchCaughtBy: snitchCaughtBy || undefined,
       events: events.sort((a, b) => a.minute - b.minute),
       weather: randomWeather,
       attendance: Math.floor(Math.random() * 50000) + 10000

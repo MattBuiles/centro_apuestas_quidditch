@@ -10,22 +10,24 @@ export const authenticate = async (
   req: AuthenticatedRequest,
   res: Response<ApiResponse>,
   next: NextFunction
-) => {
+): Promise<void> => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
 
     if (!token) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         error: 'Access denied. No token provided.',
         timestamp: new Date().toISOString()
       });
+      return;
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JWTPayload;
     req.user = decoded;
     next();
   } catch (error) {
+    console.error('Auth error:', error);
     res.status(401).json({
       success: false,
       error: 'Invalid token.',
@@ -35,21 +37,23 @@ export const authenticate = async (
 };
 
 export const authorize = (...roles: string[]) => {
-  return (req: AuthenticatedRequest, res: Response<ApiResponse>, next: NextFunction) => {
+  return (req: AuthenticatedRequest, res: Response<ApiResponse>, next: NextFunction): void => {
     if (!req.user) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         error: 'Access denied. Not authenticated.',
         timestamp: new Date().toISOString()
       });
+      return;
     }
 
     if (!roles.includes(req.user.role)) {
-      return res.status(403).json({
+      res.status(403).json({
         success: false,
         error: 'Access denied. Insufficient permissions.',
         timestamp: new Date().toISOString()
       });
+      return;
     }
 
     next();

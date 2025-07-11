@@ -15,6 +15,7 @@ router.get('/', async (req, res) => {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
+    console.error('Teams fetch error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch teams',
@@ -24,17 +25,18 @@ router.get('/', async (req, res) => {
 });
 
 // Get team by ID
-router.get('/:id', async (req, res) => {
+router.get('/:id', async (req, res): Promise<void> => {
   try {
     const db = Database.getInstance();
     const team = await db.get('SELECT * FROM teams WHERE id = ?', [req.params.id]);
     
     if (!team) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Team not found',
         timestamp: new Date().toISOString()
       });
+      return;
     }
 
     res.json({
@@ -43,6 +45,7 @@ router.get('/:id', async (req, res) => {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
+    console.error('Team fetch error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch team',

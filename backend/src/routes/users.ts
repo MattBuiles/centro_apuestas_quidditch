@@ -179,8 +179,8 @@ router.put('/:id/balance', authenticate, async (req: AuthenticatedRequest, res) 
       amount: amount,
       balanceBefore: targetUser.balance,
       balanceAfter: newBalance,
-      description: reason || `Balance adjustment by admin ${user.username}`,
-      referenceId: null
+      description: reason || `Balance adjustment by admin ${user.email}`,
+      referenceId: undefined
     });
 
     return res.json({
