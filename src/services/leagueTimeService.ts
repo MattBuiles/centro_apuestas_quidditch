@@ -1,5 +1,5 @@
 import { apiClient } from '../utils/apiClient';
-import { Season } from '../types/league';
+import { Season, Match } from '../types/league';
 import { FEATURES } from '../config/features';
 
 // Helper function to check if backend authentication is available
@@ -287,6 +287,32 @@ export class LeagueTimeService {
       }
     } catch (error) {
       console.error('Error resetting database:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Mark a specific match as live
+   */
+  async markMatchAsLive(matchId: string): Promise<{ success: boolean; message: string; match?: Match }> {
+    if (!FEATURES.USE_BACKEND_LEAGUE_TIME || !isBackendAuthAvailable()) {
+      throw new Error('Backend league time service not available or not authenticated');
+    }
+
+    try {
+      const response = await apiClient.put<Match>(`/matches/${matchId}/mark-live`, {});
+      
+      if (response.success && response.data) {
+        return {
+          success: true,
+          message: 'Match marked as live successfully',
+          match: response.data
+        };
+      } else {
+        throw new Error(response.message || response.error || 'Failed to mark match as live');
+      }
+    } catch (error) {
+      console.error('Error marking match as live:', error);
       throw error;
     }
   }

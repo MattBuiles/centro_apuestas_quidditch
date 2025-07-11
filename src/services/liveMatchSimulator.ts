@@ -217,13 +217,18 @@ export class LiveMatchSimulator {
     teamName: string,
     isLocalTeam: boolean
   ): void {
+    // Validate inputs to prevent object interpolation errors
+    const safeTeamId = typeof teamId === 'string' ? teamId : 'unknown';
+    const safeTeamName = typeof teamName === 'string' ? teamName : 'Equipo Desconocido';
+    const safeEventDescription = typeof evento.description === 'string' ? evento.description : 'Evento desconocido';
+    
     const gameEvent: GameEvent = {
       id: `${estado.matchId}-${estado.eventos.length + 1}`,
       type: evento.tipo,
       minute: estado.minuto,
       second: Math.floor(Math.random() * 60),
-      teamId,
-      description: `${teamName}: ${evento.description}`,
+      teamId: safeTeamId,
+      description: `${safeTeamName}: ${safeEventDescription}`,
       points: evento.puntos,
       success: true
     };
@@ -242,7 +247,8 @@ export class LiveMatchSimulator {
     // Handle special events
     if (evento.tipo === 'SNITCH_CAUGHT') {
       estado.snitchCaught = true;
-      estado.snitchCaughtBy = teamId;
+      // Ensure teamId is a string before assignment
+      estado.snitchCaughtBy = typeof teamId === 'string' ? teamId : 'unknown';
       if (evento.endsMatch) {
         estado.isActive = false;
       }

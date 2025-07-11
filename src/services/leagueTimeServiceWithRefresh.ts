@@ -220,6 +220,26 @@ export class LeagueTimeServiceWithRefresh {
       throw error;
     }
   }
+
+  /**
+   * Mark a match as live with automatic refresh
+   */
+  async markMatchAsLive(matchId: string): Promise<{ success: boolean; message: string; match?: unknown }> {
+    console.log('⚽ Marking match as live with automatic refresh...', matchId);
+    
+    try {
+      const result = await leagueTimeService.markMatchAsLive(matchId);
+      
+      // Trigger refresh after successful action
+      await this.triggerRefresh();
+      
+      console.log('✅ Match marked as live and UI refreshed');
+      return result;
+    } catch (error) {
+      console.error('❌ Error marking match as live:', error);
+      throw error;
+    }
+  }
 }
 
 // Singleton instance

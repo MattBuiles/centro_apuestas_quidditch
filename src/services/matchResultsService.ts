@@ -239,7 +239,16 @@ export class MatchResultsService {
     const keyMoments: KeyMoment[] = [];
 
     events.forEach(event => {
-      const teamName = event.teamId === homeTeam.id ? homeTeam.name : awayTeam.name;
+      // Validate event.teamId and get team name safely
+      const teamName = (() => {
+        if (typeof event.teamId !== 'string') {
+          console.error('Invalid teamId in event:', event);
+          return 'Equipo Desconocido';
+        }
+        if (event.teamId === homeTeam.id) return homeTeam.name;
+        if (event.teamId === awayTeam.id) return awayTeam.name;
+        return 'Equipo Desconocido';
+      })();
         switch (event.type) {
         case 'QUAFFLE_GOAL':
           keyMoments.push({
@@ -267,10 +276,15 @@ export class MatchResultsService {
             'FOUL_BLAGGING': 'Blagging (agarrar cola de escoba)',
             'FOUL_BLATCHING': 'Blatching (volar con intención de colisionar)'
           };
+          
+          // Ensure event.type is a string before using replace
+          const eventTypeString = typeof event.type === 'string' ? event.type : 'FOUL_UNKNOWN';
+          const foulType = foulTranslations[eventTypeString] || eventTypeString.replace('FOUL_', '');
+          
           keyMoments.push({
             minute: event.minute,
             type: 'MAJOR_FOUL',
-            description: `${teamName} comete una falta grave: ${foulTranslations[event.type] || event.type.replace('FOUL_', '')}`,
+            description: `${teamName} comete una falta grave: ${foulType}`,
             team: teamName,
             impact: 'medium'
           });
