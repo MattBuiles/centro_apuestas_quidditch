@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { leagueTimeService, LeagueTimeInfo } from '@/services/leagueTimeService';
+import { leagueTimeServiceWithRefresh } from '@/services/leagueTimeServiceWithRefresh';
+import { LeagueTimeInfo } from '@/services/leagueTimeService';
 import { FEATURES } from '@/config/features';
 import { Match } from '@/types/league';
 import { useAuth } from '@/context/AuthContext';
@@ -35,7 +36,7 @@ const LeagueTimeControl: React.FC<VirtualTimeControlProps> = ({
     setIsLoading(true);
     setError(null);
     try {
-      const info = await leagueTimeService.getLeagueTimeInfo();
+      const info = await leagueTimeServiceWithRefresh.getLeagueTimeInfo();
       setLeagueTimeInfo(info);
     } catch (error) {
       console.error('Error loading league time info:', error);
@@ -55,7 +56,7 @@ const LeagueTimeControl: React.FC<VirtualTimeControlProps> = ({
       setIsLoading(true);
       setError(null);
       try {
-        const info = await leagueTimeService.getLeagueTimeInfo();
+        const info = await leagueTimeServiceWithRefresh.getLeagueTimeInfo();
         setLeagueTimeInfo(info);
       } catch (error) {
         console.error('Error loading league time info:', error);
@@ -78,13 +79,13 @@ const LeagueTimeControl: React.FC<VirtualTimeControlProps> = ({
     setError(null);
     setLastActionMessage(null);
     try {
-      const result = await leagueTimeService.advanceTime({
+      const result = await leagueTimeServiceWithRefresh.advanceTime({
         days: 1,
         simulateMatches: true
       });
 
       if (result.success) {
-        await loadLeagueTimeInfo(); // Refresh info
+        // El servicio enhanced ya actualizó automáticamente el UI via callbacks
         setLastActionMessage(`✅ Tiempo avanzado 1 día. Partidos simulados: ${result.simulatedMatches.length}`);
         
         // Clear message after 3 seconds
@@ -114,13 +115,13 @@ const LeagueTimeControl: React.FC<VirtualTimeControlProps> = ({
     setError(null);
     setLastActionMessage(null);
     try {
-      const result = await leagueTimeService.advanceTime({
+      const result = await leagueTimeServiceWithRefresh.advanceTime({
         days: 7,
         simulateMatches: true
       });
 
       if (result.success) {
-        await loadLeagueTimeInfo(); // Refresh info
+        // El servicio enhanced ya actualizó automáticamente el UI via callbacks
         setLastActionMessage(`✅ Tiempo avanzado 1 semana. Partidos simulados: ${result.simulatedMatches.length}`);
         
         // Clear message after 3 seconds
@@ -150,13 +151,13 @@ const LeagueTimeControl: React.FC<VirtualTimeControlProps> = ({
     setError(null);
     setLastActionMessage(null);
     try {
-      const result = await leagueTimeService.advanceTime({
+      const result = await leagueTimeServiceWithRefresh.advanceTime({
         toNextMatch: true,
         simulateMatches: false
       });
 
       if (result.success) {
-        await loadLeagueTimeInfo(); // Refresh info
+        // El servicio enhanced ya actualizó automáticamente el UI via callbacks
         setLastActionMessage(`✅ Tiempo avanzado al próximo partido`);
         
         // Clear message after 3 seconds
@@ -185,10 +186,10 @@ const LeagueTimeControl: React.FC<VirtualTimeControlProps> = ({
     setError(null);
     setLastActionMessage(null);
     try {
-      const result = await leagueTimeService.generateNewSeason();
+      const result = await leagueTimeServiceWithRefresh.generateNewSeason();
 
       if (result.success) {
-        await loadLeagueTimeInfo(); // Refresh info
+        // El servicio enhanced ya actualizó automáticamente el UI via callbacks
         setLastActionMessage(`✅ Nueva temporada generada: ${result.season.name}`);
         
         // Clear message after 3 seconds
@@ -216,13 +217,13 @@ const LeagueTimeControl: React.FC<VirtualTimeControlProps> = ({
     setError(null);
     setLastActionMessage(null);
     try {
-      const result = await leagueTimeService.advanceTime({
+      const result = await leagueTimeServiceWithRefresh.advanceTime({
         days: 0, // No avanzar tiempo, solo simular
         simulateMatches: true
       });
 
       if (result.success) {
-        await loadLeagueTimeInfo(); // Refresh info
+        // El servicio enhanced ya actualizó automáticamente el UI via callbacks
         setLastActionMessage(`✅ Partidos simulados: ${result.simulatedMatches.length}`);
         
         // Clear message after 3 seconds

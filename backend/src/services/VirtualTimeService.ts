@@ -32,9 +32,33 @@ export class VirtualTimeService {
   public async initialize(): Promise<void> {
     try {
       await this.loadStateFromDatabase();
+      
+      // If no state was loaded, create initial state
+      if (!await this.stateExistsInDatabase()) {
+        console.log('Creating initial virtual time state...');
+        await this.saveState();
+      }
     } catch (error) {
       console.warn('Failed to load virtual time state from database, using default:', error);
       this.currentState = this.getDefaultState();
+      // Try to save the default state
+      try {
+        await this.saveState();
+      } catch (saveError) {
+        console.warn('Failed to save default virtual time state:', saveError);
+      }
+    }
+  }
+
+  /**
+   * Check if virtual time state exists in database
+   */
+  private async stateExistsInDatabase(): Promise<boolean> {
+    try {
+      const row = await this.db.get('SELECT id FROM virtual_time_state WHERE id = ?', ['global']);
+      return !!row;
+    } catch {
+      return false;
     }
   }
 
@@ -59,6 +83,7 @@ export class VirtualTimeService {
       } | undefined;
       
       if (row) {
+        console.log('Loading virtual time state from database:', row);
         this.currentState = {
           currentDate: new Date(row.current_date),
           activeSeason: null, // Will be loaded when needed
@@ -66,10 +91,14 @@ export class VirtualTimeService {
           autoMode: Boolean(row.auto_mode),
           lastUpdate: new Date(row.last_update)
         };
+      } else {
+        console.log('No virtual time state found in database, using default');
+        this.currentState = this.getDefaultState();
       }
-    } catch {
+    } catch (error) {
       // If table doesn't exist, that's ok - we'll use default state
-      console.log('Virtual time state table not found, using default state');
+      console.log('Virtual time state table not found or error loading, using default state:', error);
+      this.currentState = this.getDefaultState();
     }
   }
 
@@ -79,18 +108,31 @@ export class VirtualTimeService {
   }
 
   private async saveState(): Promise<void> {
-    // Save state to database
-    await this.db.run(`
-      INSERT OR REPLACE INTO virtual_time_state (id, current_date, active_season_id, time_speed, auto_mode, last_update)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `, [
-      'global',
-      this.currentState.currentDate.toISOString(),
-      this.currentState.activeSeason?.id || null,
-      this.currentState.timeSpeed,
-      this.currentState.autoMode,
-      this.currentState.lastUpdate.toISOString()
-    ]);
+    try {
+      console.log('💾 Saving virtual time state to database:', {
+        currentDate: this.currentState.currentDate.toISOString(),
+        timeSpeed: this.currentState.timeSpeed,
+        autoMode: this.currentState.autoMode
+      });
+      
+      // Save state to database
+      await this.db.run(`
+        INSERT OR REPLACE INTO virtual_time_state (id, current_date, active_season_id, time_speed, auto_mode, last_update)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `, [
+        'global',
+        this.currentState.currentDate.toISOString(),
+        this.currentState.activeSeason?.id || null,
+        this.currentState.timeSpeed,
+        this.currentState.autoMode ? 1 : 0,
+        this.currentState.lastUpdate.toISOString()
+      ]);
+      
+      console.log('✅ Virtual time state saved successfully');
+    } catch (error) {
+      console.error('❌ Failed to save virtual time state:', error);
+      throw error;
+    }
   }
 
   async getCurrentState(): Promise<VirtualTimeState> {
@@ -508,15 +550,6 @@ export class VirtualTimeService {
   }
 
   /**
-   * Reset virtual time to real time
-   */
-  async resetToRealTime(): Promise<void> {
-    this.currentState.currentDate = new Date();
-    this.currentState.lastUpdate = new Date();
-    await this.saveState();
-  }
-
-  /**
    * Get upcoming season information based on current virtual time
    */
   async getUpcomingSeasons(): Promise<Season[]> {
@@ -596,6 +629,35 @@ export class VirtualTimeService {
       matches: [], // Simplified for performance
       standings: [] // Simplified for performance
     };
+  }
+
+  /**
+   * Force save current state to database
+   * Used when external services modify the virtual time
+   */
+  async forceSaveState(): Promise<void> {
+    this.currentState.lastUpdate = new Date();
+    await this.saveState();
+  }
+
+  /**
+   * Set virtual time to a specific date
+   */
+  async setVirtualTime(date: Date): Promise<void> {
+    console.log('🕒 Setting virtual time to:', date.toISOString());
+    this.currentState.currentDate = date;
+    this.currentState.lastUpdate = new Date();
+    await this.saveState();
+  }
+
+  /**
+   * Reset virtual time to current real time
+   */
+  async resetToRealTime(): Promise<void> {
+    console.log('🔄 Resetting virtual time to real time');
+    this.currentState.currentDate = new Date();
+    this.currentState.lastUpdate = new Date();
+    await this.saveState();
   }
 }
 
