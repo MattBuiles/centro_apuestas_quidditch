@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { leagueTimeService, LeagueTimeInfo } from '@/services/leagueTimeService';
+import { leagueTimeServiceWithRefresh } from '@/services/leagueTimeServiceWithRefresh';
 import { FEATURES } from '@/config/features';
 import { useAuth } from '@/context/AuthContext';
 
@@ -52,15 +53,32 @@ export const useLeagueTime = () => {
     }
   }, [isBackendAuthenticated]);
 
-  // Cargar datos inicial
-  useEffect(() => {
-    refreshLeagueTime();
+  // Auto-refresh cuando hay cambios significativos en el tiempo
+  const refreshAfterAction = useCallback(async (): Promise<void> => {
+    console.log('⚡ Auto-refreshing after action...');
+    await refreshLeagueTime();
+    // Triggerar un re-render forzado actualizando el timestamp
+    setLastUpdateTime(Date.now());
   }, [refreshLeagueTime]);
 
   // Función para forzar una actualización
-  const forceRefresh = useCallback(() => {
-    return refreshLeagueTime();
+  const forceRefresh = useCallback(async () => {
+    console.log('🔄 Force refreshing league time...');
+    return await refreshLeagueTime();
   }, [refreshLeagueTime]);
+
+  // Cargar datos inicial
+  useEffect(() => {
+    refreshLeagueTime();
+    
+    // Register auto-refresh callback with the enhanced service
+    leagueTimeServiceWithRefresh.registerRefreshCallback(refreshAfterAction);
+    
+    // Cleanup on unmount
+    return () => {
+      leagueTimeServiceWithRefresh.unregisterRefreshCallback(refreshAfterAction);
+    };
+  }, [refreshLeagueTime, refreshAfterAction]);
 
   // Obtener la fecha actual de liga como objeto Date
   const getCurrentLeagueDate = useCallback(() => {
@@ -80,6 +98,7 @@ export const useLeagueTime = () => {
     isLoading,
     error,
     refreshLeagueTime,
+    refreshAfterAction,
     forceRefresh,
     getCurrentLeagueDate,
     hasActiveSeason,

@@ -319,6 +319,17 @@ export class Database {
         FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE
       );
 
+      -- Virtual time state table for centralized time management
+      CREATE TABLE IF NOT EXISTS virtual_time_state (
+        id TEXT PRIMARY KEY,
+        current_date DATETIME NOT NULL,
+        active_season_id TEXT,
+        time_speed TEXT CHECK(time_speed IN ('slow', 'medium', 'fast')) DEFAULT 'medium',
+        auto_mode BOOLEAN DEFAULT FALSE,
+        last_update DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (active_season_id) REFERENCES seasons(id)
+      );
+
       -- Create indexes for better performance
       CREATE INDEX IF NOT EXISTS idx_matches_date ON matches(date);
       CREATE INDEX IF NOT EXISTS idx_matches_status ON matches(status);
