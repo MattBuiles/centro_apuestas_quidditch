@@ -169,6 +169,97 @@ export class MatchSimulationService {
   }
 
   /**
+   * Simula un partido completo de forma instantánea (sin simulación en vivo)
+   */
+  public async simulateMatchComplete(matchId: string): Promise<{
+    homeScore: number;
+    awayScore: number;
+    duration: number;
+    snitchCaught: boolean;
+    snitchCaughtBy: string | null;
+  }> {
+    try {
+      const match = await this.db.getMatchById(matchId) as MatchData;
+      if (!match) {
+        throw new Error('Partido no encontrado');
+      }
+
+      // Verificar status del partido
+      if (match.status === 'finished') {
+        throw new Error('El partido ya ha sido finalizado');
+      }
+
+      // Generar eventos del partido
+      const events = this.generateMatchEvents(match);
+      let homeScore = 0;
+      let awayScore = 0;
+      let duration = 0;
+      let snitchCaught = false;
+      let snitchCaughtBy: string | null = null;
+
+      // Procesar todos los eventos instantáneamente
+      for (const event of events) {
+        duration = Math.max(duration, event.minute);
+
+        // Procesar evento
+        if (event.type === 'goal') {
+          if (event.team === match.home_team_id) {
+            homeScore += event.points;
+          } else {
+            awayScore += event.points;
+          }
+        } else if (event.type === 'snitch') {
+          snitchCaught = true;
+          snitchCaughtBy = event.team;
+          // Snitch otorga 150 puntos
+          if (event.team === match.home_team_id) {
+            homeScore += 150;
+          } else {
+            awayScore += 150;
+          }
+          // El partido termina cuando se captura la snitch
+          break;
+        }
+
+        // Guardar evento en base de datos
+        await this.db.createMatchEvent({
+          id: `event_${matchId}_${Date.now()}_${Math.random()}`,
+          matchId,
+          minute: event.minute,
+          type: event.type,
+          team: event.team,
+          player: event.player,
+          description: event.description,
+          points: event.points
+        });
+      }
+
+      // Finalizar partido instantáneamente
+      await this.db.updateMatchStatus(matchId, 'finished');
+      await this.db.updateMatchScore(matchId, homeScore, awayScore);
+      
+      // Marcar snitch como capturada
+      if (snitchCaught && snitchCaughtBy) {
+        await this.db.updateMatchSnitchCaught(matchId, true, snitchCaughtBy === match.home_team_id ? 'home' : 'away');
+      }
+
+      console.log(`✅ Match ${matchId} simulated completely: ${homeScore} - ${awayScore} (${duration} min)`);
+
+      return {
+        homeScore,
+        awayScore,
+        duration,
+        snitchCaught,
+        snitchCaughtBy
+      };
+
+    } catch (error) {
+      console.error('Error in complete match simulation:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Genera eventos aleatorios para un partido
    */
   private generateMatchEvents(match: MatchData): MatchEvent[] {

@@ -107,6 +107,9 @@ const MatchesPage = () => {
     // Forzar actualización del tiempo de liga
     await forceRefresh();
     
+    // Recargar datos de la temporada para mostrar cambios inmediatamente
+    await initializeSeason();
+    
     if (simulatedMatches.length > 0) {
       console.log(`✅ Se simularon ${simulatedMatches.length} partidos`);
     }
