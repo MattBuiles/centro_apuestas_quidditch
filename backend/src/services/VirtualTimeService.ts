@@ -1,5 +1,6 @@
 import { Database } from '../database/Database';
 import { Match, MatchEvent, MatchResult, Season, TeamRow, MatchRow } from '../types';
+import { SeasonManagementService } from './SeasonManagementService';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface VirtualTimeState {
@@ -19,6 +20,7 @@ export interface TimeAdvanceOptions {
 
 export class VirtualTimeService {
   private db = Database.getInstance();
+  private seasonService = new SeasonManagementService();
   private currentState: VirtualTimeState;
   private readonly STORAGE_KEY = 'virtual_time_state';
 
@@ -275,6 +277,12 @@ export class VirtualTimeService {
 
     // Update team statistics
     await this.updateTeamStats(homeTeam.id, awayTeam.id, result);
+
+    // Verificar si la temporada debe finalizarse después de simular el partido
+    const seasonResult = await this.seasonService.checkAndFinishSeasonIfComplete();
+    if (seasonResult.seasonFinished) {
+      console.log(`🏆 ¡Temporada finalizada automáticamente después de simular partido! ID: ${seasonResult.seasonId}`);
+    }
 
     return result;
   }

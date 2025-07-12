@@ -224,4 +224,42 @@ export class SeasonController {
       });
     }
   };
+
+  // POST /api/seasons/check-completion - Check and finish season if all matches are completed
+  public checkSeasonCompletion = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const result = await this.seasonService.checkAndFinishSeasonIfComplete();
+      
+      if (result.seasonFinished) {
+        res.json({
+          success: true,
+          data: {
+            seasonFinished: true,
+            seasonId: result.seasonId,
+            message: 'Season has been automatically finished'
+          },
+          message: 'Season completion check completed successfully',
+          timestamp: new Date().toISOString()
+        });
+      } else {
+        res.json({
+          success: true,
+          data: {
+            seasonFinished: false,
+            message: 'Season is still active or has pending matches'
+          },
+          message: 'Season completion check completed successfully',
+          timestamp: new Date().toISOString()
+        });
+      }
+    } catch (error) {
+      console.error('Error checking season completion:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error',
+        message: 'Failed to check season completion',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
 }

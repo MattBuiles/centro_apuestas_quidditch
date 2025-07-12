@@ -1,5 +1,6 @@
 import { Database } from '../database/Database';
 import { WebSocketService } from './WebSocketService';
+import { SeasonManagementService } from './SeasonManagementService';
 import { MatchEvent } from '../types';
 
 interface MatchData {
@@ -38,9 +39,11 @@ interface MatchSimulationStatus {
 export class MatchSimulationService {
   private db: Database;
   private wsService: WebSocketService | null = null;
+  private seasonService: SeasonManagementService;
   
   constructor() {
     this.db = Database.getInstance();
+    this.seasonService = new SeasonManagementService();
   }
 
   public setWebSocketService(wsService: WebSocketService): void {
@@ -369,6 +372,12 @@ export class MatchSimulationService {
         status: 'finished',
         winner: homeScore > awayScore ? 'home' : 'away'
       });
+
+      // Verificar si la temporada debe finalizarse
+      const seasonResult = await this.seasonService.checkAndFinishSeasonIfComplete();
+      if (seasonResult.seasonFinished) {
+        console.log(`🏆 ¡Temporada finalizada automáticamente! ID: ${seasonResult.seasonId}`);
+      }
 
     } catch (error) {
       console.error('Error finishing match:', error);

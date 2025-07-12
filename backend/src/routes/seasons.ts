@@ -13,6 +13,9 @@ router.get('/current', seasonController.getCurrentSeason);
 // GET /api/seasons/league-time - Get league time information
 router.get('/league-time', seasonController.getLeagueTime);
 
+// GET /api/seasons/check-completion - Check and finish season if all matches are completed
+router.get('/check-completion', seasonController.checkSeasonCompletion);
+
 // GET /api/seasons/:id - Get specific season
 router.get('/:id', seasonController.getSeasonById);
 
