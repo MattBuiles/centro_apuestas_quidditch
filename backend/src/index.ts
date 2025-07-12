@@ -5,6 +5,7 @@ import morgan from 'morgan';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
+import path from 'path';
 import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
 
@@ -25,8 +26,13 @@ import adminRoutes from './routes/admin';
 import virtualTimeRoutes from './routes/virtual-time';
 import leagueTimeRoutes from './routes/league-time';
 
-// Load environment variables
-dotenv.config();
+// Load environment variables from backend directory
+const backendDir = path.resolve(__dirname, '..');
+dotenv.config({ path: path.join(backendDir, '.env') });
+
+// Debug: Check if JWT_SECRET is loaded
+console.log('JWT_SECRET loaded:', process.env.JWT_SECRET ? 'YES' : 'NO');
+console.log('Backend directory:', backendDir);
 
 const app = express();
 const PORT = process.env.PORT || 3001;

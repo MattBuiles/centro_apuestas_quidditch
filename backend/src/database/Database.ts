@@ -34,7 +34,10 @@ export class Database {
   }
 
   private async connect(config?: DatabaseConfig): Promise<void> {
-    const dbPath = config?.path || process.env.DATABASE_URL || './database/quidditch.db';
+    // Always use backend directory database
+    const backendDir = path.resolve(__dirname, '..');
+    const defaultDbPath = path.join(backendDir, 'database', 'quidditch.db');
+    const dbPath = config?.path || process.env.DATABASE_URL || defaultDbPath;
     
     // Ensure database directory exists
     const dbDir = path.dirname(dbPath);
@@ -839,7 +842,6 @@ export class Database {
       JOIN teams at ON m.away_team_id = at.id
       JOIN seasons s ON m.season_id = s.id
       WHERE m.status = 'scheduled' 
-        AND (m.home_score IS NULL OR m.away_score IS NULL)
         AND m.date >= ?
       ORDER BY m.date ASC
       LIMIT 1
@@ -861,7 +863,6 @@ export class Database {
       JOIN teams at ON m.away_team_id = at.id
       JOIN seasons s ON m.season_id = s.id
       WHERE m.status = 'scheduled' 
-        AND (m.home_score IS NULL OR m.away_score IS NULL)
         AND m.date <= ?
       ORDER BY m.date ASC
     `;
