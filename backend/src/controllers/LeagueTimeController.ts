@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { LeagueTimeService } from '../services/LeagueTimeService';
 import { Database } from '../database/Database';
+import path from 'path';
 
 export class LeagueTimeController {
   private leagueTimeService: LeagueTimeService;
@@ -99,7 +100,15 @@ export class LeagueTimeController {
         WHERE status = 'live'
       `);
       
+      console.log('🔍 Checking for live matches:', liveMatches.length);
+      console.log('🗂️ Database path info:', process.cwd());
+      console.log('🗂️ Backend directory being used:', path.resolve(__dirname, '..'));
+      
       if (liveMatches && liveMatches.length > 0) {
+        console.log('⚠️ Found live matches:', liveMatches.map((m: unknown) => {
+          const match = m as { id: string; status: string };
+          return `${match.id} - ${match.status}`;
+        }));
         res.json({
           success: false,
           message: 'Ya hay un partido en vivo. Simúlalo antes de avanzar al siguiente.',
@@ -130,7 +139,6 @@ export class LeagueTimeController {
           JOIN teams at ON m.away_team_id = at.id
           JOIN seasons s ON m.season_id = s.id
           WHERE m.status = 'scheduled' 
-            AND (m.home_score IS NULL OR m.away_score IS NULL)
           ORDER BY m.date ASC
           LIMIT 1
         `) as {
@@ -163,7 +171,6 @@ export class LeagueTimeController {
                 JOIN teams at ON m.away_team_id = at.id
                 JOIN seasons s ON m.season_id = s.id
                 WHERE m.status = 'scheduled' 
-                  AND (m.home_score IS NULL OR m.away_score IS NULL)
                 ORDER BY m.date ASC
                 LIMIT 1
               `) as {
