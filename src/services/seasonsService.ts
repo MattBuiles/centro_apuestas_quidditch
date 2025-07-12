@@ -96,6 +96,19 @@ export class SeasonsService {
     }
   }
 
+  /**
+   * Create a new season with default settings
+   */
+  async createDefaultSeason(): Promise<Season | null> {
+    try {
+      const response = await apiClient.post<Season>('/seasons/create-default', {});
+      return response.data || null;
+    } catch (error) {
+      console.error('Error creating default season:', error);
+      throw error;
+    }
+  }
+
   // ===== LOCAL FALLBACK METHODS =====
 
   /**
@@ -151,7 +164,7 @@ export class SeasonsService {
    */
   private getLocalCurrentSeason(): Season | null {
     // This would normally integrate with the virtual time manager
-    // For now, return null to delegate to existing systems
+    // For now, return null to delegate to existing local systems
     console.warn('Local current season fallback - delegating to existing systems');
     return null;
   }

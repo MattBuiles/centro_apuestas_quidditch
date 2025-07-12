@@ -13,7 +13,7 @@ export class SeasonController {
   private standingsService = new StandingsService();
   private historicalSeasonsService = new HistoricalSeasonsService();
   private historicalTeamStatsService = new HistoricalTeamStatsService();
-  private virtualTimeService = new VirtualTimeService();
+  private virtualTimeService = VirtualTimeService.getInstance();
 
   // GET /api/seasons - Get all seasons
   public getAllSeasons = async (req: Request, res: Response<ApiResponse<Season[]>>) => {
@@ -162,6 +162,62 @@ export class SeasonController {
         success: false,
         error: 'Internal server error',
         message: 'Failed to create season',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
+
+  // POST /api/seasons/create-default - Create new season with default settings
+  public createDefaultSeason = async (req: Request, res: Response<ApiResponse<Season>>): Promise<void> => {
+    try {
+      // Get virtual time to start season from current date
+      const currentState = await this.virtualTimeService.getCurrentState();
+      const startDate = new Date(currentState.currentDate);
+      
+      // Season duration: 4 months (120 days)
+      const endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + 120);
+      
+      // Get all available teams
+      const teams = await this.db.all('SELECT id FROM teams ORDER BY name') as { id: string }[];
+      
+      if (teams.length < 4) {
+        res.status(400).json({
+          success: false,
+          error: 'Insufficient teams',
+          message: 'At least 4 teams are required to create a season',
+          timestamp: new Date().toISOString()
+        });
+        return;
+      }
+
+      // Generate season name based on current year
+      const year = startDate.getFullYear();
+      const seasonName = `Liga Profesional Quidditch ${year}`;
+
+      const season = await this.seasonService.createSeason({
+        name: seasonName,
+        startDate,
+        endDate,
+        teamIds: teams.map(t => t.id),
+        status: 'active' // Make it active immediately
+      });
+
+      // Set as active season in virtual time
+      await this.virtualTimeService.setActiveSeason(season.id);
+      
+      res.status(201).json({
+        success: true,
+        data: season,
+        message: 'New season created and activated successfully',
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error creating default season:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error',
+        message: 'Failed to create default season',
         timestamp: new Date().toISOString()
       });
     }

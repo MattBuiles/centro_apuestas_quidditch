@@ -21,7 +21,7 @@ export class LeagueTimeService {
   private db = Database.getInstance();
 
   constructor() {
-    this.virtualTimeService = new VirtualTimeService();
+    this.virtualTimeService = VirtualTimeService.getInstance();
     this.seasonService = new SeasonManagementService();
   }
 
