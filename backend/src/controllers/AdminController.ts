@@ -69,7 +69,7 @@ interface AdminLogEntry {
 
 export class AdminController {
   private db = Database.getInstance();
-  private virtualTimeService = new VirtualTimeService();
+  private virtualTimeService = VirtualTimeService.getInstance();
   private seasonService = new SeasonManagementService();
 
   /**
@@ -84,20 +84,28 @@ export class AdminController {
       console.log('🧹 Step 1: Clearing existing data...');
       await this.db.resetForNewSeason();
       
-      // Step 2: Reset virtual time to initial state
-      console.log('🕒 Step 2: Resetting virtual time to initial state...');
-      await this.virtualTimeService.resetToInitialState();
-      
-      // Step 3: Create new season with complete fixtures
-      console.log('🏆 Step 3: Creating new season...');
+      // Step 2: Create new season with complete fixtures (before time reset)
+      console.log('🏆 Step 2: Creating new season...');
       const newSeason = await this.createNewSeasonWithFixtures();
       
-      // Step 4: Configure virtual time settings
-      console.log('⏰ Step 4: Configuring virtual time settings...');
+      // Step 3: Reset virtual time to initial state (2025-07-14)
+      console.log('🕒 Step 3: Resetting virtual time to initial state...');
+      await this.virtualTimeService.resetToInitialState();
+      
+      // Step 4: Update virtual time service with the new active season
+      console.log('🔄 Step 4: Setting new season as active in virtual time...');
+      await this.virtualTimeService.setActiveSeason(newSeason.id);
+      
+      // Step 5: Configure virtual time settings and ensure correct date
+      console.log('⏰ Step 5: Configuring virtual time settings...');
       await this.virtualTimeService.updateSettings({
         timeSpeed: 'medium',
         autoMode: false
       });
+      
+      // Step 6: Force reset to ensure correct initial date (2025-07-14)
+      console.log('🔧 Step 6: Final time reset to ensure 2025-07-14...');
+      await this.virtualTimeService.resetToInitialState();
       
       console.log('✅ Database reset completed successfully!');
       

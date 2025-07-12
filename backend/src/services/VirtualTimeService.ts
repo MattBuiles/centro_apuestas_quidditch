@@ -20,21 +20,47 @@ export interface TimeAdvanceOptions {
 }
 
 export class VirtualTimeService {
+  private static instance: VirtualTimeService | null = null;
   private db = Database.getInstance();
   private seasonService = new SeasonManagementService();
   private standingsService = new StandingsService();
   private currentState: VirtualTimeState;
   private readonly STORAGE_KEY = 'virtual_time_state';
+  private initialized = false;
+  private resetFlag = false; // Flag to track if we just performed a reset
 
   constructor() {
     this.currentState = this.getDefaultState();
   }
 
   /**
+   * Get singleton instance
+   */
+  public static getInstance(): VirtualTimeService {
+    if (!VirtualTimeService.instance) {
+      VirtualTimeService.instance = new VirtualTimeService();
+    }
+    return VirtualTimeService.instance;
+  }
+
+  /**
    * Initialize the service and load state from database
    */
   public async initialize(): Promise<void> {
+    // Don't re-initialize if already done, unless we need to reload from DB
+    if (this.initialized && !this.resetFlag) {
+      return;
+    }
+
     try {
+      // If we just did a reset, don't load from database
+      if (this.resetFlag) {
+        console.log('⏭️  Skipping database load after recent reset');
+        this.resetFlag = false;
+        this.initialized = true;
+        return;
+      }
+
       await this.loadStateFromDatabase();
       
       // If no state was loaded, create initial state
@@ -42,6 +68,8 @@ export class VirtualTimeService {
         console.log('Creating initial virtual time state...');
         await this.saveState();
       }
+      
+      this.initialized = true;
     } catch (error) {
       console.warn('Failed to load virtual time state from database, using default:', error);
       this.currentState = this.getDefaultState();
@@ -51,6 +79,7 @@ export class VirtualTimeService {
       } catch (saveError) {
         console.warn('Failed to save default virtual time state:', saveError);
       }
+      this.initialized = true;
     }
   }
 
@@ -67,9 +96,9 @@ export class VirtualTimeService {
   }
 
   private getDefaultState(): VirtualTimeState {
-    // Set virtual time to start before the season begins (July 15th)
-    const currentYear = new Date().getFullYear();
-    const defaultStartDate = new Date(`${currentYear}-07-15T00:00:00Z`);
+    // Set virtual time to start before the season begins (July 14th, 2025)
+    // Always use 2025 for the game world, regardless of real current year
+    const defaultStartDate = new Date('2025-07-14T00:00:00Z');
     
     return {
       currentDate: defaultStartDate,
@@ -488,6 +517,10 @@ export class VirtualTimeService {
       standings: []
     };
     
+    // Important: Don't change the current date when setting active season
+    // This allows the reset process to maintain the correct initial date
+    console.log(`✅ Active season set to: ${seasonRow.name} (keeping current virtual date: ${this.currentState.currentDate.toISOString()})`);
+    
     await this.saveState();
   }
 
@@ -513,12 +546,7 @@ export class VirtualTimeService {
    * Get the active season
    */
   async getActiveSeason(): Promise<Season | null> {
-    // Try to get from current state first
-    if (this.currentState.activeSeason) {
-      return this.currentState.activeSeason;
-    }
-
-    // If not in state, try to get from database
+    // First, always check the database for the current active season
     const seasonRow = await this.db.get(`
       SELECT * FROM seasons 
       WHERE status = 'active' 
@@ -533,6 +561,7 @@ export class VirtualTimeService {
     } | undefined;
 
     if (seasonRow) {
+      // We have an active season in the database
       const season: Season = {
         id: seasonRow.id,
         name: seasonRow.name,
@@ -544,12 +573,19 @@ export class VirtualTimeService {
         standings: []
       };
       
+      // Update our state to match the database
       this.currentState.activeSeason = season;
       await this.saveState();
       return season;
+    } else {
+      // No active season in database, clear our state
+      if (this.currentState.activeSeason) {
+        console.log(`🔄 Clearing inactive season from virtual time state: ${this.currentState.activeSeason.name}`);
+        this.currentState.activeSeason = null;
+        await this.saveState();
+      }
+      return null;
     }
-
-    return null;
   }
 
   /**
@@ -700,13 +736,24 @@ export class VirtualTimeService {
   public async resetToInitialState(): Promise<void> {
     console.log('🔄 Resetting virtual time to initial state...');
     
-    // Reset to default state (July 15th, before season starts)
-    this.currentState = this.getDefaultState();
+    // First, clear any existing virtual time state from database
+    await this.db.run('DELETE FROM virtual_time_state WHERE id = ?', ['global']);
+    console.log('🧹 Cleared existing virtual time state from database');
+    
+    // Reset to default state (July 14th, 2025, before season starts)
+    const newState = this.getDefaultState();
+    console.log(`📅 Setting virtual time to: ${newState.currentDate.toISOString()}`);
+    
+    this.currentState = newState;
     
     // Save the reset state to database
     await this.saveState();
     
-    console.log(`✅ Virtual time reset to: ${this.currentState.currentDate.toISOString()}`);
+    // Set the reset flag to prevent loading from database on next initialize
+    this.resetFlag = true;
+    this.initialized = false; // Force re-initialization with the reset flag
+    
+    console.log(`✅ Virtual time reset completed to: ${this.currentState.currentDate.toISOString()}`);
   }
 
   private async getLiveMatches(): Promise<Match[]> {

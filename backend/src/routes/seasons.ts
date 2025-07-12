@@ -34,6 +34,9 @@ router.get('/:id', seasonController.getSeasonById);
 // POST /api/seasons - Create new season
 router.post('/', seasonController.createSeason);
 
+// POST /api/seasons/create-default - Create new season with default settings
+router.post('/create-default', seasonController.createDefaultSeason);
+
 // PUT /api/seasons/:id/activate - Activate season
 router.put('/:id/activate', seasonController.activateSeason);
 
