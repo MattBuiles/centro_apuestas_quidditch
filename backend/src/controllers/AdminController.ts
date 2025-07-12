@@ -46,6 +46,26 @@ interface GenerateSeasonResponse {
   teamsParticipating: number;
 }
 
+interface CreateSeasonResponse {
+  season: Season;
+  matchesGenerated: number;
+  teamsParticipating: number;
+  virtualTime: any;
+  previousSeasonFinalized: boolean;
+}
+
+interface TeamStanding {
+  team_id: string;
+  team_name: string;
+  points: number;
+  goals_for: number;
+  goals_against: number;
+  matches_played: number;
+  wins: number;
+  draws: number;
+  losses: number;
+}
+
 interface AdminLogsResponse {
   logs: AdminLogEntry[];
   pagination: {
@@ -84,28 +104,24 @@ export class AdminController {
       console.log('🧹 Step 1: Clearing existing data...');
       await this.db.resetForNewSeason();
       
-      // Step 2: Create new season with complete fixtures (before time reset)
-      console.log('🏆 Step 2: Creating new season...');
-      const newSeason = await this.createNewSeasonWithFixtures();
-      
-      // Step 3: Reset virtual time to initial state (2025-07-14)
-      console.log('🕒 Step 3: Resetting virtual time to initial state...');
+      // Step 2: Reset virtual time to initial state FIRST (2025-07-14)
+      console.log('🕒 Step 2: Resetting virtual time to initial state...');
       await this.virtualTimeService.resetToInitialState();
+      
+      // Step 3: Create new season with fixtures based on virtual time
+      console.log('🏆 Step 3: Creating new season...');
+      const newSeason = await this.createNewSeasonWithFixtures();
       
       // Step 4: Update virtual time service with the new active season
       console.log('🔄 Step 4: Setting new season as active in virtual time...');
       await this.virtualTimeService.setActiveSeason(newSeason.id);
       
-      // Step 5: Configure virtual time settings and ensure correct date
+      // Step 5: Configure virtual time settings
       console.log('⏰ Step 5: Configuring virtual time settings...');
       await this.virtualTimeService.updateSettings({
         timeSpeed: 'medium',
         autoMode: false
       });
-      
-      // Step 6: Force reset to ensure correct initial date (2025-07-14)
-      console.log('🔧 Step 6: Final time reset to ensure 2025-07-14...');
-      await this.virtualTimeService.resetToInitialState();
       
       console.log('✅ Database reset completed successfully!');
       
@@ -147,12 +163,22 @@ export class AdminController {
     const teams = await this.db.getAllTeams() as Team[];
     const teamIds = teams.map(team => team.id);
     
-    // Create new season
-    const currentYear = new Date().getFullYear();
+    // Get current virtual time state to use as reference
+    const virtualTimeState = await this.virtualTimeService.getCurrentState();
+    const currentVirtualDate = new Date(virtualTimeState.currentDate);
+    
+    // Create new season starting from current virtual date
+    const currentYear = currentVirtualDate.getFullYear();
+    const startDate = new Date(currentVirtualDate);
+    startDate.setDate(startDate.getDate() + 1); // Start tomorrow from virtual time
+    
+    const endDate = new Date(startDate);
+    endDate.setMonth(endDate.getMonth() + 4); // 4 months duration
+    
     const seasonData = {
       name: `Liga Quidditch ${currentYear}`,
-      startDate: new Date(`${currentYear}-08-01T00:00:00Z`), // Start August 1st
-      endDate: new Date(`${currentYear}-12-31T23:59:59Z`),   // End December 31st
+      startDate: startDate,
+      endDate: endDate,
       teamIds: teamIds,
       status: 'active' as const // Set the new season as active
     };
@@ -161,6 +187,7 @@ export class AdminController {
     
     console.log(`✅ Created season: ${season.name}`);
     console.log(`📅 Season period: ${seasonData.startDate.toISOString()} to ${seasonData.endDate.toISOString()}`);
+    console.log(`⏰ Virtual time reference: ${currentVirtualDate.toISOString()}`);
     console.log(`👥 Teams participating: ${teamIds.length}`);
     
     return season;
@@ -381,4 +408,240 @@ export class AdminController {
       });
     }
   };
+
+  /**
+   * Create new season with proper handling of existing active seasons
+   * This is the endpoint for the "Iniciar Nueva Temporada" button
+   */
+  public createNewSeason = async (req: AuthenticatedRequest, res: Response<ApiResponse<GenerateSeasonResponse>>): Promise<void> => {
+    try {
+      console.log('🌟 Starting new season creation process...');
+      
+      // Step 1: Check if there's an active season and finalize it
+      const currentActiveSeason = await this.db.get('SELECT * FROM seasons WHERE status = "active"') as Season | null;
+      
+      if (currentActiveSeason) {
+        console.log(`📋 Found active season: ${currentActiveSeason.name}, finalizing...`);
+        
+        // Finalize the current season (mark as finished and save historical data)
+        await this.finalizeActiveSeason(currentActiveSeason);
+        console.log('✅ Previous season finalized and archived');
+      }
+      
+      // Step 2: Get current virtual time for proper season scheduling
+      const virtualTimeState = await this.virtualTimeService.getCurrentState();
+      const currentVirtualDate = virtualTimeState.currentDate;
+      
+      console.log(`📅 Current virtual time: ${currentVirtualDate.toISOString()}`);
+      
+      // Step 3: Calculate season dates based on virtual time
+      const seasonStartDate = new Date(currentVirtualDate);
+      
+      // If we're before August 1st, start this year's season
+      // If we're after August 1st, start next year's season
+      const currentMonth = seasonStartDate.getMonth(); // 0-based (July = 6, August = 7)
+      const currentYear = seasonStartDate.getFullYear();
+      
+      let seasonYear: number;
+      if (currentMonth < 7) { // Before August (month 7)
+        seasonYear = currentYear;
+      } else {
+        seasonYear = currentYear + 1;
+      }
+      
+      // Season runs from August 1st to December 31st
+      const finalStartDate = new Date(`${seasonYear}-08-01T00:00:00Z`);
+      const finalEndDate = new Date(`${seasonYear}-12-31T23:59:59Z`);
+      
+      // Step 4: Get all teams
+      const teams = await this.db.getAllTeams() as Team[];
+      const teamIds = teams.map(team => team.id);
+      
+      if (teamIds.length === 0) {
+        res.status(400).json({
+          success: false,
+          error: 'No teams found',
+          message: 'Cannot create season without teams. Database may need to be reset.',
+          timestamp: new Date().toISOString()
+        });
+        return;
+      }
+      
+      // Step 5: Create the new season
+      const seasonData = {
+        name: `Liga Quidditch ${seasonYear}`,
+        startDate: finalStartDate,
+        endDate: finalEndDate,
+        teamIds: teamIds,
+        status: 'active' as const // Explicitly set as active
+      };
+      
+      console.log(`🏆 Creating new season: ${seasonData.name}`);
+      console.log(`📅 Season period: ${finalStartDate.toISOString()} to ${finalEndDate.toISOString()}`);
+      console.log(`👥 Teams participating: ${teamIds.length}`);
+      
+      const season = await this.seasonService.createSeason(seasonData);
+      const matchCount = await this.getMatchCount(season.id);
+      
+      // Step 6: Set the new season as active in virtual time service
+      await this.virtualTimeService.setActiveSeason(season.id);
+      console.log('✅ New season set as active in virtual time service');
+      
+      // Step 7: Log admin action
+      await this.logAdminAction(
+        req.user!.userId, 
+        'create_new_season', 
+        'season', 
+        season.id, 
+        `Created new season: ${season.name} (${teamIds.length} teams, ${matchCount} matches)`
+      );
+      
+      console.log(`✅ New season created successfully: ${season.name}`);
+      
+      // Initialize the first match for the new season
+      await this.initializeFirstMatch(season.id);
+      
+      res.json({
+        success: true,
+        data: {
+          season: season,
+          matchesGenerated: matchCount,
+          teamsParticipating: teamIds.length,
+          virtualTime: virtualTimeState,
+          previousSeasonFinalized: !!currentActiveSeason
+        } as CreateSeasonResponse,
+        message: `Nueva temporada "${season.name}" creada exitosamente con ${matchCount} partidos`,
+        timestamp: new Date().toISOString()
+      });
+      
+    } catch (error) {
+      console.error('❌ Error creating new season:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to create new season',
+        message: error instanceof Error ? error.message : 'Unknown error occurred',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
+
+  /**
+   * Initialize the first match of a new season to be ready for simulation
+   */
+  private async initializeFirstMatch(seasonId: string): Promise<void> {
+    try {
+      // Get the first scheduled match of the season
+      const firstMatch = await this.db.get(`
+        SELECT * FROM matches 
+        WHERE season_id = ? AND status = 'scheduled' 
+        ORDER BY date ASC 
+        LIMIT 1
+      `, [seasonId]) as {
+        id: string;
+        home_team_id: string;
+        away_team_id: string;
+        date: string;
+        status: string;
+      } | undefined;
+
+      if (firstMatch) {
+        console.log(`🏐 First match found: ${firstMatch.home_team_id} vs ${firstMatch.away_team_id}`);
+        console.log(`📅 Scheduled for: ${firstMatch.date}`);
+        
+        // Ensure the virtual time is set to allow this match to start
+        const virtualTimeService = VirtualTimeService.getInstance();
+        const currentVirtualState = await virtualTimeService.getCurrentState();
+        const matchDate = new Date(firstMatch.date);
+        
+        console.log(`⏰ Virtual time: ${currentVirtualState.currentDate.toISOString()}`);
+        console.log(`🏐 Match time: ${matchDate.toISOString()}`);
+        
+        // If virtual time is before the match date, advance it to make the match playable
+        if (currentVirtualState.currentDate < matchDate) {
+          console.log('⏩ Advancing virtual time to match date to make first match playable...');
+          
+          // Advance virtual time to just past the match time
+          const newVirtualTime = new Date(matchDate);
+          newVirtualTime.setMinutes(newVirtualTime.getMinutes() + 5); // 5 minutes past match start
+          
+          await virtualTimeService.setCurrentDate(newVirtualTime);
+          console.log(`✅ Virtual time advanced to: ${newVirtualTime.toISOString()}`);
+          console.log('🎮 First match should now be detectable by the simulation system');
+        } else {
+          console.log('✅ First match is ready to be picked up by the simulation system');
+        }
+      } else {
+        console.warn('⚠️ No scheduled matches found for the new season');
+      }
+    } catch (error) {
+      console.error('Error initializing first match:', error);
+    }
+  }
+
+  /**
+   * Finalize an active season by moving it to historical data
+   */
+  private async finalizeActiveSeason(season: Season): Promise<void> {
+    try {
+      console.log(`📊 Finalizing season: ${season.name}`);
+      
+      // 1. Mark season as finished
+      await this.db.run('UPDATE seasons SET status = ? WHERE id = ?', ['finished', season.id]);
+      
+      // 2. Calculate final standings
+      const standings = await this.db.all(`
+        SELECT 
+          ts.*,
+          t.name as team_name
+        FROM team_standings ts
+        JOIN teams t ON ts.team_id = t.id
+        WHERE ts.season_id = ?
+        ORDER BY ts.points DESC, (ts.goals_for - ts.goals_against) DESC, ts.goals_for DESC
+      `, [season.id]) as TeamStanding[];
+      
+      // 3. Get season statistics
+      const totalMatches = await this.db.get('SELECT COUNT(*) as count FROM matches WHERE season_id = ?', [season.id]) as { count: number };
+      const completedMatches = await this.db.get('SELECT COUNT(*) as count FROM matches WHERE season_id = ? AND status = "finished"', [season.id]) as { count: number };
+      
+      // 4. Save to historical seasons
+      const historicalSeasonData = {
+        original_season_id: season.id,
+        name: season.name,
+        year: new Date(season.startDate).getFullYear(),
+        start_date: season.startDate,
+        end_date: season.endDate,
+        total_matches: totalMatches.count,
+        completed_matches: completedMatches.count,
+        final_standings: JSON.stringify(standings),
+        champion_team_id: standings.length > 0 ? standings[0].team_id : null,
+        created_at: new Date().toISOString()
+      };
+      
+      await this.db.run(`
+        INSERT INTO historical_seasons (
+          original_season_id, name, year, start_date, end_date,
+          total_matches, completed_matches, final_standings, champion_team_id, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        historicalSeasonData.original_season_id,
+        historicalSeasonData.name,
+        historicalSeasonData.year,
+        historicalSeasonData.start_date,
+        historicalSeasonData.end_date,
+        historicalSeasonData.total_matches,
+        historicalSeasonData.completed_matches,
+        historicalSeasonData.final_standings,
+        historicalSeasonData.champion_team_id,
+        historicalSeasonData.created_at
+      ]);
+      
+      console.log(`✅ Season ${season.name} finalized and archived to historical data`);
+      console.log(`🏆 Champion: ${standings.length > 0 ? standings[0].team_name : 'No champion determined'}`);
+      console.log(`📊 Final stats: ${completedMatches.count}/${totalMatches.count} matches completed`);
+      
+    } catch (error) {
+      console.error('Error finalizing active season:', error);
+      throw new Error(`Failed to finalize active season: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
 }
