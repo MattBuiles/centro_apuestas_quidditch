@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Button from '@/components/common/Button';
 import LiveMatchViewer from '@/components/matches/LiveMatchViewer';
 import { Team, Match } from '@/types/league';
 import { FinishedMatchData, Prediction } from '@/services/predictionsService';
+import { apiClient } from '@/utils/apiClient';
+import { FEATURES } from '@/config/features';
 import styles from './MatchOverview.module.css';
 
 interface MatchOverviewProps {
@@ -12,7 +14,7 @@ interface MatchOverviewProps {
     awayTeam: string;
     homeScore: number;
     awayScore: number;
-    status: 'live' | 'upcoming' | 'finished';
+    status: 'live' | 'upcoming' | 'finished' | 'scheduled';
     minute?: string;
     date: string;
     time: string;
@@ -41,12 +43,87 @@ const MatchOverview: React.FC<MatchOverviewProps> = ({
   onStartMatch,
   onMatchEnd
 }) => {
+  const [isSimulationStarting, setIsSimulationStarting] = useState(false);
+  const [simulationStatus, setSimulationStatus] = useState<any>(null);
+
+  // Función para iniciar simulación manual
+  const handleStartSimulation = async () => {
+    if (!FEATURES.USE_BACKEND_MATCHES) {
+      // Fallback al comportamiento anterior
+      onStartMatch();
+      return;
+    }
+
+    setIsSimulationStarting(true);
+    
+    try {
+      const response = await apiClient.post(`/matches/${match.id}/iniciar-simulacion`, {});
+      
+      if (response.success) {
+        console.log('✅ Match simulation started successfully');
+        // Recargar página para mostrar el estado actualizado
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      } else {
+        throw new Error(response.error || 'Failed to start simulation');
+      }
+    } catch (error) {
+      console.error('❌ Error starting match simulation:', error);
+      alert('Error al iniciar la simulación del partido. Inténtalo de nuevo.');
+    } finally {
+      setIsSimulationStarting(false);
+    }
+  };
+
+  // Conectar a WebSocket para actualizaciones en tiempo real
+  useEffect(() => {
+    if (FEATURES.USE_BACKEND_MATCHES && match.status === 'live') {
+      const wsUrl = `ws://localhost:3002`;
+      const ws = new WebSocket(wsUrl);
+      
+      ws.onopen = () => {
+        console.log('🔌 Connected to WebSocket for live updates');
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'match_update' && data.data?.matchId === match.id) {
+            setSimulationStatus(data.data);
+            
+            // Si el partido terminó, actualizar el estado
+            if (data.data.type === 'match_finished') {
+              setTimeout(() => {
+                window.location.reload();
+              }, 3000);
+            }
+          }
+        } catch (error) {
+          console.error('Error parsing WebSocket message:', error);
+        }
+      };
+
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+      };
+
+      ws.onclose = () => {
+        console.log('🔌 WebSocket connection closed');
+      };
+
+      return () => {
+        ws.close();
+      };
+    }
+  }, [match.status, match.id]);
+
   return (
     <div className={styles.overviewTab}>
       <div className={styles.sectionCard}>
         <h2 className={styles.sectionTitle}>
           <span className={styles.sectionIcon}>⚡</span>
-          Cronología en Vivo
+          {match.status === 'finished' ? 'Resumen del Partido' : 'Cronología en Vivo'}
         </h2>
         
         {match.status === 'upcoming' && (
@@ -62,6 +139,26 @@ const MatchOverview: React.FC<MatchOverviewProps> = ({
                 <span className={styles.countdownLabel}>Inicio programado:</span>
                 <span className={styles.countdownTime}>{match.date} a las {match.time}</span>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Nuevo: Botón de simulación para partidos programados */}
+        {match.status === 'scheduled' && FEATURES.USE_BACKEND_MATCHES && (
+          <div className={styles.liveTimeline}>
+            <div className={styles.liveReadyCard}>
+              <div className={styles.liveReadyIcon}>🎯</div>
+              <h3>Partido Listo para Simular</h3>
+              <p>Este partido está programado y listo para ser simulado en tiempo real.</p>
+              <Button 
+                onClick={handleStartSimulation}
+                className={styles.startSimulationButton}
+                isLoading={isSimulationStarting}
+                disabled={isSimulationStarting}
+              >
+                <span className={styles.actionIcon}>⚡</span>
+                {isSimulationStarting ? 'Iniciando Simulación...' : 'Iniciar Simulación'}
+              </Button>
             </div>
           </div>
         )}

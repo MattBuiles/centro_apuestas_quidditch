@@ -13,6 +13,7 @@ import { errorHandler } from './middleware/errorHandler';
 import { notFound } from './middleware/notFound';
 import { Database } from './database/Database';
 import { WebSocketService } from './services/WebSocketService';
+import { MatchSimulationService } from './services/MatchSimulationService';
 
 // Routes
 import authRoutes from './routes/auth';
@@ -138,6 +139,11 @@ async function startServer() {
     const wsPort = parseInt(process.env.WS_PORT || '3002');
     const wss = new WebSocketServer({ port: wsPort });
     const wsService = new WebSocketService(wss);
+    
+    // Initialize match simulation service and connect with WebSocket
+    const matchSimulationService = new MatchSimulationService();
+    matchSimulationService.setWebSocketService(wsService);
+    
     console.log(`🔌 WebSocket server running on port ${wsPort}`);
 
     // Graceful shutdown

@@ -1610,4 +1610,68 @@ export class Database {
       throw error;
     }
   }
+
+  // ============== MATCH SIMULATION METHODS ==============
+
+  public async updateMatchStatus(matchId: string, status: string): Promise<void> {
+    const sql = `
+      UPDATE matches 
+      SET status = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `;
+    await this.run(sql, [status, matchId]);
+  }
+
+  public async updateMatchScore(matchId: string, homeScore: number, awayScore: number): Promise<void> {
+    const sql = `
+      UPDATE matches 
+      SET home_score = ?, away_score = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `;
+    await this.run(sql, [homeScore, awayScore, matchId]);
+  }
+
+  public async updateMatchSnitchCaught(matchId: string, snitchCaught: boolean, snitchCaughtBy: string): Promise<void> {
+    const sql = `
+      UPDATE matches 
+      SET snitch_caught = ?, snitch_caught_by = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `;
+    await this.run(sql, [snitchCaught, snitchCaughtBy, matchId]);
+  }
+
+  public async createMatchEvent(event: {
+    id: string;
+    matchId: string;
+    minute: number;
+    type: string;
+    team: string;
+    player?: string;
+    description: string;
+    points: number;
+  }): Promise<void> {
+    const sql = `
+      INSERT INTO match_events (id, match_id, minute, type, team, player, description, points)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+    await this.run(sql, [
+      event.id,
+      event.matchId,
+      event.minute,
+      event.type,
+      event.team,
+      event.player || null,
+      event.description,
+      event.points
+    ]);
+  }
+
+  public async getMatchEvents(matchId: string): Promise<unknown[]> {
+    const sql = `
+      SELECT * FROM match_events
+      WHERE match_id = ?
+      ORDER BY minute ASC
+    `;
+    return await this.all(sql, [matchId]);
+  }
 }
