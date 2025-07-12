@@ -1,7 +1,9 @@
 import { Router } from 'express';
 import { Database } from '../database/Database';
+import { SeasonController } from '../controllers/SeasonController';
 
 const router = Router();
+const seasonController = new SeasonController();
 
 // Get all teams
 router.get('/', async (req, res) => {
@@ -53,5 +55,11 @@ router.get('/:id', async (req, res): Promise<void> => {
     });
   }
 });
+
+// Get historical stats for all teams
+router.get('/historical-stats', seasonController.getHistoricalTeamStats);
+
+// Get historical stats for specific team
+router.get('/:teamId/historical-stats', seasonController.getTeamHistoricalStats);
 
 export default router;

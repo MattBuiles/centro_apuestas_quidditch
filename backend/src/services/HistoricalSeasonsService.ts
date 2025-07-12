@@ -1,5 +1,6 @@
 import { Database } from '../database/Database';
 import { StandingsService } from './StandingsService';
+import { HistoricalTeamStatsService } from './HistoricalTeamStatsService';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface HistoricalSeasonData {
@@ -22,6 +23,7 @@ export interface HistoricalSeasonData {
 export class HistoricalSeasonsService {
   private db = Database.getInstance();
   private standingsService = new StandingsService();
+  private historicalTeamStatsService = new HistoricalTeamStatsService();
 
   /**
    * Archiva una temporada finalizada en la tabla historical_seasons
@@ -93,10 +95,14 @@ export class HistoricalSeasonsService {
       // Guardar en la base de datos
       await this.saveHistoricalSeason(historicalData);
 
+      // Actualizar estadísticas históricas de equipos
+      await this.historicalTeamStatsService.updateHistoricalStatsForSeason(seasonId);
+
       console.log(`✅ Temporada ${season.name} archivada exitosamente como histórica`);
       console.log(`   - Equipos: ${totalTeams}`);
       console.log(`   - Partidos: ${matchStats.total} (${matchStats.finished} finalizados)`);
       console.log(`   - Campeón: ${champion?.teamName || 'No determinado'}`);
+      console.log(`   - Estadísticas históricas de equipos actualizadas`);
 
     } catch (error) {
       console.error('Error archivando temporada:', error);
