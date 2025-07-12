@@ -88,7 +88,61 @@ const MatchesPage = () => {
         setSeason(seasonData);
         setError(null);
       } else {
-        throw new Error('No active season found');
+        // No hay temporada activa, pero podemos mostrar los partidos disponibles
+        console.log('⚠️ No hay temporada activa, creando temporada temporal para mostrar partidos');
+        
+        // Crear una "temporada" temporal para mostrar los partidos
+        if (matchesData.data && matchesData.data.length > 0) {
+          const transformedMatches = matchesData.data.map((match: {
+            id: string;
+            season_id: string;
+            home_team_id: string;
+            away_team_id: string;
+            date: string;
+            status: string;
+            home_score: number;
+            away_score: number;
+            duration: number | null;
+            snitch_caught: number;
+            snitch_caught_by: string | null;
+          }) => ({
+            id: match.id,
+            seasonId: match.season_id,
+            localId: match.home_team_id,
+            visitanteId: match.away_team_id,
+            date: match.date,
+            status: match.status,
+            homeScore: match.home_score,
+            awayScore: match.away_score,
+            currentMinute: match.duration,
+            snitchCaught: match.snitch_caught,
+            snitchCaughtBy: match.snitch_caught_by
+          }));
+
+          // Crear temporada temporal
+          const tempSeason: Season = {
+            id: 'temp',
+            name: 'Partidos Disponibles',
+            year: new Date().getFullYear(),
+            startDate: new Date(),
+            endDate: new Date(),
+            status: 'finished' as const,
+            equipos: [], // Los equipos se obtendrán dinámicamente
+            partidos: transformedMatches,
+            teams: [], // Compatibilidad hacia atrás
+            matches: transformedMatches,
+            currentMatchday: 1,
+            currentRound: 1,
+            totalMatchdays: 1
+          };
+
+          setSeason(tempSeason);
+          setError(null);
+        } else {
+          // No hay partidos ni temporada activa
+          setSeason(null);
+          setError('No hay temporada activa ni partidos disponibles. Puedes crear una nueva temporada desde el panel de administración.');
+        }
       }
 
     } catch (error) {
