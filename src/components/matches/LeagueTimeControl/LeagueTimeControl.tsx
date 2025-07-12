@@ -181,15 +181,6 @@ const LeagueTimeControl: React.FC<VirtualTimeControlProps> = ({
       return;
     }
 
-    // Check if there's already a live match that hasn't been simulated
-    if (leagueTimeInfo?.activeSeason?.matches) {
-      const liveMatches = leagueTimeInfo.activeSeason.matches.filter(m => m.status === 'live');
-      if (liveMatches.length > 0) {
-        setError('Ya hay un partido en vivo. Simúlalo antes de avanzar al siguiente.');
-        return;
-      }
-    }
-
     setIsAdvancing(true);
     setError(null);
     setLastActionMessage(null);
@@ -197,11 +188,16 @@ const LeagueTimeControl: React.FC<VirtualTimeControlProps> = ({
       const result = await leagueTimeServiceWithRefresh.advanceToNextUnplayedMatch();
 
       if (result.success) {
-        setLastActionMessage(`✅ Navegado al próximo partido: ${new Date(result.newDate).toLocaleDateString('es-ES')}`);
+        const simulatedCount = result.simulatedMatches ? result.simulatedMatches.length : 0;
+        const baseMessage = `✅ Navegado al próximo partido: ${new Date(result.newDate).toLocaleDateString('es-ES')}`;
+        const simulatedMessage = simulatedCount > 0 ? ` Se simularon automáticamente ${simulatedCount} partidos en vivo.` : '';
+        
+        setLastActionMessage(baseMessage + simulatedMessage);
         
         // Clear message after 5 seconds
         setTimeout(() => setLastActionMessage(null), 5000);
         
+        // Create array of simulated matches for callback
         const simulatedMatches: Match[] = [];
         onTimeAdvanced?.(new Date(result.newDate), simulatedMatches);
       } else {
