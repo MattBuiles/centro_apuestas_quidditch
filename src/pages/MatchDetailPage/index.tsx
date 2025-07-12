@@ -420,12 +420,22 @@ const MatchDetailPage: React.FC = () => {
     awayTeam: awayTeam?.name || 'Equipo Visitante',
     homeScore: match.homeScore || 0,
     awayScore: match.awayScore || 0,
-    status: match.status as 'live' | 'upcoming' | 'finished',
+    status: match.status as 'live' | 'upcoming' | 'finished' | 'scheduled',
     minute: match.currentMinute ? `${match.currentMinute}'` : undefined,
     date: formatDate(match.date),
     time: formatTime(match.date),
     location: match.venue || 'Estadio de Quidditch'
   };
+
+  // Debug logging
+  console.log('🔍 MatchDetailPage Debug Info:', {
+    match,
+    homeTeam,
+    awayTeam,
+    transformedMatch,
+    showLiveSimulation,
+    FEATURES_BACKEND: FEATURES.USE_BACKEND_MATCHES
+  });
 
   return (
     <MatchDetailErrorBoundary>

@@ -3,7 +3,6 @@ import Button from '@/components/common/Button';
 import LiveMatchViewer from '@/components/matches/LiveMatchViewer';
 import { Team, Match } from '@/types/league';
 import { FinishedMatchData, Prediction } from '@/services/predictionsService';
-import { apiClient } from '@/utils/apiClient';
 import { FEATURES } from '@/config/features';
 import styles from './MatchOverview.module.css';
 
@@ -43,80 +42,12 @@ const MatchOverview: React.FC<MatchOverviewProps> = ({
   onStartMatch,
   onMatchEnd
 }) => {
-  const [isSimulationStarting, setIsSimulationStarting] = useState(false);
-  const [simulationStatus, setSimulationStatus] = useState<any>(null);
+  const [currentMatchStatus, setCurrentMatchStatus] = useState(match.status); // Estado local del partido
 
-  // Función para iniciar simulación manual
-  const handleStartSimulation = async () => {
-    if (!FEATURES.USE_BACKEND_MATCHES) {
-      // Fallback al comportamiento anterior
-      onStartMatch();
-      return;
-    }
-
-    setIsSimulationStarting(true);
-    
-    try {
-      const response = await apiClient.post(`/matches/${match.id}/iniciar-simulacion`, {});
-      
-      if (response.success) {
-        console.log('✅ Match simulation started successfully');
-        // Recargar página para mostrar el estado actualizado
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
-      } else {
-        throw new Error(response.error || 'Failed to start simulation');
-      }
-    } catch (error) {
-      console.error('❌ Error starting match simulation:', error);
-      alert('Error al iniciar la simulación del partido. Inténtalo de nuevo.');
-    } finally {
-      setIsSimulationStarting(false);
-    }
-  };
-
-  // Conectar a WebSocket para actualizaciones en tiempo real
+  // Sincronizar estado local con prop cuando cambie externamente
   useEffect(() => {
-    if (FEATURES.USE_BACKEND_MATCHES && match.status === 'live') {
-      const wsUrl = `ws://localhost:3002`;
-      const ws = new WebSocket(wsUrl);
-      
-      ws.onopen = () => {
-        console.log('🔌 Connected to WebSocket for live updates');
-      };
-
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          if (data.type === 'match_update' && data.data?.matchId === match.id) {
-            setSimulationStatus(data.data);
-            
-            // Si el partido terminó, actualizar el estado
-            if (data.data.type === 'match_finished') {
-              setTimeout(() => {
-                window.location.reload();
-              }, 3000);
-            }
-          }
-        } catch (error) {
-          console.error('Error parsing WebSocket message:', error);
-        }
-      };
-
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-      };
-
-      ws.onclose = () => {
-        console.log('🔌 WebSocket connection closed');
-      };
-
-      return () => {
-        ws.close();
-      };
-    }
-  }, [match.status, match.id]);
+    setCurrentMatchStatus(match.status);
+  }, [match.status]);
 
   return (
     <div className={styles.overviewTab}>
@@ -143,75 +74,126 @@ const MatchOverview: React.FC<MatchOverviewProps> = ({
           </div>
         )}
 
-        {/* Nuevo: Botón de simulación para partidos programados */}
-        {match.status === 'scheduled' && FEATURES.USE_BACKEND_MATCHES && (
+        {/* Estado scheduled: Mostrar mensaje informativo */}
+        {currentMatchStatus === 'scheduled' && FEATURES.USE_BACKEND_MATCHES && (
           <div className={styles.liveTimeline}>
-            <div className={styles.liveReadyCard}>
-              <div className={styles.liveReadyIcon}>🎯</div>
-              <h3>Partido Listo para Simular</h3>
-              <p>Este partido está programado y listo para ser simulado en tiempo real.</p>
-              <Button 
-                onClick={handleStartSimulation}
-                className={styles.startSimulationButton}
-                isLoading={isSimulationStarting}
-                disabled={isSimulationStarting}
-              >
-                <span className={styles.actionIcon}>⚡</span>
-                {isSimulationStarting ? 'Iniciando Simulación...' : 'Iniciar Simulación'}
-              </Button>
+            <div className={styles.timelineUnavailable}>
+              <div className={styles.unavailableIcon}>⏳</div>
+              <h3>Partido Aún No Iniciado</h3>
+              <p>
+                Este partido está programado pero aún no ha comenzado. 
+                Para simularlo, primero debe estar en estado "En Vivo".
+              </p>
+              <div className={styles.scheduledMatchInfo}>
+                <p>💡 <strong>Cómo simular este partido:</strong></p>
+                <ol>
+                  <li>Usa el botón "Al Próximo Partido" para activar este partido</li>
+                  <li>El estado cambiará a "En Vivo"</li>
+                  <li>Entonces podrás iniciar la simulación</li>
+                </ol>
+              </div>
             </div>
           </div>
         )}
 
-        {match.status === 'live' && (
+        {/* Simulación para partidos en vivo */}
+        {currentMatchStatus === 'live' && (
           <div className={styles.liveTimeline}>
-            {realMatch && homeTeam && awayTeam ? (
-              <>
-                {!showLiveSimulation && (
-                  <div className={styles.liveReadyCard}>
-                    <div className={styles.liveReadyIcon}>🔴</div>
-                    <h3>Partido Listo para Comenzar</h3>
-                    <p>La cronología en vivo comenzará cuando inicies la simulación del duelo.</p>
-                    <Button 
-                      onClick={onStartMatch} 
-                      className={styles.startMatchButton}
-                      isLoading={isStartingMatch}
-                      disabled={isStartingMatch}
-                    >
-                      <span className={styles.actionIcon}>⚡</span>
-                      {isStartingMatch ? 'Invocando la Magia...' : 'Iniciar Cronología'}
-                    </Button>
+            {/* Debug information */}
+            <div style={{ 
+              background: '#f0f0f0', 
+              padding: '10px', 
+              margin: '10px 0', 
+              borderRadius: '5px',
+              fontSize: '12px'
+            }}>
+              <strong>🔍 Debug Info:</strong><br/>
+              • Backend habilitado: {FEATURES.USE_BACKEND_MATCHES ? 'Sí' : 'No'}<br/>
+              • Estado del partido: {currentMatchStatus}<br/>
+              • RealMatch existe: {realMatch ? 'Sí' : 'No'}<br/>
+              • HomeTeam existe: {homeTeam ? 'Sí' : 'No'}<br/>
+              • AwayTeam existe: {awayTeam ? 'Sí' : 'No'}<br/>
+              • Match ID: {match.id}<br/>
+              • Show Live Simulation: {showLiveSimulation ? 'Sí' : 'No'}
+            </div>
+            
+            {FEATURES.USE_BACKEND_MATCHES ? (
+              // Nuevo sistema backend: usar LiveMatchViewer directamente
+              realMatch && homeTeam && awayTeam ? (
+                <div>
+                  <div style={{ background: '#e8f5e8', padding: '10px', margin: '10px 0', borderRadius: '5px' }}>
+                    ✅ Mostrando LiveMatchViewer con backend
                   </div>
-                )}
-
-                {showLiveSimulation && (
-                  <div className={styles.liveTimelineContainer}>
-                    <div className={styles.timelineHeader}>
-                      <div className={styles.liveIndicator}>
-                        <span className={styles.liveDot}></span>
-                        EN VIVO
-                      </div>
-                      <div className={styles.currentMinute}>
-                        Minuto: {realMatch.currentMinute || 0}'
-                      </div>
-                    </div>
-                    
-                    <LiveMatchViewer 
-                      match={realMatch} 
-                      homeTeam={homeTeam} 
-                      awayTeam={awayTeam}
-                      refreshInterval={3}
-                      onMatchEnd={onMatchEnd}
-                    />
+                  <LiveMatchViewer 
+                    match={realMatch} 
+                    homeTeam={homeTeam} 
+                    awayTeam={awayTeam}
+                    refreshInterval={3}
+                    onMatchEnd={onMatchEnd}
+                  />
+                </div>
+              ) : (
+                <div className={styles.timelineError}>
+                  <div className={styles.errorIcon}>⚠️</div>
+                  <h3>Error al Cargar Simulación</h3>
+                  <p>No se pudieron cargar los datos del partido para la simulación.</p>
+                  <div style={{ fontSize: '12px', marginTop: '10px' }}>
+                    • RealMatch: {realMatch ? '✅' : '❌'}<br/>
+                    • HomeTeam: {homeTeam ? '✅' : '❌'}<br/>
+                    • AwayTeam: {awayTeam ? '✅' : '❌'}
                   </div>
-                )}
-              </>
+                </div>
+              )
             ) : (
-              <div className={styles.timelineError}>
-                <div className={styles.errorIcon}>⚠️</div>
-                <h3>Error al Cargar Cronología</h3>
-                <p>No se pudieron cargar los datos del partido en vivo.</p>
-              </div>
+              // Sistema anterior: mostrar botón de inicio
+              realMatch && homeTeam && awayTeam ? (
+                <>
+                  {!showLiveSimulation && (
+                    <div className={styles.liveReadyCard}>
+                      <div className={styles.liveReadyIcon}>🔴</div>
+                      <h3>Partido Listo para Comenzar</h3>
+                      <p>La cronología en vivo comenzará cuando inicies la simulación del duelo.</p>
+                      <Button 
+                        onClick={onStartMatch} 
+                        className={styles.startMatchButton}
+                        isLoading={isStartingMatch}
+                        disabled={isStartingMatch}
+                      >
+                        <span className={styles.actionIcon}>⚡</span>
+                        {isStartingMatch ? 'Invocando la Magia...' : 'Iniciar Cronología'}
+                      </Button>
+                    </div>
+                  )}
+
+                  {showLiveSimulation && (
+                    <div className={styles.liveTimelineContainer}>
+                      <div className={styles.timelineHeader}>
+                        <div className={styles.liveIndicator}>
+                          <span className={styles.liveDot}></span>
+                          EN VIVO
+                        </div>
+                        <div className={styles.currentMinute}>
+                          Minuto: {realMatch.currentMinute || 0}'
+                        </div>
+                      </div>
+                      
+                      <LiveMatchViewer 
+                        match={realMatch} 
+                        homeTeam={homeTeam} 
+                        awayTeam={awayTeam}
+                        refreshInterval={3}
+                        onMatchEnd={onMatchEnd}
+                      />
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className={styles.timelineError}>
+                  <div className={styles.errorIcon}>⚠️</div>
+                  <h3>Error al Cargar Cronología</h3>
+                  <p>No se pudieron cargar los datos del partido en vivo.</p>
+                </div>
+              )
             )}
           </div>
         )}
