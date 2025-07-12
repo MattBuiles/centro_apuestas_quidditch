@@ -1,12 +1,14 @@
 import { Request, Response } from 'express';
 import { Database } from '../database/Database';
 import { SeasonManagementService } from '../services/SeasonManagementService';
+import { StandingsService } from '../services/StandingsService';
 import { VirtualTimeService } from '../services/VirtualTimeService';
 import { Season, ApiResponse } from '../types';
 
 export class SeasonController {
   private db = Database.getInstance();
   private seasonService = new SeasonManagementService();
+  private standingsService = new StandingsService();
   private virtualTimeService = new VirtualTimeService();
 
   // GET /api/seasons - Get all seasons
@@ -258,6 +260,106 @@ export class SeasonController {
         success: false,
         error: 'Internal server error',
         message: 'Failed to check season completion',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
+
+  // GET /api/seasons/:id/standings - Get standings for a specific season
+  public getSeasonStandings = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id } = req.params;
+      
+      // Verificar que la temporada existe
+      const season = await this.seasonService.getSeasonById(id);
+      if (!season) {
+        res.status(404).json({
+          success: false,
+          error: 'Season not found',
+          message: `Season with ID ${id} not found`,
+          timestamp: new Date().toISOString()
+        });
+        return;
+      }
+
+      // Obtener standings desde la base de datos
+      const standings = await this.standingsService.getSeasonStandings(id);
+      
+      // Obtener información adicional de los equipos
+      const teamsMap = new Map();
+      season.teams?.forEach(team => {
+        teamsMap.set(team.id, team);
+      });
+
+      // Enriquecer standings con información de equipos
+      const enrichedStandings = standings.map(standing => ({
+        ...standing,
+        team: teamsMap.get(standing.teamId) || { id: standing.teamId, name: standing.teamId }
+      }));
+
+      res.json({
+        success: true,
+        data: enrichedStandings,
+        message: 'Season standings retrieved successfully',
+        timestamp: new Date().toISOString()
+      });
+      
+    } catch (error) {
+      console.error('Error fetching season standings:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error',
+        message: 'Failed to retrieve season standings',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
+
+  // GET /api/standings/current - Get current season standings
+  public getCurrentStandings = async (req: Request, res: Response): Promise<void> => {
+    try {
+      // Obtener la temporada activa
+      const currentSeason = await this.seasonService.getCurrentSeason();
+      if (!currentSeason) {
+        res.status(404).json({
+          success: false,
+          error: 'No active season found',
+          message: 'There is no currently active season',
+          timestamp: new Date().toISOString()
+        });
+        return;
+      }
+
+      // Obtener standings desde la base de datos
+      const standings = await this.standingsService.getSeasonStandings(currentSeason.id);
+      
+      // Enriquecer standings con información de equipos
+      const enrichedStandings = standings.map(standing => ({
+        ...standing,
+        team: currentSeason.teams?.find(team => team.id === standing.teamId) || 
+              { id: standing.teamId, name: standing.teamId }
+      }));
+
+      res.json({
+        success: true,
+        data: {
+          season: {
+            id: currentSeason.id,
+            name: currentSeason.name,
+            status: currentSeason.status
+          },
+          standings: enrichedStandings
+        },
+        message: 'Current standings retrieved successfully',
+        timestamp: new Date().toISOString()
+      });
+      
+    } catch (error) {
+      console.error('Error fetching current standings:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error',
+        message: 'Failed to retrieve current standings',
         timestamp: new Date().toISOString()
       });
     }
