@@ -140,6 +140,84 @@ export class SeasonManagementService {
     return this.getSeasonById(seasonId);
   }
 
+  /**
+   * Verifica si todos los partidos de la temporada activa están finalizados
+   * y actualiza el estado de la temporada a 'finished' si es necesario
+   */
+  async checkAndFinishSeasonIfComplete(): Promise<{ seasonFinished: boolean; seasonId?: string }> {
+    // Obtener la temporada activa
+    const activeSeasonRow = await this.db.get(`
+      SELECT * FROM seasons 
+      WHERE status = 'active' 
+      LIMIT 1
+    `) as {
+      id: string;
+      name: string;
+      start_date: string;
+      end_date: string;
+      status: string;
+    } | undefined;
+
+    if (!activeSeasonRow) {
+      return { seasonFinished: false };
+    }
+
+    // Verificar si todos los partidos de la temporada están finalizados
+    const matchesStatus = await this.db.get(`
+      SELECT 
+        COUNT(*) as total_matches,
+        COUNT(CASE WHEN status = 'finished' THEN 1 END) as finished_matches,
+        COUNT(CASE WHEN status = 'scheduled' THEN 1 END) as scheduled_matches,
+        COUNT(CASE WHEN status = 'live' THEN 1 END) as live_matches
+      FROM matches 
+      WHERE season_id = ?
+    `, [activeSeasonRow.id]) as {
+      total_matches: number;
+      finished_matches: number;
+      scheduled_matches: number;
+      live_matches: number;
+    };
+
+    console.log(`🏆 Verificando finalización de temporada ${activeSeasonRow.name}:`);
+    console.log(`   - Total de partidos: ${matchesStatus.total_matches}`);
+    console.log(`   - Partidos finalizados: ${matchesStatus.finished_matches}`);
+    console.log(`   - Partidos programados: ${matchesStatus.scheduled_matches}`);
+    console.log(`   - Partidos en vivo: ${matchesStatus.live_matches}`);
+
+    // Si todos los partidos están finalizados, actualizar el estado de la temporada
+    if (matchesStatus.total_matches > 0 && 
+        matchesStatus.finished_matches === matchesStatus.total_matches) {
+      
+      console.log(`✅ Todos los partidos completados. Finalizando temporada ${activeSeasonRow.name}`);
+      
+      await this.db.run(`
+        UPDATE seasons 
+        SET status = 'finished' 
+        WHERE id = ?
+      `, [activeSeasonRow.id]);
+
+      return { 
+        seasonFinished: true, 
+        seasonId: activeSeasonRow.id 
+      };
+    }
+
+    return { seasonFinished: false };
+  }
+
+  /**
+   * Finaliza manualmente una temporada específica
+   */
+  async finishSeason(seasonId: string): Promise<Season> {
+    await this.db.run(`
+      UPDATE seasons 
+      SET status = 'finished' 
+      WHERE id = ?
+    `, [seasonId]);
+
+    return this.getSeasonById(seasonId);
+  }
+
   private async generateSeasonMatches(
     seasonId: string,
     teamIds: string[],
