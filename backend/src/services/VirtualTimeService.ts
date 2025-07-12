@@ -175,7 +175,17 @@ export class VirtualTimeService {
     const matchesSimulated: MatchResult[] = [];
     let seasonUpdated = false;
 
-    // Simulate matches that should have happened
+    // First, complete all matches that are currently live
+    if (this.currentState.activeSeason) {
+      const liveMatches = await this.getLiveMatches();
+      for (const match of liveMatches) {
+        console.log(`🔴 Completing live match: ${match.id}`);
+        const result = await this.simulateMatch(match.id);
+        matchesSimulated.push(result);
+      }
+    }
+
+    // Then simulate matches that should have happened
     if (simulatePendingMatches && this.currentState.activeSeason) {
       const pendingMatches = await this.getPendingMatchesUntil(newDate);
       for (const match of pendingMatches) {
@@ -684,6 +694,16 @@ export class VirtualTimeService {
     await this.saveState();
     
     console.log(`✅ Virtual time reset to: ${this.currentState.currentDate.toISOString()}`);
+  }
+
+  private async getLiveMatches(): Promise<Match[]> {
+    const matches = await this.db.all(`
+      SELECT * FROM matches 
+      WHERE status = 'live'
+      ORDER BY date ASC
+    `) as MatchRow[];
+
+    return matches.map(match => this.mapRowToMatch(match));
   }
 }
 
