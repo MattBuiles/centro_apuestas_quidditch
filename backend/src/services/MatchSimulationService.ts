@@ -1,6 +1,7 @@
 import { Database } from '../database/Database';
 import { WebSocketService } from './WebSocketService';
 import { SeasonManagementService } from './SeasonManagementService';
+import { StandingsService } from './StandingsService';
 import { MatchEvent } from '../types';
 
 interface MatchData {
@@ -40,10 +41,12 @@ export class MatchSimulationService {
   private db: Database;
   private wsService: WebSocketService | null = null;
   private seasonService: SeasonManagementService;
+  private standingsService: StandingsService;
   
   constructor() {
     this.db = Database.getInstance();
     this.seasonService = new SeasonManagementService();
+    this.standingsService = new StandingsService();
   }
 
   public setWebSocketService(wsService: WebSocketService): void {
@@ -362,6 +365,9 @@ export class MatchSimulationService {
         snitchCaught: true,
         snitchCaughtBy
       });
+
+      // Actualizar standings en la base de datos
+      await this.standingsService.updateStandingsAfterMatch(matchId);
 
       // Broadcast finalización del partido
       this.broadcastMatchUpdate(matchId, {
