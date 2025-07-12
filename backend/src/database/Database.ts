@@ -1507,6 +1507,10 @@ export class Database {
       await this.run('DELETE FROM season_teams');
       await this.run('DELETE FROM seasons');
       
+      // Clear historical seasons
+      console.log('🗑️ Clearing historical seasons...');
+      await this.run('DELETE FROM historical_seasons');
+      
       // Reset team statistics to zero
       console.log('🔄 Resetting team statistics...');
       await this.run(`
