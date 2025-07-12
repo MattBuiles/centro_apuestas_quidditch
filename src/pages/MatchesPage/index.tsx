@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import MatchCard from '@/components/matches/MatchCard'
 import LeagueTimeControl from '@/components/matches/LeagueTimeControl'
+import NewSeasonButton from '@/components/seasons/NewSeasonButton'
 import Button from '@/components/common/Button'
 import Card from '@/components/common/Card'
 import { useLeagueTime } from '@/hooks/useLeagueTime'
@@ -14,6 +15,7 @@ const MatchesPage = () => {
   
   // Usar el hook de tiempo de liga
   const { 
+    leagueTimeInfo,
     isLoading: isLoadingTime, 
     error: timeError, 
     getCurrentLeagueDate,
@@ -172,6 +174,36 @@ const MatchesPage = () => {
   const handleSeasonReset = () => {
     // Reset season when virtual time is reset
     forceRefresh();
+  };
+
+  const handleNewSeasonCreated = async () => {
+    // Refresh everything after a new season is created
+    console.log('🌟 New season created, refreshing data...');
+    
+    try {
+      // Clear any local state
+      setSeason(null);
+      setError(null);
+      
+      // Wait a moment for the backend to fully process the reset
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Force refresh league time info first
+      console.log('🔄 Force refreshing league time...');
+      await forceRefresh();
+      
+      // Wait another moment for the data to be synchronized
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Re-initialize season data
+      console.log('🔄 Re-initializing season data...');
+      await initializeSeason();
+      
+      console.log('✅ Season refresh completed');
+    } catch (error) {
+      console.error('❌ Error refreshing after season creation:', error);
+      setError('Error refrescando después de crear la temporada. Intenta recargar la página.');
+    }
   };
 
   const getFilteredMatches = () => {
@@ -362,6 +394,18 @@ const MatchesPage = () => {
   const filteredMatches = getFilteredMatches();
   const tabCounts = getTabCounts();
 
+  // Check if there's no active season and no matches available
+  // First check if the activeSeason exists and is actually active
+  const activeSeasonExists = season && season.id !== 'temp' && 
+                            season.status === 'active' && 
+                            season.matches && season.matches.length > 0;
+  
+  // Also check league time info for additional validation
+  const leagueTimeHasActiveSeason = leagueTimeInfo?.activeSeason && 
+                                   leagueTimeInfo.activeSeason.status === 'active';
+  
+  const hasNoActiveSeason = !activeSeasonExists && !leagueTimeHasActiveSeason;
+
   return (
     <div className={styles.matchesPageContainer}>
       <section className={styles.heroSection}>
@@ -371,91 +415,98 @@ const MatchesPage = () => {
         </p>
       </section>
 
-      {/* League Time Control */}
-      <LeagueTimeControl 
-        onTimeAdvanced={handleTimeAdvanced}
-        onSeasonReset={handleSeasonReset}
-      />
+      {/* Show New Season Button if no active season */}
+      {hasNoActiveSeason ? (
+        <NewSeasonButton onSeasonCreated={handleNewSeasonCreated} />
+      ) : (
+        <>
+          {/* League Time Control */}
+          <LeagueTimeControl 
+            onTimeAdvanced={handleTimeAdvanced}
+            onSeasonReset={handleSeasonReset}
+          />
 
-      <section className={styles.matchesContainerMain}>
-        <div className={styles.filtersSection}>
-          <div className={styles.searchFilter}>
-            <input 
-              type="text" 
-              id="match-search" 
-              placeholder="Buscar equipos..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className={styles.searchInput}
-            />
-          </div>
-        </div>
-
-        <div className={styles.tabsContainer}>
-          <Button 
-            variant={activeTab === 'today' ? 'primary' : 'outline'} 
-            onClick={() => setActiveTab('today')}
-            size="sm"
-          >
-            📅 Hoy ({tabCounts.today})
-          </Button>
-          <Button 
-            variant={activeTab === 'upcoming' ? 'primary' : 'outline'} 
-            onClick={() => setActiveTab('upcoming')}
-            size="sm"
-          >
-            ⏰ Próximos ({tabCounts.upcoming})
-          </Button>
-          <Button 
-            variant={activeTab === 'live' ? 'primary' : 'outline'} 
-            onClick={() => setActiveTab('live')}
-            size="sm"
-          >
-            🔴 En Vivo ({tabCounts.live})
-          </Button>
-        </div>
-
-        {/* Grid for matches */}
-        <div className={styles.upcomingMatchesGrid}>
-          {filteredMatches.length > 0 ? (
-            filteredMatches.map(match => (
-              <MatchCard key={match.id} match={formatMatchForCard(match)} />
-            ))
-          ) : (
-            <div className={styles.noMatchesContainer}>
-              <Card className={styles.noMatchesCard}>
-                <div className={styles.noMatchesContent}>
-                  <div className={styles.noMatchesIcon}>
-                    {activeTab === 'upcoming' && '⏰'}
-                    {activeTab === 'live' && '🔴'}
-                    {activeTab === 'today' && '📅'}
-                  </div>
-                  <h3 className={styles.noMatchesTitle}>
-                    {activeTab === 'upcoming' && 'No hay partidos próximos'}
-                    {activeTab === 'live' && 'No hay partidos en vivo'}
-                    {activeTab === 'today' && 'No hay partidos hoy'}
-                  </h3>
-                  <p className={styles.noMatchesText}>
-                    {activeTab === 'upcoming' && 'Avanza el tiempo virtual para generar los próximos 5 partidos más cercanos.'}
-                    {activeTab === 'live' && 'Inicia la simulación de un partido para verlo en vivo.'}
-                    {activeTab === 'today' && 'Avanza el tiempo hasta el día de un partido.'}
-                  </p>
-                  {searchTerm && (
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => setSearchTerm('')}
-                      className={styles.clearSearchButton}
-                    >
-                      🔍 Limpiar búsqueda
-                    </Button>
-                  )}
-                </div>
-              </Card>
+          <section className={styles.matchesContainerMain}>
+            <div className={styles.filtersSection}>
+              <div className={styles.searchFilter}>
+                <input 
+                  type="text" 
+                  id="match-search" 
+                  placeholder="Buscar equipos..." 
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className={styles.searchInput}
+                />
+              </div>
             </div>
-          )}
-        </div>
-      </section>
+
+            <div className={styles.tabsContainer}>
+              <Button 
+                variant={activeTab === 'today' ? 'primary' : 'outline'} 
+                onClick={() => setActiveTab('today')}
+                size="sm"
+              >
+                📅 Hoy ({tabCounts.today})
+              </Button>
+              <Button 
+                variant={activeTab === 'upcoming' ? 'primary' : 'outline'} 
+                onClick={() => setActiveTab('upcoming')}
+                size="sm"
+              >
+                ⏰ Próximos ({tabCounts.upcoming})
+              </Button>
+              <Button 
+                variant={activeTab === 'live' ? 'primary' : 'outline'} 
+                onClick={() => setActiveTab('live')}
+                size="sm"
+              >
+                🔴 En Vivo ({tabCounts.live})
+              </Button>
+            </div>
+
+            {/* Grid for matches */}
+            <div className={styles.upcomingMatchesGrid}>
+              {filteredMatches.length > 0 ? (
+                filteredMatches.map(match => (
+                  <MatchCard key={match.id} match={formatMatchForCard(match)} />
+                ))
+              ) : (
+                <div className={styles.noMatchesContainer}>
+                  <Card className={styles.noMatchesCard}>
+                    <div className={styles.noMatchesContent}>
+                      <div className={styles.noMatchesIcon}>
+                        {activeTab === 'upcoming' && '⏰'}
+                        {activeTab === 'live' && '🔴'}
+                        {activeTab === 'today' && '📅'}
+                      </div>
+                      <h3 className={styles.noMatchesTitle}>
+                        {activeTab === 'upcoming' && 'No hay partidos próximos'}
+                        {activeTab === 'live' && 'No hay partidos en vivo'}
+                        {activeTab === 'today' && 'No hay partidos hoy'}
+                      </h3>
+                      <p className={styles.noMatchesText}>
+                        {activeTab === 'upcoming' && 'Avanza el tiempo virtual para generar los próximos 5 partidos más cercanos.'}
+                        {activeTab === 'live' && 'Inicia la simulación de un partido para verlo en vivo.'}
+                        {activeTab === 'today' && 'Avanza el tiempo hasta el día de un partido.'}
+                      </p>
+                      {searchTerm && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => setSearchTerm('')}
+                          className={styles.clearSearchButton}
+                        >
+                          🔍 Limpiar búsqueda
+                        </Button>
+                      )}
+                    </div>
+                  </Card>
+                </div>
+              )}
+            </div>
+          </section>
+        </>
+      )}
     </div>
   )
 }
