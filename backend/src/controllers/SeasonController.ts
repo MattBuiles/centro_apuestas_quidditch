@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Database } from '../database/Database';
 import { SeasonManagementService } from '../services/SeasonManagementService';
 import { StandingsService } from '../services/StandingsService';
+import { HistoricalSeasonsService } from '../services/HistoricalSeasonsService';
 import { VirtualTimeService } from '../services/VirtualTimeService';
 import { Season, ApiResponse } from '../types';
 
@@ -9,6 +10,7 @@ export class SeasonController {
   private db = Database.getInstance();
   private seasonService = new SeasonManagementService();
   private standingsService = new StandingsService();
+  private historicalSeasonsService = new HistoricalSeasonsService();
   private virtualTimeService = new VirtualTimeService();
 
   // GET /api/seasons - Get all seasons
@@ -362,6 +364,111 @@ export class SeasonController {
         message: 'Failed to retrieve current standings',
         timestamp: new Date().toISOString()
       });
+    }
+  };
+
+  // GET /api/seasons/historical - Get all historical seasons
+  public getHistoricalSeasons = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const historicalSeasons = await this.historicalSeasonsService.getAllHistoricalSeasons();
+      
+      res.json({
+        success: true,
+        data: historicalSeasons,
+        message: 'Historical seasons retrieved successfully',
+        timestamp: new Date().toISOString()
+      });
+      
+    } catch (error) {
+      console.error('Error fetching historical seasons:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error',
+        message: 'Failed to retrieve historical seasons',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
+
+  // GET /api/seasons/historical/:id - Get specific historical season
+  public getHistoricalSeasonById = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id } = req.params;
+      
+      const historicalSeason = await this.historicalSeasonsService.getHistoricalSeasonById(id);
+      
+      if (!historicalSeason) {
+        res.status(404).json({
+          success: false,
+          error: 'Not found',
+          message: 'Historical season not found',
+          timestamp: new Date().toISOString()
+        });
+        return;
+      }
+      
+      res.json({
+        success: true,
+        data: historicalSeason,
+        message: 'Historical season retrieved successfully',
+        timestamp: new Date().toISOString()
+      });
+      
+    } catch (error) {
+      console.error('Error fetching historical season:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error',
+        message: 'Failed to retrieve historical season',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
+
+  // POST /api/seasons/:id/archive - Manually archive a finished season
+  public archiveFinishedSeason = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id } = req.params;
+      
+      // Verificar que la temporada existe y está finalizada
+      const season = await this.seasonService.getSeasonById(id);
+      
+      if (season.status !== 'finished') {
+        res.status(400).json({
+          success: false,
+          error: 'Bad request',
+          message: 'Only finished seasons can be archived',
+          timestamp: new Date().toISOString()
+        });
+        return;
+      }
+      
+      await this.historicalSeasonsService.archiveFinishedSeason(id);
+      
+      res.json({
+        success: true,
+        data: { seasonId: id },
+        message: 'Season archived successfully',
+        timestamp: new Date().toISOString()
+      });
+      
+    } catch (error) {
+      console.error('Error archiving season:', error);
+      if (error instanceof Error && error.message.includes('not found')) {
+        res.status(404).json({
+          success: false,
+          error: 'Not found',
+          message: 'Season not found',
+          timestamp: new Date().toISOString()
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          error: 'Internal server error',
+          message: 'Failed to archive season',
+          timestamp: new Date().toISOString()
+        });
+      }
     }
   };
 }

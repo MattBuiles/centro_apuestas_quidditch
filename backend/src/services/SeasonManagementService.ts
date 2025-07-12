@@ -1,6 +1,7 @@
 import { Database } from '../database/Database';
 import { Season, Team, Match, StandingEntry, TeamRow, MatchRow } from '../types';
 import { StandingsService } from './StandingsService';
+import { HistoricalSeasonsService } from './HistoricalSeasonsService';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface SeasonCreateData {
@@ -14,6 +15,7 @@ export interface SeasonCreateData {
 export class SeasonManagementService {
   private db = Database.getInstance();
   private standingsService = new StandingsService();
+  private historicalSeasonsService = new HistoricalSeasonsService();
 
   async createSeason(data: SeasonCreateData): Promise<Season> {
     const seasonId = uuidv4();
@@ -200,6 +202,15 @@ export class SeasonManagementService {
         SET status = 'finished' 
         WHERE id = ?
       `, [activeSeasonRow.id]);
+
+      // Archivar la temporada en historical_seasons
+      try {
+        await this.historicalSeasonsService.archiveFinishedSeason(activeSeasonRow.id);
+        console.log(`📚 Temporada ${activeSeasonRow.name} archivada en historical_seasons`);
+      } catch (error) {
+        console.error('Error archivando temporada en histórico:', error);
+        // No fallar el proceso principal si hay error en el archivado
+      }
 
       return { 
         seasonFinished: true, 

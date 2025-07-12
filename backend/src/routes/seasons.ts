@@ -16,6 +16,12 @@ router.get('/league-time', seasonController.getLeagueTime);
 // GET /api/seasons/check-completion - Check and finish season if all matches are completed
 router.get('/check-completion', seasonController.checkSeasonCompletion);
 
+// GET /api/seasons/historical - Get all historical seasons
+router.get('/historical', seasonController.getHistoricalSeasons);
+
+// GET /api/seasons/historical/:id - Get specific historical season
+router.get('/historical/:id', seasonController.getHistoricalSeasonById);
+
 // GET /api/standings/current - Get current season standings
 router.get('/standings/current', seasonController.getCurrentStandings);
 
@@ -30,5 +36,8 @@ router.post('/', seasonController.createSeason);
 
 // PUT /api/seasons/:id/activate - Activate season
 router.put('/:id/activate', seasonController.activateSeason);
+
+// POST /api/seasons/:id/archive - Manually archive a finished season
+router.post('/:id/archive', seasonController.archiveFinishedSeason);
 
 export default router;
