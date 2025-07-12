@@ -3,6 +3,7 @@ import { Database } from '../database/Database';
 import { SeasonManagementService } from '../services/SeasonManagementService';
 import { StandingsService } from '../services/StandingsService';
 import { HistoricalSeasonsService } from '../services/HistoricalSeasonsService';
+import { HistoricalTeamStatsService } from '../services/HistoricalTeamStatsService';
 import { VirtualTimeService } from '../services/VirtualTimeService';
 import { Season, ApiResponse } from '../types';
 
@@ -11,6 +12,7 @@ export class SeasonController {
   private seasonService = new SeasonManagementService();
   private standingsService = new StandingsService();
   private historicalSeasonsService = new HistoricalSeasonsService();
+  private historicalTeamStatsService = new HistoricalTeamStatsService();
   private virtualTimeService = new VirtualTimeService();
 
   // GET /api/seasons - Get all seasons
@@ -466,6 +468,71 @@ export class SeasonController {
           success: false,
           error: 'Internal server error',
           message: 'Failed to archive season',
+          timestamp: new Date().toISOString()
+        });
+      }
+    }
+  };
+
+  // GET /api/teams/historical-stats - Get historical stats for all teams
+  public getHistoricalTeamStats = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const historicalStats = await this.historicalTeamStatsService.getAllHistoricalStats();
+      
+      res.json({
+        success: true,
+        data: historicalStats,
+        message: 'Historical team stats retrieved successfully',
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error fetching historical team stats:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error',
+        message: 'Failed to retrieve historical team stats',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
+
+  // GET /api/teams/:teamId/historical-stats - Get historical stats for specific team
+  public getTeamHistoricalStats = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { teamId } = req.params;
+      
+      const historicalStats = await this.historicalTeamStatsService.getTeamHistoricalStats(teamId);
+      
+      if (!historicalStats) {
+        res.status(404).json({
+          success: false,
+          error: 'Not found',
+          message: 'No historical stats found for this team',
+          timestamp: new Date().toISOString()
+        });
+        return;
+      }
+      
+      res.json({
+        success: true,
+        data: historicalStats,
+        message: 'Team historical stats retrieved successfully',
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error fetching team historical stats:', error);
+      if (error instanceof Error && error.message.includes('not found')) {
+        res.status(404).json({
+          success: false,
+          error: 'Not found',
+          message: 'Team not found',
+          timestamp: new Date().toISOString()
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          error: 'Internal server error',
+          message: 'Failed to retrieve team historical stats',
           timestamp: new Date().toISOString()
         });
       }
