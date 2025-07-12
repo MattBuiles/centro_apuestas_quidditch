@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Season } from '@/types/league';
 import { leagueTimeService, LeagueTimeInfo } from '@/services/leagueTimeService';
+import { apiClient } from '@/utils/apiClient';
 import { FEATURES } from '@/config/features';
 import Card from '@/components/common/Card';
 import Button from '@/components/common/Button';
@@ -51,31 +52,36 @@ const ResultsPageBackend: React.FC = () => {
       const timeInfo = await leagueTimeService.getLeagueTimeInfo();
       setLeagueTimeInfo(timeInfo);
 
-      if (timeInfo.activeSeason) {
-        setSeason(timeInfo.activeSeason);
-        
-        // Get finished matches from the active season
-        const finishedMatches = timeInfo.activeSeason.matches
-          ?.filter(match => match.status === 'finished')
-          .sort((a, b) => new Date(b.fecha || b.date || '').getTime() - new Date(a.fecha || a.date || '').getTime()) || [];
+      // Get finished matches directly from the matches endpoint
+      const finishedMatchesResponse = await apiClient.get('/matches/status/finished');
+      
+      let formattedResults: Result[] = [];
+      
+      if (finishedMatchesResponse.success && finishedMatchesResponse.data && Array.isArray(finishedMatchesResponse.data)) {
+        const finishedMatches = finishedMatchesResponse.data
+          .sort((a: any, b: any) => new Date(b.date || '').getTime() - new Date(a.date || '').getTime());
 
-        const formattedResults: Result[] = finishedMatches.map(match => ({
+        formattedResults = finishedMatches.map((match: any) => ({
           id: match.id,
-          date: (match.fecha || match.date) ? new Date(match.fecha || match.date || '').toISOString() : '',
-          homeTeam: timeInfo.activeSeason!.teams?.find(t => t.id === match.homeTeamId)?.name || 'Team',
-          awayTeam: timeInfo.activeSeason!.teams?.find(t => t.id === match.awayTeamId)?.name || 'Team',
-          homeScore: match.homeScore || 0,
-          awayScore: match.awayScore || 0,
-          league: timeInfo.activeSeason!.name,
-          snitchCaught: match.snitchCaught || false,
-          events: match.events?.length || 0,
+          date: match.date ? new Date(match.date).toISOString() : '',
+          homeTeam: match.homeTeamName || match.home_team_id || 'Equipo Local',
+          awayTeam: match.awayTeamName || match.away_team_id || 'Equipo Visitante',
+          homeScore: match.home_score || 0,
+          awayScore: match.away_score || 0,
+          league: match.seasonName || timeInfo.activeSeason?.name || 'Liga de Quidditch',
+          snitchCaught: Boolean(match.snitch_caught),
+          events: 0, // Events are not stored in the matches table directly
           duration: match.duration || 0
         }));
-
-        setResults(formattedResults);
-      } else {
-        setResults([]);
       }
+
+      setResults(formattedResults);
+      
+      // Set season info if available
+      if (timeInfo.activeSeason) {
+        setSeason(timeInfo.activeSeason);
+      }
+      
     } catch (error) {
       console.error('Error loading results:', error);
       setError('Error cargando los resultados');
