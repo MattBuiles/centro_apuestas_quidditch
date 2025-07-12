@@ -23,6 +23,8 @@ const AboutPage = lazy(() => import('./pages/AboutPage'))
 const TermsPage = lazy(() => import('./pages/TermsPage'))
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage'))
 const ContactPage = lazy(() => import('./pages/ContactPage'))
+const WebSocketTest = lazy(() => import('./pages/WebSocketTest/WebSocketTest'))
+const MatchSimulationTest = lazy(() => import('./pages/MatchSimulationTest/MatchSimulationTest'))
 
 function App() {
   return (
@@ -43,6 +45,8 @@ function App() {
           <Route path="terms" element={<TermsPage />} />
           <Route path="privacy" element={<PrivacyPage />} />
           <Route path="contact" element={<ContactPage />} />
+          <Route path="websocket-test" element={<WebSocketTest />} />
+          <Route path="simulation-test" element={<MatchSimulationTest />} />
           {/* Protected routes */}
           <Route element={<ProtectedRoute />}>
             <Route path="betting" element={<BettingPage />} />

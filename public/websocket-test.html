@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        #messages {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-top: 20px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+        .message {
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 3px;
+            background-color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔌 WebSocket Test para Quidditch Betting</h1>
+        
+        <div id="status" class="status info">
+            Estado: Desconectado
+        </div>
+        
+        <button onclick="connectWebSocket()">Conectar WebSocket</button>
+        <button onclick="sendPing()">Enviar Ping</button>
+        <button onclick="disconnectWebSocket()">Desconectar</button>
+        <button onclick="clearMessages()">Limpiar Mensajes</button>
+        
+        <div id="messages"></div>
+    </div>
+
+    <script>
+        let ws = null;
+        const statusDiv = document.getElementById('status');
+        const messagesDiv = document.getElementById('messages');
+        
+        function updateStatus(message, type = 'info') {
+            statusDiv.textContent = `Estado: ${message}`;
+            statusDiv.className = `status ${type}`;
+            logMessage(`[STATUS] ${message}`, type);
+        }
+        
+        function logMessage(message, type = 'info') {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            messageDiv.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong> - ${message}`;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        
+        function connectWebSocket() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                updateStatus('Ya conectado', 'success');
+                return;
+            }
+            
+            updateStatus('Conectando...', 'info');
+            const wsUrl = 'ws://localhost:3002';
+            ws = new WebSocket(wsUrl);
+            
+            ws.onopen = () => {
+                updateStatus('Conectado exitosamente', 'success');
+                logMessage('✅ WebSocket conectado a: ' + wsUrl, 'success');
+            };
+            
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    logMessage('📨 Mensaje recibido: ' + JSON.stringify(data, null, 2), 'info');
+                } catch (error) {
+                    logMessage('❌ Error parseando mensaje: ' + error.message, 'error');
+                }
+            };
+            
+            ws.onerror = (error) => {
+                updateStatus('Error de conexión', 'error');
+                logMessage('❌ Error de WebSocket: ' + error.message, 'error');
+            };
+            
+            ws.onclose = () => {
+                updateStatus('Desconectado', 'info');
+                logMessage('🔌 WebSocket desconectado', 'info');
+            };
+        }
+        
+        function sendPing() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                updateStatus('No conectado', 'error');
+                return;
+            }
+            
+            const message = {
+                type: 'ping',
+                data: { 
+                    message: 'Test desde navegador',
+                    timestamp: new Date().toISOString()
+                }
+            };
+            
+            ws.send(JSON.stringify(message));
+            logMessage('📤 Ping enviado', 'info');
+        }
+        
+        function disconnectWebSocket() {
+            if (ws) {
+                ws.close();
+                ws = null;
+                updateStatus('Desconectado', 'info');
+            }
+        }
+        
+        function clearMessages() {
+            messagesDiv.innerHTML = '';
+        }
+        
+        // Auto-conectar al cargar la página
+        window.addEventListener('load', () => {
+            updateStatus('Listo para conectar', 'info');
+        });
+    </script>
+</body>
+</html>

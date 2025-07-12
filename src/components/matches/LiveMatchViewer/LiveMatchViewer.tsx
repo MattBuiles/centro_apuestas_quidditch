@@ -32,6 +32,18 @@ const LiveMatchViewer: React.FC<LiveMatchViewerProps> = ({
   const [eventFeed, setEventFeed] = useState<GameEvent[]>([]);
   const [lastEventCount, setLastEventCount] = useState(0);
 
+  // Debug logging
+  console.log('🔍 LiveMatchViewer Debug Info:', {
+    match,
+    homeTeam,
+    awayTeam,
+    matchState,
+    isSimulating,
+    eventFeed,
+    autoRefresh,
+    refreshInterval
+  });
+
   // Monitor for match completion and save results
   const updateMatchState = useCallback(() => {
     const currentState = liveMatchSimulator.getMatchState(match.id);

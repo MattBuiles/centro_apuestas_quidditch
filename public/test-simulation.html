@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test de Simulación Manual</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button { padding: 10px 20px; margin: 5px; border: none; border-radius: 5px; cursor: pointer; }
+        .primary { background: #007bff; color: white; }
+        .success-btn { background: #28a745; color: white; }
+        #messages { max-height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>🎯 Test de Simulación Manual de Partidos</h1>
+    
+    <div id="status" class="status info">Estado: Listo para iniciar</div>
+    
+    <button class="primary" onclick="testWebSocket()">1. Probar WebSocket</button>
+    <button class="primary" onclick="getMatches()">2. Obtener Partidos</button>
+    <button class="success-btn" onclick="startSimulation()" id="simulateBtn" disabled>3. Simular Partido</button>
+    <button onclick="clearLog()">Limpiar Log</button>
+    
+    <div id="matches" style="margin: 20px 0;"></div>
+    <div id="messages"></div>
+
+    <script>
+        let ws = null;
+        let selectedMatch = null;
+        
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = `Estado: ${message}`;
+            statusDiv.className = `status ${type}`;
+            logMessage(`[STATUS] ${message}`);
+        }
+        
+        function logMessage(message) {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong> - ${message}`;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        
+        function testWebSocket() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                logMessage('✅ WebSocket ya está conectado');
+                return;
+            }
+            
+            updateStatus('Conectando WebSocket...', 'info');
+            ws = new WebSocket('ws://localhost:3002');
+            
+            ws.onopen = () => {
+                updateStatus('WebSocket conectado', 'success');
+            };
+            
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    logMessage(`📨 WebSocket: ${JSON.stringify(data)}`);
+                } catch (error) {
+                    logMessage(`❌ Error parseando WebSocket: ${error.message}`);
+                }
+            };
+            
+            ws.onerror = (error) => {
+                updateStatus('Error de WebSocket', 'error');
+                logMessage(`❌ WebSocket error: ${error}`);
+            };
+            
+            ws.onclose = () => {
+                updateStatus('WebSocket desconectado', 'info');
+                logMessage('🔌 WebSocket cerrado');
+            };
+        }
+        
+        async function getMatches() {
+            try {
+                updateStatus('Obteniendo partidos...', 'info');
+                const response = await fetch('http://localhost:3001/api/matches');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const scheduledMatches = data.matches.filter(m => m.status === 'scheduled');
+                    logMessage(`✅ Encontrados ${scheduledMatches.length} partidos programados`);
+                    
+                    const matchesDiv = document.getElementById('matches');
+                    matchesDiv.innerHTML = '<h3>Partidos Disponibles:</h3>';
+                    
+                    scheduledMatches.slice(0, 5).forEach(match => {
+                        const button = document.createElement('button');
+                        button.textContent = `${match.homeTeamName} vs ${match.awayTeamName}`;
+                        button.className = 'primary';
+                        button.onclick = () => selectMatch(match);
+                        matchesDiv.appendChild(button);
+                        matchesDiv.appendChild(document.createElement('br'));
+                    });
+                    
+                    updateStatus('Partidos cargados', 'success');
+                } else {
+                    throw new Error(data.message || 'Error obteniendo partidos');
+                }
+            } catch (error) {
+                updateStatus('Error obteniendo partidos', 'error');
+                logMessage(`❌ Error: ${error.message}`);
+            }
+        }
+        
+        function selectMatch(match) {
+            selectedMatch = match;
+            logMessage(`🎯 Partido seleccionado: ${match.homeTeamName} vs ${match.awayTeamName}`);
+            document.getElementById('simulateBtn').disabled = false;
+            updateStatus(`Partido seleccionado: ${match.homeTeamName} vs ${match.awayTeamName}`, 'info');
+        }
+        
+        async function startSimulation() {
+            if (!selectedMatch) {
+                logMessage('❌ No hay partido seleccionado');
+                return;
+            }
+            
+            try {
+                updateStatus('Iniciando simulación...', 'info');
+                const response = await fetch(`http://localhost:3001/api/matches/${selectedMatch.id}/iniciar-simulacion`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    logMessage('✅ Simulación iniciada exitosamente');
+                    updateStatus('Simulación en progreso', 'success');
+                    monitorSimulation();
+                } else {
+                    throw new Error(data.message || 'Error iniciando simulación');
+                }
+            } catch (error) {
+                updateStatus('Error iniciando simulación', 'error');
+                logMessage(`❌ Error: ${error.message}`);
+            }
+        }
+        
+        function monitorSimulation() {
+            let attempts = 0;
+            const maxAttempts = 60; // 2 minutos máximo
+            
+            const checkStatus = async () => {
+                if (attempts >= maxAttempts) {
+                    logMessage('⏰ Tiempo máximo de monitoreo alcanzado');
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`http://localhost:3001/api/matches/${selectedMatch.id}/simulation-status`);
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        const status = data.status;
+                        logMessage(`📊 [${attempts + 1}s] Estado: ${status.status} | Marcador: ${status.homeScore}-${status.awayScore} | Eventos: ${status.events.length}`);
+                        
+                        if (status.status === 'finished') {
+                            updateStatus('Simulación completada', 'success');
+                            logMessage('🏆 ¡Simulación completada!');
+                            return;
+                        }
+                    }
+                    
+                    attempts++;
+                    setTimeout(checkStatus, 2000);
+                } catch (error) {
+                    logMessage(`❌ Error monitoreando: ${error.message}`);
+                }
+            };
+            
+            setTimeout(checkStatus, 2000);
+        }
+        
+        function clearLog() {
+            document.getElementById('messages').innerHTML = '';
+        }
+        
+        // Auto-conectar WebSocket al cargar
+        window.addEventListener('load', () => {
+            logMessage('🚀 Página cargada - Lista para probar');
+        });
+    </script>
+</body>
+</html>

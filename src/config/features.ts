@@ -8,7 +8,7 @@ export const FEATURES = {
   USE_BACKEND_LEAGUE_TIME: import.meta.env.VITE_USE_BACKEND === 'true', // Nuevo - tiempo de liga
   USE_BACKEND_BETS: false, // Gradual  
   USE_BACKEND_PREDICTIONS: false, // Gradual
-  USE_WEBSOCKETS: false, // Última fase
+  USE_WEBSOCKETS: true, // Habilitado para simulación de partidos
   
   // API URLs
   API_BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:3001/api',

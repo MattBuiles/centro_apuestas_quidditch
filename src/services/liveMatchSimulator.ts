@@ -10,36 +10,36 @@ export class LiveMatchSimulator {
   private readonly EVENTOS: EventConfig[] = [
     { 
       tipo: 'QUAFFLE_GOAL', 
-      probAtaque: 0.05, 
-      probDefensa: 0.03, 
+      probAtaque: 0.15, // Increased from 0.05
+      probDefensa: 0.08, // Increased from 0.03
       puntos: 10,
       description: '¡Gol de Quaffle!'
     },
     { 
       tipo: 'QUAFFLE_ATTEMPT', 
-      probAtaque: 0.10, 
-      probDefensa: 0.08, 
+      probAtaque: 0.25, // Increased from 0.10
+      probDefensa: 0.20, // Increased from 0.08
       puntos: 0,
       description: 'Intento de gol con la Quaffle'
     },
     { 
       tipo: 'QUAFFLE_SAVE', 
-      probAtaque: 0.08, 
-      probDefensa: 0.12, 
+      probAtaque: 0.20, // Increased from 0.08
+      probDefensa: 0.25, // Increased from 0.12
       puntos: 0,
       description: '¡Parada del Guardián!'
     },
     { 
       tipo: 'SNITCH_SPOTTED', 
-      probAtaque: 0.02, 
-      probDefensa: 0.02, 
+      probAtaque: 0.05, // Increased from 0.02
+      probDefensa: 0.05, // Increased from 0.02
       puntos: 0,
       description: '¡La Snitch Dorada ha sido avistada!'
     },
     { 
       tipo: 'SNITCH_CAUGHT', 
-      probAtaque: 0.005, 
-      probDefensa: 0.002, 
+      probAtaque: 0.015, // Increased from 0.005
+      probDefensa: 0.010, // Increased from 0.002
       puntos: 150,
       description: '¡La Snitch Dorada ha sido atrapada!',
       endsMatch: true,
@@ -47,7 +47,7 @@ export class LiveMatchSimulator {
     },
     { 
       tipo: 'BLUDGER_HIT', 
-      probAtaque: 0.08, 
+      probAtaque: 0.15, // Increased from 0.08 
       probDefensa: 0.10, 
       puntos: 0,
       description: '¡Jugador golpeado por una Bludger!'
@@ -70,6 +70,7 @@ export class LiveMatchSimulator {
 
   private liveMatches: Map<string, MatchState> = new Map();
   private matchIntervals: Map<string, number> = new Map();
+  private matchTeams: Map<string, { home: Team; away: Team }> = new Map(); // Store teams for each match
 
   /**
    * Starts a live match simulation
@@ -81,6 +82,9 @@ export class LiveMatchSimulator {
     visitanteTeam: Team, 
     duracionEnMinutos: number = 90
   ): MatchState {
+    // Store teams for later reference
+    this.matchTeams.set(match.id, { home: localTeam, away: visitanteTeam });
+    
     // Initialize match state
     const estado: MatchState = {
       matchId: match.id,
@@ -139,6 +143,8 @@ export class LiveMatchSimulator {
    * Following schema: "Itera eventos, lanza Math.random() y registra los que suceden"
    */
   private processMinuteEvents(estado: MatchState, local: Team, visitante: Team): void {
+    console.log(`🎮 Processing minute ${estado.minuto} events`);
+    
     this.EVENTOS.forEach(evento => {
       // Check minimum time restrictions
       if (evento.minTime && estado.minuto < evento.minTime) {
@@ -147,16 +153,27 @@ export class LiveMatchSimulator {
 
       // Calculate probabilities for both teams
       const probLocal = this.ajustarProb(evento, local, visitante, 'home');
-      const probVisitante = this.ajustarProb(evento, visitante, local, 'away');      // Check if local team event occurs
-      if (Math.random() < probLocal) {
+      const probVisitante = this.ajustarProb(evento, visitante, local, 'away');
+      
+      const randomLocal = Math.random();
+      const randomVisitante = Math.random();
+      
+      console.log(`🎯 Event ${evento.tipo}: Local(${probLocal.toFixed(4)}, roll: ${randomLocal.toFixed(4)}) Away(${probVisitante.toFixed(4)}, roll: ${randomVisitante.toFixed(4)})`);
+      
+      // Check if local team event occurs
+      if (randomLocal < probLocal) {
+        console.log(`⚡ LOCAL EVENT: ${evento.tipo} for ${local.name}`);
         this.registrarEvento(estado, evento, local.id, local.name, true);
       }
 
       // Check if visiting team event occurs (unless match has ended)
-      if (estado.isActive && Math.random() < probVisitante) {
+      if (estado.isActive && randomVisitante < probVisitante) {
+        console.log(`⚡ AWAY EVENT: ${evento.tipo} for ${visitante.name}`);
         this.registrarEvento(estado, evento, visitante.id, visitante.name, false);
       }
     });
+    
+    console.log(`📊 Minute ${estado.minuto} complete. Events: ${estado.eventos.length}, Score: ${estado.golesLocal}-${estado.golesVisitante}`);
   }
 
   /**
@@ -169,8 +186,16 @@ export class LiveMatchSimulator {
     equipoDefensor: Team, 
     venue: 'home' | 'away'
   ): number {
-    const fuerzaAtaque = equipoAtacante.fuerzaAtaque || equipoAtacante.attackStrength;
-    const fuerzaDefensa = equipoDefensor.fuerzaDefensa || equipoDefensor.defenseStrength;
+    const fuerzaAtaque = equipoAtacante.fuerzaAtaque || equipoAtacante.attackStrength || 50;
+    const fuerzaDefensa = equipoDefensor.fuerzaDefensa || equipoDefensor.defenseStrength || 50;
+
+    console.log(`🔧 Adjusting probability for ${evento.tipo}:`, {
+      team: equipoAtacante.name,
+      attackStrength: fuerzaAtaque,
+      defenseStrength: fuerzaDefensa,
+      baseProb: evento.probAtaque,
+      venue
+    });
 
     // Base probability
     let prob = evento.probAtaque;
@@ -182,7 +207,9 @@ export class LiveMatchSimulator {
     // Home advantage (5% boost for home team)
     if (venue === 'home') {
       prob *= 1.05;
-    }    // Special adjustments for specific events
+    }
+
+    // Special adjustments for specific events
     switch (evento.tipo) {
       case 'SNITCH_CAUGHT': {
         // Seeker skill matters more for snitch
@@ -291,6 +318,12 @@ export class LiveMatchSimulator {
       return null;
     }
 
+    const teams = this.matchTeams.get(matchId);
+    if (!teams) {
+      console.warn(`Cannot end match ${matchId}: Teams not found`);
+      return null;
+    }
+
     estado.isActive = false;
     estado.duration = estado.minuto;
     
@@ -298,6 +331,9 @@ export class LiveMatchSimulator {
     console.log(`📊 Match ready for detailed result saving: ${matchId}`);
     console.log(`📈 Events recorded: ${estado.eventos.length}`);
     console.log(`⏱️ Final duration: ${estado.minuto} minutes`);
+    
+    // Guardar los resultados del partido en el backend
+    this.saveMatchToBackend(matchId, estado, teams.home, teams.away);
     
     this.stopMatch(matchId);
     return estado;
@@ -316,6 +352,9 @@ export class LiveMatchSimulator {
     if (estado) {
       estado.isActive = false;
     }
+
+    // Clean up teams reference
+    this.matchTeams.delete(matchId);
   }
 
   /**
@@ -407,6 +446,9 @@ export class LiveMatchSimulator {
         console.log(`✅ Detailed match result saved successfully for ${matchId}`);
         console.log(`📊 Result ID: ${detailedResult.id}`);
         
+        // Also try to save to backend
+        this.saveMatchToBackend(matchId, estado, homeTeam, awayTeam);
+        
         // Emit custom event for components to listen to
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('matchResultSaved', {
@@ -418,6 +460,55 @@ export class LiveMatchSimulator {
       });
     } catch (error) {
       console.error('Error saving detailed match result:', error);
+    }
+  }
+
+  /**
+   * Save match result to backend database
+   */
+  private async saveMatchToBackend(
+    matchId: string,
+    estado: MatchState,
+    homeTeam: Team,
+    awayTeam: Team
+  ): Promise<void> {
+    try {
+      const { apiClient } = await import('@/utils/apiClient');
+      
+      const matchResult = {
+        matchId,
+        homeTeamId: homeTeam.id,
+        awayTeamId: awayTeam.id,
+        homeScore: estado.golesLocal,
+        awayScore: estado.golesVisitante,
+        status: 'finished',
+        events: estado.eventos.map(event => ({
+          id: event.id,
+          type: event.type,
+          minute: event.minute,
+          second: event.second,
+          teamId: event.teamId,
+          description: event.description,
+          points: event.points,
+          success: event.success
+        })),
+        duration: estado.minuto,
+        snitchCaught: estado.snitchCaught,
+        snitchCaughtBy: estado.snitchCaughtBy,
+        finishedAt: new Date().toISOString()
+      };
+
+      console.log('💾 Saving match result to backend:', matchResult);
+
+      const response = await apiClient.post(`/matches/${matchId}/finish`, matchResult);
+      
+      if (response.success) {
+        console.log('✅ Match result saved to backend successfully');
+      } else {
+        console.error('❌ Failed to save match result to backend:', response.error);
+      }
+    } catch (error) {
+      console.error('❌ Error saving match result to backend:', error);
     }
   }
 }

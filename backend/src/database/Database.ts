@@ -1640,6 +1640,69 @@ export class Database {
     await this.run(sql, [snitchCaught, snitchCaughtBy, matchId]);
   }
 
+  public async finishMatch(matchId: string, matchResult: {
+    homeScore: number;
+    awayScore: number;
+    duration: number;
+    snitchCaught: boolean;
+    snitchCaughtBy: string;
+    events: Array<{
+      id: string;
+      minute: number;
+      type: string;
+      team: string;
+      player?: string;
+      description: string;
+      points: number;
+    }>;
+    finishedAt: string;
+  }): Promise<void> {
+    try {
+      // Actualizar el partido con todos los resultados
+      const updateMatchSql = `
+        UPDATE matches 
+        SET status = 'finished', 
+            home_score = ?, 
+            away_score = ?, 
+            finished_at = ?, 
+            duration = ?, 
+            snitch_caught = ?, 
+            snitch_caught_by = ?, 
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `;
+      
+      await this.run(updateMatchSql, [
+        matchResult.homeScore,
+        matchResult.awayScore,
+        matchResult.finishedAt,
+        matchResult.duration,
+        matchResult.snitchCaught,
+        matchResult.snitchCaughtBy,
+        matchId
+      ]);
+
+      // Guardar todos los eventos del partido
+      for (const event of matchResult.events) {
+        await this.createMatchEvent({
+          id: event.id,
+          matchId,
+          minute: event.minute,
+          type: event.type,
+          team: event.team,
+          player: event.player,
+          description: event.description,
+          points: event.points
+        });
+      }
+
+      console.log(`✅ Match ${matchId} finished successfully with ${matchResult.events.length} events`);
+    } catch (error) {
+      console.error('Error finishing match:', error);
+      throw error;
+    }
+  }
+
   public async createMatchEvent(event: {
     id: string;
     matchId: string;
