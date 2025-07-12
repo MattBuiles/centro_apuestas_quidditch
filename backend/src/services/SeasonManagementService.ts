@@ -1,5 +1,6 @@
 import { Database } from '../database/Database';
 import { Season, Team, Match, StandingEntry, TeamRow, MatchRow } from '../types';
+import { StandingsService } from './StandingsService';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface SeasonCreateData {
@@ -12,6 +13,7 @@ export interface SeasonCreateData {
 
 export class SeasonManagementService {
   private db = Database.getInstance();
+  private standingsService = new StandingsService();
 
   async createSeason(data: SeasonCreateData): Promise<Season> {
     const seasonId = uuidv4();
@@ -33,6 +35,9 @@ export class SeasonManagementService {
 
     // Generate matches
     await this.generateSeasonMatches(seasonId, data.teamIds, data.startDate, data.endDate);
+
+    // Inicializar standings para la nueva temporada
+    await this.standingsService.initializeSeasonStandings(seasonId);
 
     // Return the created season
     return this.getSeasonById(seasonId);
