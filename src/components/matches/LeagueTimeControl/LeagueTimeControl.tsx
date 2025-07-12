@@ -259,7 +259,8 @@ const LeagueTimeControl: React.FC<VirtualTimeControlProps> = ({
       '• Todos los partidos y eventos\n' +
       '• Todas las apuestas y predicciones\n' +
       '• Estadísticas de temporadas anteriores\n' +
-      '• Reiniciará los saldos de usuarios\n\n' +
+      '• Reiniciará los saldos de usuarios\n' +
+      '• Regresará el tiempo virtual al 15 de julio (antes de iniciar la temporada)\n\n' +
       'Esta acción NO se puede deshacer.'
     );
 
@@ -272,10 +273,10 @@ const LeagueTimeControl: React.FC<VirtualTimeControlProps> = ({
       const result = await leagueTimeServiceWithRefresh.resetDatabaseForNewSeason(false);
 
       // The result is now the data directly, not wrapped in success property
-      setLastActionMessage(`✅ Base de datos reseteada completamente. Nueva temporada: ${result.newSeason?.name || 'Temporada creada'}. Partidos generados: ${result.stats?.matchesGenerated || 0}`);
+      setLastActionMessage(`✅ Base de datos reseteada completamente. Nueva temporada: ${result.newSeason?.name || 'Temporada creada'}. Partidos generados: ${result.stats?.matchesGenerated || 0}. Tiempo virtual reiniciado al 15 de julio.`);
       
-      // Clear message after 7 seconds
-      setTimeout(() => setLastActionMessage(null), 7000);
+      // Clear message after 10 seconds (longer message)
+      setTimeout(() => setLastActionMessage(null), 10000);
       
       // Trigger season reset callback
       onSeasonReset?.();

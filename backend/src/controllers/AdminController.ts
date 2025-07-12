@@ -85,24 +85,18 @@ export class AdminController {
       await this.db.resetForNewSeason();
       
       // Step 2: Reset virtual time to initial state
-      console.log('🕒 Step 2: Resetting virtual time...');
-      await this.virtualTimeService.initialize();
+      console.log('🕒 Step 2: Resetting virtual time to initial state...');
+      await this.virtualTimeService.resetToInitialState();
       
       // Step 3: Create new season with complete fixtures
       console.log('🏆 Step 3: Creating new season...');
       const newSeason = await this.createNewSeasonWithFixtures();
       
-      // Step 4: Initialize virtual time with the new season
-      console.log('⏰ Step 4: Initializing virtual time with new season...');
+      // Step 4: Configure virtual time settings
+      console.log('⏰ Step 4: Configuring virtual time settings...');
       await this.virtualTimeService.updateSettings({
         timeSpeed: 'medium',
         autoMode: false
-      });
-      
-      // Step 5: Set virtual time to season start
-      await this.virtualTimeService.advanceTime({
-        days: 0, // Reset to current virtual time
-        simulatePendingMatches: false
       });
       
       console.log('✅ Database reset completed successfully!');
