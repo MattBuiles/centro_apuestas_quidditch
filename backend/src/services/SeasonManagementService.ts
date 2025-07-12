@@ -261,19 +261,32 @@ export class SeasonManagementService {
       }
     }
 
-    // Distribute matches evenly across the season
-    const totalDays = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-    const matchesPerDay = Math.ceil(matches.length / totalDays);
-    let currentDate = new Date(startDate);
+    // Get current virtual time to schedule matches from the current virtual date
+    const { VirtualTimeService } = await import('./VirtualTimeService');
+    const virtualTimeService = VirtualTimeService.getInstance();
+    const currentVirtualState = await virtualTimeService.getCurrentState();
+    
+    // Schedule matches starting from the day after current virtual time
+    const tomorrow = new Date(currentVirtualState.currentDate);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(14, 0, 0, 0); // Start at 2 PM tomorrow
+    
+    console.log(`📅 Programando partidos desde fecha virtual: ${currentVirtualState.currentDate.toISOString()}`);
+    console.log(`📅 Primer partido programado para: ${tomorrow.toISOString()}`);
+    
+    // Schedule matches every few hours over the next few days
+    const hoursPerMatch = 6; // 6 hours between matches
+    let currentDate = new Date(tomorrow);
 
     for (let i = 0; i < matches.length; i++) {
-      if (i > 0 && i % matchesPerDay === 0) {
-        currentDate = new Date(currentDate.getTime() + (1000 * 60 * 60 * 24));
-      }
-
       const match = matches[i];
       const matchTime = new Date(currentDate);
-      matchTime.setHours(14 + (i % 3) * 2, 0, 0, 0); // Spread matches throughout the day
+      
+      // Add some variation to match times (14:00, 16:00, 18:00, 20:00)
+      const hourVariation = (i % 4) * 2;
+      matchTime.setHours(14 + hourVariation, 0, 0, 0);
+
+      console.log(`📅 Scheduling match ${i + 1}/${matches.length}: ${match.homeTeamId} vs ${match.awayTeamId} at ${matchTime.toISOString()}`);
 
       // Generate realistic odds
       const odds = this.generateMatchOdds();
@@ -300,6 +313,13 @@ export class SeasonManagementService {
         odds.snitchCatch.home,
         odds.snitchCatch.away
       ]);
+      
+      // Advance to next match time (every few hours, moving to next day after 4 matches)
+      if ((i + 1) % 4 === 0) {
+        // Move to next day after every 4 matches
+        currentDate.setDate(currentDate.getDate() + 1);
+        currentDate.setHours(14, 0, 0, 0); // Reset to 14:00 of next day
+      }
     }
   }
 

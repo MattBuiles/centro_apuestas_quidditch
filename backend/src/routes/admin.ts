@@ -21,6 +21,9 @@ router.delete('/truncate/:table', adminController.truncateTable);
 // POST /api/admin/generate-season - Generate new season
 router.post('/generate-season', adminController.generateNewSeason);
 
+// POST /api/admin/create-season - Create new season with proper season management
+router.post('/create-season', adminController.createNewSeason);
+
 // GET /api/admin/logs - Get admin logs
 router.get('/logs', adminController.getAdminLogs);
 

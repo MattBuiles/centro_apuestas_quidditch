@@ -245,10 +245,9 @@ export class VirtualTimeService {
     const match = await this.db.get(`
       SELECT * FROM matches 
       WHERE status = 'scheduled' 
-      AND date > ?
       ORDER BY date ASC 
       LIMIT 1
-    `, [this.currentState.currentDate.toISOString()]) as MatchRow | undefined;
+    `) as MatchRow | undefined;
 
     return match ? this.mapRowToMatch(match) : null;
   }
@@ -258,9 +257,8 @@ export class VirtualTimeService {
       SELECT * FROM matches 
       WHERE status = 'scheduled' 
       AND date <= ?
-      AND date > ?
       ORDER BY date ASC
-    `, [endDate.toISOString(), this.currentState.currentDate.toISOString()]) as MatchRow[];
+    `, [endDate.toISOString()]) as MatchRow[];
 
     return matches.map(match => this.mapRowToMatch(match));
   }
