@@ -94,27 +94,43 @@ export class LeagueTimeController {
       await virtualTimeService.initialize();
       const currentState = await virtualTimeService.getCurrentState();
       
-      // Check if there's already a live match
+      // Check if there's already a live match and simulate it automatically
       const liveMatches = await db.all(`
         SELECT * FROM matches 
         WHERE status = 'live'
       `);
       
       console.log('🔍 Checking for live matches:', liveMatches.length);
-      console.log('🗂️ Database path info:', process.cwd());
-      console.log('🗂️ Backend directory being used:', path.resolve(__dirname, '..'));
+      
+      let simulatedMatches: string[] = [];
       
       if (liveMatches && liveMatches.length > 0) {
-        console.log('⚠️ Found live matches:', liveMatches.map((m: unknown) => {
+        console.log('🔴 Found live matches, simulating them automatically:', liveMatches.map((m: unknown) => {
           const match = m as { id: string; status: string };
           return `${match.id} - ${match.status}`;
         }));
-        res.json({
-          success: false,
-          message: 'Ya hay un partido en vivo. Simúlalo antes de avanzar al siguiente.',
-          timestamp: new Date().toISOString()
-        });
-        return;
+        
+        // Import MatchSimulationService to simulate the live matches
+        const { MatchSimulationService } = await import('../services/MatchSimulationService');
+        const matchSimulationService = new MatchSimulationService();
+        
+        // Simulate each live match
+        for (const liveMatch of liveMatches) {
+          const match = liveMatch as { id: string; [key: string]: unknown };
+          console.log(`🎮 Simulating live match: ${match.id}`);
+          
+          try {
+            // Simulate the match completely
+            const result = await matchSimulationService.simulateMatchComplete(match.id as string);
+            
+            simulatedMatches.push(match.id as string);
+            console.log(`✅ Match ${match.id} simulated: ${result.homeScore} - ${result.awayScore}`);
+          } catch (error) {
+            console.error(`❌ Error simulating match ${match.id}:`, error);
+          }
+        }
+        
+        console.log(`🎯 Successfully simulated ${simulatedMatches.length} live matches`);
       }
       
       let nextMatch = await db.getNextUnplayedMatch(currentState.currentDate.toISOString()) as {
@@ -210,8 +226,8 @@ export class LeagueTimeController {
         data: {
           success: true,
           newDate: matchDate.toISOString(),
-          simulatedMatches: [],
-          message: `Avanzado al próximo partido en ${matchDate.toLocaleDateString('es-ES')}`
+          simulatedMatches: simulatedMatches,
+          message: `Avanzado al próximo partido en ${matchDate.toLocaleDateString('es-ES')}${simulatedMatches.length > 0 ? `. ${simulatedMatches.length} partidos en vivo fueron simulados automáticamente.` : ''}`
         },
         message: 'Successfully advanced to next match',
         timestamp: new Date().toISOString()
