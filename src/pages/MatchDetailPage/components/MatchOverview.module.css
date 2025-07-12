@@ -2104,3 +2104,236 @@
     animation: none;
   }
 }
+
+/* ========================================
+   SIMULATION BUTTON STYLES
+   ======================================== */
+
+.liveReadyCard {
+  background: linear-gradient(135deg, 
+    rgba(16, 185, 129, 0.1) 0%, 
+    rgba(5, 150, 105, 0.08) 50%, 
+    rgba(4, 120, 87, 0.06) 100%);
+  border: 2px solid rgba(16, 185, 129, 0.3);
+  border-radius: 20px;
+  padding: 2rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  animation: simulationReadyGlow 4s ease-in-out infinite;
+  backdrop-filter: blur(10px);
+  box-shadow: 
+    0 15px 35px rgba(16, 185, 129, 0.1),
+    0 5px 15px rgba(0, 0, 0, 0.05);
+}
+
+.liveReadyCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(16, 185, 129, 0.1) 50%, 
+    transparent 100%);
+  animation: simulationShimmer 3s ease-in-out infinite;
+  z-index: 1;
+}
+
+@keyframes simulationReadyGlow {
+  0%, 100% { 
+    box-shadow: 
+      0 15px 35px rgba(16, 185, 129, 0.1),
+      0 5px 15px rgba(0, 0, 0, 0.05);
+  }
+  50% { 
+    box-shadow: 
+      0 20px 45px rgba(16, 185, 129, 0.15),
+      0 8px 25px rgba(0, 0, 0, 0.08);
+  }
+}
+
+@keyframes simulationShimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+.liveReadyIcon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  display: inline-block;
+  animation: simulationIconBounce 2s ease-in-out infinite;
+}
+
+@keyframes simulationIconBounce {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50% { transform: translateY(-5px) scale(1.05); }
+}
+
+.liveReadyCard h3 {
+  color: #047857;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  position: relative;
+  z-index: 2;
+}
+
+.liveReadyCard p {
+  color: #065f46;
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+  position: relative;
+  z-index: 2;
+}
+
+.startSimulationButton {
+  background: linear-gradient(135deg, 
+    #10b981 0%, 
+    #059669 50%, 
+    #047857 100%);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 0.8rem 2rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  position: relative;
+  z-index: 2;
+  overflow: hidden;
+  box-shadow: 
+    0 8px 20px rgba(16, 185, 129, 0.3),
+    0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.startSimulationButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255, 255, 255, 0.2) 50%, 
+    transparent 100%);
+  transition: left 0.5s ease-in-out;
+}
+
+.startSimulationButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 12px 30px rgba(16, 185, 129, 0.4),
+    0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.startSimulationButton:hover::before {
+  left: 100%;
+}
+
+.startSimulationButton:active {
+  transform: translateY(0px);
+}
+
+.startSimulationButton:disabled {
+  background: linear-gradient(135deg, 
+    #6b7280 0%, 
+    #4b5563 50%, 
+    #374151 100%);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 
+    0 4px 10px rgba(107, 114, 128, 0.2),
+    0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.actionIcon {
+  margin-right: 0.5rem;
+  font-size: 1.2rem;
+  display: inline-block;
+  animation: actionIconPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes actionIconPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.startSimulationButton:disabled .actionIcon {
+  animation: none;
+}
+
+/* Live updates container */
+.liveUpdateContainer {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(239, 246, 255, 0.8);
+  border-radius: 12px;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.liveUpdate {
+  text-align: center;
+}
+
+.liveScore {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e40af;
+  margin-bottom: 0.5rem;
+}
+
+.liveEvent {
+  font-size: 0.9rem;
+  color: #1e3a8a;
+  line-height: 1.4;
+}
+
+/* Responsive design for simulation button */
+@media (max-width: 768px) {
+  .liveReadyCard {
+    padding: 1.5rem;
+  }
+  
+  .liveReadyIcon {
+    font-size: 2.5rem;
+  }
+  
+  .liveReadyCard h3 {
+    font-size: 1.3rem;
+  }
+  
+  .liveReadyCard p {
+    font-size: 0.9rem;
+  }
+  
+  .startSimulationButton {
+    font-size: 1rem;
+    padding: 0.7rem 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .liveReadyCard {
+    padding: 1rem;
+  }
+  
+  .liveReadyIcon {
+    font-size: 2rem;
+  }
+  
+  .liveReadyCard h3 {
+    font-size: 1.2rem;
+  }
+  
+  .startSimulationButton {
+    width: 100%;
+    padding: 0.8rem 1rem;
+  }
+}

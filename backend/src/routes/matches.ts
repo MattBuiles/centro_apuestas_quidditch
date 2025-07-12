@@ -1,7 +1,9 @@
 import { Router } from 'express';
 import { Database } from '../database/Database';
+import { MatchSimulationService } from '../services/MatchSimulationService';
 
 const router = Router();
+const matchSimulationService = new MatchSimulationService();
 
 // GET /api/matches - Get all matches
 router.get('/', async (req, res) => {
@@ -138,6 +140,91 @@ router.get('/next-unplayed', async (req, res) => {
       success: false,
       error: 'Internal server error',
       message: 'Failed to retrieve next unplayed match',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// POST /api/matches/:id/iniciar-simulacion - Start match simulation
+router.post('/:id/iniciar-simulacion', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Verificar que el partido existe
+    const db = Database.getInstance();
+    const match = await db.getMatchById(id);
+    
+    if (!match) {
+      return res.status(404).json({
+        success: false,
+        error: 'Match not found',
+        message: 'The specified match does not exist',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Verificar que el partido no ha sido jugado
+    const matchData = match as { status: string };
+    if (matchData.status === 'finished') {
+      return res.status(400).json({
+        success: false,
+        error: 'Match already finished',
+        message: 'Cannot simulate a match that has already been finished',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    if (matchData.status === 'live') {
+      return res.status(400).json({
+        success: false,
+        error: 'Match already live',
+        message: 'The match is already being simulated',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Iniciar simulación
+    await matchSimulationService.startMatchSimulation(id);
+
+    return res.json({
+      success: true,
+      message: 'Match simulation started successfully',
+      data: {
+        matchId: id,
+        status: 'live',
+        simulationStarted: true
+      },
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error starting match simulation:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: 'Failed to start match simulation',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// GET /api/matches/:id/simulation-status - Get match simulation status
+router.get('/:id/simulation-status', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const status = await matchSimulationService.getMatchSimulationStatus(id);
+    
+    return res.json({
+      success: true,
+      data: status,
+      message: 'Match simulation status retrieved successfully',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error getting match simulation status:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: 'Failed to retrieve match simulation status',
       timestamp: new Date().toISOString()
     });
   }
