@@ -63,8 +63,12 @@ export class VirtualTimeService {
   }
 
   private getDefaultState(): VirtualTimeState {
+    // Set virtual time to start before the season begins (July 15th)
+    const currentYear = new Date().getFullYear();
+    const defaultStartDate = new Date(`${currentYear}-07-15T00:00:00Z`);
+    
     return {
-      currentDate: new Date(),
+      currentDate: defaultStartDate,
       activeSeason: null,
       timeSpeed: 'medium',
       autoMode: false,
@@ -664,6 +668,22 @@ export class VirtualTimeService {
     this.currentState.currentDate = new Date();
     this.currentState.lastUpdate = new Date();
     await this.saveState();
+  }
+
+  /**
+   * Reset virtual time to initial state (used during database reset)
+   * Sets the time to before the season starts to allow proper preparation
+   */
+  public async resetToInitialState(): Promise<void> {
+    console.log('🔄 Resetting virtual time to initial state...');
+    
+    // Reset to default state (July 15th, before season starts)
+    this.currentState = this.getDefaultState();
+    
+    // Save the reset state to database
+    await this.saveState();
+    
+    console.log(`✅ Virtual time reset to: ${this.currentState.currentDate.toISOString()}`);
   }
 }
 
