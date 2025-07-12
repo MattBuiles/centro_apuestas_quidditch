@@ -243,6 +243,14 @@ export class MatchSimulationService {
         await this.db.updateMatchSnitchCaught(matchId, true, snitchCaughtBy === match.home_team_id ? 'home' : 'away');
       }
 
+      // Update team statistics - ESTA ES LA PARTE QUE FALTABA
+      await this.updateTeamStats(match.home_team_id, match.away_team_id, {
+        homeScore,
+        awayScore,
+        snitchCaught,
+        snitchCaughtBy
+      });
+
       console.log(`✅ Match ${matchId} simulated completely: ${homeScore} - ${awayScore} (${duration} min)`);
 
       return {
@@ -330,12 +338,27 @@ export class MatchSimulationService {
    */
   private async finishMatch(matchId: string, homeScore: number, awayScore: number, duration: number): Promise<void> {
     try {
+      // Get match details to access team IDs
+      const match = await this.db.getMatchById(matchId) as MatchData;
+      if (!match) {
+        throw new Error('Match not found');
+      }
+
       // Actualizar estado del partido
       await this.db.updateMatchStatus(matchId, 'finished');
       await this.db.updateMatchScore(matchId, homeScore, awayScore);
       
       // Marcar snitch como capturada
+      const snitchCaughtBy = homeScore > awayScore ? match.home_team_id : match.away_team_id;
       await this.db.updateMatchSnitchCaught(matchId, true, homeScore > awayScore ? 'home' : 'away');
+
+      // Update team statistics
+      await this.updateTeamStats(match.home_team_id, match.away_team_id, {
+        homeScore,
+        awayScore,
+        snitchCaught: true,
+        snitchCaughtBy
+      });
 
       // Broadcast finalización del partido
       this.broadcastMatchUpdate(matchId, {
@@ -371,6 +394,58 @@ export class MatchSimulationService {
    */
   private delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Updates team statistics after a match is completed
+   */
+  private async updateTeamStats(homeTeamId: string, awayTeamId: string, result: {
+    homeScore: number;
+    awayScore: number;
+    snitchCaught: boolean;
+    snitchCaughtBy: string | null;
+  }): Promise<void> {
+    // Update home team stats
+    await this.db.run(`
+      UPDATE teams SET 
+        matches_played = matches_played + 1,
+        wins = wins + ?,
+        losses = losses + ?,
+        draws = draws + ?,
+        points_for = points_for + ?,
+        points_against = points_against + ?,
+        snitch_catches = snitch_catches + ?
+      WHERE id = ?
+    `, [
+      result.homeScore > result.awayScore ? 1 : 0,
+      result.homeScore < result.awayScore ? 1 : 0,
+      result.homeScore === result.awayScore ? 1 : 0,
+      result.homeScore,
+      result.awayScore,
+      result.snitchCaughtBy === homeTeamId ? 1 : 0,
+      homeTeamId
+    ]);
+
+    // Update away team stats
+    await this.db.run(`
+      UPDATE teams SET 
+        matches_played = matches_played + 1,
+        wins = wins + ?,
+        losses = losses + ?,
+        draws = draws + ?,
+        points_for = points_for + ?,
+        points_against = points_against + ?,
+        snitch_catches = snitch_catches + ?
+      WHERE id = ?
+    `, [
+      result.awayScore > result.homeScore ? 1 : 0,
+      result.awayScore < result.homeScore ? 1 : 0,
+      result.homeScore === result.awayScore ? 1 : 0,
+      result.awayScore,
+      result.homeScore,
+      result.snitchCaughtBy === awayTeamId ? 1 : 0,
+      awayTeamId
+    ]);
   }
 
   /**
