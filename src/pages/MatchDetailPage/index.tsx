@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Match, Team } from '@/types/league';
 import { getMatchDetails, getRelatedMatches } from '@/services/matchesService';
 import { getTeams } from '@/services/teamsService';
+import { PredictionsService, MatchPredictionStats, Prediction } from '@/services/predictionsService';
 import { FEATURES } from '@/config/features';
 import Card from '@/components/common/Card';
 import Button from '@/components/common/Button';
@@ -14,6 +15,7 @@ import {
   MatchHeadToHead,
   MatchRelatedMatches,
   MatchDetailedAnalysis,
+  MatchPredictions,
 } from './components';
 import styles from './MatchDetailPage.module.css';
 
@@ -116,15 +118,38 @@ const MatchDetailPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showLiveSimulation, setShowLiveSimulation] = useState(false);
   const [isStartingMatch, setIsStartingMatch] = useState(false);
+  
+  // Predictions state
+  const [userPrediction, setUserPrediction] = useState<Prediction | null>(null);
+  const [predictionStats, setPredictionStats] = useState<MatchPredictionStats | null>(null);
+  const [isPredicting, setIsPredicting] = useState(false);
+  const [predictionsService] = useState(() => new PredictionsService());
 
   useEffect(() => {
+    const loadPredictionsData = async (matchId: string) => {
+      if (!FEATURES.USE_BACKEND_PREDICTIONS) return;
+      
+      try {
+        // Load user prediction
+        const userPred = await predictionsService.getUserPrediction(matchId);
+        setUserPrediction(userPred);
+        
+        // Load prediction stats
+        const stats = await predictionsService.getMatchPredictionStats(matchId);
+        setPredictionStats(stats);
+      } catch (error) {
+        console.warn('Failed to load predictions data:', error);
+      }
+    };
+
     if (matchId) {
       loadMatchData(matchId);
+      loadPredictionsData(matchId);
     } else {
       setError('ID de partido no proporcionado');
       setIsLoading(false);
     }
-  }, [matchId]);
+  }, [matchId, predictionsService]);
 
   const loadMatchData = async (id: string) => {
     try {
@@ -297,6 +322,47 @@ const MatchDetailPage: React.FC = () => {
     }
   };
 
+  // Handle making a prediction
+  const handlePrediction = async (winner: 'home' | 'away' | 'draw') => {
+    if (!match || isPredicting) return;
+    
+    // Only allow predictions on scheduled matches
+    if (match.status !== 'scheduled') {
+      console.warn('Cannot predict on non-scheduled match:', match.status);
+      return;
+    }
+    
+    try {
+      setIsPredicting(true);
+      
+      console.log('🎯 Submitting prediction for match:', {
+        matchId: match.id,
+        matchStatus: match.status,
+        prediction: winner,
+        confidence: 3
+      });
+      
+      // For now, use a default confidence of 3/5
+      const success = await predictionsService.submitPrediction(match.id, winner, 3);
+      
+      if (success) {
+        console.log('✅ Prediction submitted successfully, reloading data...');
+        // Reload predictions data
+        const userPred = await predictionsService.getUserPrediction(match.id);
+        setUserPrediction(userPred);
+        
+        const stats = await predictionsService.getMatchPredictionStats(match.id);
+        setPredictionStats(stats);
+      } else {
+        console.error('❌ Prediction submission failed');
+      }
+    } catch (error) {
+      console.error('Failed to submit prediction:', error);
+    } finally {
+      setIsPredicting(false);
+    }
+  };
+
   const handleStartMatch = async () => {
     if (!match) return;
 
@@ -435,7 +501,7 @@ const MatchDetailPage: React.FC = () => {
     awayTeam: awayTeam?.name || 'Equipo Visitante',
     homeScore: match.homeScore || 0,
     awayScore: match.awayScore || 0,
-    status: match.status as 'live' | 'upcoming' | 'finished' | 'scheduled',
+    status: match.status as 'live' | 'upcoming' | 'finished',
     minute: match.currentMinute ? `${match.currentMinute}'` : undefined,
     date: formatDate(match.date),
     time: formatTime(match.date),
@@ -585,10 +651,15 @@ const MatchDetailPage: React.FC = () => {
             )}
             
             {activeTab === 'predictions' && FEATURES.USE_BACKEND_PREDICTIONS && (
-              <Card className={styles.tabCard}>
-                <h3>Predicciones del Partido</h3>
-                <p>Funcionalidad de predicciones en desarrollo...</p>
-              </Card>
+              <MatchPredictions
+                match={transformedMatch}
+                userPrediction={userPrediction}
+                predictionStats={predictionStats}
+                isAuthenticated={true} // For now, assume authenticated
+                isPredicting={isPredicting}
+                canPredict={match?.status === 'scheduled'}
+                onPrediction={handlePrediction}
+              />
             )}
             
             {activeTab === 'stats' && (
