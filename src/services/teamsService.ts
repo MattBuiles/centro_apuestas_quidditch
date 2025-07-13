@@ -263,6 +263,100 @@ export const getPlayersByPosition = async (teamId: string, position: string): Pr
   return []; // Return empty array as fallback
 };
 
+// Interface para el historial de enfrentamientos
+export interface HeadToHeadData {
+  totalMatches: number;
+  teamWins: number;
+  opponentWins: number;
+  draws: number;
+  recentMatches: {
+    id: string;
+    result: 'W' | 'L' | 'D';
+    teamScore: number;
+    opponentScore: number;
+    date: string;
+    venue: string;
+    status: string;
+  }[];
+  statistics: {
+    teamAvgPoints: number;
+    opponentAvgPoints: number;
+    teamSnitchCatches: number;
+    opponentSnitchCatches: number;
+    teamHighScoring: number;
+    opponentHighScoring: number;
+  };
+  legendaryMatches: {
+    id: string;
+    date: string;
+    teamScore: number;
+    opponentScore: number;
+    venue: string;
+    description: string;
+    title: string;
+  }[];
+}
+
+// Función para obtener historial de enfrentamientos entre dos equipos
+export const getHeadToHeadData = async (teamId: string, opponentId: string): Promise<HeadToHeadData | null> => {
+  if (FEATURES.USE_BACKEND_TEAMS) {
+    try {
+      console.log(`🌐 Fetching head-to-head data between ${teamId} and ${opponentId}...`);
+      const response = await apiClient.get<HeadToHeadData>(`/teams/${teamId}/vs/${opponentId}`);
+      
+      if (response.success && response.data) {
+        console.log('✅ Head-to-head data loaded from backend');
+        return response.data;
+      }
+    } catch (error) {
+      console.warn(`⚠️ Failed to fetch head-to-head data:`, error);
+    }
+  }
+  
+  // Fallback to mock data
+  return {
+    totalMatches: 14,
+    teamWins: 7,
+    opponentWins: 5,
+    draws: 2,
+    recentMatches: [
+      { id: '1', result: 'W', teamScore: 180, opponentScore: 120, date: '2025-05-15', venue: 'Home', status: 'finished' },
+      { id: '2', result: 'L', teamScore: 90, opponentScore: 150, date: '2025-03-22', venue: 'Away', status: 'finished' },
+      { id: '3', result: 'W', teamScore: 200, opponentScore: 170, date: '2025-01-18', venue: 'Home', status: 'finished' },
+      { id: '4', result: 'W', teamScore: 160, opponentScore: 130, date: '2024-11-25', venue: 'Neutral', status: 'finished' },
+      { id: '5', result: 'L', teamScore: 110, opponentScore: 140, date: '2024-10-07', venue: 'Away', status: 'finished' }
+    ],
+    statistics: {
+      teamAvgPoints: 145,
+      opponentAvgPoints: 125,
+      teamSnitchCatches: 8,
+      opponentSnitchCatches: 6,
+      teamHighScoring: 3,
+      opponentHighScoring: 2
+    },
+    legendaryMatches: [
+      {
+        id: '1',
+        date: '2024-06-15',
+        teamScore: 230,
+        opponentScore: 220,
+        venue: 'Hogwarts',
+        description: 'Un enfrentamiento épico que duró 4 horas. La Snitch fue capturada en el último minuto tras una persecución que recorrió todo el estadio.',
+        title: 'La Final de los Milenios'
+      },
+      {
+        id: '2',
+        date: '2023-12-03',
+        teamScore: 180,
+        opponentScore: 30,
+        venue: 'Slytherin Dungeons',
+        description: 'Una demostración de dominación absoluta con 15 goles consecutivos antes de que la Snitch fuera capturada.',
+        title: 'El Duelo de los Rayos'
+      }
+    ]
+  };
+};
+
 // Servicio principal con backend + fallback
 export const getTeams = async (): Promise<Team[]> => {
   // Si el backend está habilitado, intentar usarlo
