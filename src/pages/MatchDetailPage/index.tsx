@@ -440,6 +440,11 @@ const MatchDetailPage: React.FC = () => {
   return (
     <MatchDetailErrorBoundary>
       <div className={styles.matchDetailContainer}>
+        {/* Magical floating particles */}
+        <div className={styles.floatingParticle}></div>
+        <div className={styles.floatingParticle}></div>
+        <div className={styles.floatingParticle}></div>
+        
         {/* Header */}
         <div className={styles.header}>
           <Button 
