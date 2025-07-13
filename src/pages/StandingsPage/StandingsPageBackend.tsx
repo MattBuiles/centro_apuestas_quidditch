@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import Button from '../../components/common/Button';
 import Card from '../../components/common/Card';
 import TeamLogo from '../../components/teams/TeamLogo';
-import { SeasonsService, SeasonSummary } from '../../services/seasonsService';
+import { SeasonsService } from '../../services/seasonsService';
 import { HistoricalSeasonsService, HistoricalStanding } from '../../services/historicalSeasonsService';
 import { leagueTimeService, LeagueTimeInfo } from '../../services/leagueTimeService';
 import { FEATURES } from '../../config/features';
@@ -13,8 +13,7 @@ import styles from './StandingsPage.module.css';
 const StandingsPage = () => {
   const [standings, setStandings] = useState<Standing[]>([]);
   const [season, setSeason] = useState<Season | null>(null);
-  const [viewMode, setViewMode] = useState<'current' | 'historical' | 'allTime'>('current');
-  const [allSeasons, setAllSeasons] = useState<SeasonSummary[]>([]);
+  const [viewMode, setViewMode] = useState<'current' | 'allTime'>('current');
   const [historicalStandings, setHistoricalStandings] = useState<HistoricalStanding[]>([]);
   const [leagueTimeInfo, setLeagueTimeInfo] = useState<LeagueTimeInfo | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -48,20 +47,23 @@ const StandingsPage = () => {
         }
       }
 
-      // Load all seasons for historical view
-      const seasons = await seasonsService.getAllSeasons();
-      setAllSeasons(seasons);
-
       // If we don't have an active season from league time, try to get the latest from seasons
-      if (!season && seasons.length > 0) {
-        const activeSeason = seasons.find(s => s.status === 'active') || seasons[0];
-        if (activeSeason) {
-          const fullSeason = await seasonsService.getSeasonById(activeSeason.id);
-          if (fullSeason) {
-            setSeason(fullSeason);
-            const seasonStandings = calculateStandingsFromSeason(fullSeason);
-            setStandings(seasonStandings);
+      if (!season) {
+        try {
+          const seasons = await seasonsService.getAllSeasons();
+          if (seasons.length > 0) {
+            const activeSeason = seasons.find(s => s.status === 'active') || seasons[0];
+            if (activeSeason) {
+              const fullSeason = await seasonsService.getSeasonById(activeSeason.id);
+              if (fullSeason) {
+                setSeason(fullSeason);
+                const seasonStandings = calculateStandingsFromSeason(fullSeason);
+                setStandings(seasonStandings);
+              }
+            }
           }
+        } catch (seasonError) {
+          console.warn('Failed to load seasons:', seasonError);
         }
       }
 
@@ -181,7 +183,7 @@ const StandingsPage = () => {
     return standings;
   };
 
-  const handleViewModeChange = (mode: 'current' | 'historical' | 'allTime') => {
+  const handleViewModeChange = (mode: 'current' | 'allTime') => {
     setViewMode(mode);
     if (mode === 'allTime') {
       loadHistoricalData();
@@ -238,12 +240,6 @@ const StandingsPage = () => {
             onClick={() => handleViewModeChange('allTime')}
           >
             Histórico Total
-          </Button>
-          <Button
-            variant={viewMode === 'historical' ? 'primary' : 'outline'}
-            onClick={() => handleViewModeChange('historical')}
-          >
-            Temporadas
           </Button>
         </div>
       </div>
@@ -367,38 +363,6 @@ const StandingsPage = () => {
               <div className={styles.noData}>
                 <p>No hay datos históricos disponibles</p>
                 <p>Los datos aparecerán una vez que se completen y archiven las temporadas.</p>
-              </div>
-            )}
-          </Card>
-        </div>
-      )}
-
-      {viewMode === 'historical' && (
-        <div className={styles.content}>
-          <Card>
-            <h2>📊 Temporadas Históricas</h2>
-            {allSeasons.length > 0 ? (
-              <div className={styles.seasonsList}>
-                {allSeasons.map((seasonSummary) => (
-                  <div key={seasonSummary.id} className={styles.seasonCard}>
-                    <h3>{seasonSummary.name}</h3>
-                    <div className={styles.seasonStats}>
-                      <p>Estado: <span className={styles[seasonSummary.status]}>{seasonSummary.status}</span></p>
-                      <p>Equipos: {seasonSummary.teamsCount}</p>
-                      <p>Partidos: {seasonSummary.finishedMatches}/{seasonSummary.matchesCount}</p>
-                      <p>Jornada: {seasonSummary.currentMatchday}/{seasonSummary.totalMatchdays}</p>
-                    </div>
-                    <Link to={`/historical-seasons/${seasonSummary.id}`}>
-                      <Button variant="outline" size="sm">
-                        Ver detalles
-                      </Button>
-                    </Link>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className={styles.noData}>
-                <p>No hay temporadas históricas disponibles</p>
               </div>
             )}
           </Card>
