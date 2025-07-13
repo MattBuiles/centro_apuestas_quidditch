@@ -26,6 +26,12 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Get cumulative stats for all teams from standings table (debe ir antes de /:id)
+router.get('/cumulative-stats', seasonController.getCumulativeTeamStats);
+
+// Get historical stats for all teams (debe ir antes de /:id)
+router.get('/historical-stats', seasonController.getHistoricalTeamStats);
+
 // Get team by ID
 router.get('/:id', async (req, res): Promise<void> => {
   try {
@@ -55,9 +61,6 @@ router.get('/:id', async (req, res): Promise<void> => {
     });
   }
 });
-
-// Get historical stats for all teams
-router.get('/historical-stats', seasonController.getHistoricalTeamStats);
 
 // Get historical stats for specific team
 router.get('/:teamId/historical-stats', seasonController.getTeamHistoricalStats);

@@ -557,13 +557,13 @@ export class SeasonController {
     try {
       const { teamId } = req.params;
       
-      const historicalStats = await this.historicalTeamStatsService.getTeamHistoricalStats(teamId);
+      const stats = await this.historicalTeamStatsService.getTeamHistoricalStats(teamId);
       
-      if (!historicalStats) {
+      if (!stats) {
         res.status(404).json({
           success: false,
           error: 'Not found',
-          message: 'No historical stats found for this team',
+          message: 'Team historical stats not found',
           timestamp: new Date().toISOString()
         });
         return;
@@ -571,7 +571,7 @@ export class SeasonController {
       
       res.json({
         success: true,
-        data: historicalStats,
+        data: stats,
         message: 'Team historical stats retrieved successfully',
         timestamp: new Date().toISOString()
       });
@@ -592,6 +592,66 @@ export class SeasonController {
           timestamp: new Date().toISOString()
         });
       }
+    }
+  };
+
+  // GET /api/teams/cumulative-stats - Get cumulative stats from standings table
+  public getCumulativeTeamStats = async (req: Request, res: Response): Promise<void> => {
+    try {
+      console.log('📊 Obteniendo estadísticas acumulativas de equipos desde tabla standings...');
+      
+      const cumulativeStats = await this.db.all(`
+        SELECT 
+          t.id as teamId,
+          t.name as teamName,
+          COUNT(DISTINCT s.season_id) as totalSeasons,
+          COALESCE(SUM(s.matches_played), 0) as totalMatches,
+          COALESCE(SUM(s.wins), 0) as totalWins,
+          COALESCE(SUM(s.draws), 0) as totalDraws,
+          COALESCE(SUM(s.losses), 0) as totalLosses,
+          COALESCE(SUM(s.points_for), 0) as totalGoalsFor,
+          COALESCE(SUM(s.points_against), 0) as totalGoalsAgainst,
+          COALESCE(SUM(s.points), 0) as totalPoints,
+          COALESCE(SUM(CASE WHEN s.position = 1 THEN 1 ELSE 0 END), 0) as championships,
+          CASE 
+            WHEN SUM(s.matches_played) > 0 
+            THEN ROUND((CAST(SUM(s.wins) AS FLOAT) / SUM(s.matches_played)) * 100, 2)
+            ELSE 0 
+          END as winPercentage,
+          CASE 
+            WHEN SUM(s.matches_played) > 0 
+            THEN ROUND(CAST(SUM(s.points_for) AS FLOAT) / SUM(s.matches_played), 2)
+            ELSE 0 
+          END as averageGoalsPerMatch,
+          CASE 
+            WHEN COUNT(DISTINCT s.season_id) > 0 
+            THEN ROUND(CAST(SUM(s.points) AS FLOAT) / COUNT(DISTINCT s.season_id), 2)
+            ELSE 0 
+          END as averagePointsPerSeason
+        FROM teams t
+        LEFT JOIN standings s ON t.id = s.team_id
+        WHERE s.season_id IS NOT NULL
+        GROUP BY t.id, t.name
+        HAVING totalMatches > 0
+        ORDER BY championships DESC, totalPoints DESC, totalGoalsFor - totalGoalsAgainst DESC
+      `) as any[];
+
+      console.log(`✅ Encontradas estadísticas para ${cumulativeStats.length} equipos`);
+      
+      res.json({
+        success: true,
+        data: cumulativeStats,
+        message: 'Cumulative team stats retrieved successfully',
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error fetching cumulative team stats:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error',
+        message: 'Failed to retrieve cumulative team stats',
+        timestamp: new Date().toISOString()
+      });
     }
   };
 }
