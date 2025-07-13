@@ -252,7 +252,27 @@ export interface TeamRow {
   points_against?: number;
   snitch_catches?: number;
   attack_strength?: number;
+  defense_strength?: number;
   seeker_skill?: number;
+  keeper_skill?: number;
+  chaser_skill?: number;
+  beater_skill?: number;
+  slogan?: string;
+  history?: string;
+  titles?: number;
+  achievements?: string; // JSON string
+}
+
+export interface Player {
+  id: string;
+  name: string;
+  team_id: string;
+  position: 'keeper' | 'seeker' | 'beater' | 'chaser';
+  skill_level: number;
+  is_starting: boolean;
+  years_active?: number;
+  number?: number;
+  achievements?: string[]; // JSON array
 }
 
 export interface MatchRow {

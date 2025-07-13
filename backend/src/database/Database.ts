@@ -4,6 +4,40 @@ import path from 'path';
 import fs from 'fs';
 import { DatabaseConfig } from '../types';
 
+interface TeamRow {
+  id: string;
+  [key: string]: unknown;
+}
+
+interface TeamStats {
+  id: string;
+  matches_played: number;
+  wins: number;
+  losses: number;
+  draws: number;
+  points_for: number;
+  points_against: number;
+  snitch_catches: number;
+  [key: string]: unknown;
+}
+
+interface FinishedMatch {
+  home_team_id: string;
+  away_team_id: string;
+  home_score: number;
+  away_score: number;
+  snitch_caught_by: string | null;
+  [key: string]: unknown;
+}
+
+interface Season {
+  id: string;
+  name: string;
+  start_date: string;
+  end_date: string;
+  [key: string]: unknown;
+}
+
 export class Database {
   private static instance: Database;
   private db: sqlite3.Database | null = null;
@@ -98,8 +132,36 @@ export class Database {
         points_for INTEGER DEFAULT 0,
         points_against INTEGER DEFAULT 0,
         snitch_catches INTEGER DEFAULT 0,
+        -- Team Statistics for simulation and display
+        attack_strength INTEGER DEFAULT 75,
+        defense_strength INTEGER DEFAULT 75,
+        seeker_skill INTEGER DEFAULT 75,
+        keeper_skill INTEGER DEFAULT 75,
+        chaser_skill INTEGER DEFAULT 75,
+        beater_skill INTEGER DEFAULT 75,
+        -- Additional team info for frontend
+        slogan TEXT,
+        history TEXT,
+        titles INTEGER DEFAULT 0,
+        achievements TEXT, -- JSON array
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+
+      -- Players table
+      CREATE TABLE IF NOT EXISTS players (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        team_id TEXT NOT NULL,
+        position TEXT CHECK(position IN ('keeper', 'seeker', 'beater', 'chaser')) NOT NULL,
+        skill_level INTEGER DEFAULT 75 CHECK(skill_level >= 1 AND skill_level <= 100),
+        is_starting BOOLEAN DEFAULT FALSE,
+        years_active INTEGER DEFAULT 1,
+        number INTEGER,
+        achievements TEXT, -- JSON array
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE
       );
 
       -- Seasons table
@@ -371,7 +433,17 @@ export class Database {
         founded: 990,
         description: 'Casa conocida por su valentía y determinación',
         stadium: 'Campo de Quidditch de Hogwarts',
-        colors: JSON.stringify(['#740001', '#D3A625'])
+        colors: JSON.stringify(['#740001', '#D3A625']),
+        slogan: 'Donde habitan los valientes de corazón',
+        history: 'Fundado por Godric Gryffindor, conocido por su coraje y caballerosidad. Los Gryffindor son famosos por su valentía, osadía, temple y caballerosidad.',
+        titles: 7,
+        achievements: JSON.stringify(['Campeón de la Copa de las Casas (7 veces)', 'Récord de la captura más rápida de la Snitch Dorada', 'Mayor número de victorias consecutivas (23 partidos)']),
+        attack_strength: 85,
+        defense_strength: 82,
+        seeker_skill: 90,
+        keeper_skill: 88,
+        chaser_skill: 85,
+        beater_skill: 80
       },
       {
         id: 'slytherin',
@@ -380,7 +452,17 @@ export class Database {
         founded: 990,
         description: 'Casa conocida por su astucia y ambición',
         stadium: 'Campo de Quidditch de Hogwarts',
-        colors: JSON.stringify(['#1A472A', '#AAAAAA'])
+        colors: JSON.stringify(['#1A472A', '#AAAAAA']),
+        slogan: 'Ambición pura y astucia refinada',
+        history: 'Fundado por Salazar Slytherin, este equipo es conocido por su estrategia astuta y su determinación feroz en el campo de Quidditch.',
+        titles: 6,
+        achievements: JSON.stringify(['Campeón de la Copa de las Casas (6 veces)', 'Mejor defensa en la historia de Hogwarts', 'Record de victorias consecutivas en casa']),
+        attack_strength: 88,
+        defense_strength: 92,
+        seeker_skill: 85,
+        keeper_skill: 93,
+        chaser_skill: 87,
+        beater_skill: 90
       },
       {
         id: 'ravenclaw',
@@ -389,7 +471,17 @@ export class Database {
         founded: 990,
         description: 'Casa conocida por su sabiduría e ingenio',
         stadium: 'Campo de Quidditch de Hogwarts',
-        colors: JSON.stringify(['#0E1A40', '#946B2D'])
+        colors: JSON.stringify(['#0E1A40', '#946B2D']),
+        slogan: 'Sabiduría más allá de la medida es el mayor tesoro del hombre',
+        history: 'Fundado por Rowena Ravenclaw, este equipo combina inteligencia estratégica con habilidades técnicas excepcionales en el aire.',
+        titles: 4,
+        achievements: JSON.stringify(['Campeón de la Copa de las Casas (4 veces)', 'Mejor promedio académico del equipo', 'Innovadores en tácticas de vuelo']),
+        attack_strength: 80,
+        defense_strength: 85,
+        seeker_skill: 92,
+        keeper_skill: 85,
+        chaser_skill: 90,
+        beater_skill: 75
       },
       {
         id: 'hufflepuff',
@@ -398,7 +490,17 @@ export class Database {
         founded: 990,
         description: 'Casa conocida por su lealtad y trabajo duro',
         stadium: 'Campo de Quidditch de Hogwarts',
-        colors: JSON.stringify(['#ECB939', '#372E29'])
+        colors: JSON.stringify(['#ECB939', '#372E29']),
+        slogan: 'Estos pacientes, leales y justos nunca temen al trabajo pesado',
+        history: 'Fundado por Helga Hufflepuff, este equipo demuestra que la dedicación y el trabajo en equipo pueden superar cualquier obstáculo.',
+        titles: 2,
+        achievements: JSON.stringify(['Campeón de la Copa de las Casas (2 veces)', 'Mejor espíritu deportivo', 'Record de fair play']),
+        attack_strength: 75,
+        defense_strength: 88,
+        seeker_skill: 78,
+        keeper_skill: 90,
+        chaser_skill: 82,
+        beater_skill: 85
       },
       {
         id: 'chudley-cannons',
@@ -407,7 +509,17 @@ export class Database {
         founded: 1892,
         description: 'Equipo profesional inglés con sede en Chudley',
         stadium: 'Estadio Chudley',
-        colors: JSON.stringify(['#FFA500', '#000000'])
+        colors: JSON.stringify(['#FFA500', '#000000']),
+        slogan: 'Cañones que nunca se rinden',
+        history: 'Un equipo profesional con una historia turbulenta pero con fans leales. Conocidos por su estilo de juego impredecible y su pasión.',
+        titles: 1,
+        achievements: JSON.stringify(['Liga Profesional de Quidditch (1 vez)', 'Mejor remontada de la historia', 'Fanáticos más leales']),
+        attack_strength: 70,
+        defense_strength: 65,
+        seeker_skill: 75,
+        keeper_skill: 70,
+        chaser_skill: 72,
+        beater_skill: 78
       },
       {
         id: 'holyhead-harpies',
@@ -416,17 +528,33 @@ export class Database {
         founded: 1203,
         description: 'Equipo profesional femenino de Gales',
         stadium: 'Estadio Holyhead',
-        colors: JSON.stringify(['#006400', '#FFFFFF'])
+        colors: JSON.stringify(['#006400', '#FFFFFF']),
+        slogan: 'Arpías veloces como el viento',
+        history: 'El equipo totalmente femenino más exitoso en la historia del Quidditch profesional. Conocidas por su velocidad y técnica excepcional.',
+        titles: 5,
+        achievements: JSON.stringify(['Liga Profesional de Quidditch (5 veces)', 'Primer equipo totalmente femenino campeón', 'Record de velocidad en vuelo']),
+        attack_strength: 92,
+        defense_strength: 78,
+        seeker_skill: 95,
+        keeper_skill: 80,
+        chaser_skill: 95,
+        beater_skill: 73
       }
     ];
 
     // Insert teams
     for (const team of teamsData) {
       await this.run(`
-        INSERT INTO teams (id, name, logo, founded, description, stadium, colors)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-      `, [team.id, team.name, team.logo, team.founded, team.description, team.stadium, team.colors]);
+        INSERT INTO teams (id, name, logo, founded, description, stadium, colors, slogan, history, titles, achievements, 
+                          attack_strength, defense_strength, seeker_skill, keeper_skill, chaser_skill, beater_skill)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [team.id, team.name, team.logo, team.founded, team.description, team.stadium, team.colors,
+          team.slogan, team.history, team.titles, team.achievements,
+          team.attack_strength, team.defense_strength, team.seeker_skill, team.keeper_skill, team.chaser_skill, team.beater_skill]);
     }
+
+    // Seed players for each team
+    await this.seedPlayers();
 
     // Create default admin user
     const bcrypt = await import('bcryptjs');
@@ -511,8 +639,8 @@ export class Database {
     ]);
 
     // Add all teams to the season
-    const teams = await this.all('SELECT id FROM teams');
-    for (const team of teams as any[]) {
+    const teams = await this.all('SELECT id FROM teams') as TeamRow[];
+    for (const team of teams) {
       await this.run(`
         INSERT INTO season_teams (season_id, team_id)
         VALUES (?, ?)
@@ -520,7 +648,7 @@ export class Database {
     }
 
     // Generate sample matches (round-robin tournament)
-    const teamIds = (teams as any[]).map(t => t.id);
+    const teamIds = teams.map(t => t.id);
     const matches = [];
     
     // Create all possible match combinations
@@ -598,14 +726,15 @@ export class Database {
     const finishedMatches = await this.all(`
       SELECT * FROM matches 
       WHERE season_id = ? AND status = 'finished'
-    `, [seasonId]) as any[];
+    `, [seasonId]) as FinishedMatch[];
 
-    const teamStats: { [key: string]: any } = {};
+    const teamStats: { [key: string]: TeamStats } = {};
 
     // Initialize team stats
-    const teams = await this.all('SELECT id FROM teams') as any[];
+    const teams = await this.all('SELECT id FROM teams') as TeamRow[];
     for (const team of teams) {
       teamStats[team.id] = {
+        id: team.id,
         matches_played: 0,
         wins: 0,
         losses: 0,
@@ -666,10 +795,10 @@ export class Database {
     const teams = await this.all(`
       SELECT id, wins, losses, draws, points_for, points_against, snitch_catches
       FROM teams
-    `) as any[];
+    `) as TeamStats[];
 
     // Calculate league points (3 for win, 1 for draw)
-    const standings = teams.map((team: any) => ({
+    const standings = teams.map((team: TeamStats) => ({
       ...team,
       points: (team.wins * 3) + (team.draws * 1),
       points_difference: team.points_for - team.points_against,
@@ -1377,7 +1506,7 @@ export class Database {
   // ============== HISTORICAL DATA METHODS ==============
   
   public async archiveCompletedSeason(seasonId: string): Promise<void> {
-    const season = await this.getSeasonById(seasonId) as any;
+    const season = await this.getSeasonById(seasonId) as Season | undefined;
     if (!season) return;
 
     // Archive season
@@ -1780,5 +1909,226 @@ export class Database {
       ORDER BY minute ASC
     `;
     return await this.all(sql, [matchId]);
+  }
+
+  // ============== PLAYERS METHODS ==============
+
+  private async seedPlayers(): Promise<void> {
+    if (!this.db) throw new Error('Database not connected');
+
+    console.log('👥 Seeding players for all teams...');
+
+    // Get all teams
+    const teams = await this.all('SELECT id FROM teams') as Array<{ id: string }>;
+
+    // Player data for each team
+    const playersByTeam = {
+      'gryffindor': [
+        // Titulares (7 jugadores)
+        { name: 'Harry Potter', position: 'seeker', skill_level: 95, is_starting: true, number: 1, years_active: 7 },
+        { name: 'Ron Weasley', position: 'keeper', skill_level: 88, is_starting: true, number: 2, years_active: 6 },
+        { name: 'Fred Weasley', position: 'beater', skill_level: 85, is_starting: true, number: 3, years_active: 7 },
+        { name: 'George Weasley', position: 'beater', skill_level: 85, is_starting: true, number: 4, years_active: 7 },
+        { name: 'Angelina Johnson', position: 'chaser', skill_level: 90, is_starting: true, number: 5, years_active: 6 },
+        { name: 'Katie Bell', position: 'chaser', skill_level: 88, is_starting: true, number: 6, years_active: 5 },
+        { name: 'Alicia Spinnet', position: 'chaser', skill_level: 87, is_starting: true, number: 7, years_active: 6 },
+        // Suplentes
+        { name: 'Oliver Wood', position: 'keeper', skill_level: 92, is_starting: false, number: 8, years_active: 8 },
+        { name: 'Ginny Weasley', position: 'seeker', skill_level: 88, is_starting: false, number: 9, years_active: 4 },
+        { name: 'Dean Thomas', position: 'chaser', skill_level: 75, is_starting: false, number: 10, years_active: 3 },
+        { name: 'Seamus Finnigan', position: 'beater', skill_level: 72, is_starting: false, number: 11, years_active: 3 }
+      ],
+      'slytherin': [
+        // Titulares
+        { name: 'Draco Malfoy', position: 'seeker', skill_level: 87, is_starting: true, number: 1, years_active: 6 },
+        { name: 'Blaise Zabini', position: 'keeper', skill_level: 93, is_starting: true, number: 2, years_active: 5 },
+        { name: 'Vincent Crabbe', position: 'beater', skill_level: 88, is_starting: true, number: 3, years_active: 6 },
+        { name: 'Gregory Goyle', position: 'beater', skill_level: 86, is_starting: true, number: 4, years_active: 6 },
+        { name: 'Marcus Flint', position: 'chaser', skill_level: 92, is_starting: true, number: 5, years_active: 8 },
+        { name: 'Adrian Pucey', position: 'chaser', skill_level: 89, is_starting: true, number: 6, years_active: 7 },
+        { name: 'Terence Higgs', position: 'chaser', skill_level: 85, is_starting: true, number: 7, years_active: 5 },
+        // Suplentes
+        { name: 'Miles Bletchley', position: 'keeper', skill_level: 85, is_starting: false, number: 8, years_active: 4 },
+        { name: 'Graham Montague', position: 'seeker', skill_level: 80, is_starting: false, number: 9, years_active: 3 },
+        { name: 'Cassius Warrington', position: 'chaser', skill_level: 78, is_starting: false, number: 10, years_active: 4 },
+        { name: 'Peregrine Derrick', position: 'beater', skill_level: 83, is_starting: false, number: 11, years_active: 5 }
+      ],
+      'ravenclaw': [
+        // Titulares
+        { name: 'Cho Chang', position: 'seeker', skill_level: 92, is_starting: true, number: 1, years_active: 5 },
+        { name: 'Grant Page', position: 'keeper', skill_level: 85, is_starting: true, number: 2, years_active: 4 },
+        { name: 'Jason Samuels', position: 'beater', skill_level: 78, is_starting: true, number: 3, years_active: 3 },
+        { name: 'Duncan Inglebee', position: 'beater', skill_level: 76, is_starting: true, number: 4, years_active: 3 },
+        { name: 'Roger Davies', position: 'chaser', skill_level: 90, is_starting: true, number: 5, years_active: 6 },
+        { name: 'Randolph Burrow', position: 'chaser', skill_level: 88, is_starting: true, number: 6, years_active: 5 },
+        { name: 'Jeremy Stretton', position: 'chaser', skill_level: 87, is_starting: true, number: 7, years_active: 4 },
+        // Suplentes
+        { name: 'Luna Lovegood', position: 'seeker', skill_level: 83, is_starting: false, number: 8, years_active: 2 },
+        { name: 'Terry Boot', position: 'keeper', skill_level: 79, is_starting: false, number: 9, years_active: 3 },
+        { name: 'Michael Corner', position: 'chaser', skill_level: 82, is_starting: false, number: 10, years_active: 3 },
+        { name: 'Anthony Goldstein', position: 'beater', skill_level: 74, is_starting: false, number: 11, years_active: 2 }
+      ],
+      'hufflepuff': [
+        // Titulares
+        { name: 'Cedric Diggory', position: 'seeker', skill_level: 89, is_starting: true, number: 1, years_active: 6 },
+        { name: 'Herbert Fleet', position: 'keeper', skill_level: 90, is_starting: true, number: 2, years_active: 5 },
+        { name: 'Maxine O\'Flaherty', position: 'beater', skill_level: 82, is_starting: true, number: 3, years_active: 4 },
+        { name: 'Anthony Rickett', position: 'beater', skill_level: 84, is_starting: true, number: 4, years_active: 5 },
+        { name: 'Tamsin Applebee', position: 'chaser', skill_level: 86, is_starting: true, number: 5, years_active: 4 },
+        { name: 'Heidi Macavoy', position: 'chaser', skill_level: 83, is_starting: true, number: 6, years_active: 3 },
+        { name: 'Malcolm Preece', position: 'chaser', skill_level: 81, is_starting: true, number: 7, years_active: 3 },
+        // Suplentes
+        { name: 'Justin Finch-Fletchley', position: 'keeper', skill_level: 82, is_starting: false, number: 8, years_active: 4 },
+        { name: 'Zacharias Smith', position: 'seeker', skill_level: 76, is_starting: false, number: 9, years_active: 3 },
+        { name: 'Hannah Abbott', position: 'chaser', skill_level: 78, is_starting: false, number: 10, years_active: 3 },
+        { name: 'Susan Bones', position: 'beater', skill_level: 75, is_starting: false, number: 11, years_active: 2 }
+      ],
+      'chudley-cannons': [
+        // Titulares
+        { name: 'Joey Jenkins', position: 'seeker', skill_level: 78, is_starting: true, number: 1, years_active: 4 },
+        { name: 'Ronan Lynch', position: 'keeper', skill_level: 72, is_starting: true, number: 2, years_active: 6 },
+        { name: 'Kevin Broadmoor', position: 'beater', skill_level: 80, is_starting: true, number: 3, years_active: 5 },
+        { name: 'Karl Broadmoor', position: 'beater', skill_level: 78, is_starting: true, number: 4, years_active: 5 },
+        { name: 'Galvin Gudgeon', position: 'chaser', skill_level: 75, is_starting: true, number: 5, years_active: 8 },
+        { name: 'Lennox Campbell', position: 'chaser', skill_level: 73, is_starting: true, number: 6, years_active: 3 },
+        { name: 'Rupert Brookstanton', position: 'chaser', skill_level: 71, is_starting: true, number: 7, years_active: 2 },
+        // Suplentes
+        { name: 'Dragomir Gorgovitch', position: 'seeker', skill_level: 82, is_starting: false, number: 8, years_active: 10 },
+        { name: 'Ragmar Dorkins', position: 'keeper', skill_level: 68, is_starting: false, number: 9, years_active: 2 },
+        { name: 'Catriona McCormack', position: 'chaser', skill_level: 77, is_starting: false, number: 10, years_active: 7 },
+        { name: 'Meaghan McCormack', position: 'beater', skill_level: 74, is_starting: false, number: 11, years_active: 5 }
+      ],
+      'holyhead-harpies': [
+        // Titulares
+        { name: 'Ginny Weasley', position: 'seeker', skill_level: 95, is_starting: true, number: 1, years_active: 8 },
+        { name: 'Glynnis Griffiths', position: 'keeper', skill_level: 88, is_starting: true, number: 2, years_active: 12 },
+        { name: 'Gwenog Jones', position: 'beater', skill_level: 92, is_starting: true, number: 3, years_active: 15 },
+        { name: 'Valmai Morgan', position: 'beater', skill_level: 89, is_starting: true, number: 4, years_active: 10 },
+        { name: 'Wilda Griffiths', position: 'chaser', skill_level: 96, is_starting: true, number: 5, years_active: 14 },
+        { name: 'Julia Johnson', position: 'chaser', skill_level: 94, is_starting: true, number: 6, years_active: 9 },
+        { name: 'Gwendolyn Morgan', position: 'chaser', skill_level: 93, is_starting: true, number: 7, years_active: 11 },
+        // Suplentes
+        { name: 'Artemis Faulkner', position: 'keeper', skill_level: 84, is_starting: false, number: 8, years_active: 5 },
+        { name: 'Lilywhite', position: 'seeker', skill_level: 87, is_starting: false, number: 9, years_active: 6 },
+        { name: 'Emma Vanity', position: 'chaser', skill_level: 85, is_starting: false, number: 10, years_active: 4 },
+        { name: 'Lucinda Talkalot', position: 'beater', skill_level: 82, is_starting: false, number: 11, years_active: 7 }
+      ]
+    };
+
+    // Insert players for each team
+    for (const team of teams) {
+      const teamPlayers = playersByTeam[team.id as keyof typeof playersByTeam];
+      if (teamPlayers) {
+        for (const player of teamPlayers) {
+          const playerId = `${team.id}-${player.name.toLowerCase().replace(/\s+/g, '-').replace(/'/g, '')}`;
+          
+          await this.run(`
+            INSERT INTO players (id, name, team_id, position, skill_level, is_starting, number, years_active, achievements)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `, [
+            playerId,
+            player.name,
+            team.id,
+            player.position,
+            player.skill_level,
+            player.is_starting,
+            player.number,
+            player.years_active,
+            JSON.stringify([]) // Empty achievements array for now
+          ]);
+        }
+      }
+    }
+
+    console.log('✅ All players seeded successfully');
+  }
+
+  public async getTeamById(teamId: string): Promise<unknown> {
+    const sql = `
+      SELECT 
+        t.*,
+        COUNT(DISTINCT p.id) as total_players,
+        COUNT(CASE WHEN p.is_starting = 1 THEN 1 END) as starting_players
+      FROM teams t
+      LEFT JOIN players p ON t.id = p.team_id
+      WHERE t.id = ?
+      GROUP BY t.id
+    `;
+    return await this.get(sql, [teamId]);
+  }
+
+  public async getTeamPlayers(teamId: string): Promise<unknown[]> {
+    const sql = `
+      SELECT 
+        id, name, position, skill_level, is_starting, number, years_active, achievements,
+        created_at, updated_at
+      FROM players
+      WHERE team_id = ?
+      ORDER BY is_starting DESC, position ASC, number ASC
+    `;
+    return await this.all(sql, [teamId]);
+  }
+
+  public async getTeamStartingLineup(teamId: string): Promise<unknown[]> {
+    const sql = `
+      SELECT 
+        id, name, position, skill_level, number, years_active, achievements
+      FROM players
+      WHERE team_id = ? AND is_starting = 1
+      ORDER BY position ASC, number ASC
+    `;
+    return await this.all(sql, [teamId]);
+  }
+
+  public async getPlayersByPosition(teamId: string, position: string): Promise<unknown[]> {
+    const sql = `
+      SELECT 
+        id, name, skill_level, is_starting, number, years_active, achievements
+      FROM players
+      WHERE team_id = ? AND position = ?
+      ORDER BY is_starting DESC, skill_level DESC
+    `;
+    return await this.all(sql, [teamId, position]);
+  }
+
+  public async getTeamStatistics(teamId: string): Promise<unknown> {
+    const sql = `
+      SELECT 
+        t.id, t.name, t.logo, t.founded, t.description, t.stadium, t.colors,
+        t.slogan, t.history, t.titles, t.achievements,
+        t.matches_played, t.wins, t.losses, t.draws,
+        t.points_for, t.points_against, t.snitch_catches,
+        t.attack_strength, t.defense_strength, t.seeker_skill,
+        t.keeper_skill, t.chaser_skill, t.beater_skill,
+        ROUND(CAST(t.wins AS FLOAT) / NULLIF(t.matches_played, 0) * 100, 1) as win_percentage,
+        (t.points_for - t.points_against) as point_difference
+      FROM teams t
+      WHERE t.id = ?
+    `;
+    return await this.get(sql, [teamId]);
+  }
+
+  public async getMatchLineups(matchId: string): Promise<{
+    homeTeam: { team: unknown; lineup: unknown[] };
+    awayTeam: { team: unknown; lineup: unknown[] };
+  }> {
+    // Get match details
+    const match = await this.getMatchById(matchId) as { home_team_id: string; away_team_id: string } | undefined;
+    if (!match) {
+      throw new Error('Match not found');
+    }
+
+    // Get both teams' lineups
+    const homeLineup = await this.getTeamStartingLineup(match.home_team_id);
+    const awayLineup = await this.getTeamStartingLineup(match.away_team_id);
+    
+    // Get team basic info
+    const homeTeam = await this.getTeamById(match.home_team_id);
+    const awayTeam = await this.getTeamById(match.away_team_id);
+
+    return {
+      homeTeam: { team: homeTeam, lineup: homeLineup },
+      awayTeam: { team: awayTeam, lineup: awayLineup }
+    };
   }
 }
