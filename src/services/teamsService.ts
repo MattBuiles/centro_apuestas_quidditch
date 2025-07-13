@@ -399,3 +399,153 @@ export const checkBackendStatus = async (): Promise<boolean> => {
 
 // Export para compatibilidad con código existente
 export { LOCAL_TEAMS as getLocalTeams };
+
+// Interface para cronología de eventos del partido
+export interface MatchChronology {
+  matchId: string;
+  events: MatchEvent[];
+  keyEvents: KeyEvent[];
+  matchDuration: number;
+  finalScore: {
+    home: number;
+    away: number;
+  };
+}
+
+export interface MatchEvent {
+  id: string;
+  minute: number;
+  second?: number;
+  timestamp: number;
+  type: 'QUAFFLE_GOAL' | 'SNITCH_CAUGHT' | 'FOUL' | 'TIMEOUT' | 'INJURY' | 'BLUDGER_HIT' | 'SAVE';
+  teamId: string;
+  teamName: string;
+  playerId?: string;
+  playerName?: string;
+  description: string;
+  points: number;
+  homeScore?: number;
+  awayScore?: number;
+  currentScore: {
+    home: number;
+    away: number;
+  };
+  details?: Record<string, unknown>;
+}
+
+export interface KeyEvent {
+  id: string;
+  minute: number;
+  timestamp: number;
+  type: string;
+  description: string;
+  impact: 'high' | 'medium' | 'low';
+}
+
+// Función para obtener la cronología completa de un partido finalizado
+export const getMatchChronology = async (matchId: string): Promise<MatchChronology | null> => {
+  if (FEATURES.USE_BACKEND_MATCHES) {
+    try {
+      console.log(`🌐 Fetching match chronology for ${matchId}...`);
+      const response = await apiClient.get<MatchChronology>(`/matches/${matchId}/events`);
+      
+      if (response.success && response.data) {
+        console.log('✅ Match chronology loaded from backend:', response.data);
+        console.log('📊 Events found:', response.data.events?.length || 0);
+        return response.data;
+      } else {
+        console.warn('❌ Backend response success but no data:', response);
+      }
+    } catch (error) {
+      console.warn(`⚠️ Failed to fetch match chronology for ${matchId}:`, error);
+    }
+  }
+  
+  // Only return mock data for specific test matches
+  if (matchId.includes('test') || matchId.includes('mock')) {
+    return {
+      matchId,
+      events: [
+        {
+          id: 'evt-1',
+          minute: 0,
+          timestamp: 0,
+          type: 'QUAFFLE_GOAL',
+          teamId: 'home',
+          teamName: 'Gryffindor',
+          description: '🏃‍♂️ Inicio del duelo mágico',
+          points: 0,
+          homeScore: 0,
+          awayScore: 0,
+          currentScore: { home: 0, away: 0 }
+        },
+        {
+          id: 'evt-2',
+          minute: 15,
+          timestamp: 900,
+          type: 'QUAFFLE_GOAL',
+          teamId: 'home',
+          teamName: 'Gryffindor',
+          description: '⚡ Gol de Quaffle por Harry Potter',
+          points: 10,
+          homeScore: 10,
+          awayScore: 0,
+          currentScore: { home: 10, away: 0 }
+        },
+        {
+          id: 'evt-3',
+          minute: 28,
+          timestamp: 1680,
+          type: 'QUAFFLE_GOAL',
+          teamId: 'away',
+          teamName: 'Slytherin',
+          description: '🐍 Gol de Quaffle por Draco Malfoy',
+          points: 10,
+          homeScore: 10,
+          awayScore: 10,
+          currentScore: { home: 10, away: 10 }
+        },
+        {
+          id: 'evt-4',
+          minute: 45,
+          timestamp: 2700,
+          type: 'SNITCH_CAUGHT',
+          teamId: 'home',
+          teamName: 'Gryffindor',
+          description: '🟡 Snitch capturada por Harry Potter - ¡Victoria para Gryffindor!',
+          points: 150,
+          homeScore: 160,
+          awayScore: 10,
+          currentScore: { home: 160, away: 10 }
+        }
+      ],
+      keyEvents: [
+        { 
+          id: 'key-1',
+          minute: 15, 
+          type: 'FIRST_GOAL', 
+          description: 'Primer gol del partido', 
+          impact: 'medium',
+          timestamp: 900 
+        },
+        { 
+          id: 'key-2',
+          minute: 45, 
+          type: 'SNITCH_CAUGHT', 
+          description: 'Captura de la Snitch Dorada', 
+          impact: 'high',
+          timestamp: 2700
+        }
+      ],
+      matchDuration: 45,
+      finalScore: {
+        home: 160,
+        away: 10
+      }
+    };
+  }
+  
+  // Return null for real matches that don't have chronology data
+  console.warn(`No chronology data available for match ${matchId}`);
+  return null;
+};

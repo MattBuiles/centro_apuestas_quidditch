@@ -1,4 +1,6 @@
 import { apiClient } from '../utils/apiClient';
+import { FEATURES } from '../config/features';
+import { authService } from './authService';
 
 export interface Prediction {
   id: string;
@@ -28,7 +30,10 @@ export class PredictionsService {
   private readonly USER_PREDICTIONS_KEY = 'quidditch_user_predictions';
 
   constructor() {
-    // Initialize service
+    // Listen to match finish events to auto-consolidate predictions
+    if (typeof window !== 'undefined') {
+      window.addEventListener('matchFinished', this.handleMatchFinished.bind(this) as EventListener);
+    }
   }
 
   /**
@@ -40,20 +45,39 @@ export class PredictionsService {
     confidence: number
   ): Promise<boolean> {
     try {
+      console.log('🎯 Attempting to submit prediction:', { matchId, prediction, confidence });
+      
+      // Ensure we're authenticated before making the request
+      const isAuthenticated = await authService.ensureAuthenticated();
+      if (!isAuthenticated) {
+        console.error('❌ Failed to authenticate for predictions');
+        // Fallback to local storage
+        this.storeUserPredictionLocally(matchId, prediction, confidence);
+        return true;
+      }
+
+      console.log('✅ Authentication successful, submitting prediction to backend...');
       const response = await apiClient.post('/predictions', {
         matchId,
         prediction,
         confidence
-      }) as { data?: { success?: boolean } };
+      }) as { success?: boolean; data?: Record<string, unknown> };
 
-      if (response.data?.success) {
+      console.log('🎯 Backend prediction response:', response);
+
+      // Check if the response indicates success
+      // The backend returns success at the top level, not nested under data
+      if (response.success) {
+        console.log('✅ Prediction submitted successfully to backend');
         // Also store locally as backup
         this.storeUserPredictionLocally(matchId, prediction, confidence);
         return true;
+      } else {
+        console.error('❌ Backend returned failure:', response);
+        return false;
       }
-      return false;
     } catch (error) {
-      console.error('Failed to submit prediction to backend, storing locally:', error);
+      console.error('❌ Failed to submit prediction to backend, storing locally:', error);
       // Fallback to local storage
       this.storeUserPredictionLocally(matchId, prediction, confidence);
       return true;
@@ -65,12 +89,20 @@ export class PredictionsService {
    */
   async getUserPrediction(matchId: string): Promise<Prediction | null> {
     try {
+      // Ensure we're authenticated before making the request
+      const isAuthenticated = await authService.ensureAuthenticated();
+      if (!isAuthenticated) {
+        console.warn('Not authenticated, using local predictions only');
+        return this.getUserPredictionLocally(matchId);
+      }
+
       const response = await apiClient.get(`/predictions/match/${matchId}`) as {
-        data?: { success?: boolean; data?: Record<string, unknown> | null }
+        success?: boolean; 
+        data?: Record<string, unknown> | null;
       };
 
-      if (response.data?.success && response.data?.data) {
-        const predictionData = response.data.data;
+      if (response.success && response.data) {
+        const predictionData = response.data;
         return this.transformBackendPrediction(predictionData);
       }
       
@@ -175,33 +207,40 @@ export class PredictionsService {
     prediction: 'home' | 'away' | 'draw', 
     confidence: number
   ): void {
-    const predictions = this.getAllUserPredictionsLocally();
-    
-    // Remove existing prediction for this match
-    const filteredPredictions = predictions.filter(p => p.matchId !== matchId);
-    
-    // Add new prediction
-    const newPrediction: Prediction = {
-      id: `local_${Date.now()}`,
-      userId: 'local_user',
-      userName: 'Local User',
-      matchId,
-      prediction,
-      confidence,
-      createdAt: new Date(),
-      status: 'pending'
-    };
-    
-    filteredPredictions.push(newPrediction);
-    localStorage.setItem(this.USER_PREDICTIONS_KEY, JSON.stringify(filteredPredictions));
+    try {
+      const newPrediction: Prediction = {
+        id: `pred_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        userId: 'current_user',
+        userName: 'Current User',
+        matchId,
+        prediction,
+        confidence,
+        createdAt: new Date(),
+        status: 'pending'
+      };
+
+      const predictions = this.getAllUserPredictionsLocally();
+      // Remove existing prediction for this match
+      const filteredPredictions = predictions.filter(p => p.matchId !== matchId);
+      filteredPredictions.push(newPrediction);
+      
+      localStorage.setItem(this.USER_PREDICTIONS_KEY, JSON.stringify(filteredPredictions));
+    } catch (error) {
+      console.error('Error storing prediction locally:', error);
+    }
   }
 
   /**
    * Get user prediction from local storage
    */
   private getUserPredictionLocally(matchId: string): Prediction | null {
-    const predictions = this.getAllUserPredictionsLocally();
-    return predictions.find(p => p.matchId === matchId) || null;
+    try {
+      const predictions = this.getAllUserPredictionsLocally();
+      return predictions.find(p => p.matchId === matchId) || null;
+    } catch (error) {
+      console.error('Error getting prediction locally:', error);
+      return null;
+    }
   }
 
   /**
@@ -210,25 +249,174 @@ export class PredictionsService {
   private getAllUserPredictionsLocally(): Prediction[] {
     try {
       const stored = localStorage.getItem(this.USER_PREDICTIONS_KEY);
-      if (stored) {
-        const predictions = JSON.parse(stored);
-        return Array.isArray(predictions) ? predictions.map((p: unknown) => {
-          const predObj = p as Record<string, unknown>;
-          const dateValue = predObj.createdAt;
-          const parsedDate = typeof dateValue === 'string' || typeof dateValue === 'number' 
-            ? new Date(dateValue) 
-            : new Date();
-            
-          return {
-            ...predObj,
-            createdAt: parsedDate
-          } as Prediction;
-        }) : [];
-      }
-      return [];
+      if (!stored) return [];
+      
+      const predictions = JSON.parse(stored);
+      // Convert date strings back to Date objects
+      return predictions.map((p: Prediction) => ({
+        ...p,
+        createdAt: new Date(p.createdAt)
+      }));
     } catch (error) {
-      console.error('Error parsing local predictions:', error);
+      console.error('Error getting all predictions locally:', error);
       return [];
+    }
+  }
+
+  /**
+   * Handle automatic prediction consolidation when a match finishes
+   */
+  private async handleMatchFinished(event: Event): Promise<void> {
+    const customEvent = event as CustomEvent;
+    const { matchId, homeScore, awayScore } = customEvent.detail;
+    
+    try {
+      const actualResult = this.calculateMatchResult(homeScore, awayScore);
+      await this.consolidatePrediction(matchId, actualResult);
+      
+      console.log(`🔮 Auto-consolidated prediction for match ${matchId}: ${actualResult}`);
+    } catch (error) {
+      console.error('Error auto-consolidating prediction:', error);
+    }
+  }
+
+  /**
+   * Calculate match result from scores
+   */
+  private calculateMatchResult(homeScore: number, awayScore: number): 'home' | 'away' | 'draw' {
+    if (homeScore > awayScore) return 'home';
+    if (awayScore > homeScore) return 'away';
+    return 'draw';
+  }
+
+  /**
+   * Consolidate a prediction after match completion
+   */
+  async consolidatePrediction(matchId: string, actualResult: 'home' | 'away' | 'draw'): Promise<void> {
+    try {
+      const userPrediction = await this.getUserPrediction(matchId);
+      
+      if (!userPrediction) {
+        console.log(`No prediction found for match ${matchId} to consolidate`);
+        return;
+      }
+
+      const isCorrect = userPrediction.prediction === actualResult;
+      const points = this.calculatePredictionPoints(userPrediction.confidence, isCorrect);
+
+      // Update prediction with result
+      const updatedPrediction: Prediction = {
+        ...userPrediction,
+        status: isCorrect ? 'correct' : 'incorrect',
+        points
+      };
+
+      // Save updated prediction
+      await this.updatePredictionResult(updatedPrediction);
+      
+      // Emit consolidation event
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('predictionConsolidated', {
+          detail: { 
+            matchId, 
+            prediction: updatedPrediction, 
+            actualResult,
+            isCorrect,
+            points
+          }
+        }));
+      }
+
+      console.log(`✅ Prediction consolidated for match ${matchId}: ${isCorrect ? 'CORRECT' : 'INCORRECT'} (+${points} points)`);
+    } catch (error) {
+      console.error('Error consolidating prediction:', error);
+    }
+  }
+
+  /**
+   * Calculate points earned from a prediction
+   */
+  private calculatePredictionPoints(confidence: number, isCorrect: boolean): number {
+    if (!isCorrect) return 0;
+    
+    // Base points for correct prediction
+    const basePoints = 10;
+    // Bonus points based on confidence (1-5 scale)
+    const confidenceBonus = confidence * 2;
+    
+    return basePoints + confidenceBonus;
+  }
+
+  /**
+   * Update prediction result in storage
+   */
+  private async updatePredictionResult(updatedPrediction: Prediction): Promise<void> {
+    try {
+      // Try to update in backend first
+      if (FEATURES.USE_BACKEND_PREDICTIONS) {
+        await apiClient.put(`/predictions/${updatedPrediction.id}`, {
+          status: updatedPrediction.status,
+          points: updatedPrediction.points
+        });
+      }
+    } catch (error) {
+      console.warn('Failed to update prediction in backend, updating locally:', error);
+    }
+    
+    // Always update locally as backup
+    this.updatePredictionLocally(updatedPrediction);
+  }
+
+  /**
+   * Update prediction in local storage
+   */
+  private updatePredictionLocally(updatedPrediction: Prediction): void {
+    try {
+      const predictions = this.getAllUserPredictionsLocally();
+      const index = predictions.findIndex(p => p.id === updatedPrediction.id);
+      
+      if (index >= 0) {
+        predictions[index] = updatedPrediction;
+        localStorage.setItem(this.USER_PREDICTIONS_KEY, JSON.stringify(predictions));
+      }
+    } catch (error) {
+      console.error('Error updating prediction locally:', error);
+    }
+  }
+
+  /**
+   * Get user prediction statistics
+   */
+  async getUserStats(): Promise<{
+    totalPredictions: number;
+    correctPredictions: number;
+    accuracy: number;
+    totalPoints: number;
+    pendingPredictions: number;
+  }> {
+    try {
+      const predictions = await this.getAllUserPredictions();
+      const finishedPredictions = predictions.filter(p => p.status && p.status !== 'pending');
+      const correctPredictions = finishedPredictions.filter(p => p.status === 'correct');
+      const totalPoints = predictions.reduce((sum, p) => sum + (p.points || 0), 0);
+      const pendingPredictions = predictions.filter(p => !p.status || p.status === 'pending');
+
+      return {
+        totalPredictions: predictions.length,
+        correctPredictions: correctPredictions.length,
+        accuracy: finishedPredictions.length > 0 ? (correctPredictions.length / finishedPredictions.length) * 100 : 0,
+        totalPoints,
+        pendingPredictions: pendingPredictions.length
+      };
+    } catch (error) {
+      console.error('Error getting user stats:', error);
+      return {
+        totalPredictions: 0,
+        correctPredictions: 0,
+        accuracy: 0,
+        totalPoints: 0,
+        pendingPredictions: 0
+      };
     }
   }
 }
