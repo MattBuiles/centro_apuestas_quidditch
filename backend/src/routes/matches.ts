@@ -352,4 +352,54 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// GET /api/matches/:id/lineups - Get match lineups
+router.get('/:id/lineups', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const db = Database.getInstance();
+    
+    const lineups = await db.getMatchLineups(id);
+    
+    return res.json({
+      success: true,
+      data: lineups,
+      message: 'Match lineups retrieved successfully',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error fetching match lineups:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: 'Failed to retrieve match lineups',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// GET /api/matches/:id/events - Get match events
+router.get('/:id/events', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const db = Database.getInstance();
+    
+    const events = await db.getMatchEvents(id);
+    
+    return res.json({
+      success: true,
+      data: events,
+      message: 'Match events retrieved successfully',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error fetching match events:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: 'Failed to retrieve match events',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 export default router;
