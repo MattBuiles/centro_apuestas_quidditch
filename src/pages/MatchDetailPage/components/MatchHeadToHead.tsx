@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import TeamLogo from '@/components/teams/TeamLogo';
 import { Team } from '@/types/league';
+import { getHeadToHeadData, HeadToHeadData } from '../../../services/teamsService';
 import styles from './MatchHeadToHead.module.css';
 
 interface MatchHeadToHeadProps {
@@ -9,6 +10,30 @@ interface MatchHeadToHeadProps {
 }
 
 const MatchHeadToHead: React.FC<MatchHeadToHeadProps> = ({ homeTeam, awayTeam }) => {
+  const [headToHeadData, setHeadToHeadData] = useState<HeadToHeadData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadHeadToHeadData = async () => {
+      if (!homeTeam || !awayTeam) return;
+      
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const data = await getHeadToHeadData(homeTeam.id, awayTeam.id);
+        setHeadToHeadData(data);
+      } catch (err) {
+        setError('Error cargando historial de enfrentamientos');
+        console.error('Error loading head-to-head data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadHeadToHeadData();
+  }, [homeTeam, awayTeam]);
   return (
     <div className={styles.headToHeadTab}>
       <div className={styles.sectionCard}>
@@ -17,7 +42,19 @@ const MatchHeadToHead: React.FC<MatchHeadToHeadProps> = ({ homeTeam, awayTeam })
           Historial de Duelos Épicos
         </h2>
         <div className={styles.h2hContainer}>
-          {homeTeam && awayTeam ? (
+          {loading ? (
+            <div className={styles.comingSoon}>
+              <div className={styles.comingSoonIcon}>🔥</div>
+              <h3>Cargando Historial</h3>
+              <p>Los archivos de la historia están siendo consultados para revelar los encuentros legendarios.</p>
+            </div>
+          ) : error ? (
+            <div className={styles.comingSoon}>
+              <div className={styles.comingSoonIcon}>❌</div>
+              <h3>Error al cargar Historial</h3>
+              <p>{error}</p>
+            </div>
+          ) : homeTeam && awayTeam && headToHeadData ? (
             <div className={styles.historyContent}>
               <div className={styles.historyHeader}>
                 <div className={styles.historyTeams}>
@@ -30,22 +67,22 @@ const MatchHeadToHead: React.FC<MatchHeadToHeadProps> = ({ homeTeam, awayTeam })
                     <div className={styles.historyRecord}>
                       <div className={styles.recordStats}>
                         <div className={styles.recordStat}>
-                          <span className={styles.recordNumber}>7</span>
+                          <span className={styles.recordNumber}>{headToHeadData.teamWins}</span>
                           <span className={styles.recordLabel}>Victorias</span>
                         </div>
                         <div className={styles.recordSeparator}>-</div>
                         <div className={styles.recordStat}>
-                          <span className={styles.recordNumber}>2</span>
+                          <span className={styles.recordNumber}>{headToHeadData.draws}</span>
                           <span className={styles.recordLabel}>Empates</span>
                         </div>
                         <div className={styles.recordSeparator}>-</div>
                         <div className={styles.recordStat}>
-                          <span className={styles.recordNumber}>5</span>
+                          <span className={styles.recordNumber}>{headToHeadData.opponentWins}</span>
                           <span className={styles.recordLabel}>Victorias</span>
                         </div>
                       </div>
                       <div className={styles.totalMatches}>
-                        14 encuentros disputados
+                        {headToHeadData.totalMatches} encuentros disputados
                       </div>
                     </div>
                   </div>
@@ -60,20 +97,14 @@ const MatchHeadToHead: React.FC<MatchHeadToHeadProps> = ({ homeTeam, awayTeam })
                 <div className={styles.historyStatCard}>
                   <h4>Últimos 5 Encuentros</h4>
                   <div className={styles.recentMatches}>
-                    {[
-                      { result: 'W', score: '180-120', date: '2025-05-15', venue: 'Hogwarts' },
-                      { result: 'L', score: '90-150', date: '2025-03-22', venue: 'Slytherin Dungeons' },
-                      { result: 'W', score: '200-170', date: '2025-01-18', venue: 'Hogwarts' },
-                      { result: 'W', score: '160-130', date: '2024-11-25', venue: 'Neutral' },
-                      { result: 'L', score: '110-140', date: '2024-10-07', venue: 'Slytherin Dungeons' }
-                    ].map((match, index) => (
+                    {headToHeadData.recentMatches.map((match, index) => (
                       <div key={index} className={styles.recentMatch}>
-                        <div className={`${styles.matchResultBadge} ${match.result === 'W' ? styles.win : styles.loss}`}>
+                        <div className={`${styles.matchResultBadge} ${match.result === 'W' ? styles.win : match.result === 'L' ? styles.loss : styles.draw}`}>
                           {match.result}
                         </div>
                         <div className={styles.matchDetails}>
-                          <span className={styles.matchScore}>{match.score}</span>
-                          <span className={styles.matchDate}>{match.date}</span>
+                          <span className={styles.matchScore}>{match.teamScore}-{match.opponentScore}</span>
+                          <span className={styles.matchDate}>{new Date(match.date).toLocaleDateString('es-ES')}</span>
                           <span className={styles.matchVenue}>{match.venue}</span>
                         </div>
                       </div>
@@ -85,11 +116,15 @@ const MatchHeadToHead: React.FC<MatchHeadToHeadProps> = ({ homeTeam, awayTeam })
                   <h4>Estadísticas de Enfrentamientos</h4>
                   <div className={styles.comparisonStats}>
                     <div className={styles.comparisonStat}>
-                      <span className={styles.statName}>Promedio de Puntos (Local)</span>
+                      <span className={styles.statName}>Promedio de Puntos</span>
                       <div className={styles.statComparison}>
                         <div className={styles.statBar}>
-                          <div className={styles.homeStatBar} style={{width: '65%'}}>145</div>
-                          <div className={styles.awayStatBar} style={{width: '55%'}}>125</div>
+                          <div className={styles.homeStatBar} style={{width: `${Math.min(headToHeadData.statistics.teamAvgPoints / 2, 100)}%`}}>
+                            {headToHeadData.statistics.teamAvgPoints}
+                          </div>
+                          <div className={styles.awayStatBar} style={{width: `${Math.min(headToHeadData.statistics.opponentAvgPoints / 2, 100)}%`}}>
+                            {headToHeadData.statistics.opponentAvgPoints}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -97,8 +132,12 @@ const MatchHeadToHead: React.FC<MatchHeadToHeadProps> = ({ homeTeam, awayTeam })
                       <span className={styles.statName}>Capturas de Snitch</span>
                       <div className={styles.statComparison}>
                         <div className={styles.statBar}>
-                          <div className={styles.homeStatBar} style={{width: '60%'}}>8</div>
-                          <div className={styles.awayStatBar} style={{width: '40%'}}>6</div>
+                          <div className={styles.homeStatBar} style={{width: `${(headToHeadData.statistics.teamSnitchCatches / (headToHeadData.statistics.teamSnitchCatches + headToHeadData.statistics.opponentSnitchCatches)) * 100}%`}}>
+                            {headToHeadData.statistics.teamSnitchCatches}
+                          </div>
+                          <div className={styles.awayStatBar} style={{width: `${(headToHeadData.statistics.opponentSnitchCatches / (headToHeadData.statistics.teamSnitchCatches + headToHeadData.statistics.opponentSnitchCatches)) * 100}%`}}>
+                            {headToHeadData.statistics.opponentSnitchCatches}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -106,8 +145,12 @@ const MatchHeadToHead: React.FC<MatchHeadToHeadProps> = ({ homeTeam, awayTeam })
                       <span className={styles.statName}>Partidos de más de 200 pts</span>
                       <div className={styles.statComparison}>
                         <div className={styles.statBar}>
-                          <div className={styles.homeStatBar} style={{width: '50%'}}>3</div>
-                          <div className={styles.awayStatBar} style={{width: '33%'}}>2</div>
+                          <div className={styles.homeStatBar} style={{width: `${headToHeadData.statistics.teamHighScoring > 0 ? (headToHeadData.statistics.teamHighScoring / (headToHeadData.statistics.teamHighScoring + headToHeadData.statistics.opponentHighScoring)) * 100 : 50}%`}}>
+                            {headToHeadData.statistics.teamHighScoring}
+                          </div>
+                          <div className={styles.awayStatBar} style={{width: `${headToHeadData.statistics.opponentHighScoring > 0 ? (headToHeadData.statistics.opponentHighScoring / (headToHeadData.statistics.teamHighScoring + headToHeadData.statistics.opponentHighScoring)) * 100 : 50}%`}}>
+                            {headToHeadData.statistics.opponentHighScoring}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -118,42 +161,29 @@ const MatchHeadToHead: React.FC<MatchHeadToHeadProps> = ({ homeTeam, awayTeam })
               <div className={styles.legendaryMatches}>
                 <h4>Encuentros Legendarios</h4>
                 <div className={styles.legendaryMatchesList}>
-                  <div className={styles.legendaryMatch}>
-                    <div className={styles.legendaryMatchHeader}>
-                      <span className={styles.legendaryIcon}>🏆</span>
-                      <span className={styles.legendaryTitle}>La Final de los Milenios</span>
-                      <span className={styles.legendaryDate}>2024-06-15</span>
+                  {headToHeadData.legendaryMatches.map((match, index) => (
+                    <div key={index} className={styles.legendaryMatch}>
+                      <div className={styles.legendaryMatchHeader}>
+                        <span className={styles.legendaryIcon}>🏆</span>
+                        <span className={styles.legendaryTitle}>{match.title}</span>
+                        <span className={styles.legendaryDate}>{new Date(match.date).toLocaleDateString('es-ES')}</span>
+                      </div>
+                      <div className={styles.legendaryMatchDetails}>
+                        <span className={styles.legendaryScore}>{match.teamScore} - {match.opponentScore}</span>
+                        <p className={styles.legendaryDescription}>
+                          {match.description}
+                        </p>
+                      </div>
                     </div>
-                    <div className={styles.legendaryMatchDetails}>
-                      <span className={styles.legendaryScore}>230 - 220</span>
-                      <p className={styles.legendaryDescription}>
-                        Un enfrentamiento épico que duró 4 horas. La Snitch fue capturada en el último minuto 
-                        tras una persecución que recorrió todo el estadio.
-                      </p>
-                    </div>
-                  </div>
-                  <div className={styles.legendaryMatch}>
-                    <div className={styles.legendaryMatchHeader}>
-                      <span className={styles.legendaryIcon}>⚡</span>
-                      <span className={styles.legendaryTitle}>El Duelo de los Rayos</span>
-                      <span className={styles.legendaryDate}>2023-12-03</span>
-                    </div>
-                    <div className={styles.legendaryMatchDetails}>
-                      <span className={styles.legendaryScore}>180 - 30</span>
-                      <p className={styles.legendaryDescription}>
-                        Una demostración de dominación absoluta con 15 goles consecutivos 
-                        antes de que la Snitch fuera capturada.
-                      </p>
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </div>
             </div>
           ) : (
             <div className={styles.comingSoon}>
               <div className={styles.comingSoonIcon}>🔥</div>
-              <h3>Cargando Historial</h3>
-              <p>Los archivos de la historia están siendo consultados para revelar los encuentros legendarios.</p>
+              <h3>Equipos no encontrados</h3>
+              <p>No se pudieron cargar los datos de los equipos.</p>
             </div>
           )}
         </div>

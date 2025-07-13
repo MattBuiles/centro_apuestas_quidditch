@@ -13,6 +13,20 @@ interface PlayerRow {
   [key: string]: unknown;
 }
 
+interface MatchRow {
+  id: string;
+  home_team_id: string;
+  away_team_id: string;
+  home_score?: number;
+  away_score?: number;
+  date: string;
+  status: string;
+  location?: string;
+  home_team_name?: string;
+  away_team_name?: string;
+  [key: string]: unknown;
+}
+
 const router = Router();
 const seasonController = new SeasonController();
 
@@ -195,5 +209,150 @@ router.get('/:id/players/:position', async (req, res): Promise<void> => {
 
 // Get historical stats for specific team
 router.get('/:teamId/historical-stats', seasonController.getTeamHistoricalStats);
+
+// Get head-to-head history between two teams
+router.get('/:teamId/vs/:opponentId', async (req, res): Promise<void> => {
+  try {
+    const db = Database.getInstance();
+    const { teamId, opponentId } = req.params;
+    
+    // Get all matches between the two teams
+    const matches = await db.all(`
+      SELECT 
+        m.*,
+        ht.name as home_team_name,
+        at.name as away_team_name
+      FROM matches m
+      JOIN teams ht ON m.home_team_id = ht.id
+      JOIN teams at ON m.away_team_id = at.id
+      WHERE 
+        (m.home_team_id = ? AND m.away_team_id = ?) OR
+        (m.home_team_id = ? AND m.away_team_id = ?)
+      ORDER BY m.date DESC
+    `, [teamId, opponentId, opponentId, teamId]) as MatchRow[];
+    
+    // Calculate head-to-head statistics
+    let teamWins = 0;
+    let opponentWins = 0;
+    let draws = 0;
+    let totalMatches = 0;
+    let teamTotalPoints = 0;
+    let opponentTotalPoints = 0;
+    let teamSnitchCatches = 0;
+    let opponentSnitchCatches = 0;
+    
+    const recentMatches = matches.slice(0, 5).map(match => {
+      const isTeamHome = match.home_team_id === teamId;
+      const teamScore = isTeamHome ? (match.home_score || 0) : (match.away_score || 0);
+      const opponentScore = isTeamHome ? (match.away_score || 0) : (match.home_score || 0);
+      
+      // Update totals
+      totalMatches++;
+      teamTotalPoints += teamScore;
+      opponentTotalPoints += opponentScore;
+      
+      // Determine winner
+      let result = 'D'; // Draw
+      if (teamScore > opponentScore) {
+        teamWins++;
+        result = 'W';
+      } else if (opponentScore > teamScore) {
+        opponentWins++;
+        result = 'L';
+      } else {
+        draws++;
+      }
+      
+      // Count snitch catches (games with scores >= 150 typically indicate snitch catch)
+      if (teamScore >= 150) teamSnitchCatches++;
+      if (opponentScore >= 150) opponentSnitchCatches++;
+      
+      return {
+        id: match.id,
+        result,
+        teamScore,
+        opponentScore,
+        date: match.date,
+        venue: isTeamHome ? 'Home' : 'Away',
+        status: match.status
+      };
+    });
+    
+    // Calculate averages
+    const teamAvgPoints = totalMatches > 0 ? Math.round(teamTotalPoints / totalMatches) : 0;
+    const opponentAvgPoints = totalMatches > 0 ? Math.round(opponentTotalPoints / totalMatches) : 0;
+    
+    // Count high-scoring games (>200 points)
+    const teamHighScoring = matches.filter(m => {
+      const isTeamHome = m.home_team_id === teamId;
+      const teamScore = isTeamHome ? (m.home_score || 0) : (m.away_score || 0);
+      return teamScore > 200;
+    }).length;
+    
+    const opponentHighScoring = matches.filter(m => {
+      const isTeamHome = m.home_team_id === teamId;
+      const opponentScore = isTeamHome ? (m.away_score || 0) : (m.home_score || 0);
+      return opponentScore > 200;
+    }).length;
+    
+    // Find legendary matches (highest scoring, closest games, etc.)
+    const legendaryMatches = matches
+      .filter(m => (m.home_score || 0) > 0 && (m.away_score || 0) > 0)
+      .sort((a, b) => {
+        const totalA = (a.home_score || 0) + (a.away_score || 0);
+        const totalB = (b.home_score || 0) + (b.away_score || 0);
+        return totalB - totalA;
+      })
+      .slice(0, 3)
+      .map(match => {
+        const isTeamHome = match.home_team_id === teamId;
+        const teamScore = isTeamHome ? (match.home_score || 0) : (match.away_score || 0);
+        const opponentScore = isTeamHome ? (match.away_score || 0) : (match.home_score || 0);
+        const totalPoints = teamScore + opponentScore;
+        
+        return {
+          id: match.id,
+          date: match.date,
+          teamScore,
+          opponentScore,
+          venue: match.location || 'Unknown',
+          description: `Partido épico con ${totalPoints} puntos totales`,
+          title: totalPoints > 400 ? 'La Final de los Milenios' : 
+                 Math.abs(teamScore - opponentScore) <= 10 ? 'El Duelo de los Rayos' :
+                 'Encuentro Legendario'
+        };
+      });
+    
+    const headToHeadData = {
+      totalMatches,
+      teamWins,
+      opponentWins,
+      draws,
+      recentMatches,
+      statistics: {
+        teamAvgPoints,
+        opponentAvgPoints,
+        teamSnitchCatches,
+        opponentSnitchCatches,
+        teamHighScoring,
+        opponentHighScoring
+      },
+      legendaryMatches
+    };
+    
+    res.json({
+      success: true,
+      data: headToHeadData,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Head-to-head fetch error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch head-to-head data',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
 
 export default router;

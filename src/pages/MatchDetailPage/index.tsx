@@ -1,7 +1,7 @@
 import React, { Component, ReactNode, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Match, Team } from '@/types/league';
-import { getMatchDetails } from '@/services/matchesService';
+import { getMatchDetails, getRelatedMatches } from '@/services/matchesService';
 import { getTeams } from '@/services/teamsService';
 import { FEATURES } from '@/config/features';
 import Card from '@/components/common/Card';
@@ -12,6 +12,8 @@ import {
   MatchStats,
   MatchLineups,
   MatchHeadToHead,
+  MatchRelatedMatches,
+  MatchDetailedAnalysis,
 } from './components';
 import styles from './MatchDetailPage.module.css';
 
@@ -108,6 +110,7 @@ const MatchDetailPage: React.FC = () => {
   const [match, setMatch] = useState<Match | null>(null);
   const [homeTeam, setHomeTeam] = useState<Team | null>(null);
   const [awayTeam, setAwayTeam] = useState<Team | null>(null);
+  const [relatedMatches, setRelatedMatches] = useState<Match[]>([]);
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -268,6 +271,17 @@ const MatchDetailPage: React.FC = () => {
 
       setHomeTeam(finalHomeTeam);
       setAwayTeam(finalAwayTeam);
+
+      // Load related matches
+      if (finalHomeTeam && finalAwayTeam) {
+        try {
+          const related = await getRelatedMatches(finalHomeTeam.id, finalAwayTeam.id);
+          setRelatedMatches(related);
+        } catch (relatedError) {
+          console.warn('Failed to load related matches:', relatedError);
+          setRelatedMatches([]);
+        }
+      }
 
       // Check if match is live to show simulation
       if (matchData.status === 'live') {
@@ -606,17 +620,25 @@ const MatchDetailPage: React.FC = () => {
             )}
             
             {activeTab === 'analysis' && (
-              <Card className={styles.tabCard}>
-                <h3>Análisis Detallado</h3>
-                <p>Análisis táctico en desarrollo...</p>
-              </Card>
+              <MatchDetailedAnalysis 
+                match={{
+                  id: match.id,
+                  homeTeam: match.homeTeamId || '',
+                  awayTeam: match.awayTeamId || '',
+                  homeScore: match.homeScore,
+                  awayScore: match.awayScore,
+                  status: match.status,
+                  date: match.date,
+                  location: match.venue
+                }} 
+                isLoading={isLoading} 
+              />
             )}
             
             {activeTab === 'related' && (
-              <Card className={styles.tabCard}>
-                <h3>Partidos Relacionados</h3>
-                <p>Historial de partidos en desarrollo...</p>
-              </Card>
+              <MatchRelatedMatches
+                relatedMatches={relatedMatches}
+              />
             )}
           </div>
         </div>

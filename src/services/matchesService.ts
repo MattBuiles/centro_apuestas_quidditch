@@ -287,3 +287,48 @@ export const getMatchEvents = async (matchId: string) => {
     throw new Error('Backend API is disabled - match events cannot be retrieved');
   }
 };
+
+// Obtener partidos relacionados (próximos partidos de los equipos involucrados)
+export const getRelatedMatches = async (homeTeamId: string, awayTeamId: string): Promise<Match[]> => {
+  // Por ahora, generar datos mock ya que no tenemos endpoint específico para esto
+  return generateMockRelatedMatches(homeTeamId, awayTeamId);
+};
+
+// Generar partidos relacionados mock como fallback
+const generateMockRelatedMatches = (homeTeamId: string, awayTeamId: string): Match[] => {
+  const teamIds = ['gryffindor', 'slytherin', 'ravenclaw', 'hufflepuff'];
+  const otherTeams = teamIds.filter(id => id !== homeTeamId && id !== awayTeamId);
+  
+  const mockMatches: Match[] = [];
+  
+  // Generar próximos partidos para ambos equipos
+  for (let i = 1; i <= 5; i++) {
+    const date = new Date();
+    date.setDate(date.getDate() + (i * 7)); // Cada semana
+    
+    const opponent = otherTeams[Math.floor(Math.random() * otherTeams.length)];
+    const isHomeTeamMatch = i <= 3;
+    const teamId = isHomeTeamMatch ? homeTeamId : awayTeamId;
+    
+    mockMatches.push({
+      id: `mock-related-${teamId}-${i}`,
+      localId: teamId,
+      visitanteId: opponent,
+      fecha: date,
+      homeTeamId: teamId,
+      awayTeamId: opponent,
+      date: date,
+      status: 'scheduled',
+      homeScore: 0,
+      awayScore: 0,
+      duration: 0,
+      round: 1,
+      matchday: i,
+      snitchCaught: false,
+      eventos: [],
+      events: []
+    });
+  }
+  
+  return mockMatches;
+};
