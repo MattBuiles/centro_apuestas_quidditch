@@ -13,6 +13,7 @@ const MatchDetailPage = lazy(() => import('./pages/MatchDetailPage/index'))
 const MatchResultDetail = lazy(() => import('./components/matches/MatchResultDetail'))
 const TeamsPage = lazy(() => import('./pages/TeamsPage'))
 const StandingsPage = lazy(() => import('./pages/StandingsPage'))
+const HistoricalSeasonDetail = lazy(() => import('./pages/StandingsPage/HistoricalSeasonDetail'))
 const TeamDetailPage = lazy(() => import('./pages/TeamDetailPage'))
 const BettingPage = lazy(() => import('./pages/BettingPage'))
 const ResultsPage = lazy(() => import('./pages/ResultsPage'))
@@ -39,6 +40,7 @@ function App() {
           <Route path="matches/:matchId/result" element={<MatchResultDetail />} />
           <Route path="teams" element={<TeamsPage />} />
           <Route path="standings" element={<StandingsPage />} />
+          <Route path="historical-seasons/:id" element={<HistoricalSeasonDetail />} />
           <Route path="results" element={<ResultsPage />} /><Route path="teams/:teamId" element={<TeamDetailPage />} />
           {/* Footer pages */}
           <Route path="about" element={<AboutPage />} />

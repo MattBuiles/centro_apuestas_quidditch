@@ -1,24 +1,27 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import Button from '@/components/common/Button';
-import Card from '@/components/common/Card';
-import TeamLogo from '@/components/teams/TeamLogo';
-import { SeasonsService, SeasonSummary } from '@/services/seasonsService';
-import { leagueTimeService, LeagueTimeInfo } from '@/services/leagueTimeService';
-import { FEATURES } from '@/config/features';
-import { Season, Standing } from '@/types/league';
+import Button from '../../components/common/Button';
+import Card from '../../components/common/Card';
+import TeamLogo from '../../components/teams/TeamLogo';
+import { SeasonsService, SeasonSummary } from '../../services/seasonsService';
+import { HistoricalSeasonsService, HistoricalStanding } from '../../services/historicalSeasonsService';
+import { leagueTimeService, LeagueTimeInfo } from '../../services/leagueTimeService';
+import { FEATURES } from '../../config/features';
+import { Season, Standing } from '../../types/league';
 import styles from './StandingsPage.module.css';
 
 const StandingsPage = () => {
   const [standings, setStandings] = useState<Standing[]>([]);
   const [season, setSeason] = useState<Season | null>(null);
-  const [viewMode, setViewMode] = useState<'current' | 'historical'>('current');
+  const [viewMode, setViewMode] = useState<'current' | 'historical' | 'allTime'>('current');
   const [allSeasons, setAllSeasons] = useState<SeasonSummary[]>([]);
+  const [historicalStandings, setHistoricalStandings] = useState<HistoricalStanding[]>([]);
   const [leagueTimeInfo, setLeagueTimeInfo] = useState<LeagueTimeInfo | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const seasonsService = new SeasonsService();
+  const historicalSeasonsService = new HistoricalSeasonsService();
 
   useEffect(() => {
     loadData();
@@ -65,6 +68,22 @@ const StandingsPage = () => {
     } catch (error) {
       console.error('Error loading standings data:', error);
       setError('Error cargando los datos de la clasificación');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadHistoricalData = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      console.log('🔄 Cargando datos históricos acumulativos...');
+      const historicalStandingsData = await historicalSeasonsService.getCumulativeHistoricalStandings();
+      console.log('✅ Datos históricos cargados:', historicalStandingsData);
+      setHistoricalStandings(historicalStandingsData);
+    } catch (error) {
+      console.error('Error loading historical data:', error);
+      setError('Error cargando los datos históricos');
     } finally {
       setIsLoading(false);
     }
@@ -162,8 +181,11 @@ const StandingsPage = () => {
     return standings;
   };
 
-  const handleViewModeChange = (mode: 'current' | 'historical') => {
+  const handleViewModeChange = (mode: 'current' | 'historical' | 'allTime') => {
     setViewMode(mode);
+    if (mode === 'allTime') {
+      loadHistoricalData();
+    }
   };
 
   if (isLoading) {
@@ -212,10 +234,16 @@ const StandingsPage = () => {
             Temporada Actual
           </Button>
           <Button
+            variant={viewMode === 'allTime' ? 'primary' : 'outline'}
+            onClick={() => handleViewModeChange('allTime')}
+          >
+            Histórico Total
+          </Button>
+          <Button
             variant={viewMode === 'historical' ? 'primary' : 'outline'}
             onClick={() => handleViewModeChange('historical')}
           >
-            Histórico
+            Temporadas
           </Button>
         </div>
       </div>
@@ -286,10 +314,69 @@ const StandingsPage = () => {
         </div>
       )}
 
+      {viewMode === 'allTime' && (
+        <div className={styles.content}>
+          <Card>
+            <h2>🏆 Clasificación Histórica Acumulativa</h2>
+            <p className={styles.description}>
+              Ranking basado en el rendimiento acumulado de todas las temporadas completadas
+            </p>
+            
+            {historicalStandings.length > 0 ? (
+              <div className={styles.standingsTable}>
+                <div className={styles.tableHeader}>
+                  <span className={styles.position}>Pos</span>
+                  <span className={styles.team}>Equipo</span>
+                  <span className={styles.stat}>Temp</span>
+                  <span className={styles.stat}>🏆</span>
+                  <span className={styles.stat}>PJ</span>
+                  <span className={styles.stat}>G</span>
+                  <span className={styles.stat}>E</span>
+                  <span className={styles.stat}>P</span>
+                  <span className={styles.stat}>GF</span>
+                  <span className={styles.stat}>GC</span>
+                  <span className={styles.stat}>DG</span>
+                  <span className={styles.stat}>Pts</span>
+                  <span className={styles.stat}>%G</span>
+                </div>
+
+                {historicalStandings.map((standing) => (
+                  <div key={standing.teamId} className={`${styles.tableRow} ${styles[`position${standing.position}`]}`}>
+                    <span className={styles.position}>{standing.position}</span>
+                    <div className={styles.team}>
+                      <TeamLogo teamName={standing.teamName} size="sm" />
+                      <span>{standing.teamName}</span>
+                    </div>
+                    <span className={styles.stat}>{standing.totalSeasons}</span>
+                    <span className={styles.stat}>{standing.championships}</span>
+                    <span className={styles.stat}>{standing.totalMatches}</span>
+                    <span className={styles.stat}>{standing.totalWins}</span>
+                    <span className={styles.stat}>{standing.totalDraws}</span>
+                    <span className={styles.stat}>{standing.totalLosses}</span>
+                    <span className={styles.stat}>{standing.totalGoalsFor}</span>
+                    <span className={styles.stat}>{standing.totalGoalsAgainst}</span>
+                    <span className={`${styles.stat} ${standing.totalGoalDifference >= 0 ? styles.positive : styles.negative}`}>
+                      {standing.totalGoalDifference > 0 ? '+' : ''}{standing.totalGoalDifference}
+                    </span>
+                    <span className={styles.stat}>{standing.totalPoints}</span>
+                    <span className={styles.stat}>{standing.winPercentage.toFixed(1)}%</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className={styles.noData}>
+                <p>No hay datos históricos disponibles</p>
+                <p>Los datos aparecerán una vez que se completen y archiven las temporadas.</p>
+              </div>
+            )}
+          </Card>
+        </div>
+      )}
+
       {viewMode === 'historical' && (
         <div className={styles.content}>
           <Card>
-            <h2>📊 Histórico de Temporadas</h2>
+            <h2>📊 Temporadas Históricas</h2>
             {allSeasons.length > 0 ? (
               <div className={styles.seasonsList}>
                 {allSeasons.map((seasonSummary) => (
@@ -301,7 +388,7 @@ const StandingsPage = () => {
                       <p>Partidos: {seasonSummary.finishedMatches}/{seasonSummary.matchesCount}</p>
                       <p>Jornada: {seasonSummary.currentMatchday}/{seasonSummary.totalMatchdays}</p>
                     </div>
-                    <Link to={`/seasons/${seasonSummary.id}`}>
+                    <Link to={`/historical-seasons/${seasonSummary.id}`}>
                       <Button variant="outline" size="sm">
                         Ver detalles
                       </Button>

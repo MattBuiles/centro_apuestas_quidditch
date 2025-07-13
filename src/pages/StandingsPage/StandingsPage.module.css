@@ -753,6 +753,14 @@
 }
 
 /* ===== HISTORICAL VIEW ===== */
+.description {
+  text-align: center;
+  color: var(--color-gray-600);
+  font-size: var(--text-base);
+  margin-bottom: var(--spacing-6);
+  font-style: italic;
+}
+
 .seasonsList {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -1221,4 +1229,29 @@
         grid-template-columns: repeat(2, 1fr);
         gap: var(--spacing-sm);
     }
+}
+
+/* ===== HISTORICAL ALL TIME VIEW ===== */
+.description {
+  color: var(--color-gray-600);
+  font-size: var(--text-base);
+  margin-bottom: var(--spacing-6);
+  text-align: center;
+  font-style: italic;
+}
+
+/* Position indicators for historical standings */
+.tableRow.position1 {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 193, 7, 0.05));
+  border-left: 4px solid #ffd700;
+}
+
+.tableRow.position2 {
+  background: linear-gradient(135deg, rgba(192, 192, 192, 0.1), rgba(169, 169, 169, 0.05));
+  border-left: 4px solid #c0c0c0;
+}
+
+.tableRow.position3 {
+  background: linear-gradient(135deg, rgba(205, 127, 50, 0.1), rgba(184, 115, 51, 0.05));
+  border-left: 4px solid #cd7f32;
 }
