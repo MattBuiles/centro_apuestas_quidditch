@@ -10,6 +10,7 @@ import TeamLogo from '@/components/teams/TeamLogo';
 import {
   MatchOverview,
   MatchStats,
+  MatchLineups,
   MatchHeadToHead,
 } from './components';
 import styles from './MatchDetailPage.module.css';
@@ -584,19 +585,10 @@ const MatchDetailPage: React.FC = () => {
             )}
             
             {activeTab === 'lineups' && (
-              <Card className={styles.tabCard}>
-                <h3>Alineaciones de los Equipos</h3>
-                <div className={styles.lineupsContainer}>
-                  <div className={styles.teamLineup}>
-                    <h4>{homeTeam?.name}</h4>
-                    <p>Alineación en desarrollo...</p>
-                  </div>
-                  <div className={styles.teamLineup}>
-                    <h4>{awayTeam?.name}</h4>
-                    <p>Alineación en desarrollo...</p>
-                  </div>
-                </div>
-              </Card>
+              <MatchLineups
+                homeTeam={homeTeam}
+                awayTeam={awayTeam}
+              />
             )}
             
             {activeTab === 'head-to-head' && (

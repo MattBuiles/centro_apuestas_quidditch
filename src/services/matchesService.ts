@@ -243,3 +243,47 @@ export const getNextUnplayedMatch = async (virtualTime?: string): Promise<Match 
     throw new Error('Backend API is disabled - next unplayed match cannot be retrieved');
   }
 };
+
+// Obtener alineaciones de un partido
+export const getMatchLineups = async (matchId: string) => {
+  if (FEATURES.USE_BACKEND_MATCHES) {
+    try {
+      console.log(`🔄 Fetching lineups for match ${matchId}...`);
+      const response = await apiClient.get(`/matches/${matchId}/lineups`);
+      
+      if (response.success && response.data) {
+        console.log('✅ Match lineups fetched from backend');
+        return response.data;
+      } else {
+        throw new Error('Backend response was not successful');
+      }
+    } catch (error) {
+      console.error(`❌ Error fetching lineups for match ${matchId}:`, error);
+      throw new Error('Match lineups cannot be retrieved - backend unavailable');
+    }
+  } else {
+    throw new Error('Backend API is disabled - match lineups cannot be retrieved');
+  }
+};
+
+// Obtener eventos de un partido
+export const getMatchEvents = async (matchId: string) => {
+  if (FEATURES.USE_BACKEND_MATCHES) {
+    try {
+      console.log(`🔄 Fetching events for match ${matchId}...`);
+      const response = await apiClient.get(`/matches/${matchId}/events`);
+      
+      if (response.success && response.data) {
+        console.log('✅ Match events fetched from backend');
+        return response.data;
+      } else {
+        throw new Error('Backend response was not successful');
+      }
+    } catch (error) {
+      console.error(`❌ Error fetching events for match ${matchId}:`, error);
+      throw new Error('Match events cannot be retrieved - backend unavailable');
+    }
+  } else {
+    throw new Error('Backend API is disabled - match events cannot be retrieved');
+  }
+};
