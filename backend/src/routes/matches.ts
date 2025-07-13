@@ -2,6 +2,18 @@ import { Router } from 'express';
 import { Database } from '../database/Database';
 import { MatchSimulationService } from '../services/MatchSimulationService';
 
+// Interface for incoming events from frontend
+interface IncomingEvent {
+  id: string;
+  minute: number;
+  type: string;
+  teamId: string;
+  playerId?: string;
+  player?: string;
+  description: string;
+  points: number;
+}
+
 const router = Router();
 const matchSimulationService = new MatchSimulationService();
 
@@ -213,6 +225,19 @@ router.post('/:id/finish', async (req, res) => {
       finishedAt
     } = req.body;
     
+    // Log the incoming request body for debugging
+    console.log('🔍 POST /api/matches/:id/finish - Request body:', {
+      matchId: id,
+      homeScore,
+      awayScore,
+      eventsCount: events?.length || 0,
+      duration,
+      snitchCaught,
+      snitchCaughtBy,
+      finishedAt,
+      firstEvent: events?.[0] || null
+    });
+    
     // Verificar que el partido existe
     const db = Database.getInstance();
     const match = await db.getMatchById(id);
@@ -226,16 +251,33 @@ router.post('/:id/finish', async (req, res) => {
       });
     }
 
-    // Preparar los datos del resultado
+    // Preparar los datos del resultado - transformar eventos del frontend al formato del backend
+    const transformedEvents = (events || []).map((event: IncomingEvent) => ({
+      id: event.id,
+      minute: event.minute,
+      type: event.type,
+      team: event.teamId, // Transformar teamId del frontend a team del backend
+      player: event.playerId || event.player || '',
+      description: event.description,
+      points: event.points
+    }));
+
     const matchResult = {
       homeScore: homeScore || 0,
       awayScore: awayScore || 0,
       duration: duration || 0,
       snitchCaught: snitchCaught || false,
       snitchCaughtBy: snitchCaughtBy || '',
-      events: events || [],
+      events: transformedEvents,
       finishedAt: finishedAt || new Date().toISOString()
     };
+
+    console.log('🔄 Transformed match result:', {
+      homeScore: matchResult.homeScore,
+      awayScore: matchResult.awayScore,
+      eventsCount: matchResult.events.length,
+      firstTransformedEvent: matchResult.events[0] || null
+    });
 
     // Finalizar el partido
     await db.finishMatch(id, matchResult);
@@ -263,11 +305,16 @@ router.post('/:id/finish', async (req, res) => {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error('Error finishing match:', error);
+    console.error('❌ Error finishing match:', {
+      matchId: req.params.id,
+      error: error instanceof Error ? error.message : error,
+      stack: error instanceof Error ? error.stack : undefined
+    });
+    
     return res.status(500).json({
       success: false,
       error: 'Internal server error',
-      message: 'Failed to finish match',
+      message: error instanceof Error ? error.message : 'Failed to finish match',
       timestamp: new Date().toISOString()
     });
   }
