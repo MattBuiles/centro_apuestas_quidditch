@@ -48,8 +48,8 @@ const MatchPredictions: React.FC<MatchPredictionsProps> = ({
             <h3>Tu Visión del Futuro</h3>
             <div className={styles.predictionDisplay}>
               <span className={styles.predictionTeam}>
-                {userPrediction.predictedWinner === 'home' ? match.homeTeam :
-                 userPrediction.predictedWinner === 'away' ? match.awayTeam :
+                {userPrediction.prediction === 'home' ? match.homeTeam :
+                 userPrediction.prediction === 'away' ? match.awayTeam :
                  'Empate'}
               </span>
               <span className={styles.confidenceLevel}>
@@ -58,15 +58,15 @@ const MatchPredictions: React.FC<MatchPredictionsProps> = ({
             </div>
             
             {/* Show prediction result if match is finished */}
-            {match.status === 'finished' && userPrediction.isCorrect !== undefined && (
+            {match.status === 'finished' && userPrediction.status && (
               <div className={styles.predictionResultSection}>
                 <h4>🔮 Resultado de tu Predicción</h4>
                 <div className={styles.predictionComparison}>
                   <div className={styles.predictionMade}>
                     <span className={styles.predictionLabel}>Tu predicción:</span>
                     <span className={styles.predictionValue}>
-                      {userPrediction.predictedWinner === 'home' ? match.homeTeam :
-                       userPrediction.predictedWinner === 'away' ? match.awayTeam :
+                      {userPrediction.prediction === 'home' ? match.homeTeam :
+                       userPrediction.prediction === 'away' ? match.awayTeam :
                        'Empate'}
                     </span>
                   </div>
@@ -79,19 +79,19 @@ const MatchPredictions: React.FC<MatchPredictionsProps> = ({
                     </span>
                   </div>
                 </div>
-                <div className={userPrediction.isCorrect ? styles.correctPrediction : styles.incorrectPrediction}>
+                <div className={userPrediction.status === 'correct' ? styles.correctPrediction : styles.incorrectPrediction}>
                   <span className={styles.predictionIcon}>
-                    {userPrediction.isCorrect ? '🎯' : '❌'}
+                    {userPrediction.status === 'correct' ? '🎯' : '❌'}
                   </span>
                   <span className={styles.predictionResultText}>
-                    {userPrediction.isCorrect ? 
+                    {userPrediction.status === 'correct' ? 
                       '¡Excelente! Tu predicción fue acertada. Eres un verdadero vidente del Quidditch.' : 
                       'Tu predicción fue incorrecta esta vez. Las estrellas pueden ser difíciles de interpretar.'
                     }
                   </span>
                 </div>
                 <div className={styles.predictionTimestamp}>
-                  <small>📅 Predicción realizada: {new Date(userPrediction.timestamp).toLocaleString('es-ES')}</small>
+                  <small>📅 Predicción realizada: {userPrediction.createdAt.toLocaleString('es-ES')}</small>
                 </div>
               </div>
             )}
@@ -145,7 +145,7 @@ const MatchPredictions: React.FC<MatchPredictionsProps> = ({
           </div>
         )}
 
-        {predictionStats && (
+        {predictionStats && predictionStats.totalPredictions > 0 && (
           <div className={styles.communityPredictions}>
             <h3>Sabiduría de la Comunidad</h3>
             <div className={styles.predictionStats}>

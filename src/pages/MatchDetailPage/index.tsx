@@ -1,4 +1,4 @@
-import React, { Component, ReactNode, useState, useEffect } from 'react';
+import React, { Component, ReactNode, useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Match, Team } from '@/types/league';
 import { getMatchDetails, getRelatedMatches } from '@/services/matchesService';
@@ -123,22 +123,35 @@ const MatchDetailPage: React.FC = () => {
   const [userPrediction, setUserPrediction] = useState<Prediction | null>(null);
   const [predictionStats, setPredictionStats] = useState<MatchPredictionStats | null>(null);
   const [isPredicting, setIsPredicting] = useState(false);
-  const [predictionsService] = useState(() => new PredictionsService());
+  
+  // Create predictions service as a ref to avoid recreating it
+  const predictionsServiceRef = useRef<PredictionsService | null>(null);
+  if (!predictionsServiceRef.current) {
+    predictionsServiceRef.current = new PredictionsService();
+  }
+  const predictionsService = predictionsServiceRef.current;
 
   useEffect(() => {
     const loadPredictionsData = async (matchId: string) => {
       if (!FEATURES.USE_BACKEND_PREDICTIONS) return;
       
       try {
+        console.log('🔄 Loading predictions data for match:', matchId);
+        
         // Load user prediction
         const userPred = await predictionsService.getUserPrediction(matchId);
+        console.log('📊 User prediction loaded:', userPred ? 'Found prediction' : 'No prediction');
         setUserPrediction(userPred);
         
         // Load prediction stats
         const stats = await predictionsService.getMatchPredictionStats(matchId);
+        console.log('📈 Prediction stats loaded:', stats);
         setPredictionStats(stats);
       } catch (error) {
         console.warn('Failed to load predictions data:', error);
+        // Clear any incorrect data
+        setUserPrediction(null);
+        setPredictionStats(null);
       }
     };
 
@@ -149,7 +162,7 @@ const MatchDetailPage: React.FC = () => {
       setError('ID de partido no proporcionado');
       setIsLoading(false);
     }
-  }, [matchId, predictionsService]);
+  }, [matchId, predictionsService]); // Now predictionsService is stable through useRef
 
   const loadMatchData = async (id: string) => {
     try {
@@ -449,6 +462,41 @@ const MatchDetailPage: React.FC = () => {
       </span>
     );
   };
+
+  // Debug function - make available globally for testing
+  if (typeof window !== 'undefined') {
+    (window as typeof window & { clearAllPredictions?: () => void }).clearAllPredictions = () => {
+      // Clear all prediction-related localStorage
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.includes('prediction') || key.includes('quidditch'))) {
+          keysToRemove.push(key);
+        }
+      }
+      
+      keysToRemove.forEach(key => {
+        localStorage.removeItem(key);
+        console.log('🧹 Removed:', key);
+      });
+      
+      // Clear service cache
+      predictionsService.clearAllLocalPredictions();
+      
+      // Reset component state
+      setUserPrediction(null);
+      setPredictionStats(null);
+      
+      console.log('🧹 All predictions and related data cleared - refresh page to reload');
+    };
+    
+    // Also add a function to check current predictions
+    (window as typeof window & { checkPredictions?: () => void }).checkPredictions = () => {
+      console.log('📊 Current userPrediction:', userPrediction);
+      console.log('📈 Current predictionStats:', predictionStats);
+      console.log('💾 LocalStorage predictions:', localStorage.getItem('quidditch_user_predictions'));
+    };
+  }
 
   if (isLoading) {
     return (

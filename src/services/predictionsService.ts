@@ -92,8 +92,8 @@ export class PredictionsService {
       // Ensure we're authenticated before making the request
       const isAuthenticated = await authService.ensureAuthenticated();
       if (!isAuthenticated) {
-        console.warn('Not authenticated, using local predictions only');
-        return this.getUserPredictionLocally(matchId);
+        console.warn('Not authenticated, no predictions available');
+        return null; // Don't use local storage if not authenticated
       }
 
       const response = await apiClient.get(`/predictions/match/${matchId}`) as {
@@ -102,15 +102,25 @@ export class PredictionsService {
       };
 
       if (response.success && response.data) {
+        console.log('✅ Found user prediction for match:', matchId);
+        console.log('📊 Raw backend data:', response.data);
         const predictionData = response.data;
-        return this.transformBackendPrediction(predictionData);
+        const transformedPrediction = this.transformBackendPrediction(predictionData);
+        console.log('🔄 Transformed prediction:', transformedPrediction);
+        return transformedPrediction;
       }
       
+      console.log('ℹ️ No prediction found for match:', matchId);
       return null;
     } catch (error) {
-      console.warn('Failed to get prediction from backend, checking local storage:', error);
-      // Fallback to local storage
-      return this.getUserPredictionLocally(matchId);
+      console.warn('Failed to get prediction from backend:', error);
+      // Only use local storage as last resort and only if we have a real prediction
+      const localPrediction = this.getUserPredictionLocally(matchId);
+      if (localPrediction) {
+        console.log('📱 Using local prediction for match:', matchId);
+        return localPrediction;
+      }
+      return null;
     }
   }
 
@@ -122,8 +132,12 @@ export class PredictionsService {
       // Get user's own prediction
       const userPrediction = await this.getUserPrediction(matchId);
       
-      // For now, since we don't have a public endpoint for all match predictions,
-      // we'll generate some basic stats based on the user prediction
+      console.log(`📊 Getting stats for match ${matchId}:`, {
+        hasUserPrediction: !!userPrediction,
+        userPrediction: userPrediction?.prediction || 'none'
+      });
+      
+      // Return stats based only on real user prediction
       const stats: MatchPredictionStats = {
         totalPredictions: userPrediction ? 1 : 0,
         homeWinPredictions: userPrediction?.prediction === 'home' ? 1 : 0,
@@ -181,22 +195,33 @@ export class PredictionsService {
    * Transform backend prediction data to frontend format
    */
   private transformBackendPrediction(data: Record<string, unknown>): Prediction {
+    console.log('🔄 Transforming backend prediction data:', data);
+    
     const dateValue = data.created_at || data.createdAt;
     const parsedDate = typeof dateValue === 'string' || typeof dateValue === 'number' 
       ? new Date(dateValue) 
       : new Date();
+    
+    const prediction = (data.prediction as 'home' | 'away' | 'draw') || 'home';
+    console.log('📊 Prediction value from backend:', {
+      original: data.prediction,
+      transformed: prediction
+    });
       
-    return {
+    const result = {
       id: String(data.id || ''),
       userId: String(data.user_id || data.userId || ''),
       userName: String(data.username || data.userName || 'Unknown'),
       matchId: String(data.match_id || data.matchId || ''),
-      prediction: (data.prediction as 'home' | 'away' | 'draw') || 'home',
+      prediction: prediction,
       confidence: Number(data.confidence) || 3,
       points: Number(data.points) || 0,
       createdAt: parsedDate,
       status: (data.status as 'pending' | 'correct' | 'incorrect') || 'pending'
     };
+    
+    console.log('✅ Transformed prediction:', result);
+    return result;
   }
 
   /**
@@ -208,6 +233,8 @@ export class PredictionsService {
     confidence: number
   ): void {
     try {
+      console.log('💾 Storing prediction locally:', { matchId, prediction, confidence });
+      
       const newPrediction: Prediction = {
         id: `pred_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         userId: 'current_user',
@@ -219,12 +246,15 @@ export class PredictionsService {
         status: 'pending'
       };
 
+      console.log('📝 Created prediction object:', newPrediction);
+
       const predictions = this.getAllUserPredictionsLocally();
       // Remove existing prediction for this match
       const filteredPredictions = predictions.filter(p => p.matchId !== matchId);
       filteredPredictions.push(newPrediction);
       
       localStorage.setItem(this.USER_PREDICTIONS_KEY, JSON.stringify(filteredPredictions));
+      console.log('✅ Prediction stored in localStorage');
     } catch (error) {
       console.error('Error storing prediction locally:', error);
     }
@@ -417,6 +447,18 @@ export class PredictionsService {
         totalPoints: 0,
         pendingPredictions: 0
       };
+    }
+  }
+
+  /**
+   * Clear all local predictions (for debugging)
+   */
+  clearAllLocalPredictions(): void {
+    try {
+      localStorage.removeItem(this.USER_PREDICTIONS_KEY);
+      console.log('🧹 All local predictions cleared');
+    } catch (error) {
+      console.error('Error clearing local predictions:', error);
     }
   }
 }
