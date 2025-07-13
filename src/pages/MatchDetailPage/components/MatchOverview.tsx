@@ -1,10 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import Button from '@/components/common/Button';
 import LiveMatchViewer from '@/components/matches/LiveMatchViewer';
+import MatchChronology from './MatchChronology';
 import { Team, Match } from '@/types/league';
-import { FinishedMatchData, Prediction } from '@/services/predictionsService';
+import { Prediction } from '@/services/predictionsService';
 import { FEATURES } from '@/config/features';
 import styles from './MatchOverview.module.css';
+
+// Tipos temporales para datos extendidos
+interface ExtendedPrediction extends Prediction {
+  predictedWinner?: 'home' | 'away' | 'draw';
+  isCorrect?: boolean;
+  timestamp?: string;
+}
+
+interface FinishedMatchData {
+  predictions: {
+    totalPredictions: number;
+    homeWinPredictions: number;
+    awayWinPredictions: number;
+    drawPredictions: number;
+  };
+  winner: 'home' | 'away' | 'draw';
+  finishedAt: string;
+  timeline?: Array<{
+    minute: string;
+    event: string;
+    score?: { home: number; away: number };
+  }>;
+}
 
 interface MatchOverviewProps {
   match: {
@@ -24,7 +48,7 @@ interface MatchOverviewProps {
   awayTeam: Team | null;
   showLiveSimulation: boolean;
   isStartingMatch: boolean;
-  userPrediction: Prediction | null;
+  userPrediction: ExtendedPrediction | null;
   finishedMatchData: FinishedMatchData | null;
   onStartMatch: () => void;
   onMatchEnd: (endedMatchState: unknown) => void;
@@ -266,7 +290,7 @@ const MatchOverview: React.FC<MatchOverviewProps> = ({
                       </span>
                     </div>
                     <div className={styles.predictionTimestamp}>
-                      <small>📅 Predicción realizada: {new Date(userPrediction.timestamp).toLocaleString('es-ES')}</small>
+                      <small>📅 Predicción realizada: {userPrediction.timestamp ? new Date(userPrediction.timestamp).toLocaleString('es-ES') : 'Fecha no disponible'}</small>
                     </div>
                   </div>
                 )}
@@ -287,46 +311,13 @@ const MatchOverview: React.FC<MatchOverviewProps> = ({
                 )}
               </div>
               
-              {/* Show detailed timeline only for non-finished matches */}
-              {match.status !== 'finished' && (
-                <div className={styles.timelineHistoryCard}>
-                  <h4>Cronología del Partido</h4>
-                  <div className={styles.timelineHistory}>
-                    {finishedMatchData && finishedMatchData.timeline ? (
-                      finishedMatchData.timeline.map((event, index) => (
-                        <div key={index} className={styles.timelineEvent}>
-                          <span className={styles.eventTime}>{event.minute}'</span>
-                          <span className={styles.eventDescription}>{event.event}</span>
-                          {event.score && (
-                            <span className={styles.eventScore}>
-                              {event.score.home} - {event.score.away}
-                            </span>
-                          )}
-                        </div>
-                      ))
-                    ) : (
-                      <>
-                        <div className={styles.timelineEvent}>
-                          <span className={styles.eventTime}>0'</span>
-                          <span className={styles.eventDescription}>🏃‍♂️ Inicio del duelo mágico</span>
-                        </div>
-                        <div className={styles.timelineEvent}>
-                          <span className={styles.eventTime}>Final</span>
-                          <span className={styles.eventDescription}>
-                            🟡 Snitch capturada - {match.homeScore > match.awayScore ? match.homeTeam : match.awayTeam} obtiene la victoria
-                          </span>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                  <div className={styles.timelineNote}>
-                    <small>
-                      {finishedMatchData ? 
-                        '✨ Cronología completa guardada del partido simulado' : 
-                        '💡 La cronología detallada estará disponible en futuras simulaciones'}
-                    </small>
-                  </div>
-                </div>
+              {/* Show MatchChronology component for finished matches */}
+              {match.status === 'finished' && (
+                <MatchChronology 
+                  matchId={match.id}
+                  homeTeamName={match.homeTeam}
+                  awayTeamName={match.awayTeam}
+                />
               )}
             </div>
           </div>
