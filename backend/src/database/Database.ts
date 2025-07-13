@@ -154,7 +154,7 @@ export class Database {
         id TEXT PRIMARY KEY,
         match_id TEXT NOT NULL,
         minute INTEGER NOT NULL,
-        type TEXT CHECK(type IN ('goal', 'snitch', 'foul', 'timeout', 'substitution')) NOT NULL,
+        type TEXT NOT NULL,
         team TEXT NOT NULL,
         player TEXT,
         description TEXT NOT NULL,
@@ -1661,14 +1661,31 @@ export class Database {
     }>;
     finishedAt: string;
   }): Promise<void> {
+    console.log('🔄 Database.finishMatch called with:', {
+      matchId,
+      homeScore: matchResult.homeScore,
+      awayScore: matchResult.awayScore,
+      eventsCount: matchResult.events.length,
+      duration: matchResult.duration,
+      snitchCaught: matchResult.snitchCaught,
+      snitchCaughtBy: matchResult.snitchCaughtBy
+    });
+
     try {
+      // Verificar que el partido existe primero
+      const existingMatch = await this.get('SELECT * FROM matches WHERE id = ?', [matchId]);
+      if (!existingMatch) {
+        throw new Error(`Match with ID ${matchId} does not exist`);
+      }
+
+      console.log('✅ Match exists, proceeding with update');
+
       // Actualizar el partido con todos los resultados
       const updateMatchSql = `
         UPDATE matches 
         SET status = 'finished', 
             home_score = ?, 
             away_score = ?, 
-            finished_at = ?, 
             duration = ?, 
             snitch_caught = ?, 
             snitch_caught_by = ?, 
@@ -1679,30 +1696,42 @@ export class Database {
       await this.run(updateMatchSql, [
         matchResult.homeScore,
         matchResult.awayScore,
-        matchResult.finishedAt,
         matchResult.duration,
         matchResult.snitchCaught,
         matchResult.snitchCaughtBy,
         matchId
       ]);
 
+      console.log('✅ Match updated successfully');
+
+      // Limpiar eventos existentes del partido para evitar duplicados
+      await this.run('DELETE FROM match_events WHERE match_id = ?', [matchId]);
+      console.log('✅ Existing events cleared');
+
       // Guardar todos los eventos del partido
+      let eventsProcessed = 0;
       for (const event of matchResult.events) {
-        await this.createMatchEvent({
-          id: event.id,
-          matchId,
-          minute: event.minute,
-          type: event.type,
-          team: event.team,
-          player: event.player,
-          description: event.description,
-          points: event.points
-        });
+        try {
+          await this.createMatchEvent({
+            id: event.id,
+            matchId,
+            minute: event.minute,
+            type: event.type,
+            team: event.team,
+            player: event.player || undefined,
+            description: event.description,
+            points: event.points
+          });
+          eventsProcessed++;
+        } catch (eventError) {
+          console.error(`❌ Error saving event ${event.id}:`, eventError);
+          // Continue processing other events
+        }
       }
 
-      console.log(`✅ Match ${matchId} finished successfully with ${matchResult.events.length} events`);
+      console.log(`✅ Match ${matchId} finished successfully with ${eventsProcessed}/${matchResult.events.length} events saved`);
     } catch (error) {
-      console.error('Error finishing match:', error);
+      console.error('❌ Error in finishMatch:', error);
       throw error;
     }
   }
@@ -1717,20 +1746,31 @@ export class Database {
     description: string;
     points: number;
   }): Promise<void> {
-    const sql = `
-      INSERT INTO match_events (id, match_id, minute, type, team, player, description, points)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-    await this.run(sql, [
-      event.id,
-      event.matchId,
-      event.minute,
-      event.type,
-      event.team,
-      event.player || null,
-      event.description,
-      event.points
-    ]);
+    try {
+      const sql = `
+        INSERT INTO match_events (id, match_id, minute, type, team, player, description, points)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+      
+      await this.run(sql, [
+        event.id,
+        event.matchId,
+        event.minute,
+        event.type,
+        event.team,
+        event.player || null,
+        event.description,
+        event.points
+      ]);
+    } catch (error) {
+      console.error('❌ Error creating match event:', {
+        eventId: event.id,
+        matchId: event.matchId,
+        type: event.type,
+        error: error instanceof Error ? error.message : error
+      });
+      throw error;
+    }
   }
 
   public async getMatchEvents(matchId: string): Promise<unknown[]> {
