@@ -81,12 +81,12 @@ const MatchPredictions: React.FC<MatchPredictionsProps> = ({
                 </div>
                 <div className={userPrediction.status === 'correct' ? styles.correctPrediction : styles.incorrectPrediction}>
                   <span className={styles.predictionIcon}>
-                    {userPrediction.status === 'correct' ? '🎯' : '❌'}
+                    {userPrediction.status === 'correct' ? '�✨' : '🔮💫'}
                   </span>
                   <span className={styles.predictionResultText}>
                     {userPrediction.status === 'correct' ? 
-                      '¡Excelente! Tu predicción fue acertada. Eres un verdadero vidente del Quidditch.' : 
-                      'Tu predicción fue incorrecta esta vez. Las estrellas pueden ser difíciles de interpretar.'
+                      '¡Extraordinario! Tu visión fue precisa. Las estrellas se alinearon perfectamente con tu sabiduría mágica. Eres un verdadero oráculo del Quidditch.' : 
+                      'Esta vez las brumas del futuro te confundieron. Incluso los mejores videntes a veces interpretan mal las señales cósmicas. ¡La próxima vez las estrellas serán más claras!'
                     }
                   </span>
                 </div>
