@@ -356,4 +356,77 @@ router.get('/:teamId/vs/:opponentId', async (req, res): Promise<void> => {
   }
 });
 
+// Get recent matches for a specific team
+router.get('/:id/recent-matches', async (req, res): Promise<void> => {
+  try {
+    const db = Database.getInstance();
+    const teamId = req.params.id;
+    const limit = parseInt(req.query.limit as string) || 5;
+    
+    // Get recent matches for the team
+    const matches = await db.all(`
+      SELECT 
+        m.*,
+        ht.name as home_team_name,
+        at.name as away_team_name
+      FROM matches m
+      JOIN teams ht ON m.home_team_id = ht.id
+      JOIN teams at ON m.away_team_id = at.id
+      WHERE 
+        (m.home_team_id = ? OR m.away_team_id = ?)
+        AND m.status = 'finished'
+        AND m.home_score IS NOT NULL 
+        AND m.away_score IS NOT NULL
+      ORDER BY m.date DESC
+      LIMIT ?
+    `, [teamId, teamId, limit]) as MatchRow[];
+    
+    // Transform matches to the expected format
+    const recentMatches = matches.map(match => {
+      const isTeamHome = match.home_team_id === teamId;
+      const teamScore = isTeamHome ? (match.home_score || 0) : (match.away_score || 0);
+      const opponentScore = isTeamHome ? (match.away_score || 0) : (match.home_score || 0);
+      
+      // Determine result
+      let result = 'D'; // Draw
+      if (teamScore > opponentScore) {
+        result = 'W';
+      } else if (opponentScore > teamScore) {
+        result = 'L';
+      }
+      
+      // Calculate confidence based on margin of victory
+      const scoreDifference = Math.abs(teamScore - opponentScore);
+      let confidence = 70; // Base confidence
+      if (scoreDifference > 100) confidence = 90; // Dominant win/loss
+      else if (scoreDifference > 50) confidence = 80; // Comfortable margin
+      else if (scoreDifference < 10) confidence = 60; // Close game
+      
+      return {
+        id: match.id,
+        result,
+        teamScore,
+        opponentScore,
+        opponent: isTeamHome ? match.away_team_name : match.home_team_name,
+        date: match.date,
+        venue: isTeamHome ? 'Home' : 'Away',
+        confidence
+      };
+    });
+    
+    res.json({
+      success: true,
+      data: recentMatches,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Recent matches fetch error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch recent matches',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 export default router;
