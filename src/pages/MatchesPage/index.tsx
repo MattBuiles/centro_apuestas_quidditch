@@ -5,6 +5,7 @@ import NewSeasonButton from '@/components/seasons/NewSeasonButton'
 import Button from '@/components/common/Button'
 import Card from '@/components/common/Card'
 import { useLeagueTime } from '@/hooks/useLeagueTime'
+import { apiClient } from '@/utils/apiClient'
 import { Season, Match } from '@/types/league'
 import styles from './MatchesPage.module.css'
 
@@ -31,47 +32,28 @@ const MatchesPage = () => {
       setIsLoading(true);
       setError(null);
 
-      // First get league time info for season data
-      const leagueTimeResponse = await fetch('http://localhost:3001/api/league-time');
-      if (!leagueTimeResponse.ok) {
-        throw new Error(`League time HTTP error! status: ${leagueTimeResponse.status}`);
-      }
-      
-      const leagueTimeData = await leagueTimeResponse.json();
+      console.log('🚀 Initializing season with RequestQueue...');
+
+      // First get league time info for season data using apiClient (with RequestQueue)
+      const leagueTimeData = await apiClient.get('/league-time');
 
       if (!leagueTimeData.success || !leagueTimeData.data) {
         throw new Error('Invalid league time response format');
       }
 
-      // Then get matches data separately
-      const matchesResponse = await fetch('http://localhost:3001/api/matches');
-      if (!matchesResponse.ok) {
-        throw new Error(`Matches HTTP error! status: ${matchesResponse.status}`);
-      }
-      
-      const matchesData = await matchesResponse.json();
+      // Then get matches data separately using apiClient (with RequestQueue)
+      const matchesData = await apiClient.get('/matches');
       
       if (!matchesData.success || !matchesData.data) {
         throw new Error('Invalid matches response format');
       }
 
-      // Combine the data
-      const seasonData = leagueTimeData.data.activeSeason;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const seasonData = (leagueTimeData.data as any)?.activeSeason;
       if (seasonData) {
         // Transform matches to match expected structure
-        const transformedMatches = matchesData.data.map((match: {
-          id: string;
-          season_id: string;
-          home_team_id: string;
-          away_team_id: string;
-          date: string;
-          status: string;
-          home_score: number;
-          away_score: number;
-          duration: number | null;
-          snitch_caught: number;
-          snitch_caught_by: string | null;
-        }) => ({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const transformedMatches = (matchesData.data as any[]).map((match: any) => ({
           id: match.id,
           seasonId: match.season_id,
           localId: match.home_team_id,
@@ -86,7 +68,8 @@ const MatchesPage = () => {
         }));
 
         console.log('🎯 Transformed matches count:', transformedMatches.length);
-        seasonData.matches = transformedMatches;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (seasonData as any).matches = transformedMatches;
         setSeason(seasonData);
         setError(null);
       } else {
@@ -94,20 +77,12 @@ const MatchesPage = () => {
         console.log('⚠️ No hay temporada activa, creando temporada temporal para mostrar partidos');
         
         // Crear una "temporada" temporal para mostrar los partidos
-        if (matchesData.data && matchesData.data.length > 0) {
-          const transformedMatches = matchesData.data.map((match: {
-            id: string;
-            season_id: string;
-            home_team_id: string;
-            away_team_id: string;
-            date: string;
-            status: string;
-            home_score: number;
-            away_score: number;
-            duration: number | null;
-            snitch_caught: number;
-            snitch_caught_by: string | null;
-          }) => ({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const matchesArray = matchesData.data as any[];
+        
+        if (matchesArray && matchesArray.length > 0) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const transformedMatches = matchesArray.map((match: any) => ({
             id: match.id,
             seasonId: match.season_id,
             localId: match.home_team_id,
@@ -130,9 +105,9 @@ const MatchesPage = () => {
             endDate: new Date(),
             status: 'finished' as const,
             equipos: [], // Los equipos se obtendrán dinámicamente
-            partidos: transformedMatches,
+            partidos: transformedMatches as unknown as Match[],
             teams: [], // Compatibilidad hacia atrás
-            matches: transformedMatches,
+            matches: transformedMatches as unknown as Match[],
             currentMatchday: 1,
             currentRound: 1,
             totalMatchdays: 1
