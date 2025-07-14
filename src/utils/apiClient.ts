@@ -1,3 +1,5 @@
+import { requestQueue } from './requestQueue';
+
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 interface ApiResponse<T> {
@@ -42,27 +44,25 @@ class ApiClient {
       headers.Authorization = `Bearer ${this.token}`;
     }
 
+    // Usar requestQueue singleton para manejar la petición con throttling y retry
+    const requestOptions = {
+      ...options,
+      headers,
+    };
+
     try {
-      const response = await fetch(url, {
-        ...options,
-        headers,
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
+      // El requestQueue maneja todo el procesamiento HTTP y devuelve los datos parseados
+      const data = await requestQueue.enqueue<unknown>(url, requestOptions);
       
-      // If the backend response already has the ApiResponse structure, return it directly
+      // Si los datos ya tienen estructura ApiResponse, devolverlos directamente
       if (data && typeof data === 'object' && 'success' in data) {
-        return data;
+        return data as ApiResponse<T>;
       }
       
-      // Otherwise, wrap it in ApiResponse structure
+      // De lo contrario, envolver en estructura ApiResponse
       return {
         success: true,
-        data,
+        data: data as T,
         timestamp: new Date().toISOString()
       };
     } catch (error) {

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
 import { seasonsService } from '@/services/seasonsService';
+import { apiClient } from '@/utils/apiClient';
 import { useAuth } from '@/context/AuthContext';
 import styles from './NewSeasonButton.module.css';
 
@@ -70,37 +71,20 @@ const NewSeasonButton = ({ onSeasonCreated, className = '' }: NewSeasonButtonPro
         throw new Error('No hay token de autenticación disponible');
       }
       
-      // Call the reset endpoint with authentication
-      const response = await fetch('http://localhost:3001/api/admin/reset-database', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`,
-        },
-      });
+      // Call the reset endpoint with authentication using apiClient (with RequestQueue)
+      const response = await apiClient.post('/admin/reset-database', {});
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error('No autorizado - verifica tu sesión de administrador');
-        } else if (response.status === 403) {
-          throw new Error('Acceso denegado - solo administradores pueden resetear');
-        }
-        throw new Error(`Reset failed: ${response.status}`);
+      if (!response.success) {
+        throw new Error(response.error || 'Reset failed');
       }
 
-      const result = await response.json();
+      console.log('✅ Database reset successfully');
       
-      if (result.success) {
-        console.log('✅ Database reset successfully');
-        
-        // Wait a moment for backend to fully process the reset
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        // Trigger refresh in parent component
-        onSeasonCreated();
-      } else {
-        throw new Error(result.message || 'Reset failed');
-      }
+      // Wait a moment for backend to fully process the reset
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Trigger refresh in parent component
+      onSeasonCreated();
     } catch (error) {
       console.error('❌ Error resetting database:', error);
       setError(error instanceof Error ? error.message : 'Error desconocido al resetear la base de datos');
