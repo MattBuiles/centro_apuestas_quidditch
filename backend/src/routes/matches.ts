@@ -290,6 +290,12 @@ router.post('/:id/finish', async (req, res) => {
       snitchCaught: matchResult.snitchCaught
     });
 
+    // Resolver las predicciones para este partido
+    console.log(`🔮 Resolving predictions for finished match ${id}...`);
+    const predictionResults = await db.resolveMatchPredictions(id, matchResult.homeScore, matchResult.awayScore);
+    
+    console.log(`🎯 Prediction resolution completed:`, predictionResults);
+
     return res.json({
       success: true,
       message: 'Match finished and results saved successfully',
@@ -300,7 +306,8 @@ router.post('/:id/finish', async (req, res) => {
         status: 'finished',
         events: matchResult.events.length,
         duration: matchResult.duration,
-        finishedAt: matchResult.finishedAt
+        finishedAt: matchResult.finishedAt,
+        predictions: predictionResults
       },
       timestamp: new Date().toISOString()
     });

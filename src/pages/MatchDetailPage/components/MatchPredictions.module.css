@@ -954,3 +954,177 @@
   25% { transform: translateX(-2px); }
   75% { transform: translateX(2px); }
 }
+
+/* Points Earned Section - MAGICAL REWARDS */
+.pointsEarned {
+  background: linear-gradient(135deg, 
+    rgba(255, 215, 0, 0.15) 0%,
+    rgba(255, 193, 7, 0.1) 25%,
+    rgba(255, 255, 255, 0.9) 50%,
+    rgba(255, 193, 7, 0.1) 75%,
+    rgba(255, 215, 0, 0.15) 100%);
+  border-radius: 20px;
+  padding: clamp(1.2rem, 2.5vw, 1.8rem) clamp(1.5rem, 3vw, 2.2rem);
+  margin-top: clamp(1rem, 2vw, 1.5rem);
+  border: 2px solid rgba(255, 193, 7, 0.3);
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+  animation: pointsReveal 0.6s ease-out 0.3s both;
+  box-shadow: 
+    0 8px 25px rgba(255, 193, 7, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+@keyframes pointsReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.pointsEarned::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%,
+    rgba(255, 215, 0, 0.4) 50%,
+    transparent 100%);
+  animation: pointsShimmer 3s ease-in-out infinite 1s;
+}
+
+@keyframes pointsShimmer {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: 100%; }
+}
+
+.pointsIcon {
+  font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+  margin-right: clamp(0.5rem, 1vw, 0.8rem);
+  animation: trophyFloat 2s ease-in-out infinite;
+  display: inline-block;
+}
+
+@keyframes trophyFloat {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-8px) rotate(5deg);
+  }
+  50% {
+    transform: translateY(-5px) rotate(0deg);
+  }
+  75% {
+    transform: translateY(-12px) rotate(-3deg);
+  }
+}
+
+.pointsText {
+  font-weight: 600;
+  font-size: clamp(1rem, 2.2vw, 1.3rem);
+  color: #B8860B;
+  text-shadow: 0 1px 3px rgba(184, 134, 11, 0.3);
+  background: linear-gradient(135deg, 
+    rgba(255, 215, 0, 0.8) 0%,
+    rgba(255, 193, 7, 0.9) 50%,
+    rgba(218, 165, 32, 0.8) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.pointsEarned:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 
+    0 15px 35px rgba(255, 193, 7, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border-color: rgba(255, 193, 7, 0.5);
+}
+
+.pointsEarned:hover .pointsIcon {
+  animation: trophyCelebration 1s ease-in-out;
+}
+
+@keyframes trophyCelebration {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg) scale(1);
+  }
+  25% {
+    transform: translateY(-15px) rotate(15deg) scale(1.2);
+  }
+  50% {
+    transform: translateY(-8px) rotate(-10deg) scale(1.1);
+  }
+  75% {
+    transform: translateY(-20px) rotate(20deg) scale(1.3);
+  }
+}
+
+/* Enhanced glow for correct predictions with points */
+.correctPrediction:has(.pointsEarned) {
+  background: linear-gradient(135deg, 
+    rgba(34, 139, 34, 0.08) 0%,
+    rgba(50, 205, 50, 0.05) 25%,
+    rgba(255, 255, 255, 0.95) 50%,
+    rgba(50, 205, 50, 0.05) 75%,
+    rgba(34, 139, 34, 0.08) 100%);
+  border-color: rgba(34, 139, 34, 0.3);
+}
+
+.correctPrediction:has(.pointsEarned)::after {
+  content: '✨🏆✨';
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+  opacity: 0.7;
+  animation: successSparkles 3s ease-in-out infinite;
+}
+
+/* Magical particle effects for points */
+.pointsEarned::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.8) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: magicalParticles 4s ease-in-out infinite;
+  box-shadow: 
+    20px -30px 0 rgba(255, 215, 0, 0.6),
+    -25px -20px 0 rgba(255, 193, 7, 0.5),
+    30px 25px 0 rgba(218, 165, 32, 0.7),
+    -15px 35px 0 rgba(255, 215, 0, 0.4),
+    40px -10px 0 rgba(255, 193, 7, 0.6);
+}
+
+@keyframes magicalParticles {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(0) rotate(0deg);
+    opacity: 0;
+  }
+  25% {
+    transform: translate(-50%, -50%) scale(1) rotate(90deg);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(0.8) rotate(180deg);
+    opacity: 0.8;
+  }
+  75% {
+    transform: translate(-50%, -50%) scale(1.2) rotate(270deg);
+    opacity: 0.6;
+  }
+}
