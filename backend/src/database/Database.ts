@@ -1652,6 +1652,8 @@ export class Database {
     const season = await this.getSeasonById(seasonId) as Season | undefined;
     if (!season) return;
 
+    console.log(`📚 Archivando temporada completada: ${season.name} (${seasonId})`);
+
     // Archive season
     const historicalSeasonId = `hist-${seasonId}-${Date.now()}`;
     await this.run(`
@@ -1673,11 +1675,59 @@ export class Database {
       null
     ]);
 
+    console.log(`📊 Actualizando estadísticas históricas de equipos...`);
+    
     // Update team historical stats
     await this.updateHistoricalTeamStats();
     
+    console.log(`👥 Actualizando estadísticas históricas de usuarios...`);
+    
     // Update user historical stats
     await this.updateHistoricalUserStats();
+
+    console.log(`✅ Temporada ${season.name} archivada correctamente`);
+  }
+
+  /**
+   * Fuerza la actualización de todas las estadísticas históricas de equipos
+   * Útil para reparar datos históricos existentes
+   */
+  public async forceUpdateHistoricalTeamStats(): Promise<void> {
+    console.log(`🔧 Forzando actualización de estadísticas históricas de equipos...`);
+    await this.updateHistoricalTeamStats();
+    console.log(`✅ Estadísticas históricas de equipos actualizadas forzadamente`);
+  }
+
+  /**
+   * Repara y pobla la tabla historical_team_stats con datos de temporadas ya finalizadas
+   */
+  public async repairHistoricalTeamStats(): Promise<void> {
+    console.log(`🔧 Reparando estadísticas históricas de equipos...`);
+    
+    try {
+      // Primero, limpiar registros con datos NULL
+      await this.run(`
+        DELETE FROM historical_team_stats 
+        WHERE total_seasons IS NULL OR total_matches IS NULL
+      `);
+      
+      // Forzar la actualización completa
+      await this.forceUpdateHistoricalTeamStats();
+      
+      // Verificar resultados
+      const stats = await this.all(`
+        SELECT team_id, team_name, total_seasons, total_matches, championships_won 
+        FROM historical_team_stats 
+        ORDER BY championships_won DESC, total_wins DESC
+      `);
+      
+      console.log(`✅ Reparación completada. ${(stats as any[]).length} equipos actualizados`);
+      console.table(stats);
+      
+    } catch (error) {
+      console.error('❌ Error reparando estadísticas históricas:', error);
+      throw error;
+    }
   }
 
   private async updateHistoricalTeamStats(): Promise<void> {
@@ -1686,24 +1736,30 @@ export class Database {
       INSERT OR REPLACE INTO historical_team_stats (
         id, team_id, team_name, total_seasons, total_matches, total_wins, 
         total_losses, total_draws, total_points_for, total_points_against, 
-        total_snitch_catches, championships_won
+        total_snitch_catches, championships_won, best_season_position, 
+        worst_season_position, updated_at
       )
       SELECT 
         'hist-' || t.id as id,
         t.id as team_id,
         t.name as team_name,
         COUNT(DISTINCT st.season_id) as total_seasons,
-        SUM(t.matches_played) as total_matches,
-        SUM(t.wins) as total_wins,
-        SUM(t.losses) as total_losses,
-        SUM(t.draws) as total_draws,
-        SUM(t.points_for) as total_points_for,
-        SUM(t.points_against) as total_points_against,
-        SUM(t.snitch_catches) as total_snitch_catches,
-        COUNT(CASE WHEN st.position = 1 THEN 1 END) as championships_won
+        COALESCE(SUM(st.matches_played), 0) as total_matches,
+        COALESCE(SUM(st.wins), 0) as total_wins,
+        COALESCE(SUM(st.losses), 0) as total_losses,
+        COALESCE(SUM(st.draws), 0) as total_draws,
+        COALESCE(SUM(st.points_for), 0) as total_points_for,
+        COALESCE(SUM(st.points_against), 0) as total_points_against,
+        COALESCE(SUM(st.snitch_catches), 0) as total_snitch_catches,
+        COUNT(CASE WHEN st.position = 1 THEN 1 END) as championships_won,
+        MIN(st.position) as best_season_position,
+        MAX(st.position) as worst_season_position,
+        CURRENT_TIMESTAMP as updated_at
       FROM teams t
-      LEFT JOIN season_teams st_rel ON t.id = st_rel.team_id
       LEFT JOIN standings st ON t.id = st.team_id
+      WHERE st.season_id IS NOT NULL OR t.id IN (
+        SELECT DISTINCT team_id FROM season_teams
+      )
       GROUP BY t.id, t.name
     `;
     await this.run(sql);
