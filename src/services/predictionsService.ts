@@ -137,7 +137,41 @@ export class PredictionsService {
         userPrediction: userPrediction?.prediction || 'none'
       });
       
-      // Return stats based only on real user prediction
+      // Get community prediction statistics from backend
+      try {
+        const response = await apiClient.get(`/predictions/match/${matchId}/stats`) as {
+          success?: boolean;
+          data?: {
+            totalPredictions: number;
+            homeWinPredictions: number;
+            awayWinPredictions: number;
+            drawPredictions: number;
+            homeWinPercentage: number;
+            awayWinPercentage: number;
+            drawPercentage: number;
+            averageConfidence: number;
+          };
+        };
+
+        if (response.success && response.data) {
+          console.log('📊 Community prediction stats from backend:', response.data);
+          return {
+            totalPredictions: response.data.totalPredictions,
+            homeWinPredictions: response.data.homeWinPredictions,
+            awayWinPredictions: response.data.awayWinPredictions,
+            drawPredictions: response.data.drawPredictions,
+            homeWinPercentage: response.data.homeWinPercentage,
+            awayWinPercentage: response.data.awayWinPercentage,
+            drawPercentage: response.data.drawPercentage,
+            userPrediction,
+            predictions: [] // We don't need individual predictions for stats display
+          };
+        }
+      } catch (error) {
+        console.warn('Failed to get community stats from backend:', error);
+      }
+      
+      // Fallback: Return stats based only on user prediction if backend fails
       const stats: MatchPredictionStats = {
         totalPredictions: userPrediction ? 1 : 0,
         homeWinPredictions: userPrediction?.prediction === 'home' ? 1 : 0,

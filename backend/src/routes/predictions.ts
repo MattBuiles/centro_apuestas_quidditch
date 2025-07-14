@@ -271,4 +271,51 @@ router.get('/statistics', authenticate, async (req: AuthenticatedRequest, res) =
   }
 });
 
+// GET /api/predictions/match/:matchId/stats - Get aggregated prediction statistics for a match
+router.get('/match/:matchId/stats', async (req, res) => {
+  try {
+    const matchId = req.params.matchId;
+
+    // Get aggregated statistics for the match
+    const stats = await db.get(`
+      SELECT 
+        COUNT(*) as total_predictions,
+        COUNT(CASE WHEN prediction = 'home' THEN 1 END) as home_predictions,
+        COUNT(CASE WHEN prediction = 'away' THEN 1 END) as away_predictions,
+        COUNT(CASE WHEN prediction = 'draw' THEN 1 END) as draw_predictions,
+        AVG(confidence) as average_confidence
+      FROM predictions 
+      WHERE match_id = ?
+    `, [matchId]) as any;
+
+    // Calculate percentages
+    const totalPredictions = stats?.total_predictions || 0;
+    const homePercentage = totalPredictions > 0 ? (stats?.home_predictions / totalPredictions) * 100 : 0;
+    const awayPercentage = totalPredictions > 0 ? (stats?.away_predictions / totalPredictions) * 100 : 0;
+    const drawPercentage = totalPredictions > 0 ? (stats?.draw_predictions / totalPredictions) * 100 : 0;
+
+    return res.json({
+      success: true,
+      data: {
+        totalPredictions: totalPredictions,
+        homeWinPredictions: stats?.home_predictions || 0,
+        awayWinPredictions: stats?.away_predictions || 0,
+        drawPredictions: stats?.draw_predictions || 0,
+        homeWinPercentage: homePercentage,
+        awayWinPercentage: awayPercentage,
+        drawPercentage: drawPercentage,
+        averageConfidence: stats?.average_confidence || 0
+      },
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error fetching match prediction stats:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 export default router;
