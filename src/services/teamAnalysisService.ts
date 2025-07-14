@@ -54,27 +54,60 @@ class TeamAnalysisService {
    */
   async getTeamStatistics(teamId: string): Promise<TeamStatistics | null> {
     if (!FEATURES.USE_BACKEND_MATCHES) {
+      console.log(`⚠️ Backend disabled, cannot fetch statistics for team "${teamId}"`);
       return null;
     }
 
     try {
+      console.log(`🔄 Fetching team statistics from backend for: ${teamId}`);
       const response = await fetch(`${this.API_BASE_URL}/teams/${teamId}`);
       
       if (!response.ok) {
-        console.warn(`Failed to fetch team statistics for ${teamId}:`, response.status);
+        console.warn(`❌ Failed to fetch team statistics for ${teamId}:`, response.status);
         return null;
       }
 
       const data = await response.json();
       
       if (!data.success || !data.data) {
-        console.warn('Invalid team statistics response:', data);
+        console.warn('❌ Invalid team statistics response:', data);
         return null;
       }
 
-      return data.data as TeamStatistics;
+      const teamData = data.data;
+      console.log(`✅ Team statistics fetched successfully for ${teamId}:`, {
+        name: teamData.name,
+        matches_played: teamData.matches_played,
+        wins: teamData.wins,
+        win_percentage: teamData.win_percentage,
+        attack_strength: teamData.attack_strength,
+        defense_strength: teamData.defense_strength
+      });
+
+      // Asegurar que todos los campos requeridos estén presentes
+      const statistics: TeamStatistics = {
+        id: teamData.id || teamId,
+        name: teamData.name || teamId,
+        matches_played: teamData.matches_played || 0,
+        wins: teamData.wins || 0,
+        losses: teamData.losses || 0,
+        draws: teamData.draws || 0,
+        points_for: teamData.points_for || 0,
+        points_against: teamData.points_against || 0,
+        snitch_catches: teamData.snitch_catches || 0,
+        attack_strength: teamData.attack_strength || 75,
+        defense_strength: teamData.defense_strength || 75,
+        seeker_skill: teamData.seeker_skill || 75,
+        keeper_skill: teamData.keeper_skill || 75,
+        chaser_skill: teamData.chaser_skill || 75,
+        beater_skill: teamData.beater_skill || 75,
+        win_percentage: teamData.win_percentage || 0,
+        point_difference: teamData.point_difference || 0
+      };
+
+      return statistics;
     } catch (error) {
-      console.error('Error fetching team statistics:', error);
+      console.error('❌ Error fetching team statistics:', error);
       return null;
     }
   }
@@ -84,27 +117,91 @@ class TeamAnalysisService {
    */
   async getHeadToHeadData(teamId: string, opponentId: string): Promise<HeadToHeadData | null> {
     if (!FEATURES.USE_BACKEND_MATCHES) {
+      console.log(`⚠️ Backend disabled, cannot fetch head-to-head data for ${teamId} vs ${opponentId}`);
       return null;
     }
 
     try {
+      console.log(`🔄 Fetching head-to-head data from backend: ${teamId} vs ${opponentId}`);
       const response = await fetch(`${this.API_BASE_URL}/teams/${teamId}/vs/${opponentId}`);
       
       if (!response.ok) {
-        console.warn(`Failed to fetch head-to-head data:`, response.status);
+        console.warn(`❌ Failed to fetch head-to-head data:`, response.status);
         return null;
       }
 
       const data = await response.json();
       
       if (!data.success || !data.data) {
-        console.warn('Invalid head-to-head response:', data);
+        console.warn('❌ Invalid head-to-head response:', data);
         return null;
       }
 
-      return data.data as HeadToHeadData;
+      const h2hData = data.data;
+      console.log(`✅ Head-to-head data fetched successfully:`, {
+        totalMatches: h2hData.totalMatches,
+        teamWins: h2hData.teamWins,
+        opponentWins: h2hData.opponentWins
+      });
+
+      // Transformar a la estructura esperada
+      const headToHeadData: HeadToHeadData = {
+        teamWins: h2hData.teamWins || 0,
+        opponentWins: h2hData.opponentWins || 0,
+        draws: h2hData.draws || 0,
+        totalMatches: h2hData.totalMatches || 0,
+        teamAvgPoints: h2hData.statistics?.teamAvgPoints || 0,
+        opponentAvgPoints: h2hData.statistics?.opponentAvgPoints || 0,
+        recentMatches: (h2hData.recentMatches || []).map((match: { result?: string; teamScore?: number; opponentScore?: number; date?: string }) => ({
+          result: match.result || 'L',
+          teamScore: match.teamScore || 0,
+          opponentScore: match.opponentScore || 0,
+          date: match.date || new Date().toISOString()
+        }))
+      };
+
+      return headToHeadData;
     } catch (error) {
-      console.error('Error fetching head-to-head data:', error);
+      console.error('❌ Error fetching head-to-head data:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Obtiene los últimos partidos de un equipo
+   */
+  async getTeamRecentMatches(teamId: string, limit: number = 5): Promise<Array<{ result: 'W' | 'L' | 'D'; confidence: number }> | null> {
+    if (!FEATURES.USE_BACKEND_MATCHES) {
+      console.log(`⚠️ Backend disabled, cannot fetch recent matches for team "${teamId}"`);
+      return null;
+    }
+
+    try {
+      console.log(`🔄 Fetching recent matches from backend for: ${teamId}`);
+      const response = await fetch(`${this.API_BASE_URL}/teams/${teamId}/recent-matches?limit=${limit}`);
+      
+      if (!response.ok) {
+        console.warn(`❌ Failed to fetch recent matches for ${teamId}:`, response.status);
+        return null;
+      }
+
+      const data = await response.json();
+      
+      if (!data.success || !data.data) {
+        console.warn('❌ Invalid recent matches response:', data);
+        return null;
+      }
+
+      const matches = data.data;
+      console.log(`✅ Recent matches fetched successfully for ${teamId}:`, matches.length, 'matches');
+
+      // Transformar a la estructura esperada
+      return matches.map((match: { result?: string; confidence?: number }) => ({
+        result: (match.result || 'L') as 'W' | 'L' | 'D',
+        confidence: match.confidence || 70
+      }));
+    } catch (error) {
+      console.error('❌ Error fetching recent matches:', error);
       return null;
     }
   }
@@ -130,13 +227,13 @@ class TeamAnalysisService {
       defenseStrength: stats.defense_strength
     });
 
-    return this.generateRealAnalysis(stats, isHome);
+    return await this.generateRealAnalysis(stats, isHome);
   }
 
   /**
    * Genera análisis basado en estadísticas reales del backend
    */
-  private generateRealAnalysis(stats: TeamStatistics, isHome: boolean): TeamAnalysisData {
+  private async generateRealAnalysis(stats: TeamStatistics, isHome: boolean): Promise<TeamAnalysisData> {
     // Calcular rating de forma basado en estadísticas reales
     const winRate = stats.win_percentage || 0;
     const attackRating = stats.attack_strength || 75;
@@ -184,8 +281,24 @@ class TeamAnalysisService {
     if (winRate >= 70) momentum = 'up';
     else if (winRate <= 30) momentum = 'down';
 
-    // Generar forma reciente simulada basada en win rate
-    const recentForm = this.generateRecentForm(stats.win_percentage);
+    // Intentar obtener forma reciente real del backend
+    const realRecentForm = await this.getTeamRecentMatches(stats.id);
+    const recentForm = realRecentForm || this.generateRecentForm(stats.win_percentage);
+
+    // Ajustar momentum basado en forma reciente real si está disponible
+    if (realRecentForm && realRecentForm.length >= 3) {
+      const recentWins = realRecentForm.filter(match => match.result === 'W').length;
+      const recentWinRate = (recentWins / realRecentForm.length) * 100;
+      
+      if (recentWinRate >= 80) momentum = 'up';
+      else if (recentWinRate <= 20) momentum = 'down';
+      
+      console.log(`📈 Momentum updated based on recent form for ${stats.name}:`, {
+        recentWins: `${recentWins}/${realRecentForm.length}`,
+        recentWinRate: `${recentWinRate}%`,
+        momentum
+      });
+    }
 
     return {
       name: stats.name,
