@@ -1148,9 +1148,22 @@ export class Database {
     amount: number;
     potentialWin: number;
   }): Promise<{ lastID?: number; changes?: number }> {
+    // Get current virtual time
+    let virtualTime: string;
+    try {
+      const { VirtualTimeService } = await import('../services/VirtualTimeService');
+      const virtualTimeService = VirtualTimeService.getInstance();
+      await virtualTimeService.initialize();
+      const currentState = await virtualTimeService.getCurrentState();
+      virtualTime = currentState.currentDate.toISOString();
+    } catch (error) {
+      console.error('Error getting virtual time for bet, using real time:', error);
+      virtualTime = new Date().toISOString();
+    }
+
     const sql = `
-      INSERT INTO bets (id, user_id, match_id, type, prediction, odds, amount, potential_win, status)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+      INSERT INTO bets (id, user_id, match_id, type, prediction, odds, amount, potential_win, status, placed_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)
     `;
     return await this.run(sql, [
       betData.id,
@@ -1160,7 +1173,8 @@ export class Database {
       betData.prediction,
       betData.odds,
       betData.amount,
-      betData.potentialWin
+      betData.potentialWin,
+      virtualTime
     ]);
   }
 
@@ -1197,12 +1211,28 @@ export class Database {
   }
 
   public async updateBetStatus(betId: string, status: string, resolvedAt?: string): Promise<{ lastID?: number; changes?: number }> {
+    let finalResolvedAt = resolvedAt;
+    
+    // If no resolvedAt provided, use virtual time
+    if (!finalResolvedAt) {
+      try {
+        const { VirtualTimeService } = await import('../services/VirtualTimeService');
+        const virtualTimeService = VirtualTimeService.getInstance();
+        await virtualTimeService.initialize();
+        const currentState = await virtualTimeService.getCurrentState();
+        finalResolvedAt = currentState.currentDate.toISOString();
+      } catch (error) {
+        console.error('Error getting virtual time for bet status update, using real time:', error);
+        finalResolvedAt = new Date().toISOString();
+      }
+    }
+
     const sql = `
       UPDATE bets 
       SET status = ?, resolved_at = ?
       WHERE id = ?
     `;
-    return await this.run(sql, [status, resolvedAt || new Date().toISOString(), betId]);
+    return await this.run(sql, [status, finalResolvedAt, betId]);
   }
 
   public async getAllBets(): Promise<unknown[]> {
@@ -1232,16 +1262,30 @@ export class Database {
     prediction: string;
     confidence: number;
   }): Promise<{ lastID?: number; changes?: number }> {
+    // Get current virtual time
+    let virtualTime: string;
+    try {
+      const { VirtualTimeService } = await import('../services/VirtualTimeService');
+      const virtualTimeService = VirtualTimeService.getInstance();
+      await virtualTimeService.initialize();
+      const currentState = await virtualTimeService.getCurrentState();
+      virtualTime = currentState.currentDate.toISOString();
+    } catch (error) {
+      console.error('Error getting virtual time for prediction, using real time:', error);
+      virtualTime = new Date().toISOString();
+    }
+
     const sql = `
-      INSERT INTO predictions (id, user_id, match_id, prediction, confidence, status)
-      VALUES (?, ?, ?, ?, ?, 'pending')
+      INSERT INTO predictions (id, user_id, match_id, prediction, confidence, status, created_at)
+      VALUES (?, ?, ?, ?, ?, 'pending', ?)
     `;
     return await this.run(sql, [
       predictionData.id,
       predictionData.userId,
       predictionData.matchId,
       predictionData.prediction,
-      predictionData.confidence
+      predictionData.confidence,
+      virtualTime
     ]);
   }
 
@@ -1278,12 +1322,28 @@ export class Database {
   }
 
   public async updatePredictionStatus(predictionId: string, status: string, points: number, resolvedAt?: string): Promise<{ lastID?: number; changes?: number }> {
+    let finalResolvedAt = resolvedAt;
+    
+    // If no resolvedAt provided, use virtual time
+    if (!finalResolvedAt) {
+      try {
+        const { VirtualTimeService } = await import('../services/VirtualTimeService');
+        const virtualTimeService = VirtualTimeService.getInstance();
+        await virtualTimeService.initialize();
+        const currentState = await virtualTimeService.getCurrentState();
+        finalResolvedAt = currentState.currentDate.toISOString();
+      } catch (error) {
+        console.error('Error getting virtual time for prediction status update, using real time:', error);
+        finalResolvedAt = new Date().toISOString();
+      }
+    }
+
     const sql = `
       UPDATE predictions 
       SET status = ?, points = ?, resolved_at = ?
       WHERE id = ?
     `;
-    return await this.run(sql, [status, points, resolvedAt || new Date().toISOString(), predictionId]);
+    return await this.run(sql, [status, points, finalResolvedAt, predictionId]);
   }
 
   public async getAllPredictions(): Promise<unknown[]> {
@@ -1340,7 +1400,21 @@ export class Database {
       let resolvedCount = 0;
       let correctCount = 0;
       let incorrectCount = 0;
-      const resolvedAt = new Date().toISOString();
+      
+      // Get current virtual time for resolved_at
+      let virtualTime: string;
+      try {
+        const { VirtualTimeService } = await import('../services/VirtualTimeService');
+        const virtualTimeService = VirtualTimeService.getInstance();
+        await virtualTimeService.initialize();
+        const currentState = await virtualTimeService.getCurrentState();
+        virtualTime = currentState.currentDate.toISOString();
+      } catch (error) {
+        console.error('Error getting virtual time for prediction resolution, using real time:', error);
+        virtualTime = new Date().toISOString();
+      }
+
+      const resolvedAt = virtualTime;
 
       // Resolver cada predicción
       for (const prediction of pendingPredictions) {
