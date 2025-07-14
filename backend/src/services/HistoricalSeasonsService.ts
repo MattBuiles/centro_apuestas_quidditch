@@ -95,8 +95,11 @@ export class HistoricalSeasonsService {
       // Guardar en la base de datos
       await this.saveHistoricalSeason(historicalData);
 
-      // Actualizar estadísticas históricas de equipos
+      // Actualizar estadísticas históricas de equipos usando el servicio especializado
       await this.historicalTeamStatsService.updateHistoricalStatsForSeason(seasonId);
+
+      // También ejecutar la actualización desde la base de datos para asegurar consistencia
+      await this.db.archiveCompletedSeason(seasonId);
 
       console.log(`✅ Temporada ${season.name} archivada exitosamente como histórica`);
       console.log(`   - Equipos: ${totalTeams}`);
