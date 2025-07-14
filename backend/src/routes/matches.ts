@@ -125,6 +125,45 @@ router.get('/next-unplayed', async (req, res) => {
   }
 });
 
+// GET /api/matches/related/:homeTeamId/:awayTeamId - Get related matches for specific teams
+router.get('/related/:homeTeamId/:awayTeamId', async (req, res) => {
+  try {
+    const { homeTeamId, awayTeamId } = req.params;
+    const limit = parseInt(req.query.limit as string) || 5;
+    const db = Database.getInstance();
+    
+    // Get current virtual time from VirtualTimeService
+    let currentVirtualTime: string;
+    try {
+      const { VirtualTimeService } = await import('../services/VirtualTimeService');
+      const virtualTimeService = VirtualTimeService.getInstance();
+      await virtualTimeService.initialize();
+      const currentState = await virtualTimeService.getCurrentState();
+      currentVirtualTime = currentState.currentDate.toISOString();
+    } catch (error) {
+      console.error('Error getting virtual time for related matches, using current time:', error);
+      currentVirtualTime = new Date().toISOString();
+    }
+    
+    const relatedMatches = await db.getRelatedMatches(homeTeamId, awayTeamId, currentVirtualTime, limit);
+    
+    res.json({
+      success: true,
+      data: relatedMatches,
+      message: 'Related matches retrieved successfully',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error fetching related matches:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: 'Failed to retrieve related matches',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 // GET /api/matches/:id/simulation-status - Get match simulation status
 router.get('/:id/simulation-status', async (req, res) => {
   try {

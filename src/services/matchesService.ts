@@ -1,6 +1,7 @@
 import { apiClient } from '../utils/apiClient';
 import { Match, EventType } from '../types/league';
 import { FEATURES } from '../config/features';
+import { LeagueTimeService } from './leagueTimeService';
 
 // Tipo para las respuestas del backend
 interface BackendMatch {
@@ -290,20 +291,57 @@ export const getMatchEvents = async (matchId: string) => {
 
 // Obtener partidos relacionados (próximos partidos de los equipos involucrados)
 export const getRelatedMatches = async (homeTeamId: string, awayTeamId: string): Promise<Match[]> => {
-  // Por ahora, generar datos mock ya que no tenemos endpoint específico para esto
-  return generateMockRelatedMatches(homeTeamId, awayTeamId);
+  if (FEATURES.USE_BACKEND_MATCHES) {
+    try {
+      if (FEATURES.DEBUG_API) {
+        console.log(`🔄 Fetching related matches for teams ${homeTeamId} vs ${awayTeamId} from backend...`);
+      }
+
+      const response = await apiClient.get<BackendMatch[]>(`/matches/related/${homeTeamId}/${awayTeamId}?limit=5`);
+      
+      if (response.success && response.data) {
+        if (FEATURES.DEBUG_API) {
+          console.log('✅ Related matches fetched from backend:', response.data.length);
+        }
+        return response.data.map(adaptBackendMatch);
+      } else {
+        console.warn('⚠️ Backend response was not successful for related matches, falling back to mock data');
+        return await generateMockRelatedMatches(homeTeamId, awayTeamId);
+      }
+    } catch (error) {
+      console.error('❌ Error fetching related matches from backend, falling back to mock data:', error);
+      return await generateMockRelatedMatches(homeTeamId, awayTeamId);
+    }
+  } else {
+    return await generateMockRelatedMatches(homeTeamId, awayTeamId);
+  }
 };
 
 // Generar partidos relacionados mock como fallback
-const generateMockRelatedMatches = (homeTeamId: string, awayTeamId: string): Match[] => {
+const generateMockRelatedMatches = async (homeTeamId: string, awayTeamId: string): Promise<Match[]> => {
   const teamIds = ['gryffindor', 'slytherin', 'ravenclaw', 'hufflepuff'];
   const otherTeams = teamIds.filter(id => id !== homeTeamId && id !== awayTeamId);
   
   const mockMatches: Match[] = [];
   
+  // Try to get virtual time, fall back to real time if not available
+  let baseDate: Date;
+  try {
+    if (FEATURES.USE_BACKEND_LEAGUE_TIME) {
+      const leagueTimeService = new LeagueTimeService();
+      const timeInfo = await leagueTimeService.getLeagueTimeInfo();
+      baseDate = new Date(timeInfo.currentDate);
+    } else {
+      baseDate = new Date();
+    }
+  } catch (error) {
+    console.warn('⚠️ Could not get virtual time for mock related matches, using real time:', error);
+    baseDate = new Date();
+  }
+  
   // Generar próximos partidos para ambos equipos
   for (let i = 1; i <= 5; i++) {
-    const date = new Date();
+    const date = new Date(baseDate);
     date.setDate(date.getDate() + (i * 7)); // Cada semana
     
     const opponent = otherTeams[Math.floor(Math.random() * otherTeams.length)];
