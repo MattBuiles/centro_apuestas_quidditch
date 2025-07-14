@@ -1312,6 +1312,75 @@ export class Database {
     return await this.get(sql, [userId, matchId]);
   }
 
+  public async resolveMatchPredictions(matchId: string, homeScore: number, awayScore: number): Promise<{ resolved: number; correct: number; incorrect: number }> {
+    try {
+      console.log(`🔮 Resolving predictions for match ${matchId} - Final score: ${homeScore}-${awayScore}`);
+      
+      // Determinar el resultado real del partido
+      let actualResult: 'home' | 'away' | 'draw';
+      if (homeScore > awayScore) {
+        actualResult = 'home';
+      } else if (awayScore > homeScore) {
+        actualResult = 'away';
+      } else {
+        actualResult = 'draw';
+      }
+
+      console.log(`🎯 Match result: ${actualResult}`);
+
+      // Obtener todas las predicciones pendientes para este partido
+      const pendingPredictions = await this.all(`
+        SELECT id, prediction, user_id, confidence 
+        FROM predictions 
+        WHERE match_id = ? AND status = 'pending'
+      `, [matchId]);
+
+      console.log(`📊 Found ${pendingPredictions.length} pending predictions to resolve`);
+
+      let resolvedCount = 0;
+      let correctCount = 0;
+      let incorrectCount = 0;
+      const resolvedAt = new Date().toISOString();
+
+      // Resolver cada predicción
+      for (const prediction of pendingPredictions) {
+        const pred = prediction as { id: string; prediction: string; user_id: string; confidence: number };
+        const isCorrect = pred.prediction === actualResult;
+        const newStatus = isCorrect ? 'correct' : 'incorrect';
+        
+        // Calcular puntos basados en la confianza y si acertó
+        const points = isCorrect ? pred.confidence * 10 : 0;
+
+        // Actualizar la predicción
+        await this.run(`
+          UPDATE predictions 
+          SET status = ?, points = ?, resolved_at = ?
+          WHERE id = ?
+        `, [newStatus, points, resolvedAt, pred.id]);
+
+        resolvedCount++;
+        if (isCorrect) {
+          correctCount++;
+          console.log(`✅ User ${pred.user_id}: Correct prediction (${pred.prediction}) - Points: ${points}`);
+        } else {
+          incorrectCount++;
+          console.log(`❌ User ${pred.user_id}: Incorrect prediction (${pred.prediction} vs ${actualResult}) - Points: 0`);
+        }
+      }
+
+      console.log(`🏆 Predictions resolved: ${resolvedCount} total, ${correctCount} correct, ${incorrectCount} incorrect`);
+
+      return {
+        resolved: resolvedCount,
+        correct: correctCount,
+        incorrect: incorrectCount
+      };
+    } catch (error) {
+      console.error('❌ Error resolving match predictions:', error);
+      throw error;
+    }
+  }
+
   // ============== ADMIN STATISTICS METHODS ==============
   
   public async getAllUsers(): Promise<unknown[]> {
@@ -1858,7 +1927,10 @@ export class Database {
         }
       }
 
-      console.log(`✅ Match ${matchId} finished successfully with ${eventsProcessed}/${matchResult.events.length} events saved`);
+      // Resolve predictions for the match
+      const { correct, incorrect } = await this.resolveMatchPredictions(matchId, matchResult.homeScore, matchResult.awayScore);
+
+      console.log(`✅ Match ${matchId} finished successfully with ${eventsProcessed}/${matchResult.events.length} events saved. Predictions resolved: ${correct} correct, ${incorrect} incorrect`);
     } catch (error) {
       console.error('❌ Error in finishMatch:', error);
       throw error;
