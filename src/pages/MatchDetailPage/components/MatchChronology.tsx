@@ -28,6 +28,8 @@ const MatchChronology: React.FC<MatchChronologyProps> = ({
   const [chronology, setChronology] = useState<MatchChronologyData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedEvents, setExpandedEvents] = useState<Set<number>>(new Set());
+  const [selectedEventType, setSelectedEventType] = useState<string>('all');
+  const [isAnimating, setIsAnimating] = useState(false);
 
   useEffect(() => {
     const loadChronology = async () => {
@@ -64,12 +66,54 @@ const MatchChronology: React.FC<MatchChronologyProps> = ({
       newExpanded.add(eventIndex);
     }
     setExpandedEvents(newExpanded);
+    
+    // Add a brief animation effect
+    setIsAnimating(true);
+    setTimeout(() => setIsAnimating(false), 300);
+  };
+
+  const getFilteredEvents = () => {
+    if (!chronology) return [];
+    if (selectedEventType === 'all') return chronology.events;
+    return chronology.events.filter(event => event.type === selectedEventType);
+  };
+
+  const getAvailableEventTypes = () => {
+    if (!chronology) return [];
+    const types = [...new Set(chronology.events.map(event => event.type))];
+    return ['all', ...types];
   };
 
   const formatTimestamp = (timestamp: number): string => {
     const minutes = Math.floor(timestamp / 60);
     const seconds = timestamp % 60;
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  const getEventTypeIcon = (eventType: string): string => {
+    const iconMap: Record<string, string> = {
+      'QUAFFLE_GOAL': '⚡',
+      'SNITCH_CAUGHT': '🟡',
+      'FOUL': '⚠️',
+      'TIMEOUT': '⏸️',
+      'INJURY': '🔴',
+      'BLUDGER_HIT': '💥',
+      'SAVE': '🛡️'
+    };
+    return iconMap[eventType] || '⚽';
+  };
+
+  const getEventTypeColor = (eventType: string): string => {
+    const colorMap: Record<string, string> = {
+      'QUAFFLE_GOAL': 'linear-gradient(135deg, #10b981, #059669)',
+      'SNITCH_CAUGHT': 'linear-gradient(135deg, #fbbf24, #f59e0b)', 
+      'FOUL': 'linear-gradient(135deg, #ef4444, #dc2626)',
+      'TIMEOUT': 'linear-gradient(135deg, #6366f1, #4f46e5)',
+      'INJURY': 'linear-gradient(135deg, #f97316, #ea580c)',
+      'BLUDGER_HIT': 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+      'SAVE': 'linear-gradient(135deg, #06b6d4, #0891b2)'
+    };
+    return colorMap[eventType] || 'linear-gradient(135deg, #64748b, #475569)';
   };
 
   if (isLoading) {
@@ -137,34 +181,81 @@ const MatchChronology: React.FC<MatchChronologyProps> = ({
         </div>
       </div>
 
-      {/* Timeline */}
+      {/* Timeline Container */}
       <div className={styles.timelineContainer}>
         <div className={styles.timelineHeader}>
           <h4>⏱️ Línea de Tiempo</h4>
+          
+          {/* Event Type Filters */}
+          <div className={styles.eventFilters}>
+            {getAvailableEventTypes().map(type => (
+              <button
+                key={type}
+                className={`${styles.filterButton} ${selectedEventType === type ? styles.active : ''}`}
+                onClick={() => setSelectedEventType(type)}
+              >
+                {type === 'all' ? '🔍 Todos' : `${getEventTypeIcon(type)} ${type}`}
+              </button>
+            ))}
+          </div>
         </div>
         
-        <div className={styles.timeline}>
+        <div className={`${styles.timeline} ${isAnimating ? styles.animating : ''}`}>
           <div className={styles.timelineTrack}></div>
           
-          {chronology.events.map((event, index) => (
+          {getFilteredEvents().map((event, index) => (
             <div 
               key={index}
               className={`${styles.timelineEvent} ${expandedEvents.has(index) ? styles.expanded : ''}`}
               onClick={() => toggleEventExpansion(index)}
             >
               <div className={styles.eventMarker}>
-                <span className={styles.eventTime}>
-                  {formatTimestamp(event.timestamp)}
-                </span>
+                <div 
+                  className={styles.eventTime}
+                  style={{ background: getEventTypeColor(event.type) }}
+                >
+                  <span className={styles.minute}>
+                    {Math.floor(event.timestamp / 60)}'
+                  </span>
+                  {event.second && (
+                    <span className={styles.second}>
+                      {event.timestamp % 60}s
+                    </span>
+                  )}
+                </div>
+                <div 
+                  className={styles.eventDot}
+                  style={{ background: getEventTypeColor(event.type) }}
+                />
               </div>
               
               <div className={styles.eventContent}>
                 <div className={styles.eventHeader}>
-                  <span className={styles.eventType}>{event.type}</span>
-                  <span className={styles.eventScore}>
+                  <div className={styles.eventType}>
+                    {getEventTypeIcon(event.type)} {event.type}
+                  </div>
+                  <div className={styles.eventScore}>
                     {event.homeScore} - {event.awayScore}
-                  </span>
+                  </div>
                 </div>
+                
+                {event.teamName && (
+                  <div className={styles.eventTeam}>
+                    <span className={styles.teamName}>{event.teamName}</span>
+                    {event.points > 0 && (
+                      <span className={styles.eventPoints}>
+                        +{event.points} pts
+                      </span>
+                    )}
+                  </div>
+                )}
+                
+                {event.playerName && (
+                  <div className={styles.eventPlayer}>
+                    <span className={styles.playerIcon}>👤</span>
+                    <span>{event.playerName}</span>
+                  </div>
+                )}
                 
                 <div className={styles.eventDescription}>
                   {event.description}
@@ -198,23 +289,24 @@ const MatchChronology: React.FC<MatchChronologyProps> = ({
             <h4>🌟 Momentos Clave</h4>
           </div>
           
-          <div className={styles.keyMoments}>
-            {chronology.keyEvents.map((moment, index) => (
-              <div key={moment.id || index} className={styles.keyMoment}>
-                <div className={styles.keyMomentTime}>
-                  {formatTimestamp(moment.timestamp)}
-                </div>
-                <div className={styles.keyMomentContent}>
-                  <h5>{moment.type}</h5>
-                  <p>{moment.description}</p>
-                  {moment.impact && (
-                    <div className={styles.keyMomentImpact}>
-                      <strong>Impacto:</strong> {moment.impact}
-                    </div>
-                  )}
-                </div>
+          <div className={styles.keyMoments}>          {chronology.keyEvents.map((moment, index) => (
+            <div key={moment.id || index} className={styles.keyMoment}>
+              <div className={styles.keyMomentTime}>
+                {formatTimestamp(moment.timestamp)}
               </div>
-            ))}
+              <div className={styles.keyMomentContent}>
+                <h5>
+                  {getEventTypeIcon(moment.type)} {moment.type}
+                </h5>
+                <p className={styles.keyMomentDescription}>{moment.description}</p>
+                {moment.impact && (
+                  <div className={styles.keyMomentImpact}>
+                    <strong>Impacto:</strong> {moment.impact}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
           </div>
         </div>
       )}
