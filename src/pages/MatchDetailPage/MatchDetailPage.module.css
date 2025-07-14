@@ -1267,47 +1267,30 @@
   font-size: clamp(0.85rem, 2vw, 1rem);
   font-weight: 600;
   border-radius: 20px;
-  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: all 0.3s ease;
   cursor: pointer;
   position: relative;
-  overflow: hidden;
   margin: 0.2rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-}
-
-.tab::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, 
-    transparent,
-    rgba(106, 13, 173, 0.1),
-    transparent
-  );
-  transition: left 0.6s ease;
-  z-index: 1;
-}
-
-.tab:hover::before {
-  left: 100%;
+  /* Fix clickable area */
+  z-index: 10;
+  overflow: visible;
 }
 
 .tab:hover {
   background: rgba(106, 13, 173, 0.1);
   color: #6A0DAD;
-  transform: translateY(-2px);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(106, 13, 173, 0.2);
 }
 
 .tab.active {
   background: linear-gradient(135deg, #6A0DAD, #9C27B0);
   color: white;
-  transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(106, 13, 173, 0.4);
-  z-index: 3;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(106, 13, 173, 0.4);
+  z-index: 11;
 }
 
 .tab.active::before {
@@ -1495,34 +1478,6 @@
   50% { opacity: 0.6; }
 }
 
-/* Enhanced hover effects for better interactivity */
-.tab {
-  position: relative;
-  overflow: visible;
-}
-
-.tab::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 50%;
-  width: 0;
-  height: 2px;
-  background: linear-gradient(90deg, #6A0DAD, #9C27B0);
-  transition: all 0.3s ease;
-  transform: translateX(-50%);
-}
-
-.tab:hover::after {
-  width: 80%;
-}
-
-.tab.active::after {
-  width: 100%;
-  height: 3px;
-  bottom: -3px;
-}
-
 /* Enhanced loading state for better UX */
 .loadingSpinner p {
   margin-top: 1rem;
@@ -1541,10 +1496,49 @@
   box-shadow: 0 25px 60px rgba(106, 13, 173, 0.2);
 }
 
-/* Smooth transitions for all interactive elements */
-* {
-  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-              box-shadow 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-              background 0.3s ease,
-              color 0.3s ease;
+/* Responsive Design */
+@media (max-width: 768px) {
+  .matchDetailContainer {
+    padding: 1rem;
+  }
+  
+  .teamSection {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    text-align: center;
+  }
+  
+  .scoreSection {
+    order: -1;
+  }
+  
+  .tabsHeader {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .tab {
+    width: 100%;
+    justify-content: center;
+    margin: 0.1rem 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    gap: 1rem;
+  }
+  
+  .mainMatchCard {
+    padding: 1.5rem;
+    border-radius: 20px;
+  }
+  
+  .tabsContainer {
+    border-radius: 20px;
+  }
+  
+  .tabContent {
+    padding: 1.5rem;
+  }
 }
