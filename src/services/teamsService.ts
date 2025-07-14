@@ -447,17 +447,104 @@ export const getMatchChronology = async (matchId: string): Promise<MatchChronolo
   if (FEATURES.USE_BACKEND_MATCHES) {
     try {
       console.log(`🌐 Fetching match chronology for ${matchId}...`);
-      const response = await apiClient.get<MatchChronology>(`/matches/${matchId}/events`);
       
-      if (response.success && response.data) {
-        console.log('✅ Match chronology loaded from backend:', response.data);
-        console.log('📊 Events found:', response.data.events?.length || 0);
-        return response.data;
+      // Obtener detalles del partido y eventos por separado
+      const [matchResponse, eventsResponse] = await Promise.all([
+        apiClient.get(`/matches/${matchId}`),
+        apiClient.get(`/matches/${matchId}/events`)
+      ]);
+      
+      if (eventsResponse.success && eventsResponse.data && Array.isArray(eventsResponse.data)) {
+        const rawEvents = eventsResponse.data;
+        const matchData = matchResponse.success ? matchResponse.data : null;
+        
+        console.log('✅ Raw events from database:', rawEvents);
+        
+        // Transformar eventos de la base de datos al formato esperado
+        const transformedEvents: MatchEvent[] = rawEvents.map((event: any, index: number) => ({
+          id: event.id || `event-${index}`,
+          minute: event.minute || 0,
+          second: 0,
+          timestamp: (event.minute || 0) * 60,
+          type: event.type || 'QUAFFLE_GOAL',
+          teamId: event.team || 'unknown',
+          teamName: event.team || 'Equipo Desconocido',
+          playerId: event.player || undefined,
+          playerName: event.player || undefined,
+          description: event.description || 'Evento sin descripción',
+          points: event.points || 0,
+          homeScore: undefined,
+          awayScore: undefined,
+          currentScore: { home: 0, away: 0 }, // Se calculará dinámicamente
+          details: event.details || {}
+        }));
+
+        // Calcular puntajes acumulativos
+        let homeScore = 0;
+        let awayScore = 0;
+        
+        transformedEvents.forEach(event => {
+          // Determinar si es equipo local o visitante basado en el ID del partido
+          const matchInfo = matchData as any;
+          const isHomeTeam = event.teamId === matchInfo?.home_team_id || 
+                           event.teamId === matchInfo?.homeTeamId ||
+                           event.teamId === matchInfo?.homeTeam;
+          
+          if (isHomeTeam) {
+            homeScore += event.points;
+          } else {
+            awayScore += event.points;
+          }
+          
+          event.homeScore = homeScore;
+          event.awayScore = awayScore;
+          event.currentScore = { home: homeScore, away: awayScore };
+        });
+
+        // Identificar eventos clave (goles, snitch dorada, etc.)
+        const keyEvents: KeyEvent[] = transformedEvents
+          .filter(event => 
+            event.type === 'SNITCH_CAUGHT' || 
+            event.points >= 10 ||
+            event.type === 'FOUL'
+          )
+          .map(event => ({
+            id: event.id,
+            minute: event.minute,
+            timestamp: event.timestamp,
+            type: event.type,
+            description: event.description,
+            impact: event.type === 'SNITCH_CAUGHT' ? 'high' as const : 
+                   event.points >= 10 ? 'medium' as const : 'low' as const
+          }));
+
+        const finalScore = transformedEvents.length > 0 
+          ? transformedEvents[transformedEvents.length - 1].currentScore
+          : { home: homeScore, away: awayScore };
+
+        const chronology: MatchChronology = {
+          matchId,
+          events: transformedEvents,
+          keyEvents,
+          matchDuration: Math.max(...transformedEvents.map(e => e.minute), 0),
+          finalScore
+        };
+
+        console.log('📊 Transformed chronology:', {
+          eventsCount: chronology.events.length,
+          keyEventsCount: chronology.keyEvents.length,
+          duration: chronology.matchDuration,
+          finalScore: chronology.finalScore
+        });
+
+        return chronology;
       } else {
-        console.warn('❌ Backend response success but no data:', response);
+        console.warn('❌ Backend response success but no events data:', eventsResponse);
+        return null;
       }
     } catch (error) {
       console.warn(`⚠️ Failed to fetch match chronology for ${matchId}:`, error);
+      return null;
     }
   }
   
