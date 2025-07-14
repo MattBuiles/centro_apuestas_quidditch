@@ -81,7 +81,7 @@ const MatchPredictions: React.FC<MatchPredictionsProps> = ({
                 </div>
                 <div className={userPrediction.status === 'correct' ? styles.correctPrediction : styles.incorrectPrediction}>
                   <span className={styles.predictionIcon}>
-                    {userPrediction.status === 'correct' ? '�✨' : '🔮💫'}
+                    {userPrediction.status === 'correct' ? '✨' : '🔮💫'}
                   </span>
                   <span className={styles.predictionResultText}>
                     {userPrediction.status === 'correct' ? 
@@ -89,6 +89,17 @@ const MatchPredictions: React.FC<MatchPredictionsProps> = ({
                       'Esta vez las brumas del futuro te confundieron. Incluso los mejores videntes a veces interpretan mal las señales cósmicas. ¡La próxima vez las estrellas serán más claras!'
                     }
                   </span>
+                  {userPrediction.points !== undefined && (
+                    <div className={styles.pointsEarned}>
+                      <span className={styles.pointsIcon}>🏆</span>
+                      <span className={styles.pointsText}>
+                        {userPrediction.status === 'correct' ? 
+                          `¡Has ganado ${userPrediction.points} puntos mágicos!` : 
+                          'Sin puntos esta vez, pero la experiencia es invaluable.'
+                        }
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <div className={styles.predictionTimestamp}>
                   <small>📅 Predicción realizada: {userPrediction.createdAt.toLocaleString('es-ES')}</small>
