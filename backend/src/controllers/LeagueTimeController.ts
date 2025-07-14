@@ -125,6 +125,14 @@ export class LeagueTimeController {
             
             simulatedMatches.push(match.id as string);
             console.log(`✅ Match ${match.id} simulated: ${result.homeScore} - ${result.awayScore}`);
+            
+            // Resolve predictions for this match
+            try {
+              const predictionResult = await db.resolveMatchPredictions(match.id as string, result.homeScore, result.awayScore);
+              console.log(`🔮 Predictions resolved for match ${match.id}: ${predictionResult.resolved} total, ${predictionResult.correct} correct, ${predictionResult.incorrect} incorrect`);
+            } catch (predictionError) {
+              console.error(`Error resolving predictions for match ${match.id}:`, predictionError);
+            }
           } catch (error) {
             console.error(`❌ Error simulating match ${match.id}:`, error);
           }
