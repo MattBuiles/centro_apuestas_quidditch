@@ -226,8 +226,9 @@ router.get('/:teamId/vs/:opponentId', async (req, res): Promise<void> => {
       JOIN teams ht ON m.home_team_id = ht.id
       JOIN teams at ON m.away_team_id = at.id
       WHERE 
-        (m.home_team_id = ? AND m.away_team_id = ?) OR
-        (m.home_team_id = ? AND m.away_team_id = ?)
+        ((m.home_team_id = ? AND m.away_team_id = ?) OR
+        (m.home_team_id = ? AND m.away_team_id = ?))
+        AND m.status = 'finished'
       ORDER BY m.date DESC
     `, [teamId, opponentId, opponentId, teamId]) as MatchRow[];
     
@@ -286,18 +287,18 @@ router.get('/:teamId/vs/:opponentId', async (req, res): Promise<void> => {
     const teamHighScoring = matches.filter(m => {
       const isTeamHome = m.home_team_id === teamId;
       const teamScore = isTeamHome ? (m.home_score || 0) : (m.away_score || 0);
-      return teamScore > 200;
+      return teamScore > 200 && m.status === 'finished';
     }).length;
     
     const opponentHighScoring = matches.filter(m => {
       const isTeamHome = m.home_team_id === teamId;
       const opponentScore = isTeamHome ? (m.away_score || 0) : (m.home_score || 0);
-      return opponentScore > 200;
+      return opponentScore > 200 && m.status === 'finished';
     }).length;
     
     // Find legendary matches (highest scoring, closest games, etc.)
     const legendaryMatches = matches
-      .filter(m => (m.home_score || 0) > 0 && (m.away_score || 0) > 0)
+      .filter(m => (m.home_score || 0) > 0 && (m.away_score || 0) > 0 && m.status === 'finished')
       .sort((a, b) => {
         const totalA = (a.home_score || 0) + (a.away_score || 0);
         const totalB = (b.home_score || 0) + (b.away_score || 0);
