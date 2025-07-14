@@ -1,5 +1,5 @@
 /* ========================================
-   DETAILED ANALYSIS TAB
+   MAGICAL DETAILED ANALYSIS TAB
    ======================================== */
 
 .detailedAnalysisTab {
@@ -15,10 +15,98 @@
 }
 
 /* ========================================
-   MAGICAL DETAILED ANALYSIS STYLES
+   LOADING STATES
    ======================================== */
 
-/* Main Container */
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  background: linear-gradient(145deg, 
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(248, 249, 250, 0.9) 50%,
+    rgba(240, 242, 245, 0.85) 100%);
+  backdrop-filter: blur(20px);
+  border-radius: 25px;
+  border: 2px solid rgba(106, 13, 173, 0.2);
+  animation: magicalPulse 2s ease-in-out infinite;
+}
+
+.loadingSpinner {
+  position: relative;
+  margin-bottom: 2rem;
+}
+
+.magicalOrb {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, #6A0DAD, #9C27B0, #E91E63, #FF6B35, #6A0DAD);
+  animation: orbSpin 2s linear infinite;
+  position: relative;
+}
+
+.magicalOrb::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+}
+
+.magicalOrb::after {
+  content: '🔮';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2rem;
+  z-index: 2;
+}
+
+@keyframes orbSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes magicalPulse {
+  0%, 100% { 
+    box-shadow: 0 20px 50px rgba(106, 13, 173, 0.15);
+    transform: scale(1);
+  }
+  50% { 
+    box-shadow: 0 25px 60px rgba(106, 13, 173, 0.25);
+    transform: scale(1.02);
+  }
+}
+
+.loadingText {
+  font-size: 1.2rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #6A0DAD, #9C27B0, #E91E63);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-align: center;
+  animation: textShimmer 3s ease-in-out infinite;
+}
+
+@keyframes textShimmer {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.3); }
+}
+
+/* ========================================
+   MAIN CONTAINER
+   ======================================== */
+
 .detailedAnalysisContainer {
   background: linear-gradient(145deg, 
     rgba(255, 255, 255, 0.95) 0%,
@@ -34,10 +122,10 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.9);
   position: relative;
   overflow: hidden;
-  animation: analysisGlow 4s ease-in-out infinite alternate;
+  animation: containerGlow 4s ease-in-out infinite alternate;
 }
 
-@keyframes analysisGlow {
+@keyframes containerGlow {
   0% { 
     box-shadow: 0 20px 50px rgba(106, 13, 173, 0.15), 0 8px 25px rgba(0, 0, 0, 0.08);
   }
@@ -69,7 +157,10 @@
   50% { opacity: 0.8; }
 }
 
-/* Analysis Header */
+/* ========================================
+   HEADER SECTION
+   ======================================== */
+
 .analysisHeader {
   text-align: center;
   margin-bottom: 3rem;
@@ -84,18 +175,863 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   text-shadow: 0 4px 15px rgba(106, 13, 173, 0.3);
-  margin: 0;
-  animation: titleAnalyze 5s ease-in-out infinite;
+  margin: 0 0 1rem 0;
+  animation: titleFloat 5s ease-in-out infinite;
 }
 
-@keyframes titleAnalyze {
+@keyframes titleFloat {
   0%, 100% { 
-    filter: brightness(1) hue-rotate(0deg);
+    transform: translateY(0) scale(1);
+    filter: brightness(1);
+  }
+  50% { 
+    transform: translateY(-5px) scale(1.02);
+    filter: brightness(1.2);
+  }
+}
+
+.magicalDivider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.starIcon, .wandIcon {
+  font-size: 1.5rem;
+  animation: iconTwinkle 2s ease-in-out infinite;
+}
+
+.wandIcon {
+  animation-delay: 0.5s;
+}
+
+@keyframes iconTwinkle {
+  0%, 100% { 
+    transform: scale(1) rotate(0deg);
+    opacity: 0.8;
+  }
+  50% { 
+    transform: scale(1.2) rotate(10deg);
+    opacity: 1;
+  }
+}
+
+/* ========================================
+   TEAMS ANALYSIS GRID
+   ======================================== */
+
+.teamsAnalysisGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.teamAnalysisCard {
+  background: linear-gradient(145deg, 
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(248, 250, 252, 0.8) 100%);
+  backdrop-filter: blur(15px);
+  border-radius: 20px;
+  padding: 2rem;
+  border: 2px solid rgba(106, 13, 173, 0.15);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  animation: cardFloat 6s ease-in-out infinite;
+}
+
+.teamAnalysisCard:hover {
+  transform: translateY(-10px) scale(1.02);
+  box-shadow: 0 25px 60px rgba(106, 13, 173, 0.2);
+  border-color: rgba(106, 13, 173, 0.3);
+}
+
+.homeTeam {
+  animation-delay: 0s;
+}
+
+.awayTeam {
+  animation-delay: 0.5s;
+}
+
+@keyframes cardFloat {
+  0%, 100% { 
+    transform: translateY(0);
+    box-shadow: 0 15px 40px rgba(106, 13, 173, 0.1);
+  }
+  50% { 
+    transform: translateY(-5px);
+    box-shadow: 0 20px 50px rgba(106, 13, 173, 0.15);
+  }
+}
+
+.teamAnalysisCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(106, 13, 173, 0.03) 0%,
+    rgba(156, 39, 176, 0.02) 50%,
+    rgba(233, 30, 99, 0.03) 100%);
+  border-radius: 20px;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.teamAnalysisCard:hover::before {
+  opacity: 1;
+}
+
+/* ========================================
+   TEAM HEADER
+   ======================================== */
+
+.teamHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid rgba(106, 13, 173, 0.1);
+}
+
+.teamName {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #4A4A6A;
+  text-shadow: 0 2px 8px rgba(106, 13, 173, 0.2);
+}
+
+.teamMomentum {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.momentumIcon {
+  font-size: 1.5rem;
+  animation: momentumPulse 2s ease-in-out infinite;
+}
+
+@keyframes momentumPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.formRating {
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.highRating {
+  color: #10B981;
+  text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+}
+
+.mediumRating {
+  color: #F59E0B;
+  text-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+}
+
+.lowRating {
+  color: #EF4444;
+  text-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+}
+
+/* ========================================
+   FORM SECTION (Cristales)
+   ======================================== */
+
+.formSection {
+  margin-bottom: 2rem;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #6B46C1;
+  margin-bottom: 1rem;
+}
+
+.formIcon {
+  font-size: 1.2rem;
+  animation: iconGlow 3s ease-in-out infinite;
+}
+
+@keyframes iconGlow {
+  0%, 100% { 
+    filter: brightness(1);
     transform: scale(1);
   }
   50% { 
-    filter: brightness(1.2) hue-rotate(10deg);
-    transform: scale(1.02);
+    filter: brightness(1.5);
+    transform: scale(1.1);
+  }
+}
+
+.formCrystals {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.formCrystal {
+  position: relative;
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  animation: crystalShimmer 4s ease-in-out infinite;
+}
+
+.formCrystal:hover {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.victory {
+  background: linear-gradient(135deg, #10B981, #059669);
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+}
+
+.defeat {
+  background: linear-gradient(135deg, #EF4444, #DC2626);
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+}
+
+.draw {
+  background: linear-gradient(135deg, #F59E0B, #D97706);
+  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4);
+}
+
+@keyframes crystalShimmer {
+  0%, 100% { 
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+  }
+  50% { 
+    box-shadow: 0 12px 30px rgba(16, 185, 129, 0.6);
+  }
+}
+
+.resultLetter {
+  font-size: 1.1rem;
+  z-index: 2;
+  position: relative;
+}
+
+.crystalGlow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.3) 50%, transparent 70%);
+  animation: glowSweep 3s ease-in-out infinite;
+}
+
+@keyframes glowSweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* ========================================
+   MAGICAL LISTS (Fortalezas y Debilidades)
+   ======================================== */
+
+.strengthsSection, .weaknessesSection {
+  margin-bottom: 2rem;
+}
+
+.strengthIcon {
+  color: #10B981;
+  font-size: 1.2rem;
+  animation: strengthPulse 2s ease-in-out infinite;
+}
+
+.weaknessIcon {
+  color: #8B5CF6;
+  font-size: 1.2rem;
+  animation: weaknessPulse 2s ease-in-out infinite;
+}
+
+@keyframes strengthPulse {
+  0%, 100% { 
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% { 
+    transform: scale(1.1);
+    filter: brightness(1.3);
+  }
+}
+
+@keyframes weaknessPulse {
+  0%, 100% { 
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% { 
+    transform: scale(1.1);
+    filter: brightness(1.3);
+  }
+}
+
+.magicalList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.strengthItem, .weaknessItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+.strengthItem {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.05));
+  border-left: 3px solid #10B981;
+}
+
+.strengthItem:hover {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.1));
+  transform: translateX(5px);
+}
+
+.weaknessItem {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(124, 58, 237, 0.05));
+  border-left: 3px solid #8B5CF6;
+}
+
+.weaknessItem:hover {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(124, 58, 237, 0.1));
+  transform: translateX(5px);
+}
+
+.magicalBullet {
+  font-size: 1rem;
+  animation: bulletTwinkle 3s ease-in-out infinite;
+}
+
+@keyframes bulletTwinkle {
+  0%, 100% { 
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+.strengthText {
+  color: #065F46;
+  font-weight: 500;
+}
+
+.weaknessText {
+  color: #581C87;
+  font-weight: 500;
+}
+
+.noStrengths, .noWeaknesses {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #6B7280;
+  font-style: italic;
+  padding: 1rem;
+  text-align: center;
+  justify-content: center;
+}
+
+.neutralIcon, .perfectIcon {
+  font-size: 1.2rem;
+  animation: neutralPulse 3s ease-in-out infinite;
+}
+
+@keyframes neutralPulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* ========================================
+   ORACLE PREDICTION
+   ======================================== */
+
+.oraclePrediction {
+  background: linear-gradient(145deg, 
+    rgba(106, 13, 173, 0.1) 0%,
+    rgba(156, 39, 176, 0.08) 50%,
+    rgba(233, 30, 99, 0.1) 100%);
+  backdrop-filter: blur(15px);
+  border-radius: 20px;
+  padding: 2.5rem;
+  border: 2px solid rgba(106, 13, 173, 0.2);
+  margin-bottom: 3rem;
+  position: relative;
+  overflow: hidden;
+  animation: oracleGlow 5s ease-in-out infinite;
+}
+
+@keyframes oracleGlow {
+  0%, 100% { 
+    box-shadow: 0 20px 50px rgba(106, 13, 173, 0.2);
+  }
+  50% { 
+    box-shadow: 0 30px 70px rgba(106, 13, 173, 0.3);
+  }
+}
+
+.oraclePrediction::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, 
+    transparent 0%,
+    rgba(106, 13, 173, 0.05) 25%,
+    rgba(156, 39, 176, 0.05) 50%,
+    rgba(233, 30, 99, 0.05) 75%,
+    transparent 100%);
+  animation: oracleShimmer 8s linear infinite;
+  z-index: -1;
+}
+
+@keyframes oracleShimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.oracleTitle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  font-size: 1.8rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #6A0DAD, #9C27B0, #E91E63);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-align: center;
+  margin-bottom: 2rem;
+  animation: oracleTitlePulse 4s ease-in-out infinite;
+}
+
+@keyframes oracleTitlePulse {
+  0%, 100% { 
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% { 
+    transform: scale(1.05);
+    filter: brightness(1.2);
+  }
+}
+
+.oracleIcon {
+  font-size: 2rem;
+  animation: oracleIconSpin 6s linear infinite;
+}
+
+@keyframes oracleIconSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.predictionGrid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 2rem;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.teamPrediction {
+  text-align: center;
+  position: relative;
+  padding: 1.5rem;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(106, 13, 173, 0.2);
+  transition: all 0.3s ease;
+}
+
+.teamPrediction:hover {
+  transform: scale(1.05);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.predictionPercentage {
+  font-size: 2.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #6A0DAD, #9C27B0);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 0.5rem;
+  animation: percentagePulse 3s ease-in-out infinite;
+}
+
+@keyframes percentagePulse {
+  0%, 100% { 
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% { 
+    transform: scale(1.1);
+    filter: brightness(1.3);
+  }
+}
+
+.predictionTeamName {
+  font-size: 1rem;
+  color: #4A4A6A;
+  font-weight: 600;
+}
+
+.magicalAura {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 15px;
+  background: linear-gradient(45deg, 
+    rgba(106, 13, 173, 0.1),
+    rgba(156, 39, 176, 0.1),
+    rgba(233, 30, 99, 0.1));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.teamPrediction:hover .magicalAura {
+  opacity: 1;
+}
+
+.versusSection {
+  text-align: center;
+  padding: 1rem;
+}
+
+.versusText {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #F59E0B;
+  text-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+  margin-bottom: 0.5rem;
+}
+
+.mysticSymbol {
+  font-size: 2rem;
+  animation: symbolRotate 4s linear infinite;
+  margin-bottom: 0.5rem;
+}
+
+@keyframes symbolRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.probabilityLabel {
+  font-size: 0.9rem;
+  color: #6B7280;
+  font-weight: 500;
+}
+
+.oracleInsight {
+  background: rgba(106, 13, 173, 0.1);
+  border-radius: 15px;
+  padding: 1.5rem;
+  border: 1px solid rgba(106, 13, 173, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.oracleInsight::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, 
+    transparent 0%,
+    rgba(106, 13, 173, 0.1) 50%,
+    transparent 100%);
+  animation: insightGlow 4s linear infinite;
+}
+
+@keyframes insightGlow {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.insightIcon {
+  font-size: 1.5rem;
+  float: left;
+  margin-right: 1rem;
+  margin-top: 0.2rem;
+  animation: insightTwinkle 3s ease-in-out infinite;
+}
+
+@keyframes insightTwinkle {
+  0%, 100% { 
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+.insightText {
+  color: #4A4A6A;
+  font-size: 1rem;
+  line-height: 1.6;
+  position: relative;
+  z-index: 2;
+}
+
+.insightLabel {
+  font-weight: 700;
+  color: #6A0DAD;
+}
+
+/* ========================================
+   MYSTIC FACTORS
+   ======================================== */
+
+.mysticFactors {
+  background: linear-gradient(145deg, 
+    rgba(59, 130, 246, 0.1) 0%,
+    rgba(139, 92, 246, 0.08) 50%,
+    rgba(106, 13, 173, 0.1) 100%);
+  backdrop-filter: blur(15px);
+  border-radius: 20px;
+  padding: 2.5rem;
+  border: 2px solid rgba(59, 130, 246, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.mysticFactors::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(59, 130, 246, 0.03) 0%,
+    rgba(139, 92, 246, 0.02) 50%,
+    rgba(106, 13, 173, 0.03) 100%);
+  animation: mysticShift 10s ease-in-out infinite;
+  z-index: -1;
+}
+
+@keyframes mysticShift {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.8; }
+}
+
+.factorsTitle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  font-size: 1.6rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #3B82F6, #8B5CF6, #6A0DAD);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.factorsIcon {
+  font-size: 1.8rem;
+  animation: factorsIconPulse 4s ease-in-out infinite;
+}
+
+@keyframes factorsIconPulse {
+  0%, 100% { 
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% { 
+    transform: scale(1.1);
+    filter: brightness(1.3);
+  }
+}
+
+.factorsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.factorCard {
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  padding: 2rem;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.factorCard:hover {
+  transform: translateY(-5px);
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 15px 35px rgba(59, 130, 246, 0.2);
+}
+
+.factorCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, 
+    transparent 0%,
+    rgba(59, 130, 246, 0.05) 50%,
+    transparent 100%);
+  animation: cardShimmer 6s linear infinite;
+  z-index: -1;
+}
+
+@keyframes cardShimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.factorTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #3B82F6;
+  margin-bottom: 1.5rem;
+}
+
+.homeIcon, .statsIcon {
+  font-size: 1.3rem;
+  animation: factorIconBounce 3s ease-in-out infinite;
+}
+
+@keyframes factorIconBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+.factorList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.factorItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 10px;
+  background: rgba(59, 130, 246, 0.05);
+  transition: all 0.3s ease;
+}
+
+.factorItem:hover {
+  background: rgba(59, 130, 246, 0.1);
+  transform: translateX(5px);
+}
+
+.factorBullet {
+  font-size: 1.1rem;
+  animation: bulletSpark 4s ease-in-out infinite;
+}
+
+@keyframes bulletSpark {
+  0%, 100% { 
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+.factorItem span:last-child {
+  color: #1E40AF;
+  font-weight: 500;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+
+@media (max-width: 768px) {
+  .detailedAnalysisContainer {
+    padding: 1.5rem;
+  }
+  
+  .teamsAnalysisGrid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .predictionGrid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .versusSection {
+    order: -1;
+  }
+  
+  .factorsGrid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .analysisTitle {
+    font-size: 1.5rem;
+  }
+  
+  .formCrystals {
+    justify-content: center;
   }
 }
 
