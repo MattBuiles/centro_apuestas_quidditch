@@ -998,6 +998,28 @@ export class Database {
     return await this.all(sql, [targetTime]);
   }
 
+  public async getRelatedMatches(homeTeamId: string, awayTeamId: string, currentVirtualTime: string, limit: number = 5): Promise<unknown[]> {
+    const sql = `
+      SELECT 
+        m.*,
+        ht.name as homeTeamName,
+        ht.logo as homeTeamLogo,
+        at.name as awayTeamName,
+        at.logo as awayTeamLogo,
+        s.name as seasonName
+      FROM matches m
+      JOIN teams ht ON m.home_team_id = ht.id
+      JOIN teams at ON m.away_team_id = at.id
+      JOIN seasons s ON m.season_id = s.id
+      WHERE m.status = 'scheduled' 
+        AND m.date > ?
+        AND (m.home_team_id = ? OR m.away_team_id = ? OR m.home_team_id = ? OR m.away_team_id = ?)
+      ORDER BY m.date ASC
+      LIMIT ?
+    `;
+    return await this.all(sql, [currentVirtualTime, homeTeamId, homeTeamId, awayTeamId, awayTeamId, limit]);
+  }
+
   // ============== SEASONS METHODS ==============
   
   public async getAllSeasons(): Promise<unknown[]> {
@@ -1865,7 +1887,7 @@ export class Database {
       // Clear historical stats (optional - you might want to keep these)
       console.log('📊 Clearing historical statistics...');
       await this.run('DELETE FROM historical_team_stats');
-      await this.run('DELETE FROM historical_user_stats');
+           await this.run('DELETE FROM historical_user_stats');
 
       // Clear user transactions
       console.log('� Clearing user transactions...');
