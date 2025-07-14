@@ -257,6 +257,14 @@ export class MatchSimulationService {
         snitchCaughtBy
       });
 
+      // Resolve predictions for this match
+      try {
+        const predictionResult = await this.db.resolveMatchPredictions(matchId, homeScore, awayScore);
+        console.log(`🔮 Predictions resolved for match ${matchId}: ${predictionResult.resolved} total, ${predictionResult.correct} correct, ${predictionResult.incorrect} incorrect`);
+      } catch (predictionError) {
+        console.error(`Error resolving predictions for match ${matchId}:`, predictionError);
+      }
+
       console.log(`✅ Match ${matchId} simulated completely: ${homeScore} - ${awayScore} (${duration} min)`);
 
       return {
@@ -368,6 +376,14 @@ export class MatchSimulationService {
 
       // Actualizar standings en la base de datos
       await this.standingsService.updateStandingsAfterMatch(matchId);
+
+      // Resolve predictions for this match
+      try {
+        const predictionResult = await this.db.resolveMatchPredictions(matchId, homeScore, awayScore);
+        console.log(`🔮 Predictions resolved for match ${matchId}: ${predictionResult.resolved} total, ${predictionResult.correct} correct, ${predictionResult.incorrect} incorrect`);
+      } catch (predictionError) {
+        console.error(`Error resolving predictions for match ${matchId}:`, predictionError);
+      }
 
       // Broadcast finalización del partido
       this.broadcastMatchUpdate(matchId, {

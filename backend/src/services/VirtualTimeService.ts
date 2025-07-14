@@ -310,6 +310,14 @@ export class VirtualTimeService {
     // Actualizar standings en la base de datos
     await this.standingsService.updateStandingsAfterMatch(matchId);
 
+    // Resolve predictions for this match
+    try {
+      const predictionResult = await this.db.resolveMatchPredictions(matchId, result.homeScore, result.awayScore);
+      console.log(`🔮 Predictions resolved for match ${matchId}: ${predictionResult.resolved} total, ${predictionResult.correct} correct, ${predictionResult.incorrect} incorrect`);
+    } catch (error) {
+      console.error(`Error resolving predictions for match ${matchId}:`, error);
+    }
+
     // Verificar si la temporada debe finalizarse después de simular el partido
     const seasonResult = await this.seasonService.checkAndFinishSeasonIfComplete();
     if (seasonResult.seasonFinished) {
