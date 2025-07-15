@@ -1128,3 +1128,186 @@
     opacity: 0.6;
   }
 }
+
+/* ========================================
+   PREDICTION BUTTONS - IMPROVED DESIGN
+   ======================================== */
+
+.predictionButtons {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1rem, 2vw, 1.5rem);
+  margin-top: clamp(1.5rem, 3vw, 2rem);
+}
+
+@media (min-width: 768px) {
+  .predictionButtons {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+.predictionButton {
+  flex: 1;
+  min-height: clamp(3rem, 6vw, 4rem);
+  font-size: clamp(1rem, 2.2vw, 1.2rem);
+  font-weight: 700;
+  border: 2px solid rgba(106, 13, 173, 0.3);
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(186, 104, 200, 0.05) 25%,
+    rgba(255, 255, 255, 0.8) 50%,
+    rgba(156, 39, 176, 0.03) 75%,
+    rgba(255, 255, 255, 0.85) 100%);
+  color: rgba(106, 13, 173, 0.9);
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 15px rgba(106, 13, 173, 0.1);
+}
+
+.predictionButton:hover {
+  transform: translateY(-2px);
+  border-color: rgba(106, 13, 173, 0.5);
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(186, 104, 200, 0.08) 25%,
+    rgba(255, 255, 255, 0.85) 50%,
+    rgba(156, 39, 176, 0.05) 75%,
+    rgba(255, 255, 255, 0.9) 100%);
+  box-shadow: 0 8px 25px rgba(106, 13, 173, 0.2);
+}
+
+.predictionButton:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(106, 13, 173, 0.2);
+}
+
+.predictionButton.selected {
+  border-color: #0568fd;
+  background: linear-gradient(135deg, 
+    rgba(5, 104, 253, 0.15) 0%,
+    rgba(5, 104, 253, 0.08) 25%,
+    rgba(230, 240, 255, 0.9) 50%,
+    rgba(5, 104, 253, 0.08) 75%,
+    rgba(5, 104, 253, 0.15) 100%);
+  color: #0568fd;
+  font-weight: bold;
+  box-shadow: 0 8px 25px rgba(5, 104, 253, 0.25);
+}
+
+.predictionButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  background: rgba(255, 255, 255, 0.5);
+  color: rgba(106, 13, 173, 0.5);
+  border-color: rgba(106, 13, 173, 0.2);
+}
+
+.predictionButton:disabled:hover {
+  transform: none;
+  box-shadow: 0 4px 15px rgba(106, 13, 173, 0.1);
+}
+
+.drawIcon {
+  font-size: clamp(1.2rem, 2.5vw, 1.5rem);
+  margin-right: 0.5rem;
+}
+
+/* ========================================
+   CLOSED PREDICTIONS MESSAGE
+   ======================================== */
+
+.closedPredictions {
+  text-align: center;
+  padding: clamp(2rem, 4vw, 3rem);
+  background: linear-gradient(135deg, 
+    rgba(156, 39, 176, 0.05) 0%,
+    rgba(255, 255, 255, 0.9) 25%,
+    rgba(255, 255, 255, 0.8) 50%,
+    rgba(186, 104, 200, 0.05) 75%,
+    rgba(156, 39, 176, 0.05) 100%);
+  border-radius: 20px;
+  border: 2px solid rgba(156, 39, 176, 0.2);
+  backdrop-filter: blur(15px);
+  position: relative;
+  overflow: hidden;
+  animation: closedMessageFloat 3s ease-in-out infinite;
+  margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+@keyframes closedMessageFloat {
+  0%, 100% { 
+    transform: translateY(0px);
+    box-shadow: 0 10px 30px rgba(156, 39, 176, 0.1);
+  }
+  50% { 
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(156, 39, 176, 0.15);
+  }
+}
+
+.closedPredictions::before {
+  content: '🔮';
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  opacity: 0.6;
+  animation: closedCrystalFloat 4s ease-in-out infinite;
+}
+
+@keyframes closedCrystalFloat {
+  0%, 100% { 
+    transform: rotate(0deg) scale(1);
+    opacity: 0.6;
+  }
+  33% { 
+    transform: rotate(10deg) scale(1.1);
+    opacity: 0.8;
+  }
+  66% { 
+    transform: rotate(-5deg) scale(1.05);
+    opacity: 0.7;
+  }
+}
+
+.closedPredictions p {
+  font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+  color: rgba(156, 39, 176, 0.8);
+  font-weight: 500;
+  margin: 0;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.closedPredictions::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, 
+    transparent 0%,
+    rgba(156, 39, 176, 0.03) 25%,
+    rgba(186, 104, 200, 0.05) 50%,
+    rgba(156, 39, 176, 0.03) 75%,
+    transparent 100%);
+  animation: closedShimmer 6s ease-in-out infinite;
+  z-index: -1;
+}
+
+@keyframes closedShimmer {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+}

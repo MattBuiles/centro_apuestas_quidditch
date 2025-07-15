@@ -108,40 +108,47 @@ const MatchPredictions: React.FC<MatchPredictionsProps> = ({
             )}
           </div>
         ) : (
-          canPredict && isAuthenticated && (
-            <div className={styles.predictionInterface}>
-              <h3>¿Qué dice tu bola de cristal?</h3>
-              <p>Consulta las estrellas y haz tu predicción sobre este duelo épico.</p>
-              <div className={styles.predictionButtons}>
-                <Button 
-                  variant="outline"
-                  onClick={() => onPrediction('home')}
-                  disabled={isPredicting}
-                  className={styles.predictionButton}
-                >
-                  <TeamLogo teamName={match.homeTeam} size="sm" />
-                  {match.homeTeam}
-                </Button>
-                <Button 
-                  variant="outline"
-                  onClick={() => onPrediction('draw')}
-                  disabled={isPredicting}
-                  className={styles.predictionButton}
-                >
-                  <span className={styles.drawIcon}>⚖️</span>
-                  Empate
-                </Button>
-                <Button 
-                  variant="outline"
-                  onClick={() => onPrediction('away')}
-                  disabled={isPredicting}
-                  className={styles.predictionButton}
-                >
-                  <TeamLogo teamName={match.awayTeam} size="sm" />
-                  {match.awayTeam}
-                </Button>
-              </div>
+          // Show closed predictions message if can't predict and no existing prediction
+          !canPredict && !userPrediction ? (
+            <div className={styles.closedPredictions}>
+              <p>Las predicciones para este partido ya están cerradas.</p>
             </div>
+          ) : (
+            canPredict && isAuthenticated && (
+              <div className={styles.predictionInterface}>
+                <h3>¿Qué dice tu bola de cristal?</h3>
+                <p>Consulta las estrellas y haz tu predicción sobre este duelo épico.</p>
+                <div className={styles.predictionButtons}>
+                  <Button 
+                    variant="outline"
+                    onClick={() => onPrediction('home')}
+                    disabled={isPredicting}
+                    className={styles.predictionButton}
+                  >
+                    <TeamLogo teamName={match.homeTeam} size="sm" />
+                    {match.homeTeam}
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => onPrediction('draw')}
+                    disabled={isPredicting}
+                    className={styles.predictionButton}
+                  >
+                    <span className={styles.drawIcon}>⚖️</span>
+                    Empate
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => onPrediction('away')}
+                    disabled={isPredicting}
+                    className={styles.predictionButton}
+                  >
+                    <TeamLogo teamName={match.awayTeam} size="sm" />
+                    {match.awayTeam}
+                  </Button>
+                </div>
+              </div>
+            )
           )
         )}
 
