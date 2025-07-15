@@ -274,19 +274,57 @@ export class SeasonManagementService {
     console.log(`📅 Programando partidos desde fecha virtual: ${currentVirtualState.currentDate.toISOString()}`);
     console.log(`📅 Primer partido programado para: ${tomorrow.toISOString()}`);
     
-    // Schedule matches every few hours over the next few days
-    const hoursPerMatch = 6; // 6 hours between matches
+    // Schedule matches with more realistic distribution
+    // Configuration for better match scheduling
+    const matchesPerDay = Math.random() < 0.3 ? 0 : Math.random() < 0.6 ? 1 : 2; // 30% chance no matches, 30% chance 1 match, 40% chance 2 matches
+    const possibleMatchTimes = ['14:00', '16:30', '19:00']; // More realistic times
     let currentDate = new Date(tomorrow);
+    let matchesScheduledToday = 0;
+    let currentMaxMatchesForDay = Math.random() < 0.3 ? 0 : Math.random() < 0.7 ? 1 : 2;
 
     for (let i = 0; i < matches.length; i++) {
       const match = matches[i];
+      
+      // Check if we need to move to next day
+      if (matchesScheduledToday >= currentMaxMatchesForDay) {
+        // Move to next day
+        let daysToAdd = 1;
+        
+        // Sometimes skip days (20% chance of adding extra day, 10% chance of 2 extra days)
+        if (Math.random() < 0.2) {
+          daysToAdd += 1;
+          if (Math.random() < 0.1) {
+            daysToAdd += 1;
+          }
+        }
+        
+        currentDate.setDate(currentDate.getDate() + daysToAdd);
+        matchesScheduledToday = 0;
+        
+        // Recalculate max matches for new day
+        currentMaxMatchesForDay = Math.random() < 0.3 ? 0 : Math.random() < 0.7 ? 1 : 2;
+        
+        // If no matches scheduled for this day, skip it
+        if (currentMaxMatchesForDay === 0) {
+          currentDate.setDate(currentDate.getDate() + 1);
+          currentMaxMatchesForDay = Math.random() < 0.7 ? 1 : 2; // Ensure next day has matches
+        }
+      }
+      
       const matchTime = new Date(currentDate);
       
-      // Add some variation to match times (14:00, 16:00, 18:00, 20:00)
-      const hourVariation = (i % 4) * 2;
-      matchTime.setHours(14 + hourVariation, 0, 0, 0);
+      // Select time based on how many matches are scheduled today
+      let timeIndex;
+      if (currentMaxMatchesForDay === 1) {
+        timeIndex = 1; // 16:30 for single match
+      } else {
+        timeIndex = matchesScheduledToday === 0 ? 0 : 2; // 14:00 for first, 19:00 for second
+      }
+      
+      const [hours, minutes] = possibleMatchTimes[timeIndex].split(':').map(Number);
+      matchTime.setHours(hours, minutes, 0, 0);
 
-      console.log(`📅 Scheduling match ${i + 1}/${matches.length}: ${match.homeTeamId} vs ${match.awayTeamId} at ${matchTime.toISOString()}`);
+      console.log(`📅 Scheduling match ${i + 1}/${matches.length}: ${match.homeTeamId} vs ${match.awayTeamId} at ${matchTime.toISOString()} (${matchesScheduledToday + 1}/${currentMaxMatchesForDay} today)`);
 
       // Generate realistic odds
       const odds = this.generateMatchOdds();
@@ -314,12 +352,7 @@ export class SeasonManagementService {
         odds.snitchCatch.away
       ]);
       
-      // Advance to next match time (every few hours, moving to next day after 4 matches)
-      if ((i + 1) % 4 === 0) {
-        // Move to next day after every 4 matches
-        currentDate.setDate(currentDate.getDate() + 1);
-        currentDate.setHours(14, 0, 0, 0); // Reset to 14:00 of next day
-      }
+      matchesScheduledToday++;
     }
   }
 
