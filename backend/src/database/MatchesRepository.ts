@@ -1,4 +1,7 @@
 import { DatabaseConnection } from './DatabaseConnection';
+import { DatabaseResult } from './interfaces';
+// Add import for BetResolutionService
+import { BetResolutionService } from '../services/BetResolutionService';
 
 export class MatchesRepository {
   private connection: DatabaseConnection;
@@ -263,6 +266,20 @@ export class MatchesRepository {
       // Actualizar estadísticas de los equipos
       await this.updateTeamStatistics(matchId, matchResult.homeScore, matchResult.awayScore, matchResult.snitchCaughtBy);
       console.log('✅ Team statistics updated');
+
+      // Resolve bets for the finished match
+      try {
+        const betResolutionService = BetResolutionService.getInstance();
+        const resolution = await betResolutionService.resolveBetsForMatch(matchId);
+        console.log(`✅ Bets resolved for match ${matchId}: ${resolution.resolved} resolved, ${resolution.errors.length} errors`);
+        
+        if (resolution.errors.length > 0) {
+          console.warn('⚠️ Bet resolution errors:', resolution.errors);
+        }
+      } catch (betError) {
+        console.error('❌ Error resolving bets for match:', betError);
+        // Don't throw - match should still finish successfully even if bet resolution fails
+      }
 
     } catch (error) {
       console.error('❌ Error in finishMatch:', error);
