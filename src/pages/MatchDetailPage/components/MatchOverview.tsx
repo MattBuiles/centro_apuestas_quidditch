@@ -141,9 +141,9 @@ const MatchOverview: React.FC<MatchOverviewProps> = ({
               • Show Live Simulation: {showLiveSimulation ? 'Sí' : 'No'}
             </div>
             
-            {FEATURES.USE_BACKEND_MATCHES ? (
-              // Nuevo sistema backend: usar LiveMatchViewer directamente
-              realMatch && homeTeam && awayTeam ? (
+            {realMatch && homeTeam && awayTeam ? (
+              FEATURES.USE_BACKEND_MATCHES ? (
+                // Nuevo sistema backend: usar LiveMatchViewer directamente
                 <div>
                   <div style={{ background: '#e8f5e8', padding: '10px', margin: '10px 0', borderRadius: '5px' }}>
                     ✅ Mostrando LiveMatchViewer con backend
@@ -157,20 +157,7 @@ const MatchOverview: React.FC<MatchOverviewProps> = ({
                   />
                 </div>
               ) : (
-                <div className={styles.timelineError}>
-                  <div className={styles.errorIcon}>⚠️</div>
-                  <h3>Error al Cargar Simulación</h3>
-                  <p>No se pudieron cargar los datos del partido para la simulación.</p>
-                  <div style={{ fontSize: '12px', marginTop: '10px' }}>
-                    • RealMatch: {realMatch ? '✅' : '❌'}<br/>
-                    • HomeTeam: {homeTeam ? '✅' : '❌'}<br/>
-                    • AwayTeam: {awayTeam ? '✅' : '❌'}
-                  </div>
-                </div>
-              )
-            ) : (
-              // Sistema anterior: mostrar botón de inicio
-              realMatch && homeTeam && awayTeam ? (
+                // Sistema anterior: mostrar botón de inicio primero, luego LiveMatchViewer
                 <>
                   {!showLiveSimulation && (
                     <div className={styles.liveReadyCard}>
@@ -211,13 +198,18 @@ const MatchOverview: React.FC<MatchOverviewProps> = ({
                     </div>
                   )}
                 </>
-              ) : (
-                <div className={styles.timelineError}>
-                  <div className={styles.errorIcon}>⚠️</div>
-                  <h3>Error al Cargar Cronología</h3>
-                  <p>No se pudieron cargar los datos del partido en vivo.</p>
-                </div>
               )
+            ) : (
+              <div className={styles.timelineError}>
+                <div className={styles.errorIcon}>⚠️</div>
+                <h3>Error al Cargar Simulación</h3>
+                <p>No se pudieron cargar los datos del partido para la simulación.</p>
+                <div style={{ fontSize: '12px', marginTop: '10px' }}>
+                  • RealMatch: {realMatch ? '✅' : '❌'}<br/>
+                  • HomeTeam: {homeTeam ? '✅' : '❌'}<br/>
+                  • AwayTeam: {awayTeam ? '✅' : '❌'}
+                </div>
+              </div>
             )}
           </div>
         )}

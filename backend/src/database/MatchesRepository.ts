@@ -259,6 +259,11 @@ export class MatchesRepository {
       }
 
       console.log(`✅ Match ${matchId} finished successfully with ${eventsProcessed}/${matchResult.events.length} events saved`);
+
+      // Actualizar estadísticas de los equipos
+      await this.updateTeamStatistics(matchId, matchResult.homeScore, matchResult.awayScore, matchResult.snitchCaughtBy);
+      console.log('✅ Team statistics updated');
+
     } catch (error) {
       console.error('❌ Error in finishMatch:', error);
       throw error;
@@ -337,5 +342,82 @@ export class MatchesRepository {
       homeTeam: { team: homeTeam, lineup: homeLineup },
       awayTeam: { team: awayTeam, lineup: awayLineup }
     };
+  }
+
+  /**
+   * Updates team statistics after a match is finished
+   */
+  private async updateTeamStatistics(matchId: string, homeScore: number, awayScore: number, snitchCaughtBy: string): Promise<void> {
+    try {
+      // Get match details to get team IDs
+      const match = await this.connection.get('SELECT home_team_id, away_team_id FROM matches WHERE id = ?', [matchId]) as { home_team_id: string; away_team_id: string } | undefined;
+      
+      if (!match) {
+        throw new Error(`Match ${matchId} not found`);
+      }
+
+      const homeTeamId = match.home_team_id;
+      const awayTeamId = match.away_team_id;
+
+      // Determine match result
+      let homeResult: 'win' | 'loss' | 'draw';
+      let awayResult: 'win' | 'loss' | 'draw';
+
+      if (homeScore > awayScore) {
+        homeResult = 'win';
+        awayResult = 'loss';
+      } else if (awayScore > homeScore) {
+        homeResult = 'loss';
+        awayResult = 'win';
+      } else {
+        homeResult = 'draw';
+        awayResult = 'draw';
+      }
+
+      // Update home team statistics
+      await this.updateSingleTeamStats(homeTeamId, homeResult, homeScore, awayScore, snitchCaughtBy === homeTeamId);
+
+      // Update away team statistics
+      await this.updateSingleTeamStats(awayTeamId, awayResult, awayScore, homeScore, snitchCaughtBy === awayTeamId);
+
+      console.log(`📊 Updated statistics for teams ${homeTeamId} (${homeResult}) and ${awayTeamId} (${awayResult})`);
+    } catch (error) {
+      console.error('❌ Error updating team statistics:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Updates statistics for a single team
+   */
+  private async updateSingleTeamStats(teamId: string, result: 'win' | 'loss' | 'draw', pointsFor: number, pointsAgainst: number, caughtSnitch: boolean): Promise<void> {
+    const sql = `
+      UPDATE teams 
+      SET 
+        matches_played = matches_played + 1,
+        wins = wins + ?,
+        losses = losses + ?,
+        draws = draws + ?,
+        points_for = points_for + ?,
+        points_against = points_against + ?,
+        snitch_catches = snitch_catches + ?,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `;
+
+    const wins = result === 'win' ? 1 : 0;
+    const losses = result === 'loss' ? 1 : 0;
+    const draws = result === 'draw' ? 1 : 0;
+    const snitchCatch = caughtSnitch ? 1 : 0;
+
+    await this.connection.run(sql, [
+      wins,
+      losses, 
+      draws,
+      pointsFor,
+      pointsAgainst,
+      snitchCatch,
+      teamId
+    ]);
   }
 }

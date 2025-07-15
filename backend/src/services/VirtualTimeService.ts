@@ -279,44 +279,22 @@ export class VirtualTimeService {
     // Generate match result using simulation logic
     const result = this.generateMatchResult(homeTeam, awayTeam, matchId);
 
-    // Update match in database
-    await this.db.run(`
-      UPDATE matches SET 
-        status = 'finished',
-        home_score = ?,
-        away_score = ?,
-        snitch_caught = ?,
-        snitch_caught_by = ?,
-        duration = ?,
-        updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `, [
-      result.homeScore,
-      result.awayScore,
-      result.snitchCaught,
-      result.snitchCaughtBy,
-      result.duration,
-      matchId
-    ]);
+    // Use the centralized finishMatch method that handles everything consistently
+    const matchResult = {
+      homeScore: result.homeScore,
+      awayScore: result.awayScore,
+      duration: result.duration,
+      snitchCaught: result.snitchCaught,
+      snitchCaughtBy: result.snitchCaughtBy || '',
+      events: result.events,
+      finishedAt: new Date().toISOString()
+    };
 
-    // Save match events
-    for (const event of result.events) {
-      await this.saveMatchEvent(event);
-    }
-
-    // Update team statistics
-    await this.updateTeamStats(homeTeam.id, awayTeam.id, result);
+    // This will handle all match completion logic consistently
+    await this.db.finishMatch(matchId, matchResult);
 
     // Actualizar standings en la base de datos
     await this.standingsService.updateStandingsAfterMatch(matchId);
-
-    // Resolve predictions for this match
-    try {
-      const predictionResult = await this.db.resolveMatchPredictions(matchId, result.homeScore, result.awayScore);
-      console.log(`🔮 Predictions resolved for match ${matchId}: ${predictionResult.resolved} total, ${predictionResult.correct} correct, ${predictionResult.incorrect} incorrect`);
-    } catch (error) {
-      console.error(`Error resolving predictions for match ${matchId}:`, error);
-    }
 
     // Verificar si la temporada debe finalizarse después de simular el partido
     const seasonResult = await this.seasonService.checkAndFinishSeasonIfComplete();
@@ -405,66 +383,6 @@ export class VirtualTimeService {
       weather: randomWeather,
       attendance: Math.floor(Math.random() * 50000) + 10000
     };
-  }
-
-  private async saveMatchEvent(event: MatchEvent): Promise<void> {
-    await this.db.run(`
-      INSERT INTO match_events (id, match_id, minute, type, team, player, description, points)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `, [
-      event.id,
-      event.matchId,
-      event.minute,
-      event.type,
-      event.team,
-      event.player,
-      event.description,
-      event.points
-    ]);
-  }
-
-  private async updateTeamStats(homeTeamId: string, awayTeamId: string, result: MatchResult): Promise<void> {
-    // Update home team stats
-    await this.db.run(`
-      UPDATE teams SET 
-        matches_played = matches_played + 1,
-        wins = wins + ?,
-        losses = losses + ?,
-        draws = draws + ?,
-        points_for = points_for + ?,
-        points_against = points_against + ?,
-        snitch_catches = snitch_catches + ?
-      WHERE id = ?
-    `, [
-      result.homeScore > result.awayScore ? 1 : 0,
-      result.homeScore < result.awayScore ? 1 : 0,
-      result.homeScore === result.awayScore ? 1 : 0,
-      result.homeScore,
-      result.awayScore,
-      result.snitchCaughtBy === homeTeamId ? 1 : 0,
-      homeTeamId
-    ]);
-
-    // Update away team stats
-    await this.db.run(`
-      UPDATE teams SET 
-        matches_played = matches_played + 1,
-        wins = wins + ?,
-        losses = losses + ?,
-        draws = draws + ?,
-        points_for = points_for + ?,
-        points_against = points_against + ?,
-        snitch_catches = snitch_catches + ?
-      WHERE id = ?
-    `, [
-      result.awayScore > result.homeScore ? 1 : 0,
-      result.awayScore < result.homeScore ? 1 : 0,
-      result.homeScore === result.awayScore ? 1 : 0,
-      result.awayScore,
-      result.homeScore,
-      result.snitchCaughtBy === awayTeamId ? 1 : 0,
-      awayTeamId
-    ]);
   }
 
   private mapRowToMatch(row: MatchRow): Match {
