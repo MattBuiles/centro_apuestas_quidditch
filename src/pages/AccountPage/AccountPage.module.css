@@ -1624,263 +1624,30 @@
   gap: var(--spacing-4);
 }
 
-.betTabs {
+.loadingContainer {
   display: flex;
-  gap: var(--spacing-2);
-  margin-bottom: var(--spacing-6);
-  background: rgba(255, 255, 255, 0.7);
-  padding: var(--spacing-2);
-  border-radius: var(--radius-lg);
-  border: 1px solid rgba(106, 90, 205, 0.2);
-}
-
-.betTab {
-  flex: 1;
-  padding: var(--spacing-3) var(--spacing-4);
-  border: none;
-  background: transparent;
-  border-radius: var(--radius-md);
-  font-weight: 600;
-  color: var(--color-gray-600);
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.betTab:hover {
-  background: rgba(106, 90, 205, 0.1);
-  color: var(--color-primary);
-}
-
-.betTab.active {
-  background: var(--color-primary);
-  color: white;
-  box-shadow: 0 4px 12px rgba(106, 90, 205, 0.3);
-}
-
-.betCard {
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: var(--radius-xl);
-  padding: var(--spacing-6);
-  box-shadow: 
-    0 10px 25px rgba(0, 0, 0, 0.08),
-    0 4px 12px rgba(106, 90, 205, 0.12);
-  border: 1px solid rgba(106, 90, 205, 0.1);
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.betCard::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
-}
-
-.betCard:hover::before {
-  height: 6px;
-}
-
-.betCard:hover {
-  transform: translateY(-2px);
-  box-shadow: 
-    0 15px 35px rgba(0, 0, 0, 0.12),
-    0 8px 20px rgba(106, 90, 205, 0.18);
-}
-
-.betCard.active {
-  border-color: rgba(59, 130, 246, 0.3);
-}
-
-.betCard.active::before {
-  background: linear-gradient(90deg, #3b82f6, #1d4ed8);
-}
-
-.betCard.won {
-  border-color: rgba(16, 185, 129, 0.3);
-}
-
-.betCard.won::before {
-  background: linear-gradient(90deg, #10b981, #059669);
-}
-
-.betCard.lost {
-  border-color: rgba(239, 68, 68, 0.3);
-}
-
-.betCard.lost::before {
-  background: linear-gradient(90deg, #ef4444, #dc2626);
-}
-
-.betHeader {
-  display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  margin-bottom: var(--spacing-4);
-}
-
-.betMatch {
-  font-family: var(--font-primary);
-  font-size: var(--text-lg);
-  font-weight: 700;
-  color: var(--color-primary);
-  margin: 0;
-}
-
-.betStatus {
-  padding: var(--spacing-2) var(--spacing-3);
-  border-radius: var(--radius-full);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.betStatus.active {
-  background: rgba(59, 130, 246, 0.1);
-  color: #1d4ed8;
-  border: 1px solid rgba(59, 130, 246, 0.2);
-}
-
-.betStatus.won {
-  background: rgba(16, 185, 129, 0.1);
-  color: #059669;
-  border: 1px solid rgba(16, 185, 129, 0.2);
-}
-
-.betStatus.lost {
-  background: rgba(239, 68, 68, 0.1);
-  color: #dc2626;
-  border: 1px solid rgba(239, 68, 68, 0.2);
-}
-
-.betDetails {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: var(--spacing-4);
-  margin-bottom: var(--spacing-4);
-}
-
-.betDetail {
-  background: rgba(106, 90, 205, 0.05);
-  padding: var(--spacing-3);
-  border-radius: var(--radius-md);
-  border: 1px solid rgba(106, 90, 205, 0.1);
-  transition: all 0.3s ease;
-}
-
-.betDetail:hover {
-  background: rgba(106, 90, 205, 0.08);
-  transform: translateY(-2px);
-}
-
-.betDetailLabel {
-  font-size: var(--text-sm);
-  color: var(--color-gray-600);
-  margin-bottom: var(--spacing-2);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.betDetailValue {
-  font-weight: 700;
-  color: var(--color-gray-800);
-  font-size: var(--text-base);
-}
-
-.winResult {
-  color: #10b981 !important;
-}
-
-.lossResult {
-  color: #ef4444 !important;
-}
-
-.potentialWin {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fcd34d 100%);
-  border: 2px solid var(--color-secondary);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-4);
+  padding: var(--spacing-8);
   text-align: center;
-  margin-top: var(--spacing-5);
-  position: relative;
-  overflow: hidden;
 }
 
-.potentialWin::before {
-  content: '🎯';
-  position: absolute;
-  top: var(--spacing-2);
-  right: var(--spacing-2);
+.loadingContainer p {
   font-size: var(--text-lg);
-  opacity: 0.7;
-}
-
-.potentialWinText {
-  font-size: var(--text-sm);
-  color: #92400e;
-  margin-bottom: var(--spacing-2);
-  font-weight: 600;
-}
-
-.potentialWinAmount {
-  font-family: var(--font-primary);
-  font-size: var(--text-xl);
-  font-weight: 800;
-  color: #92400e;
-  text-shadow: 0 1px 2px rgba(146, 64, 14, 0.3);
-}
-
-/* ===== BET OPTIONS DETAILS ===== */
-.betOptionsDetails {
-  margin-top: var(--spacing-4);
-  padding: var(--spacing-3);
-  background: rgba(106, 90, 205, 0.05);
-  border-radius: var(--radius-md);
-  border: 1px solid rgba(106, 90, 205, 0.1);
-}
-
-.betOptionsTitle {
-  font-size: var(--text-sm);
-  font-weight: 700;
   color: var(--color-primary);
-  margin-bottom: var(--spacing-3);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.betOptionItem {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--spacing-2) 0;
-  border-bottom: 1px solid rgba(106, 90, 205, 0.1);
-}
-
-.betOptionItem:last-child {
-  border-bottom: none;
-}
-
-.betOptionText {
-  font-size: var(--text-sm);
-  color: var(--color-gray-700);
   font-weight: 500;
-  flex: 1;
+  animation: magicalPulse 2s ease-in-out infinite;
 }
 
-.betOptionOdds {
-  font-size: var(--text-sm);
-  font-weight: 700;
-  color: var(--color-primary);
-  background: rgba(106, 90, 205, 0.1);
-  padding: var(--spacing-1) var(--spacing-2);
-  border-radius: var(--radius-sm);
-  min-width: 60px;
-  text-align: center;
+@keyframes magicalPulse {
+  0%, 100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
 }
 
 /* ===== MODAL - Diseño elegante mejorado ===== */

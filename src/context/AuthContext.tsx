@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../utils/apiClient';
 import { FEATURES } from '../config/features';
@@ -417,6 +417,7 @@ interface AuthContextType {
   getPredefinedAccounts: () => { email: string; username: string; role: string }[];  // Funciones para manejo de apuestas
   placeBet: (bet: Omit<UserBet, 'id' | 'userId' | 'date' | 'status'>) => Promise<boolean>;
   getUserBets: () => UserBet[];
+  loadUserBetsFromBackend: () => Promise<UserBet[]>;
   getTodayBetsCount: () => number;
   canPlaceBet: (amount: number) => { canBet: boolean; reason?: string };
   // Funciones para manejo de transacciones
@@ -515,6 +516,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                 
                 setUser(backendUser);
                 
+                // Load user bets from backend after successful auth verification
+                try {
+                  await loadUserBetsFromBackend();
+                } catch (error) {
+                  console.error('Error loading user bets during auth check:', error);
+                }
+                
                 // Update stored user data
                 if (localStorage.getItem('user')) {
                   localStorage.setItem('user', JSON.stringify(backendUser));
@@ -599,6 +607,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           } else {
             sessionStorage.setItem('user', JSON.stringify(user));
             sessionStorage.setItem('auth_token', tokens.accessToken);
+          }
+
+          // Load user bets from backend after successful login
+          try {
+            await loadUserBetsFromBackend();
+          } catch (error) {
+            console.error('Error loading user bets after login:', error);
           }
 
           // Navigate based on role
@@ -989,10 +1004,68 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  // Obtener todas las apuestas del usuario
+  // Obtener todas las apuestas del usuario desde el backend
   const getUserBets = (): UserBet[] => {
     return userBets;
   };
+
+  // Cargar apuestas del usuario desde el backend
+  const loadUserBetsFromBackend = useCallback(async (): Promise<UserBet[]> => {
+    console.log('🔍 loadUserBetsFromBackend called');
+    console.log('🔍 User:', user);
+    console.log('🔍 USE_BACKEND_BETS:', FEATURES.USE_BACKEND_BETS);
+    
+    if (!user || !FEATURES.USE_BACKEND_BETS) {
+      console.log('🔍 Returning early - no user or backend disabled');
+      return userBets;
+    }
+
+    try {
+      console.log('🔍 Making API call to /bets');
+      const response = await apiClient.get('/bets') as any;
+      console.log('🔍 API Response:', response);
+      
+      if (response.success && response.data) {
+        const backendBets = response.data;
+        console.log('🔍 Backend bets:', backendBets);
+        
+        // Filtrar apuestas del usuario actual
+        const userBackendBets = backendBets.filter((bet: any) => bet.user_id === user.id);
+        console.log('🔍 User bets from backend:', userBackendBets);
+        
+        // Transformar datos del backend al formato del frontend
+        const transformedBets: UserBet[] = userBackendBets.map((bet: any) => ({
+          id: bet.id,
+          userId: bet.user_id,
+          matchId: bet.match_id,
+          matchName: `${bet.homeTeamName || 'Equipo Local'} vs ${bet.awayTeamName || 'Equipo Visitante'}`,
+          options: [{
+            id: bet.id,
+            type: bet.type,
+            selection: bet.prediction,
+            odds: bet.odds,
+            description: `${bet.type}: ${bet.prediction}`,
+            matchId: bet.match_id
+          }],
+          amount: bet.amount,
+          combinedOdds: bet.odds,
+          potentialWin: bet.potential_win,
+          date: bet.placed_at, // Esta es la fecha virtual del backend
+          status: bet.status === 'pending' ? 'active' : bet.status
+        }));
+
+        console.log('🔍 Transformed bets:', transformedBets);
+        setUserBets(transformedBets);
+        return transformedBets;
+      } else {
+        console.log('🔍 No data in response or response failed');
+      }
+    } catch (error) {
+      console.error('🔍 Error loading user bets from backend:', error);
+    }
+
+    return userBets;
+  }, [user, userBets]);
 
   // Obtener el número de apuestas realizadas hoy
   const getTodayBetsCount = (): number => {
@@ -1232,6 +1305,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         getPredefinedAccounts,        // Funciones de apuestas
         placeBet,
         getUserBets,
+        loadUserBetsFromBackend,
         getTodayBetsCount,
         canPlaceBet,
         // Funciones de transacciones
