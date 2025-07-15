@@ -164,8 +164,19 @@ export class MatchSimulationService {
         }
       }
 
-      // Finalizar partido
-      await this.finishMatch(matchId, homeScore, awayScore, currentMinute);
+      // Finalizar partido - usar el método centralizado de Database
+      const snitchCaught = homeScore > awayScore + 140 || awayScore > homeScore + 140;
+      const matchResult = {
+        homeScore,
+        awayScore,
+        status: 'finished' as const,
+        finishedAt: new Date().toISOString(),
+        snitchCaught,
+        snitchCaughtBy: snitchCaught ? (homeScore > awayScore + 140 ? 'home' : 'away') : '',
+        duration: currentMinute,
+        events: [] // Los eventos ya se guardaron durante la simulación
+      };
+      await this.db.finishMatch(matchId, matchResult);
 
     } catch (error) {
       console.error('Error in match simulation:', error);
@@ -240,30 +251,19 @@ export class MatchSimulationService {
         });
       }
 
-      // Finalizar partido instantáneamente
-      await this.db.updateMatchStatus(matchId, 'finished');
-      await this.db.updateMatchScore(matchId, homeScore, awayScore);
-      
-      // Marcar snitch como capturada
-      if (snitchCaught && snitchCaughtBy) {
-        await this.db.updateMatchSnitchCaught(matchId, true, snitchCaughtBy === match.home_team_id ? 'home' : 'away');
-      }
-
-      // Update team statistics - ESTA ES LA PARTE QUE FALTABA
-      await this.updateTeamStats(match.home_team_id, match.away_team_id, {
+      // Use the centralized finishMatch method
+      const matchResult = {
         homeScore,
         awayScore,
+        duration,
         snitchCaught,
-        snitchCaughtBy
-      });
+        snitchCaughtBy: snitchCaughtBy || '',
+        events: [], // Events were already saved individually above
+        finishedAt: new Date().toISOString()
+      };
 
-      // Resolve predictions for this match
-      try {
-        const predictionResult = await this.db.resolveMatchPredictions(matchId, homeScore, awayScore);
-        console.log(`🔮 Predictions resolved for match ${matchId}: ${predictionResult.resolved} total, ${predictionResult.correct} correct, ${predictionResult.incorrect} incorrect`);
-      } catch (predictionError) {
-        console.error(`Error resolving predictions for match ${matchId}:`, predictionError);
-      }
+      // This will handle all match completion logic consistently
+      await this.db.finishMatch(matchId, matchResult);
 
       console.log(`✅ Match ${matchId} simulated completely: ${homeScore} - ${awayScore} (${duration} min)`);
 
@@ -348,66 +348,6 @@ export class MatchSimulationService {
   }
 
   /**
-   * Finaliza un partido y actualiza la base de datos
-   */
-  private async finishMatch(matchId: string, homeScore: number, awayScore: number, duration: number): Promise<void> {
-    try {
-      // Get match details to access team IDs
-      const match = await this.db.getMatchById(matchId) as MatchData;
-      if (!match) {
-        throw new Error('Match not found');
-      }
-
-      // Actualizar estado del partido
-      await this.db.updateMatchStatus(matchId, 'finished');
-      await this.db.updateMatchScore(matchId, homeScore, awayScore);
-      
-      // Marcar snitch como capturada
-      const snitchCaughtBy = homeScore > awayScore ? match.home_team_id : match.away_team_id;
-      await this.db.updateMatchSnitchCaught(matchId, true, homeScore > awayScore ? 'home' : 'away');
-
-      // Update team statistics
-      await this.updateTeamStats(match.home_team_id, match.away_team_id, {
-        homeScore,
-        awayScore,
-        snitchCaught: true,
-        snitchCaughtBy
-      });
-
-      // Actualizar standings en la base de datos
-      await this.standingsService.updateStandingsAfterMatch(matchId);
-
-      // Resolve predictions for this match
-      try {
-        const predictionResult = await this.db.resolveMatchPredictions(matchId, homeScore, awayScore);
-        console.log(`🔮 Predictions resolved for match ${matchId}: ${predictionResult.resolved} total, ${predictionResult.correct} correct, ${predictionResult.incorrect} incorrect`);
-      } catch (predictionError) {
-        console.error(`Error resolving predictions for match ${matchId}:`, predictionError);
-      }
-
-      // Broadcast finalización del partido
-      this.broadcastMatchUpdate(matchId, {
-        type: 'match_finished',
-        minute: duration,
-        homeScore,
-        awayScore,
-        status: 'finished',
-        winner: homeScore > awayScore ? 'home' : 'away'
-      });
-
-      // Verificar si la temporada debe finalizarse
-      const seasonResult = await this.seasonService.checkAndFinishSeasonIfComplete();
-      if (seasonResult.seasonFinished) {
-        console.log(`🏆 ¡Temporada finalizada automáticamente! ID: ${seasonResult.seasonId}`);
-      }
-
-    } catch (error) {
-      console.error('Error finishing match:', error);
-      throw error;
-    }
-  }
-
-  /**
    * Envía actualizaciones en tiempo real via WebSocket
    */
   private broadcastMatchUpdate(matchId: string, data: MatchSimulationData): void {
@@ -425,58 +365,6 @@ export class MatchSimulationService {
    */
   private delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  /**
-   * Updates team statistics after a match is completed
-   */
-  private async updateTeamStats(homeTeamId: string, awayTeamId: string, result: {
-    homeScore: number;
-    awayScore: number;
-    snitchCaught: boolean;
-    snitchCaughtBy: string | null;
-  }): Promise<void> {
-    // Update home team stats
-    await this.db.run(`
-      UPDATE teams SET 
-        matches_played = matches_played + 1,
-        wins = wins + ?,
-        losses = losses + ?,
-        draws = draws + ?,
-        points_for = points_for + ?,
-        points_against = points_against + ?,
-        snitch_catches = snitch_catches + ?
-      WHERE id = ?
-    `, [
-      result.homeScore > result.awayScore ? 1 : 0,
-      result.homeScore < result.awayScore ? 1 : 0,
-      result.homeScore === result.awayScore ? 1 : 0,
-      result.homeScore,
-      result.awayScore,
-      result.snitchCaughtBy === homeTeamId ? 1 : 0,
-      homeTeamId
-    ]);
-
-    // Update away team stats
-    await this.db.run(`
-      UPDATE teams SET 
-        matches_played = matches_played + 1,
-        wins = wins + ?,
-        losses = losses + ?,
-        draws = draws + ?,
-        points_for = points_for + ?,
-        points_against = points_against + ?,
-        snitch_catches = snitch_catches + ?
-      WHERE id = ?
-    `, [
-      result.awayScore > result.homeScore ? 1 : 0,
-      result.awayScore < result.homeScore ? 1 : 0,
-      result.homeScore === result.awayScore ? 1 : 0,
-      result.awayScore,
-      result.homeScore,
-      result.snitchCaughtBy === awayTeamId ? 1 : 0,
-      awayTeamId
-    ]);
   }
 
   /**
