@@ -407,6 +407,7 @@ interface AuthContextType {
   register: (username: string, email: string, password: string, birthdate: string) => Promise<void>;
   logout: () => void;
   updateUserBalance: (newBalance: number) => void;
+  syncUserBalance: () => Promise<void>;
   updateUserProfile: (userData: Partial<Pick<User, 'username' | 'email' | 'avatar'>>) => void;
   validateCurrentPassword: (password: string) => boolean;
   validatePassword: (password: string) => string | null;
@@ -844,7 +845,46 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         sessionStorage.setItem('user', JSON.stringify(updatedUser));
       }
     }
-  };  const updateUserProfile = (userData: Partial<Pick<User, 'username' | 'email' | 'avatar'>>) => {
+  };
+
+  // Sync user balance from backend
+  const syncUserBalance = async () => {
+    if (!user || !FEATURES.USE_BACKEND_BETS) return;
+
+    try {
+      console.log('🔄 Syncing user balance from backend...');
+      const response = await apiClient.get('/auth/me') as any;
+      
+      if (response?.data?.success && response?.data?.data?.balance !== undefined) {
+        const newBalance = response.data.data.balance;
+        if (newBalance !== user.balance) {
+          console.log(`💰 Balance updated: ${user.balance}G → ${newBalance}G`);
+          updateUserBalance(newBalance);
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error syncing user balance:', error);
+    }
+  };
+
+  // Effect to sync user balance periodically when backend is enabled
+  useEffect(() => {
+    if (!user || !FEATURES.USE_BACKEND_BETS) return;
+
+    // Sync balance immediately on mount
+    syncUserBalance();
+
+    // Set up periodic sync every 30 seconds
+    const intervalId = setInterval(() => {
+      syncUserBalance();
+    }, 30000); // 30 seconds
+
+    // Cleanup on unmount
+    return () => clearInterval(intervalId);
+  }, [user?.id, FEATURES.USE_BACKEND_BETS]);
+
+  // ...existing code...
+  const updateUserProfile = (userData: Partial<Pick<User, 'username' | 'email' | 'avatar'>>) => {
     if (user) {
       const updatedUser = { ...user, ...userData };
       setUser(updatedUser);
@@ -1184,6 +1224,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         register,
         logout,
         updateUserBalance,
+        syncUserBalance,
         updateUserProfile,
         validateCurrentPassword,
         validatePassword,
