@@ -279,13 +279,37 @@ router.post('/:id/finish', async (req, res) => {
     
     // Verificar que el partido existe
     const db = Database.getInstance();
-    const match = await db.getMatchById(id);
+    const match = await db.getMatchById(id) as {
+      id: string;
+      status: string;
+      home_score: number;
+      away_score: number;
+      updated_at: string;
+    } | null;
     
     if (!match) {
       return res.status(404).json({
         success: false,
         error: 'Match not found',
         message: 'The specified match does not exist',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // 🛡️ PROTECCIÓN CONTRA DUPLICACIÓN: Verificar si el partido ya está terminado
+    if (match.status === 'finished') {
+      console.log(`⚠️ Attempt to finish already finished match ${id}`);
+      return res.status(400).json({
+        success: false,
+        error: 'Match already finished',
+        message: 'This match has already been finished and cannot be processed again',
+        data: {
+          matchId: id,
+          status: match.status,
+          homeScore: match.home_score,
+          awayScore: match.away_score,
+          finishedAt: match.updated_at
+        },
         timestamp: new Date().toISOString()
       });
     }

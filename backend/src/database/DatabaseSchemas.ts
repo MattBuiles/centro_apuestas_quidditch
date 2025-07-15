@@ -106,6 +106,7 @@ export class DatabaseSchemas {
         snitch_caught BOOLEAN DEFAULT FALSE,
         snitch_caught_by TEXT,
         duration INTEGER, -- in minutes
+        is_stats_consolidated BOOLEAN DEFAULT FALSE, -- Flag to prevent duplicate stat updates
         odds_home_win REAL,
         odds_away_win REAL,
         odds_draw REAL,

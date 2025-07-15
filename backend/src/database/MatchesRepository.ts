@@ -204,13 +204,38 @@ export class MatchesRepository {
     });
 
     try {
-      // Verificar que el partido existe primero
-      const existingMatch = await this.connection.get('SELECT * FROM matches WHERE id = ?', [matchId]);
+      // Verificar que el partido existe y obtener su estado actual
+      const existingMatch = await this.connection.get('SELECT * FROM matches WHERE id = ?', [matchId]) as { 
+        id: string; 
+        status: string; 
+        home_team_id: string; 
+        away_team_id: string; 
+        home_score: number; 
+        away_score: number; 
+        is_stats_consolidated?: boolean;
+      } | undefined;
+      
       if (!existingMatch) {
         throw new Error(`Match with ID ${matchId} does not exist`);
       }
 
-      console.log('✅ Match exists, proceeding with update');
+      // 🛡️ PROTECCIÓN CONTRA DUPLICACIÓN: Verificar si el partido ya está terminado
+      if (existingMatch.status === 'finished') {
+        console.log(`⚠️ Match ${matchId} is already finished. Skipping duplicate finalization.`);
+        console.log(`   Current scores: ${existingMatch.home_score} - ${existingMatch.away_score}`);
+        console.log(`   Attempted scores: ${matchResult.homeScore} - ${matchResult.awayScore}`);
+        
+        // No lanzar error, solo retornar sin procesar
+        return;
+      }
+
+      // 🛡️ PROTECCIÓN ADICIONAL: Verificar si las estadísticas ya están consolidadas
+      if (existingMatch.is_stats_consolidated) {
+        console.log(`⚠️ Match ${matchId} statistics are already consolidated. Skipping duplicate processing.`);
+        return;
+      }
+
+      console.log('✅ Match exists and is not finished yet, proceeding with update');
 
       // Actualizar el partido con todos los resultados
       const updateMatchSql = `
@@ -221,6 +246,7 @@ export class MatchesRepository {
             duration = ?, 
             snitch_caught = ?, 
             snitch_caught_by = ?, 
+            is_stats_consolidated = TRUE,
             updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
       `;
@@ -263,7 +289,8 @@ export class MatchesRepository {
 
       console.log(`✅ Match ${matchId} finished successfully with ${eventsProcessed}/${matchResult.events.length} events saved`);
 
-      // Actualizar estadísticas de los equipos
+      // 🎯 SOLO ACTUALIZAR ESTADÍSTICAS SI EL PARTIDO NO ESTABA TERMINADO ANTES
+      console.log('🔄 Updating team statistics...');
       await this.updateTeamStatistics(matchId, matchResult.homeScore, matchResult.awayScore, matchResult.snitchCaughtBy);
       console.log('✅ Team statistics updated');
 
