@@ -630,8 +630,41 @@ const WalletSection = () => {
 };
 
 const BetsSection = () => {
-    const { getUserBets } = useAuth();
-    const [activeTab, setActiveTab] = useState<'active' | 'history'>('active');    // Get user bets from AuthContext
+    const { getUserBets, loadUserBetsFromBackend } = useAuth();
+    const [activeTab, setActiveTab] = useState<'active' | 'history'>('active');
+    const [isLoading, setIsLoading] = useState(false);
+    
+    // Cargar apuestas del backend cuando se monta el componente
+    useEffect(() => {
+        const loadBets = async () => {
+            setIsLoading(true);
+            try {
+                await loadUserBetsFromBackend();
+            } catch (error) {
+                console.error('Error loading user bets:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        
+        loadBets();
+    }, []); // Solo ejecutar una vez al montar el componente
+    
+    // Función para formatear la fecha virtual
+    const formatVirtualDate = (dateString: string) => {
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('es-ES', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        } catch {
+            return 'Fecha inválida';
+        }
+    };
+    
+    // Get user bets from AuthContext
     const allUserBets = getUserBets();
     
     // Separate active and historical bets
@@ -660,7 +693,11 @@ const BetsSection = () => {
                 </button>
             </div>            {activeTab === 'active' && (
                 <div className={styles.betsContainer}>
-                    {activeBets.length > 0 ? (                        activeBets.map((bet) => (
+                    {isLoading ? (
+                        <div className={styles.loadingContainer}>
+                            <p>⚡ Consultando las profecías mágicas...</p>
+                        </div>
+                    ) : activeBets.length > 0 ? (                        activeBets.map((bet) => (
                             <div key={bet.id} className={`${styles.betCard} ${styles.active}`}>
                                 <div className={styles.betHeader}>
                                     <h3 className={styles.betMatch}>{bet.matchName}</h3>
@@ -670,8 +707,8 @@ const BetsSection = () => {
                                 </div>
                                 <div className={styles.betDetails}>
                                     <div className={styles.betDetail}>
-                                        <p className={styles.betDetailLabel}>Fecha de Apuesta</p>
-                                        <p className={styles.betDetailValue}>{new Date(bet.date).toLocaleDateString('es-ES')}</p>
+                                        <p className={styles.betDetailLabel}>Fecha de Apuesta (Tiempo Virtual)</p>
+                                        <p className={styles.betDetailValue}>{formatVirtualDate(bet.date)}</p>
                                     </div>
                                     <div className={styles.betDetail}>
                                         <p className={styles.betDetailLabel}>Tipo de Apuesta</p>
@@ -717,7 +754,11 @@ const BetsSection = () => {
                 </div>
             )}            {activeTab === 'history' && (
                 <div className={styles.betsContainer}>
-                    {betHistory.length > 0 ? (
+                    {isLoading ? (
+                        <div className={styles.loadingContainer}>
+                            <p>⚡ Consultando el historial de profecías...</p>
+                        </div>
+                    ) : betHistory.length > 0 ? (
                         betHistory.map((bet) => (
                             <div key={bet.id} className={`${styles.betCard} ${styles[bet.status]}`}>
                                 <div className={styles.betHeader}>
@@ -728,8 +769,8 @@ const BetsSection = () => {
                                 </div>
                                 <div className={styles.betDetails}>
                                     <div className={styles.betDetail}>
-                                        <p className={styles.betDetailLabel}>Fecha</p>
-                                        <p className={styles.betDetailValue}>{new Date(bet.date).toLocaleDateString('es-ES')}</p>
+                                        <p className={styles.betDetailLabel}>Fecha (Tiempo Virtual)</p>
+                                        <p className={styles.betDetailValue}>{formatVirtualDate(bet.date)}</p>
                                     </div>
                                     <div className={styles.betDetail}>
                                         <p className={styles.betDetailLabel}>Tipo de Apuesta</p>
