@@ -998,31 +998,113 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
 
     try {
-      // Crear la nueva apuesta
-      const newBet: UserBet = {
-        ...betData,
-        id: `bet_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        userId: user.id,
-        date: new Date().toISOString(),
-        status: 'active'
-      };
+      // Check if backend integration is enabled
+      if (FEATURES.USE_BACKEND_BETS) {
+        // For combined bets, create a single bet with combined odds in the backend
+        // Use the first option's type as the main type and create a combined prediction
+        const mainOption = betData.options[0];
+        const combinedPrediction = betData.options.map(opt => `${opt.type}:${opt.selection}`).join(',');
+        
+        const backendBetData = {
+          matchId: betData.matchId,
+          type: betData.options.length === 1 ? mainOption.type : 'combined',
+          prediction: betData.options.length === 1 ? mainOption.selection : combinedPrediction,
+          odds: betData.combinedOdds,
+          amount: betData.amount
+        };
 
-      // Descontar el monto del saldo
-      const newBalance = user.balance - betData.amount;
-      updateUserBalance(newBalance);      // Agregar la apuesta al historial
-      const updatedBets = [...userBets, newBet];
-      saveUserBets(updatedBets);
+        try {
+          const response = await apiClient.post('/bets', backendBetData);
+          if (response.success) {
+            // Backend bet creation successful
+            console.log('Bet created successfully in backend:', response.data);
+            
+            // Create local bet for UI consistency
+            const newBet: UserBet = {
+              ...betData,
+              id: `bet_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+              userId: user.id,
+              date: new Date().toISOString(),
+              status: 'active'
+            };
 
-      // Registrar la transacción de la apuesta
-      addTransaction({
-        type: 'bet',
-        amount: -betData.amount,
-        description: `Apuesta: ${betData.matchName}`
-      });
+            // Get updated user data from backend to ensure balance is correct
+            try {
+              const userResponse = await apiClient.get('/auth/me');
+              if (userResponse.success && userResponse.data && typeof userResponse.data === 'object') {
+                const userData = userResponse.data as any;
+                const updatedUser = {
+                  ...user,
+                  balance: userData.balance || user.balance
+                };
+                setUser(updatedUser);
+                setCurrentAccounts(prev => 
+                  prev.map(account => 
+                    account.user.id === user.id 
+                      ? { ...account, user: updatedUser }
+                      : account
+                  )
+                );
+              }
+            } catch (error) {
+              console.error('Error fetching updated user data:', error);
+              // Fallback: update balance locally
+              const newBalance = user.balance - betData.amount;
+              updateUserBalance(newBalance);
+            }
 
-      return true;
+            // Add to local bets for UI
+            const updatedBets = [...userBets, newBet];
+            saveUserBets(updatedBets);
+
+            // Register transaction locally for UI
+            addTransaction({
+              type: 'bet',
+              amount: -betData.amount,
+              description: `Apuesta: ${betData.matchName}`
+            });
+
+            return true;
+          } else {
+            throw new Error('Error al crear apuesta en el backend');
+          }
+        } catch (error) {
+          console.error('Error creating bet in backend:', error);
+          throw new Error('Error al comunicarse con el servidor');
+        }
+      } else {
+        // Fallback to local storage if backend is not available
+        console.warn('Backend betting not available, using local storage');
+        
+        // Crear la nueva apuesta
+        const newBet: UserBet = {
+          ...betData,
+          id: `bet_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          userId: user.id,
+          date: new Date().toISOString(),
+          status: 'active'
+        };
+
+        // Descontar el monto del saldo
+        const newBalance = user.balance - betData.amount;
+        updateUserBalance(newBalance);
+
+        // Agregar la apuesta al historial
+        const updatedBets = [...userBets, newBet];
+        saveUserBets(updatedBets);
+
+        // Registrar la transacción de la apuesta
+        addTransaction({
+          type: 'bet',
+          amount: -betData.amount,
+          description: `Apuesta: ${betData.matchName}`
+        });
+
+        return true;
+      }
     } catch (error) {
-      console.error('Error al realizar la apuesta:', error);      return false;
+      console.error('Error al realizar la apuesta:', error);
+      return false;
     }
   };
 
