@@ -314,12 +314,51 @@ export class VirtualTimeService {
     // Use strengths to influence scoring (for future enhancements)
     const strengthDifference = homeStrength - awayStrength;
     
-    // Generate base scores (Quaffle goals)
-    const homeQuaffleScore = Math.floor(Math.random() * 120) + 30 + Math.max(0, strengthDifference);
-    const awayQuaffleScore = Math.floor(Math.random() * 120) + 30 + Math.max(0, -strengthDifference);
+    // Generate match events FIRST - these will determine the final score
+    const events: MatchEvent[] = [];
+    const duration = Math.floor(Math.random() * 60) + 30; // 30-90 minutes
+
+    // Generate Quaffle goals based on team strength
+    const baseGoalCount = Math.floor(Math.random() * 10) + 8; // 8-17 goals total
+    const homeGoalAdvantage = Math.max(0, strengthDifference / 10); // Slight advantage
+    
+    const homeGoalChance = 0.5 + (homeGoalAdvantage / 100); // Slight home advantage
+
+    // Generate goal events
+    for (let i = 0; i < baseGoalCount; i++) {
+      const minute = Math.floor(Math.random() * duration);
+      const randomValue = Math.random();
+      const isHomeGoal = randomValue < homeGoalChance;
+      
+      events.push({
+        id: uuidv4(),
+        matchId,
+        minute,
+        type: 'goal',
+        team: isHomeGoal ? homeTeam.id : awayTeam.id,
+        player: `Chaser ${Math.floor(Math.random() * 3) + 1}`,
+        description: 'Quaffle goal scored - 10 points!',
+        points: 10
+      });
+    }
+
+    // Generate some foul events (no points)
+    const foulCount = Math.floor(Math.random() * 4) + 2; // 2-5 fouls
+    for (let i = 0; i < foulCount; i++) {
+      events.push({
+        id: uuidv4(),
+        matchId,
+        minute: Math.floor(Math.random() * duration),
+        type: 'foul',
+        team: Math.random() < 0.5 ? homeTeam.id : awayTeam.id,
+        player: `Player ${Math.floor(Math.random() * 7) + 1}`,
+        description: 'Foul committed - rule violation',
+        points: 0
+      });
+    }
 
     // Determine snitch catch (150 points)
-    const snitchCatchChance = 0.8; // 80% chance someone catches it
+    const snitchCatchChance = 0.85; // 85% chance someone catches it
     const snitchCaught = Math.random() < snitchCatchChance;
     let snitchCaughtBy = null;
 
@@ -331,43 +370,28 @@ export class VirtualTimeService {
       const homeChance = homeSeekerSkill / totalSkill;
       
       snitchCaughtBy = Math.random() < homeChance ? homeTeam.id : awayTeam.id;
-    }
-
-    const homeScore = homeQuaffleScore + (snitchCaughtBy === homeTeam.id ? 150 : 0);
-    const awayScore = awayQuaffleScore + (snitchCaughtBy === awayTeam.id ? 150 : 0);
-
-    // Generate match events
-    const events: MatchEvent[] = [];
-    const duration = Math.floor(Math.random() * 60) + 30; // 30-90 minutes
-
-    // Add some random events
-    const eventCount = Math.floor(Math.random() * 10) + 5;
-    for (let i = 0; i < eventCount; i++) {
+      
+      // Add snitch catch event
       events.push({
         id: uuidv4(),
         matchId,
-        minute: Math.floor(Math.random() * duration),
-        type: Math.random() < 0.7 ? 'goal' : 'foul',
-        team: Math.random() < 0.5 ? homeTeam.id : awayTeam.id,
-        player: `Player ${Math.floor(Math.random() * 7) + 1}`,
-        description: Math.random() < 0.7 ? 'Quaffle goal scored' : 'Foul committed',
-        points: Math.random() < 0.7 ? 10 : 0
-      });
-    }
-
-    // Add snitch catch event if applicable
-    if (snitchCaught && snitchCaughtBy) {
-      events.push({
-        id: uuidv4(),
-        matchId,
-        minute: duration - 5,
+        minute: duration - Math.floor(Math.random() * 10) - 1, // Near end of match
         type: 'snitch',
         team: snitchCaughtBy,
         player: 'Seeker',
-        description: 'Golden Snitch caught!',
+        description: 'Golden Snitch caught! +150 points!',
         points: 150
       });
     }
+
+    // Sort events by minute
+    events.sort((a, b) => a.minute - b.minute);
+
+    // 🎯 CALCULATE FINAL SCORES FROM EVENTS - This is the key fix!
+    const { homeScore, awayScore } = this.calculateScoreFromEvents(events, homeTeam.id, awayTeam.id);
+
+    console.log(`🎯 Match ${matchId} simulated: ${homeTeam.name || 'Home'} ${homeScore} - ${awayScore} ${awayTeam.name || 'Away'}`);
+    console.log(`   Events generated: ${events.length} (${events.filter(e => e.type === 'goal').length} goals, ${events.filter(e => e.type === 'snitch').length} snitch, ${events.filter(e => e.type === 'foul').length} fouls)`);
 
     const weatherTypes = ['sunny', 'cloudy', 'rainy', 'stormy', 'foggy', 'windy'] as const;
     const randomWeather = weatherTypes[Math.floor(Math.random() * weatherTypes.length)];
@@ -379,10 +403,34 @@ export class VirtualTimeService {
       duration,
       snitchCaught,
       snitchCaughtBy: snitchCaughtBy || undefined,
-      events: events.sort((a, b) => a.minute - b.minute),
+      events,
       weather: randomWeather,
       attendance: Math.floor(Math.random() * 50000) + 10000
     };
+  }
+
+  /**
+   * Calculate final scores from the events generated during simulation
+   * This ensures the final score always matches the events
+   */
+  private calculateScoreFromEvents(events: MatchEvent[], homeTeamId: string, awayTeamId: string): {
+    homeScore: number;
+    awayScore: number;
+  } {
+    let homeScore = 0;
+    let awayScore = 0;
+
+    for (const event of events) {
+      if (event.points > 0) {
+        if (event.team === homeTeamId) {
+          homeScore += event.points;
+        } else if (event.team === awayTeamId) {
+          awayScore += event.points;
+        }
+      }
+    }
+
+    return { homeScore, awayScore };
   }
 
   private mapRowToMatch(row: MatchRow): Match {
