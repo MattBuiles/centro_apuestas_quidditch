@@ -549,7 +549,7 @@ const MatchDetailPage: React.FC = () => {
     awayTeam: awayTeam?.name || 'Equipo Visitante',
     homeScore: match.homeScore || 0,
     awayScore: match.awayScore || 0,
-    status: match.status as 'live' | 'upcoming' | 'finished',
+    status: match.status === 'scheduled' ? 'upcoming' : match.status as 'live' | 'upcoming' | 'finished',
     minute: match.currentMinute ? `${match.currentMinute}'` : undefined,
     date: formatDate(match.date),
     time: formatTime(match.date),
