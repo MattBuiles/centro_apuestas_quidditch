@@ -88,6 +88,75 @@ export class BetsRepository {
       }
     }
 
+    // If the bet won, we need to handle the payout and create a transaction
+    if (status === 'won') {
+      // First, get bet details to calculate winnings
+      const betDetails = await this.connection.get(`
+        SELECT b.*, u.balance, u.id as user_id 
+        FROM bets b 
+        JOIN users u ON b.user_id = u.id 
+        WHERE b.id = ?
+      `, [betId]) as any;
+
+      if (betDetails) {
+        const winnings = betDetails.potential_win;
+        const newBalance = betDetails.balance + winnings;
+        
+        // Update user balance
+        const updateBalanceSQL = `UPDATE users SET balance = ? WHERE id = ?`;
+        await this.connection.run(updateBalanceSQL, [newBalance, betDetails.user_id]);
+
+        // Create transaction record for the winnings
+        const { Database } = await import('./Database');
+        const db = Database.getInstance();
+        
+        const transactionId = `win-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        await db.createTransaction({
+          id: transactionId,
+          userId: betDetails.user_id,
+          type: 'bet_won',
+          amount: winnings,
+          balanceBefore: betDetails.balance,
+          balanceAfter: newBalance,
+          description: `Ganancia de apuesta: ${winnings} galeones`,
+          referenceId: betId
+        });
+
+        console.log(`🎉 Bet won! User ${betDetails.user_id} received ${winnings} galeones. New balance: ${newBalance}`);
+      }
+    }
+    
+    // If the bet lost, create a transaction record for the loss
+    if (status === 'lost') {
+      const betDetails = await this.connection.get(`
+        SELECT b.*, u.balance, u.id as user_id 
+        FROM bets b 
+        JOIN users u ON b.user_id = u.id 
+        WHERE b.id = ?
+      `, [betId]) as any;
+
+      if (betDetails) {
+        // Create transaction record for the loss (amount will be negative since it was already deducted)
+        const { Database } = await import('./Database');
+        const db = Database.getInstance();
+        
+        const transactionId = `loss-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        await db.createTransaction({
+          id: transactionId,
+          userId: betDetails.user_id,
+          type: 'bet_lost',
+          amount: 0, // No change in balance since money was already deducted when placing bet
+          balanceBefore: betDetails.balance,
+          balanceAfter: betDetails.balance,
+          description: `Apuesta perdida: ${betDetails.amount} galeones`,
+          referenceId: betId
+        });
+
+        console.log(`💔 Bet lost! User ${betDetails.user_id} lost ${betDetails.amount} galeones from bet ${betId}`);
+      }
+    }
+
+    // Update the bet status
     const sql = `
       UPDATE bets 
       SET status = ?, resolved_at = ?
