@@ -422,7 +422,8 @@ interface AuthContextType {
   canPlaceBet: (amount: number) => { canBet: boolean; reason?: string };
   // Funciones para manejo de transacciones
   getUserTransactions: () => UserTransaction[];
-  addTransaction: (transaction: Omit<UserTransaction, 'id' | 'userId' | 'date'>) => void;
+  addTransaction: (transaction: Omit<UserTransaction, 'id' | 'userId' | 'date'>) => Promise<void>;
+  loadUserTransactionsFromBackend: () => Promise<UserTransaction[]>;
   error: string | null;
 }
 
@@ -1067,6 +1068,47 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return userBets;
   }, [user, userBets]);
 
+  // Cargar transacciones del usuario desde el backend
+  const loadUserTransactionsFromBackend = useCallback(async (): Promise<UserTransaction[]> => {
+    console.log('🔍 loadUserTransactionsFromBackend called');
+    
+    if (!user || !FEATURES.USE_BACKEND_BETS) {
+      console.log('🔍 Returning early - no user or backend disabled');
+      return userTransactions;
+    }
+
+    try {
+      console.log('🔍 Making API call to /transactions');
+      const response = await apiClient.get('/transactions') as any;
+      console.log('🔍 Transactions API Response:', response);
+      
+      if (response.success && response.data) {
+        const backendTransactions = response.data;
+        console.log('🔍 Backend transactions:', backendTransactions);
+        
+        // Transformar datos del backend al formato del frontend
+        const transformedTransactions: UserTransaction[] = backendTransactions.map((transaction: any) => ({
+          id: transaction.id,
+          userId: transaction.user_id,
+          type: transaction.type,
+          amount: transaction.amount,
+          description: transaction.description,
+          date: transaction.created_at ? new Date(transaction.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
+        }));
+
+        console.log('🔍 Transformed transactions:', transformedTransactions);
+        setUserTransactions(transformedTransactions);
+        return transformedTransactions;
+      } else {
+        console.log('🔍 No data in response or response failed');
+      }
+    } catch (error) {
+      console.error('🔍 Error loading user transactions from backend:', error);
+    }
+
+    return userTransactions;
+  }, [user, userTransactions]);
+
   // Obtener el número de apuestas realizadas hoy
   const getTodayBetsCount = (): number => {
     const today = new Date().toDateString();
@@ -1236,19 +1278,55 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return userTransactions;
   };
 
-  // Agregar una nueva transacción
-  const addTransaction = (transactionData: Omit<UserTransaction, 'id' | 'userId' | 'date'>) => {
-    if (!user) return;
+  // Agregar una nueva transacción al backend
+  const addTransaction = async (transactionData: Omit<UserTransaction, 'id' | 'userId' | 'date'>) => {
+    if (!user || !FEATURES.USE_BACKEND_BETS) {
+      // Fallback al comportamiento anterior si no hay backend
+      const newTransaction: UserTransaction = {
+        ...transactionData,
+        id: Date.now(),
+        userId: user?.id || '',
+        date: new Date().toISOString().split('T')[0]
+      };
+      const updatedTransactions = [...userTransactions, newTransaction];
+      saveUserTransactions(updatedTransactions);
+      return;
+    }
 
-    const newTransaction: UserTransaction = {
-      ...transactionData,
-      id: Date.now(),
-      userId: user.id,
-      date: new Date().toISOString().split('T')[0] // YYYY-MM-DD format
-    };
+    try {
+      // Determinar el endpoint según el tipo de transacción
+      const endpoint = transactionData.type === 'deposit' ? 
+        '/transactions/deposit' : 
+        transactionData.type === 'withdraw' ? '/transactions/withdraw' : null;
+      
+      if (!endpoint) {
+        console.error('Tipo de transacción no soportado:', transactionData.type);
+        return;
+      }
 
-    const updatedTransactions = [...userTransactions, newTransaction];
-    saveUserTransactions(updatedTransactions);
+      const response = await apiClient.post(endpoint, {
+        amount: Math.abs(transactionData.amount), // Siempre enviar positivo
+        description: transactionData.description
+      }) as any;
+
+      if (response.success) {
+        console.log('✅ Transacción guardada en backend:', response.data);
+        
+        // Actualizar el balance del usuario en el contexto
+        if (response.data.balanceAfter !== undefined) {
+          setUser(prev => prev ? { ...prev, balance: response.data.balanceAfter } : null);
+        }
+        
+        // Recargar transacciones desde el backend
+        await loadUserTransactionsFromBackend();
+      } else {
+        console.error('❌ Error guardando transacción:', response.error);
+        throw new Error(response.error);
+      }
+    } catch (error) {
+      console.error('❌ Error en addTransaction:', error);
+      throw error;
+    }
   };
 
   // Función para restablecer contraseña por email
@@ -1311,6 +1389,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         // Funciones de transacciones
         getUserTransactions,
         addTransaction,
+        loadUserTransactionsFromBackend,
         error,
       }}
     >

@@ -26,6 +26,7 @@ import predictionsRoutes from './routes/predictions';
 import adminRoutes from './routes/admin';
 import virtualTimeRoutes from './routes/virtual-time';
 import leagueTimeRoutes from './routes/league-time';
+import transactionsRoutes from './routes/transactions';
 
 // Load environment variables from backend directory
 const backendDir = path.resolve(__dirname, '..');
@@ -114,6 +115,7 @@ app.use('/api/predictions', predictionsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/virtual-time', virtualTimeRoutes);
 app.use('/api/league-time', leagueTimeRoutes);
+app.use('/api/transactions', transactionsRoutes);
 
 // Error handling
 app.use(notFound);
