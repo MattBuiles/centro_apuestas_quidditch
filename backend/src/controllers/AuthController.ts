@@ -245,6 +245,39 @@ export class AuthController {
     }
   };
 
+  public checkEmailExists = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { email } = req.body;
+
+      // Check if user exists with this email
+      const user = await this.db.getUserByEmailForRecovery(email);
+
+      if (user) {
+        res.json({
+          success: true,
+          data: { exists: true },
+          message: 'Email exists in our system',
+          timestamp: new Date().toISOString()
+        });
+      } else {
+        res.json({
+          success: true,
+          data: { exists: false },
+          message: 'Email not found in our system',
+          timestamp: new Date().toISOString()
+        });
+      }
+
+    } catch (error) {
+      console.error('Check email error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
+
   public resetPassword = async (req: Request, res: Response): Promise<void> => {
     try {
       const { email, newPassword } = req.body;
