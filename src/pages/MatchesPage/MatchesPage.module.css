@@ -199,6 +199,18 @@
     position: relative;
 }
 
+.searchFilter::before {
+    content: '🔍';
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(106, 13, 173, 0.4);
+    font-size: 1.1rem;
+    z-index: 1;
+    pointer-events: none;
+}
+
 @media (min-width: 768px) {
     .searchFilter {
         max-width: 450px;
@@ -250,7 +262,7 @@
 
 @media (min-width: 768px) {
     .searchInput {
-        padding: 1.25rem 1.75rem;
+        padding: 1.25rem 1.75rem 1.25rem 3rem;
         min-height: 3.5rem;
         border-radius: 18px;
     }
