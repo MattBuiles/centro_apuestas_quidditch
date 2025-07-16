@@ -1617,11 +1617,459 @@
   text-shadow: 0 1px 2px rgba(239, 68, 68, 0.3);
 }
 
-/* ===== BETS SECTION ===== */
+/* ===== BETS SECTION - DISEÑO MÁGICO Y ELEGANTE ===== */
 .betsContainer {
   display: flex;
   flex-direction: column;
+  gap: var(--spacing-6);
+  position: relative;
+}
+
+/* Efecto mágico de fondo para contenedor de apuestas */
+.betsContainer::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  background: linear-gradient(45deg, 
+    rgba(255, 204, 0, 0.08) 0%,
+    rgba(75, 0, 130, 0.08) 25%,
+    rgba(255, 204, 0, 0.08) 50%,
+    rgba(75, 0, 130, 0.08) 75%,
+    rgba(255, 204, 0, 0.08) 100%);
+  background-size: 400% 400%;
+  animation: magicalGradientShift 10s ease infinite;
+  border-radius: var(--radius-xl);
+  opacity: 0.6;
+  pointer-events: none;
+  z-index: -1;
+}
+
+@keyframes magicalGradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Tabs de apuestas con diseño mágico */
+.betTabs {
+  display: flex;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-6);
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-2);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 
+    0 8px 32px rgba(75, 0, 130, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.betTab {
+  flex: 1;
+  padding: var(--spacing-4) var(--spacing-6);
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: var(--text-base);
+  font-weight: 600;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  position: relative;
+  overflow: hidden;
+  font-family: var(--font-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.betTab::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 100%);
+  transition: left 0.6s ease;
+}
+
+.betTab:hover::before {
+  left: 100%;
+}
+
+.betTab:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(255, 255, 255, 0.1);
+}
+
+.betTab.active {
+  background: linear-gradient(135deg, 
+    rgba(255, 204, 0, 0.9) 0%,
+    rgba(255, 215, 0, 0.8) 50%,
+    rgba(218, 165, 32, 0.9) 100%);
+  color: #1a1a2e;
+  box-shadow: 
+    0 8px 25px rgba(255, 204, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transform: translateY(-3px);
+}
+
+.betTab.active::before {
+  background: linear-gradient(90deg, 
+    transparent 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 100%);
+}
+
+/* Tarjetas de apuestas con diseño mágico elegante */
+.betCard {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(248, 250, 252, 0.9) 50%,
+    rgba(241, 245, 249, 0.95) 100%);
+  backdrop-filter: blur(25px);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-6);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 
+    0 20px 50px rgba(0, 0, 0, 0.08),
+    0 8px 25px rgba(75, 0, 130, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  position: relative;
+  overflow: hidden;
+}
+
+.betCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, 
+    var(--color-primary) 0%,
+    var(--color-secondary) 50%,
+    var(--color-primary) 100%);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+}
+
+/* Efecto de partículas mágicas en hover */
+.betCard::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(2px 2px at 20px 30px, rgba(255, 204, 0, 0.4), transparent),
+    radial-gradient(2px 2px at 40px 70px, rgba(75, 0, 130, 0.3), transparent),
+    radial-gradient(1px 1px at 90px 40px, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(1px 1px at 130px 80px, rgba(255, 204, 0, 0.4), transparent);
+  background-repeat: repeat;
+  background-size: 200px 100px;
+  animation: magicalSparkles 8s linear infinite;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+  border-radius: var(--radius-xl);
+}
+
+.betCard:hover::after {
+  opacity: 1;
+}
+
+@keyframes magicalSparkles {
+  from { transform: translateY(0); }
+  to { transform: translateY(-100px); }
+}
+
+.betCard:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 
+    0 30px 60px rgba(0, 0, 0, 0.12),
+    0 12px 30px rgba(75, 0, 130, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+/* Header de tarjeta de apuesta */
+.betHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-5);
+  padding-bottom: var(--spacing-3);
+  border-bottom: 2px dashed rgba(75, 0, 130, 0.2);
+}
+
+.betMatch {
+  font-family: var(--font-secondary);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(75, 0, 130, 0.2);
+  background: linear-gradient(135deg, 
+    var(--color-primary) 0%,
+    var(--color-primary-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.betStatus {
+  padding: var(--spacing-2) var(--spacing-4);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.betStatus.active {
+  background: linear-gradient(135deg, 
+    rgba(59, 130, 246, 0.9) 0%,
+    rgba(37, 99, 235, 0.8) 100%);
+  color: white;
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.betStatus.won {
+  background: linear-gradient(135deg, 
+    rgba(16, 185, 129, 0.9) 0%,
+    rgba(5, 150, 105, 0.8) 100%);
+  color: white;
+  border-color: rgba(16, 185, 129, 0.3);
+  animation: victoryGlow 2s ease-in-out infinite alternate;
+}
+
+.betStatus.lost {
+  background: linear-gradient(135deg, 
+    rgba(239, 68, 68, 0.9) 0%,
+    rgba(220, 38, 38, 0.8) 100%);
+  color: white;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+@keyframes victoryGlow {
+  from { 
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  }
+  to { 
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.5);
+  }
+}
+
+/* Detalles de las apuestas con diseño mágico */
+.betDetails {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: var(--spacing-4);
+  margin-bottom: var(--spacing-5);
+}
+
+.betDetail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  padding: var(--spacing-4);
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.7) 0%,
+    rgba(248, 250, 252, 0.5) 100%);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+
+.betDetail::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, 
+    transparent 0%,
+    var(--color-primary) 50%,
+    transparent 100%);
+}
+
+.betDetail strong {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  font-family: var(--font-secondary);
+}
+
+.betDetail span:not(strong) {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--color-text);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Ganancia potencial destacada */
+.potentialWin {
+  background: linear-gradient(135deg, 
+    rgba(255, 204, 0, 0.15) 0%,
+    rgba(255, 215, 0, 0.1) 50%,
+    rgba(218, 165, 32, 0.15) 100%);
+  border: 2px solid rgba(255, 204, 0, 0.3);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-5);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 
+    0 8px 25px rgba(255, 204, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.potentialWin::before {
+  content: '✨';
+  position: absolute;
+  top: var(--spacing-2);
+  right: var(--spacing-3);
+  font-size: var(--text-xl);
+  animation: magicalSparkle 2s ease-in-out infinite;
+}
+
+.potentialWin::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 100%);
+  animation: magicalShimmer 3s ease-in-out infinite;
+}
+
+@keyframes magicalSparkle {
+  0%, 100% { 
+    transform: scale(1) rotate(0deg); 
+    opacity: 0.8; 
+  }
+  50% { 
+    transform: scale(1.2) rotate(180deg); 
+    opacity: 1; 
+  }
+}
+
+@keyframes magicalShimmer {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: 100%; }
+}
+
+.potentialWin strong {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  display: block;
+  margin-bottom: var(--spacing-1);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.potentialWin span:not(strong) {
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  background: linear-gradient(135deg, 
+    #b8860b 0%,
+    #ffd700 50%,
+    #daa520 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 2px 4px rgba(255, 204, 0, 0.3);
+  display: block;
+  font-family: var(--font-secondary);
+}
+
+/* Estado sin apuestas mejorado */
+.noBets {
+  text-align: center;
+  padding: var(--spacing-12) var(--spacing-6);
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(248, 250, 252, 0.05) 100%);
+  border-radius: var(--radius-xl);
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(15px);
+  position: relative;
+}
+
+.noBets::before {
+  content: '🏆';
+  font-size: 4rem;
+  display: block;
+  margin-bottom: var(--spacing-4);
+  opacity: 0.6;
+  animation: magicalFloat 3s ease-in-out infinite;
+}
+
+@keyframes magicalFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.noBets p {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  margin: 0;
+  font-family: var(--font-secondary);
+}
+
+/* Responsive design mejorado para bets */
+@media (max-width: 768px) {
+  .betTabs {
+    flex-direction: column;
+    gap: var(--spacing-1);
+  }
+  
+  .betTab {
+    padding: var(--spacing-3) var(--spacing-4);
+    font-size: var(--text-sm);
+  }
+  
+  .betCard {
+    padding: var(--spacing-4);
+  }
+  
+  .betDetails {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-3);
+  }
+  
+  .potentialWin {
+    padding: var(--spacing-4);
+  }
+  
+  .potentialWin span:not(strong) {
+    font-size: var(--text-xl);
+  }
 }
 
 .loadingContainer {
