@@ -430,33 +430,33 @@ export class DatabaseSeed {
     const playersByTeam = {
       'gryffindor': [
         // Titulares (7 jugadores)
-        { name: 'Harry Potter', position: 'seeker', skill_level: 95, is_starting: true, number: 1, years_active: 7 },
-        { name: 'Ron Weasley', position: 'keeper', skill_level: 88, is_starting: true, number: 2, years_active: 6 },
-        { name: 'Fred Weasley', position: 'beater', skill_level: 85, is_starting: true, number: 3, years_active: 7 },
-        { name: 'George Weasley', position: 'beater', skill_level: 85, is_starting: true, number: 4, years_active: 7 },
-        { name: 'Angelina Johnson', position: 'chaser', skill_level: 90, is_starting: true, number: 5, years_active: 6 },
-        { name: 'Katie Bell', position: 'chaser', skill_level: 88, is_starting: true, number: 6, years_active: 5 },
-        { name: 'Alicia Spinnet', position: 'chaser', skill_level: 87, is_starting: true, number: 7, years_active: 6 },
+        { name: 'Harry Potter', position: 'seeker', skill_level: 95, is_starting: true, number: 1, years_active: 7, achievements: JSON.stringify(['Buscador más joven en un siglo', 'Captura récord de Snitch en 5 minutos', 'Héroe de la resistencia']) },
+        { name: 'Ron Weasley', position: 'keeper', skill_level: 88, is_starting: true, number: 2, years_active: 6, achievements: JSON.stringify(['95% de efectividad en paradas', 'Guardián del año 2023']) },
+        { name: 'Fred Weasley', position: 'beater', skill_level: 85, is_starting: true, number: 3, years_active: 7, achievements: JSON.stringify(['Mejor golpeador defensivo de la década', 'Récord de bludgers desviadas']) },
+        { name: 'George Weasley', position: 'beater', skill_level: 85, is_starting: true, number: 4, years_active: 7, achievements: JSON.stringify(['Mejor golpeador ofensivo de la década', 'Jugada más espectacular 2022']) },
+        { name: 'Angelina Johnson', position: 'chaser', skill_level: 90, is_starting: true, number: 5, years_active: 6, achievements: JSON.stringify(['Capitana del equipo 2 años', '150+ goles en su carrera']) },
+        { name: 'Katie Bell', position: 'chaser', skill_level: 88, is_starting: true, number: 6, years_active: 5, achievements: JSON.stringify(['100+ goles en su carrera', 'Cazadora más rápida']) },
+        { name: 'Alicia Spinnet', position: 'chaser', skill_level: 87, is_starting: true, number: 7, years_active: 6, achievements: JSON.stringify(['Mejor promedio de goles por partido', 'Jugadora más consistente']) },
         // Suplentes
-        { name: 'Oliver Wood', position: 'keeper', skill_level: 92, is_starting: false, number: 8, years_active: 8 },
-        { name: 'Ginny Weasley', position: 'seeker', skill_level: 88, is_starting: false, number: 9, years_active: 4 },
-        { name: 'Dean Thomas', position: 'chaser', skill_level: 75, is_starting: false, number: 10, years_active: 3 },
-        { name: 'Seamus Finnigan', position: 'beater', skill_level: 72, is_starting: false, number: 11, years_active: 3 }
+        { name: 'Oliver Wood', position: 'keeper', skill_level: 92, is_starting: false, number: 8, years_active: 8, achievements: JSON.stringify(['Capitán legendario', 'Récord de partidos invicto']) },
+        { name: 'Ginny Weasley', position: 'seeker', skill_level: 88, is_starting: false, number: 9, years_active: 4, achievements: JSON.stringify(['Buscadora más promisoria', 'Captura más joven']) },
+        { name: 'Dean Thomas', position: 'chaser', skill_level: 75, is_starting: false, number: 10, years_active: 3, achievements: JSON.stringify(['Mejor jugador suplente']) },
+        { name: 'Seamus Finnigan', position: 'beater', skill_level: 72, is_starting: false, number: 11, years_active: 3, achievements: JSON.stringify(['Golpeador más agresivo']) }
       ],
       'slytherin': [
         // Titulares
-        { name: 'Draco Malfoy', position: 'seeker', skill_level: 87, is_starting: true, number: 1, years_active: 6 },
-        { name: 'Blaise Zabini', position: 'keeper', skill_level: 93, is_starting: true, number: 2, years_active: 5 },
-        { name: 'Vincent Crabbe', position: 'beater', skill_level: 88, is_starting: true, number: 3, years_active: 6 },
-        { name: 'Gregory Goyle', position: 'beater', skill_level: 86, is_starting: true, number: 4, years_active: 6 },
-        { name: 'Marcus Flint', position: 'chaser', skill_level: 92, is_starting: true, number: 5, years_active: 8 },
-        { name: 'Adrian Pucey', position: 'chaser', skill_level: 89, is_starting: true, number: 6, years_active: 7 },
-        { name: 'Terence Higgs', position: 'chaser', skill_level: 85, is_starting: true, number: 7, years_active: 5 },
+        { name: 'Draco Malfoy', position: 'seeker', skill_level: 87, is_starting: true, number: 1, years_active: 6, achievements: JSON.stringify(['Buscador más estratégico de su generación', 'Captura más elegante']) },
+        { name: 'Blaise Zabini', position: 'keeper', skill_level: 93, is_starting: true, number: 2, years_active: 5, achievements: JSON.stringify(['Mejor promedio de paradas', 'Guardián más seguro']) },
+        { name: 'Vincent Crabbe', position: 'beater', skill_level: 88, is_starting: true, number: 3, years_active: 6, achievements: JSON.stringify(['Golpeador más intimidante', 'Récord de bludgers conectadas']) },
+        { name: 'Gregory Goyle', position: 'beater', skill_level: 86, is_starting: true, number: 4, years_active: 6, achievements: JSON.stringify(['Especialista en jugadas de fuerza', 'Mejor dupla de golpeadores']) },
+        { name: 'Marcus Flint', position: 'chaser', skill_level: 92, is_starting: true, number: 5, years_active: 8, achievements: JSON.stringify(['Capitán más exitoso de Slytherin', 'Líder en goles anotados']) },
+        { name: 'Adrian Pucey', position: 'chaser', skill_level: 89, is_starting: true, number: 6, years_active: 7, achievements: JSON.stringify(['Especialista en goles de larga distancia', 'Mejor precisión']) },
+        { name: 'Terence Higgs', position: 'chaser', skill_level: 85, is_starting: true, number: 7, years_active: 5, achievements: JSON.stringify(['Cazador más técnico', 'Jugador más elegante']) },
         // Suplentes
-        { name: 'Miles Bletchley', position: 'keeper', skill_level: 85, is_starting: false, number: 8, years_active: 4 },
-        { name: 'Graham Montague', position: 'seeker', skill_level: 80, is_starting: false, number: 9, years_active: 3 },
-        { name: 'Cassius Warrington', position: 'chaser', skill_level: 78, is_starting: false, number: 10, years_active: 4 },
-        { name: 'Peregrine Derrick', position: 'beater', skill_level: 83, is_starting: false, number: 11, years_active: 5 }
+        { name: 'Miles Bletchley', position: 'keeper', skill_level: 85, is_starting: false, number: 8, years_active: 4, achievements: JSON.stringify(['Guardián más joven en alcanzar 50 partidos']) },
+        { name: 'Graham Montague', position: 'seeker', skill_level: 80, is_starting: false, number: 9, years_active: 3, achievements: JSON.stringify(['Buscador suplente más confiable']) },
+        { name: 'Cassius Warrington', position: 'chaser', skill_level: 78, is_starting: false, number: 10, years_active: 4, achievements: JSON.stringify(['Mejor jugador de reserva']) },
+        { name: 'Peregrine Derrick', position: 'beater', skill_level: 83, is_starting: false, number: 11, years_active: 5, achievements: JSON.stringify(['Golpeador más disciplinado']) }
       ],
       'ravenclaw': [
         // Titulares
@@ -539,7 +539,7 @@ export class DatabaseSeed {
             player.is_starting,
             player.number,
             player.years_active,
-            JSON.stringify([]) // Empty achievements array for now
+            (player as any).achievements || '[]' // Use player achievements or empty array
           ]);
         }
       }

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Team Backend Connection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .success {
+            color: #28a745;
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .error {
+            color: #dc3545;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .info {
+            color: #0c5460;
+            background-color: #bee5eb;
+            border: 1px solid #abdde5;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔍 Test Team Backend Connection</h1>
+        <p>Esta página verifica la conexión del frontend con el backend para cargar equipos.</p>
+        
+        <button onclick="testTeamGryffindor()">Test Gryffindor Team</button>
+        <button onclick="testApiClient()">Test API Client</button>
+        <button onclick="testAllTeams()">Test All Teams</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3001/api';
+        
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = type;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong> ${message}`;
+            results.appendChild(div);
+            results.scrollTop = results.scrollHeight;
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        async function testTeamGryffindor() {
+            clearResults();
+            log('🔍 Testing Gryffindor team loading...');
+            
+            try {
+                // Test 1: Direct fetch call
+                log('1️⃣ Making direct fetch call to /teams/gryffindor...');
+                const response = await fetch(`${API_BASE}/teams/gryffindor`);
+                
+                log(`Response status: ${response.status}`, response.ok ? 'success' : 'error');
+                log(`Response headers: ${response.headers.get('content-type')}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                log(`Response structure: success=${data.success}, hasData=${!!data.data}`, 'success');
+                
+                if (data.success && data.data) {
+                    log('✅ API call successful!', 'success');
+                    log(`Team: ${data.data.name} (ID: ${data.data.id})`);
+                    log(`Roster: ${data.data.roster?.length || 0} players`);
+                    log(`Upcoming matches: ${data.data.upcomingMatches?.length || 0}`);
+                    log(`Recent matches: ${data.data.recentMatches?.length || 0}`);
+                    log(`Rivalries: ${data.data.rivalries?.length || 0}`);
+                    
+                    // Show full data structure
+                    log('<pre>' + JSON.stringify(data.data, null, 2) + '</pre>');
+                } else {
+                    log('❌ API call failed: Invalid response structure', 'error');
+                    log('<pre>' + JSON.stringify(data, null, 2) + '</pre>');
+                }
+                
+            } catch (error) {
+                log('❌ Error during testing: ' + error.message, 'error');
+                log('Stack trace: ' + error.stack, 'error');
+            }
+        }
+        
+        async function testApiClient() {
+            clearResults();
+            log('🔍 Testing API Client class...');
+            
+            try {
+                // Simulate the API client logic
+                const apiClient = {
+                    baseURL: API_BASE,
+                    async get(endpoint) {
+                        const url = `${this.baseURL}${endpoint}`;
+                        log(`Making request to: ${url}`);
+                        
+                        const response = await fetch(url, {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        
+                        const data = await response.json();
+                        
+                        // Check if response already has ApiResponse structure
+                        if (data && typeof data === 'object' && 'success' in data) {
+                            return data;
+                        }
+                        
+                        // Otherwise, wrap in ApiResponse structure
+                        return {
+                            success: true,
+                            data: data,
+                            timestamp: new Date().toISOString()
+                        };
+                    }
+                };
+                
+                const response = await apiClient.get('/teams/gryffindor');
+                
+                log('✅ API Client test successful!', 'success');
+                log(`Response: ${JSON.stringify(response, null, 2)}`);
+                
+                // Test the team detail page logic
+                if (response.success && response.data) {
+                    log('✅ Team data structure is correct', 'success');
+                    log(`Team ID: ${response.data.id}`);
+                    log(`Team Name: ${response.data.name}`);
+                } else {
+                    log('❌ Team data structure is incorrect', 'error');
+                }
+                
+            } catch (error) {
+                log('❌ API Client test failed: ' + error.message, 'error');
+            }
+        }
+        
+        async function testAllTeams() {
+            clearResults();
+            log('🔍 Testing all teams endpoint...');
+            
+            try {
+                const response = await fetch(`${API_BASE}/teams`);
+                const data = await response.json();
+                
+                if (data.success && Array.isArray(data.data)) {
+                    log(`✅ Found ${data.data.length} teams`, 'success');
+                    data.data.forEach(team => {
+                        log(`- ${team.name} (ID: ${team.id})`);
+                    });
+                } else {
+                    log('❌ Teams endpoint failed', 'error');
+                }
+                
+            } catch (error) {
+                log('❌ Error testing teams: ' + error.message, 'error');
+            }
+        }
+        
+        // Auto-run basic test on page load
+        window.addEventListener('load', () => {
+            log('🚀 Page loaded. Backend should be running on http://localhost:3001', 'info');
+            log('Click the buttons above to test different scenarios.');
+        });
+    </script>
+</body>
+</html>

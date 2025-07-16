@@ -6,6 +6,50 @@ import TeamLogo from '@/components/teams/TeamLogo';
 import { apiClient } from '@/utils/apiClient';
 import styles from './TeamDetailPage.module.css';
 
+// Define interfaces for backend data
+interface BackendPlayer {
+  id: string;
+  name: string;
+  position: string;
+  number: number;
+  yearsActive: number;
+  achievements: string[];
+}
+
+interface BackendMatch {
+  id: string;
+  opponent: string;
+  date: string;
+  venue: string;
+  result?: 'win' | 'loss' | 'draw';
+  score?: string;
+}
+
+interface BackendIdol {
+  id: string;
+  name: string;
+  position: string;
+  period: string;
+  achievements: string[];
+  description: string;
+  legendaryStats: string;
+}
+
+interface BackendRivalry {
+  opponentId: string;
+  opponentName: string;
+  totalMatches: number;
+  wins: number;
+  losses: number;
+  draws: number;
+  winPercentage: number;
+  lastMatch?: {
+    date: string;
+    result: string;
+    score: string;
+  };
+}
+
 interface Player {
   id: string;
   name: string;
@@ -698,11 +742,12 @@ const TeamDetailPage = () => {
       try {
         // Try to get team from backend first
         const response = await apiClient.get(`/teams/${teamId}`) as { 
-          data?: { success?: boolean; data?: Record<string, unknown> } 
+          success?: boolean; 
+          data?: Record<string, unknown>
         };
         
-        if (response.data?.success && response.data?.data) {
-          const teamData = response.data.data;
+        if (response.success && response.data) {
+          const teamData = response.data;
           
           // Transform backend data to match frontend interface
           const transformedTeam: TeamDetails = {
@@ -718,9 +763,62 @@ const TeamDetailPage = () => {
             stadium: String(teamData.stadium || 'Unknown Stadium'),
             colors: Array.isArray(teamData.colors) ? teamData.colors.map(String) : ['Unknown'],
             achievements: Array.isArray(teamData.achievements) ? teamData.achievements.map(String) : [],
-            roster: [], // TODO: Load from backend
-            upcomingMatches: [], // TODO: Load from backend
-            historicalIdols: [] // TODO: Load from backend
+            
+            // Transform roster data from backend
+            roster: Array.isArray(teamData.roster) ? teamData.roster.map((player: BackendPlayer) => ({
+              id: String(player.id || ''),
+              name: String(player.name || ''),
+              position: String(player.position || ''),
+              number: Number(player.number) || 0,
+              yearsActive: Number(player.yearsActive) || 0,
+              achievements: Array.isArray(player.achievements) ? player.achievements.map(String) : []
+            })) : [],
+            
+            // Transform upcoming matches from backend
+            upcomingMatches: Array.isArray(teamData.upcomingMatches) ? teamData.upcomingMatches.map((match: BackendMatch) => ({
+              id: String(match.id || ''),
+              opponent: String(match.opponent || ''),
+              date: String(match.date || ''),
+              venue: String(match.venue || ''),
+              result: undefined // upcoming matches don't have results
+            })) : [],
+            
+            // Transform recent matches from backend
+            recentMatches: Array.isArray(teamData.recentMatches) ? teamData.recentMatches.map((match: BackendMatch) => ({
+              id: String(match.id || ''),
+              opponent: String(match.opponent || ''),
+              date: String(match.date || ''),
+              venue: String(match.venue || ''),
+              result: match.result as 'win' | 'loss' | 'draw' | undefined,
+              score: String(match.score || '')
+            })) : [],
+            
+            // Transform historical idols from backend
+            historicalIdols: Array.isArray(teamData.historicalIdols) ? teamData.historicalIdols.map((idol: BackendIdol) => ({
+              id: String(idol.id || ''),
+              name: String(idol.name || ''),
+              position: String(idol.position || ''),
+              period: String(idol.period || ''),
+              achievements: Array.isArray(idol.achievements) ? idol.achievements.map(String) : [],
+              description: String(idol.description || ''),
+              legendaryStats: String(idol.legendaryStats || '')
+            })) : [],
+            
+            // Transform rivalries from backend
+            rivalries: Array.isArray(teamData.rivalries) ? teamData.rivalries.map((rivalry: BackendRivalry) => ({
+              opponentId: String(rivalry.opponentId || ''),
+              opponentName: String(rivalry.opponentName || ''),
+              totalMatches: Number(rivalry.totalMatches) || 0,
+              wins: Number(rivalry.wins) || 0,
+              losses: Number(rivalry.losses) || 0,
+              draws: Number(rivalry.draws) || 0,
+              winPercentage: Number(rivalry.winPercentage) || 0,
+              lastMatch: rivalry.lastMatch ? {
+                date: String(rivalry.lastMatch.date || ''),
+                result: (rivalry.lastMatch.result as 'win' | 'loss' | 'draw') || 'draw',
+                score: String(rivalry.lastMatch.score || '')
+              } : undefined
+            })) : []
           };
           
           setTeam(transformedTeam);
@@ -728,10 +826,15 @@ const TeamDetailPage = () => {
           throw new Error('Team not found in backend');
         }
       } catch (error) {
-        console.warn(`Failed to load team ${teamId} from backend, falling back to mock data:`, error);
+        console.error(`Failed to load team ${teamId} from backend:`, error);
+        console.error('Error details:', {
+          message: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined
+        });
         
         // Fallback to mock data
         if (teamId && mockTeamDetails[teamId]) {
+          console.warn(`Using mock data for team ${teamId}`);
           setTeam(mockTeamDetails[teamId]);
         } else {
           setTeam(null);

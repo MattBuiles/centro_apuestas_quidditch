@@ -9,7 +9,40 @@ interface TeamRow {
 }
 
 interface PlayerRow {
+  id: string;
+  name: string;
+  position: string;
   achievements?: string;
+  skill_level: number;
+  is_starting: boolean;
+  number?: number;
+  years_active?: number;
+  [key: string]: unknown;
+}
+
+interface RivalryRow {
+  opponent_id: string;
+  opponent_name: string;
+  total_matches: number;
+  wins: number;
+  losses: number;
+  draws: number;
+  win_percentage: number;
+  last_match_date?: string;
+  last_match_result?: string;
+  last_match_team_score?: number;
+  last_match_opponent_score?: number;
+  [key: string]: unknown;
+}
+
+interface HistoricalIdolRow {
+  id: string;
+  name: string;
+  position: string;
+  period: string;
+  achievements?: string;
+  description: string;
+  legendary_stats: string;
   [key: string]: unknown;
 }
 
@@ -57,7 +90,7 @@ router.get('/cumulative-stats', seasonController.getCumulativeTeamStats);
 // Get historical stats for all teams (debe ir antes de /:id)
 router.get('/historical-stats', seasonController.getHistoricalTeamStats);
 
-// Get team by ID
+// Get team by ID with complete information
 router.get('/:id', async (req, res): Promise<void> => {
   try {
     const db = Database.getInstance();
@@ -75,23 +108,120 @@ router.get('/:id', async (req, res): Promise<void> => {
       return;
     }
 
-    // Get team players
+    // Get team players and lineup
     const players = await db.getTeamPlayers(teamId);
     const startingLineup = await db.getTeamStartingLineup(teamId);
 
-    // Parse JSON fields
+    // Get upcoming matches for this team
+    const upcomingMatches = await db.getTeamUpcomingMatches(teamId, 5);
+    
+    // Get recent matches for this team
+    const recentMatches = await db.getTeamRecentMatches(teamId, 5);
+    
+    // Get rivalries data
+    const rivalries = await db.getTeamRivalries(teamId);
+    
+    // Get historical idols
+    const historicalIdols = await db.getTeamHistoricalIdols(teamId);
+
+    // Parse JSON fields and transform data
     const teamData = {
       ...(team as object),
       colors: JSON.parse((team as TeamRow).colors || '[]'),
       achievements: JSON.parse((team as TeamRow).achievements || '[]'),
-      players: players.map(player => ({
-        ...(player as object),
-        achievements: JSON.parse((player as PlayerRow).achievements || '[]')
+      
+      // Complete roster with achievements parsed
+      roster: players.map(player => ({
+        id: (player as PlayerRow).id,
+        name: (player as PlayerRow).name,
+        position: (player as PlayerRow).position,
+        number: (player as PlayerRow).number,
+        yearsActive: (player as PlayerRow).years_active,
+        achievements: JSON.parse((player as PlayerRow).achievements || '[]'),
+        skillLevel: (player as PlayerRow).skill_level,
+        isStarting: (player as PlayerRow).is_starting
       })),
+      
+      // Starting lineup
       startingLineup: startingLineup.map(player => ({
-        ...(player as object),
-        achievements: JSON.parse((player as PlayerRow).achievements || '[]')
-      }))
+        id: (player as PlayerRow).id,
+        name: (player as PlayerRow).name,
+        position: (player as PlayerRow).position,
+        number: (player as PlayerRow).number,
+        yearsActive: (player as PlayerRow).years_active,
+        achievements: JSON.parse((player as PlayerRow).achievements || '[]'),
+        skillLevel: (player as PlayerRow).skill_level
+      })),
+      
+      // Upcoming matches
+      upcomingMatches: upcomingMatches.map(match => ({
+        id: (match as MatchRow).id,
+        opponent: (match as MatchRow).home_team_id === teamId ? 
+          (match as MatchRow).away_team_name : 
+          (match as MatchRow).home_team_name,
+        date: (match as MatchRow).date,
+        venue: (match as MatchRow).home_team_id === teamId ? 'Home' : 'Away',
+        status: (match as MatchRow).status
+      })),
+      
+      // Recent matches with results
+      recentMatches: recentMatches.map(match => {
+        const isTeamHome = (match as MatchRow).home_team_id === teamId;
+        const teamScore = isTeamHome ? 
+          ((match as MatchRow).home_score || 0) : 
+          ((match as MatchRow).away_score || 0);
+        const opponentScore = isTeamHome ? 
+          ((match as MatchRow).away_score || 0) : 
+          ((match as MatchRow).home_score || 0);
+        
+        let result = 'draw';
+        if (teamScore > opponentScore) result = 'win';
+        else if (opponentScore > teamScore) result = 'loss';
+        
+        return {
+          id: (match as MatchRow).id,
+          opponent: isTeamHome ? 
+            (match as MatchRow).away_team_name : 
+            (match as MatchRow).home_team_name,
+          date: (match as MatchRow).date,
+          venue: isTeamHome ? 'Home' : 'Away',
+          result: result as 'win' | 'loss' | 'draw',
+          score: `${teamScore}-${opponentScore}`
+        };
+      }),
+      
+      // Rivalries data
+      rivalries: rivalries.map(rivalry => {
+        const rivalryData = rivalry as RivalryRow;
+        return {
+          opponentId: rivalryData.opponent_id,
+          opponentName: rivalryData.opponent_name,
+          totalMatches: rivalryData.total_matches,
+          wins: rivalryData.wins,
+          losses: rivalryData.losses,
+          draws: rivalryData.draws,
+          winPercentage: rivalryData.win_percentage,
+          lastMatch: rivalryData.last_match_date ? {
+            date: rivalryData.last_match_date,
+            result: rivalryData.last_match_result,
+            score: `${rivalryData.last_match_team_score}-${rivalryData.last_match_opponent_score}`
+          } : null
+        };
+      }),
+      
+      // Historical idols
+      historicalIdols: historicalIdols.map(idol => {
+        const idolData = idol as HistoricalIdolRow;
+        return {
+          id: idolData.id,
+          name: idolData.name,
+          position: idolData.position,
+          period: idolData.period,
+          achievements: JSON.parse(idolData.achievements || '[]'),
+          description: idolData.description,
+          legendaryStats: idolData.legendary_stats
+        };
+      })
     };
 
     res.json({

@@ -199,6 +199,22 @@ export class Database {
     return await this.teams.getTeamStatistics(teamId);
   }
 
+  public async getTeamUpcomingMatches(teamId: string, limit: number = 5): Promise<unknown[]> {
+    return await this.teams.getTeamUpcomingMatches(teamId, limit);
+  }
+
+  public async getTeamRecentMatches(teamId: string, limit: number = 5): Promise<unknown[]> {
+    return await this.teams.getTeamRecentMatches(teamId, limit);
+  }
+
+  public async getTeamRivalries(teamId: string): Promise<unknown[]> {
+    return await this.teams.getTeamRivalries(teamId);
+  }
+
+  public async getTeamHistoricalIdols(teamId: string): Promise<unknown[]> {
+    return await this.teams.getTeamHistoricalIdols(teamId);
+  }
+
   // ============== USERS/AUTH METHODS ==============
   
   public async getUserByEmail(email: string): Promise<unknown> {
