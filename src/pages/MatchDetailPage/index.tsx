@@ -16,6 +16,7 @@ import {
   MatchRelatedMatches,
   MatchDetailedAnalysis,
   MatchPredictions,
+  MatchBetting,
 } from './components';
 import styles from './MatchDetailPage.module.css';
 
@@ -732,10 +733,23 @@ const MatchDetailPage: React.FC = () => {
             )}
             
             {activeTab === 'betting' && FEATURES.USE_BACKEND_BETS && (
-              <Card className={styles.tabCard}>
-                <h3>Apuestas del Partido</h3>
-                <p>Sistema de apuestas en desarrollo...</p>
-              </Card>
+              <MatchBetting
+                match={{
+                  id: match.id,
+                  homeTeam: homeTeam?.name || match.homeTeamId || '',
+                  awayTeam: awayTeam?.name || match.awayTeamId || '',
+                  homeScore: match.homeScore || 0,
+                  awayScore: match.awayScore || 0,
+                  status: match.status as 'live' | 'upcoming' | 'finished',
+                  date: match.date.toISOString().split('T')[0],
+                  time: match.date.toLocaleTimeString('es-ES', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                  }),
+                  location: match.venue || 'Campo de Quidditch'
+                }}
+                canBet={match.status !== 'finished'}
+              />
             )}
             
             {activeTab === 'analysis' && (
