@@ -182,25 +182,34 @@ export class TeamsRepository {
   public async getTeamHistoricalIdols(teamId: string): Promise<unknown[]> {
     const sql = `
       SELECT 
-        p.id,
-        p.name,
-        p.position,
-        p.years_active,
-        p.achievements,
-        p.skill_level,
-        '1990-2000' as period,
-        'Legendary player who defined the team''s style' as description,
-        CASE 
-          WHEN p.skill_level >= 90 THEN 'Legendary stats - Hall of Fame'
-          WHEN p.skill_level >= 85 THEN 'Outstanding performance record'
-          ELSE 'Notable contribution to team success'
-        END as legendary_stats
-      FROM players p
-      WHERE p.team_id = ?
-        AND p.skill_level >= 85
-        AND p.is_starting = 1
-      ORDER BY p.skill_level DESC, p.years_active DESC
-      LIMIT 5
+        ti.id,
+        ti.name,
+        ti.position,
+        ti.period,
+        ti.years_active,
+        ti.description,
+        ti.achievements,
+        ti.legendary_stats
+      FROM team_idols ti
+      WHERE ti.team_id = ?
+        AND ti.is_active = 1
+      ORDER BY ti.years_active DESC, ti.name ASC
+    `;
+    return await this.connection.all(sql, [teamId]);
+  }
+
+  public async getTeamAchievements(teamId: string): Promise<unknown[]> {
+    const sql = `
+      SELECT 
+        ta.id,
+        ta.title,
+        ta.description,
+        ta.year,
+        ta.category
+      FROM team_achievements ta
+      WHERE ta.team_id = ?
+        AND ta.is_active = 1
+      ORDER BY ta.year DESC, ta.title ASC
     `;
     return await this.connection.all(sql, [teamId]);
   }

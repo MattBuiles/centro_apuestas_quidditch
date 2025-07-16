@@ -6,6 +6,9 @@ import { TeamTitlesService } from '../services/TeamTitlesService';
 interface TeamRow {
   colors?: string;
   achievements?: string;
+  wins?: number;
+  draws?: number;
+  losses?: number;
   [key: string]: unknown;
 }
 
@@ -125,12 +128,28 @@ router.get('/:id', async (req, res): Promise<void> => {
     
     // Get historical idols
     const historicalIdols = await db.getTeamHistoricalIdols(teamId);
+    
+    // Get team achievements from database
+    const teamAchievements = await db.getTeamAchievements(teamId);
 
+    // Calculate current league points from wins/draws/losses
+    const currentLeaguePoints = ((team as TeamRow).wins || 0) * 3 + ((team as TeamRow).draws || 0) * 1;
+    
+    // Combine achievements from teams table and team_achievements table
+    const baseAchievements = (team as TeamRow).achievements ? JSON.parse((team as TeamRow).achievements as string) : [];
+    const dbAchievements = (teamAchievements as Array<{ title: string; description?: string; year?: number }>).map(ach => 
+      ach.year ? `${ach.title} (${ach.year})` : ach.title
+    );
+    const combinedAchievements = [...baseAchievements, ...dbAchievements];
+    
     // Parse JSON fields and transform data
     const teamData = {
       ...(team as object),
       colors: JSON.parse((team as TeamRow).colors || '[]'),
-      achievements: JSON.parse((team as TeamRow).achievements || '[]'),
+      achievements: combinedAchievements,
+      
+      // Add calculated league points
+      points: currentLeaguePoints,
       
       // Complete roster with achievements parsed
       roster: players.map(player => ({
