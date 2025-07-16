@@ -10,9 +10,22 @@ export class AdminRepository {
 
   // User transactions methods
   public async createTransaction(transactionData: TransactionData): Promise<DatabaseResult> {
+    // Get current virtual time
+    let virtualTime: string;
+    try {
+      const { VirtualTimeService } = await import('../services/VirtualTimeService');
+      const virtualTimeService = VirtualTimeService.getInstance();
+      await virtualTimeService.initialize();
+      const currentState = await virtualTimeService.getCurrentState();
+      virtualTime = currentState.currentDate.toISOString();
+    } catch (error) {
+      console.error('Error getting virtual time for transaction, using real time:', error);
+      virtualTime = new Date().toISOString();
+    }
+
     const sql = `
-      INSERT INTO user_transactions (id, user_id, type, amount, balance_before, balance_after, description, reference_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO user_transactions (id, user_id, type, amount, balance_before, balance_after, description, reference_id, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     return await this.connection.run(sql, [
       transactionData.id,
@@ -22,7 +35,8 @@ export class AdminRepository {
       transactionData.balanceBefore,
       transactionData.balanceAfter,
       transactionData.description || '',
-      transactionData.referenceId || null
+      transactionData.referenceId || null,
+      virtualTime
     ]);
   }
 
