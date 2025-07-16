@@ -80,6 +80,25 @@ export class UsersRepository {
     return await this.connection.run(sql, params);
   }
 
+  public async updateUserPassword(userId: string, hashedPassword: string): Promise<DatabaseResult> {
+    const sql = `
+      UPDATE users 
+      SET password = ?, updated_at = datetime('now')
+      WHERE id = ?
+    `;
+    return await this.connection.run(sql, [hashedPassword, userId]);
+  }
+
+  public async getUserPasswordById(userId: string): Promise<{ password: string } | null> {
+    const sql = `
+      SELECT password
+      FROM users 
+      WHERE id = ?
+    `;
+    const result = await this.connection.get(sql, [userId]);
+    return result as { password: string } | null;
+  }
+
   public async getAllUsers(): Promise<unknown[]> {
     const sql = `
       SELECT 
