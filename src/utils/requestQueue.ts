@@ -134,7 +134,7 @@ export class RequestQueue {
   /**
    * Ejecuta una petición HTTP individual
    */
-  private async executeRequest<T>(request: QueuedRequest<T>): Promise<T> {
+  private async executeRequest<T>(request: QueuedRequest): Promise<T> {
     console.log(`🌐 Making request: ${request.url}`);
     
     const response = await fetch(request.url, request.options);
@@ -151,19 +151,15 @@ export class RequestQueue {
 
     const data = await response.json();
     
-    // Si la respuesta tiene estructura ApiResponse, extraer los datos
-    if (data && typeof data === 'object' && 'success' in data) {
-      return data.success ? data.data : data;
-    }
-    
+    // Return the full response object so that apiClient can handle the success field
     return data;
   }
 
   /**
    * Maneja errores de petición con retry automático
    */
-  private async handleRequestError<T>(
-    request: QueuedRequest<T>, 
+  private async handleRequestError(
+    request: QueuedRequest, 
     error: Error
   ): Promise<void> {
     console.error(`❌ Request failed: ${request.url}`, error.message);
@@ -239,7 +235,7 @@ export class RequestQueue {
    * Guarda datos en el caché
    */
   private setCache<T>(key: string, data: T, seconds: number): void {
-    const entry: RequestCacheEntry<T> = {
+    const entry: RequestCacheEntry = {
       data,
       timestamp: Date.now(),
       expiresAt: Date.now() + (seconds * 1000)

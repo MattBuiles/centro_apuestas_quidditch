@@ -82,4 +82,126 @@ export class TeamsRepository {
     `;
     return await this.connection.get(sql, [teamId]);
   }
+
+  public async getTeamUpcomingMatches(teamId: string, limit: number = 5): Promise<unknown[]> {
+    const sql = `
+      SELECT 
+        m.*,
+        ht.name as home_team_name,
+        at.name as away_team_name,
+        ht.logo as home_team_logo,
+        at.logo as away_team_logo
+      FROM matches m
+      JOIN teams ht ON m.home_team_id = ht.id
+      JOIN teams at ON m.away_team_id = at.id
+      WHERE 
+        (m.home_team_id = ? OR m.away_team_id = ?)
+        AND m.status IN ('scheduled', 'live')
+        AND m.date > datetime('now')
+      ORDER BY m.date ASC
+      LIMIT ?
+    `;
+    return await this.connection.all(sql, [teamId, teamId, limit]);
+  }
+
+  public async getTeamRecentMatches(teamId: string, limit: number = 5): Promise<unknown[]> {
+    const sql = `
+      SELECT 
+        m.*,
+        ht.name as home_team_name,
+        at.name as away_team_name,
+        ht.logo as home_team_logo,
+        at.logo as away_team_logo
+      FROM matches m
+      JOIN teams ht ON m.home_team_id = ht.id
+      JOIN teams at ON m.away_team_id = at.id
+      WHERE 
+        (m.home_team_id = ? OR m.away_team_id = ?)
+        AND m.status = 'finished'
+        AND m.home_score IS NOT NULL 
+        AND m.away_score IS NOT NULL
+      ORDER BY m.date DESC
+      LIMIT ?
+    `;
+    return await this.connection.all(sql, [teamId, teamId, limit]);
+  }
+
+  public async getTeamRivalries(teamId: string): Promise<unknown[]> {
+    const sql = `
+      SELECT 
+        CASE 
+          WHEN m.home_team_id = ? THEN m.away_team_id
+          ELSE m.home_team_id
+        END as opponent_id,
+        CASE 
+          WHEN m.home_team_id = ? THEN at.name
+          ELSE ht.name
+        END as opponent_name,
+        COUNT(*) as total_matches,
+        SUM(CASE 
+          WHEN m.home_team_id = ? AND m.home_score > m.away_score THEN 1
+          WHEN m.away_team_id = ? AND m.away_score > m.home_score THEN 1
+          ELSE 0
+        END) as wins,
+        SUM(CASE 
+          WHEN m.home_team_id = ? AND m.home_score < m.away_score THEN 1
+          WHEN m.away_team_id = ? AND m.away_score < m.home_score THEN 1
+          ELSE 0
+        END) as losses,
+        SUM(CASE 
+          WHEN m.home_score = m.away_score THEN 1
+          ELSE 0
+        END) as draws,
+        ROUND(AVG(CASE 
+          WHEN m.home_team_id = ? AND m.home_score > m.away_score THEN 1.0
+          WHEN m.away_team_id = ? AND m.away_score > m.home_score THEN 1.0
+          ELSE 0.0
+        END) * 100, 1) as win_percentage,
+        MAX(m.date) as last_match_date,
+        '' as last_match_result,
+        0 as last_match_team_score,
+        0 as last_match_opponent_score
+      FROM matches m
+      JOIN teams ht ON m.home_team_id = ht.id
+      JOIN teams at ON m.away_team_id = at.id
+      WHERE 
+        (m.home_team_id = ? OR m.away_team_id = ?)
+        AND m.status = 'finished'
+        AND m.home_score IS NOT NULL 
+        AND m.away_score IS NOT NULL
+      GROUP BY opponent_id, opponent_name
+      HAVING total_matches >= 2
+      ORDER BY total_matches DESC, win_percentage DESC
+      LIMIT 10
+    `;
+    return await this.connection.all(sql, [
+      teamId, teamId, teamId, teamId, teamId, teamId, teamId, teamId, teamId, teamId
+    ]);
+  }
+
+  public async getTeamHistoricalIdols(teamId: string): Promise<unknown[]> {
+    const sql = `
+      SELECT 
+        p.id,
+        p.name,
+        p.position,
+        p.years_active,
+        p.achievements,
+        p.skill_level,
+        '1990-2000' as period,
+        'Legendary player who defined the team''s style' as description,
+        CASE 
+          WHEN p.skill_level >= 90 THEN 'Legendary stats - Hall of Fame'
+          WHEN p.skill_level >= 85 THEN 'Outstanding performance record'
+          ELSE 'Notable contribution to team success'
+        END as legendary_stats
+      FROM players p
+      WHERE p.team_id = ?
+        AND p.skill_level >= 85
+        AND p.is_starting = 1
+      ORDER BY p.skill_level DESC, p.years_active DESC
+      LIMIT 5
+    `;
+    return await this.connection.all(sql, [teamId]);
+  }
 }
