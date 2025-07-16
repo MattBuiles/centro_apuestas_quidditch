@@ -50,6 +50,36 @@ export class UsersRepository {
     return await this.connection.run(sql, [newBalance, userId]);
   }
 
+  public async updateUserProfile(userId: string, userData: { username?: string; email?: string }): Promise<DatabaseResult> {
+    const updates: string[] = [];
+    const params: any[] = [];
+    
+    if (userData.username !== undefined) {
+      updates.push('username = ?');
+      params.push(userData.username);
+    }
+    
+    if (userData.email !== undefined) {
+      updates.push('email = ?');
+      params.push(userData.email);
+    }
+    
+    if (updates.length === 0) {
+      throw new Error('No fields to update');
+    }
+    
+    updates.push('updated_at = datetime(\'now\')');
+    params.push(userId);
+    
+    const sql = `
+      UPDATE users 
+      SET ${updates.join(', ')}
+      WHERE id = ?
+    `;
+    
+    return await this.connection.run(sql, params);
+  }
+
   public async getAllUsers(): Promise<unknown[]> {
     const sql = `
       SELECT 

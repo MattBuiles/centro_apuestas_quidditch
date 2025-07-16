@@ -416,7 +416,7 @@ interface AuthContextType {
   logout: () => void;
   updateUserBalance: (newBalance: number) => void;
   syncUserBalance: () => Promise<void>;
-  updateUserProfile: (userData: Partial<Pick<User, 'username' | 'email' | 'avatar'>>) => void;
+  updateUserProfile: (userData: Partial<Pick<User, 'username' | 'email' | 'avatar'>>) => Promise<void>;
   validateCurrentPassword: (password: string) => boolean;
   validatePassword: (password: string) => string | null;
   updatePassword: (newPassword: string) => void;  // Nueva función para restablecer contraseña por email
@@ -917,30 +917,83 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, [user?.id, FEATURES.USE_BACKEND_BETS]);
 
   // ...existing code...
-  const updateUserProfile = (userData: Partial<Pick<User, 'username' | 'email' | 'avatar'>>) => {
-    if (user) {
-      const updatedUser = { ...user, ...userData };
-      setUser(updatedUser);
-      
-      // Update the account in the current accounts list
-      setCurrentAccounts(prev => 
-        prev.map(account => 
-          account.user.id === user.id 
-            ? { ...account, user: updatedUser }
-            : account
-        )
-      );
-      
-      // Update the stored user data
-      const storedInLocal = localStorage.getItem('user');
-      const storedInSession = sessionStorage.getItem('user');
-      
-      if (storedInLocal) {
-        localStorage.setItem('user', JSON.stringify(updatedUser));
+  const updateUserProfile = async (userData: Partial<Pick<User, 'username' | 'email' | 'avatar'>>) => {
+    if (!user) return;
+    
+    try {
+      // Si tenemos username o email y el backend está habilitado, actualizamos en el backend
+      if (FEATURES.USE_BACKEND_BETS && (userData.username || userData.email)) {
+        const updateData: { username?: string; email?: string } = {};
+        if (userData.username) updateData.username = userData.username;
+        if (userData.email) updateData.email = userData.email;
+        
+        const response = await apiClient.put('/users/profile', updateData);
+        
+        if (response.success && response.data) {
+          // Actualizar con los datos del backend
+          const backendUser = response.data as any;
+          const updatedUser = { 
+            ...user, 
+            username: backendUser.username,
+            email: backendUser.email,
+            // Mantener el avatar local si no viene del backend
+            avatar: userData.avatar || user.avatar
+          };
+          
+          setUser(updatedUser);
+          
+          // Update the account in the current accounts list
+          setCurrentAccounts(prev => 
+            prev.map(account => 
+              account.user.id === user.id 
+                ? { ...account, user: updatedUser }
+                : account
+            )
+          );
+          
+          // Update the stored user data
+          const storedInLocal = localStorage.getItem('user');
+          const storedInSession = sessionStorage.getItem('user');
+          
+          if (storedInLocal) {
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+          }
+          if (storedInSession) {
+            sessionStorage.setItem('user', JSON.stringify(updatedUser));
+          }
+          
+          return; // Salir early si el backend fue exitoso
+        } else {
+          throw new Error(response.error || 'Failed to update profile');
+        }
       }
-      if (storedInSession) {
-        sessionStorage.setItem('user', JSON.stringify(updatedUser));
-      }
+    } catch (error) {
+      console.error('Error updating profile in backend:', error);
+      throw error; // Re-throw para que el frontend pueda manejar el error
+    }
+    
+    // Si no hay backend o solo se actualiza el avatar, actualizar localmente
+    const updatedUser = { ...user, ...userData };
+    setUser(updatedUser);
+    
+    // Update the account in the current accounts list
+    setCurrentAccounts(prev => 
+      prev.map(account => 
+        account.user.id === user.id 
+          ? { ...account, user: updatedUser }
+          : account
+      )
+    );
+    
+    // Update the stored user data
+    const storedInLocal = localStorage.getItem('user');
+    const storedInSession = sessionStorage.getItem('user');
+    
+    if (storedInLocal) {
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+    }
+    if (storedInSession) {
+      sessionStorage.setItem('user', JSON.stringify(updatedUser));
     }
   };
   // Función para validar la contraseña actual
