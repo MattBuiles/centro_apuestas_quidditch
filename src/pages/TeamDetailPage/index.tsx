@@ -4,6 +4,8 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 import Card from '@/components/common/Card';
 import TeamLogo from '@/components/teams/TeamLogo';
 import { apiClient } from '@/utils/apiClient';
+import { formatTeamColors } from '@/utils/colorUtils';
+import { generateEnhancedTeamHistory, generateEnhancedAchievements } from '@/utils/teamEnhancementUtils';
 import styles from './TeamDetailPage.module.css';
 
 // Define interfaces for backend data
@@ -754,7 +756,11 @@ const TeamDetailPage = () => {
             id: String(teamData.id || teamId),
             name: String(teamData.name || ''),
             slogan: String(teamData.slogan || 'A proud Quidditch team'),
-            history: String(teamData.history || 'This team has a rich history in Quidditch.'),
+            history: generateEnhancedTeamHistory(
+              String(teamData.name || ''),
+              Number(teamData.founded) || 1000,
+              String(teamData.history || '')
+            ),
             wins: Number(teamData.wins) || 0,
             losses: Number(teamData.losses) || 0,
             draws: Number(teamData.draws) || 0,
@@ -762,7 +768,11 @@ const TeamDetailPage = () => {
             founded: Number(teamData.founded) || 1000,
             stadium: String(teamData.stadium || 'Unknown Stadium'),
             colors: Array.isArray(teamData.colors) ? teamData.colors.map(String) : ['Unknown'],
-            achievements: Array.isArray(teamData.achievements) ? teamData.achievements.map(String) : [],
+            achievements: generateEnhancedAchievements(
+              String(teamData.name || ''),
+              Number(teamData.titles) || 0,
+              Array.isArray(teamData.achievements) ? teamData.achievements.map(String) : []
+            ),
             
             // Transform roster data from backend
             roster: Array.isArray(teamData.roster) ? teamData.roster.map((player: BackendPlayer) => ({
@@ -914,7 +924,7 @@ const TeamDetailPage = () => {
           </div>
           {team.colors && (
             <div className={styles.teamColors}>
-              <span>🎨 Colores del equipo: {team.colors.join(', ')}</span>
+              <span>🎨 Colores del equipo: {formatTeamColors(team.colors)}</span>
             </div>
           )}
           <div className={styles.teamQuickStats}>
@@ -922,13 +932,13 @@ const TeamDetailPage = () => {
               <div className={styles.statValue}>{team.wins}</div>
               <div className={styles.statLabel}>Victorias</div>
             </div>
-            {team.losses && (
+            {team.losses !== undefined && (
               <div className={styles.stat}>
                 <div className={styles.statValue}>{team.losses}</div>
                 <div className={styles.statLabel}>Derrotas</div>
               </div>
             )}
-            {team.draws && (
+            {team.draws !== undefined && (
               <div className={styles.stat}>
                 <div className={styles.statValue}>{team.draws}</div>
                 <div className={styles.statLabel}>Empates</div>

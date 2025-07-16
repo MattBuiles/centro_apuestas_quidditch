@@ -1,0 +1,92 @@
+{
+  "timestamp": "2025-07-16T14:07:37.203Z",
+  "teams": [
+    {
+      "teamId": "gryffindor",
+      "teamName": "Gryffindor",
+      "totalTitles": 3,
+      "seasonTitles": [
+        {
+          "seasonId": "season-2025",
+          "seasonName": "Liga Quidditch 2025",
+          "championshipDate": "2025-12-31T23:59:59.000Z",
+          "points": 0,
+          "position": 1
+        },
+        {
+          "seasonId": "644f7bdc-dad8-42b3-983b-6dad966efb94",
+          "seasonName": "Temporada 2022-2023",
+          "championshipDate": "2023-05-31",
+          "points": 0,
+          "position": 1
+        },
+        {
+          "seasonId": "a91ab792-7845-414d-af8a-f2b67490e39e",
+          "seasonName": "Temporada 2020-2021",
+          "championshipDate": "2021-05-31",
+          "points": 0,
+          "position": 1
+        }
+      ]
+    },
+    {
+      "teamId": "slytherin",
+      "teamName": "Slytherin",
+      "totalTitles": 2,
+      "seasonTitles": [
+        {
+          "seasonId": "413f9dcf-0df4-404f-baef-fff0681cbe33",
+          "seasonName": "Temporada 2024-2025",
+          "championshipDate": "2025-05-31",
+          "points": 0,
+          "position": 1
+        },
+        {
+          "seasonId": "3887f862-6204-4b27-bcdf-694865e90698",
+          "seasonName": "Temporada 2021-2022",
+          "championshipDate": "2022-05-31",
+          "points": 0,
+          "position": 1
+        }
+      ]
+    },
+    {
+      "teamId": "ravenclaw",
+      "teamName": "Ravenclaw",
+      "totalTitles": 1,
+      "seasonTitles": [
+        {
+          "seasonId": "dde5b365-e5a7-4e79-9ed2-ac5dbe7fef6f",
+          "seasonName": "Temporada 2023-2024",
+          "championshipDate": "2024-05-31",
+          "points": 0,
+          "position": 1
+        }
+      ]
+    },
+    {
+      "teamId": "hufflepuff",
+      "teamName": "Hufflepuff",
+      "totalTitles": 0,
+      "seasonTitles": []
+    },
+    {
+      "teamId": "chudley",
+      "teamName": "Equipo no encontrado",
+      "totalTitles": 0,
+      "seasonTitles": []
+    },
+    {
+      "teamId": "harpies",
+      "teamName": "Equipo no encontrado",
+      "totalTitles": 0,
+      "seasonTitles": []
+    }
+  ],
+  "summary": {
+    "totalTeams": 6,
+    "totalTitles": 6,
+    "teamsWithTitles": 3,
+    "teamsWithoutTitles": 3
+  }
+}

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { Database } from '../database/Database';
 import { SeasonController } from '../controllers/SeasonController';
+import { TeamTitlesService } from '../services/TeamTitlesService';
 
 interface TeamRow {
   colors?: string;
@@ -62,6 +63,7 @@ interface MatchRow {
 
 const router = Router();
 const seasonController = new SeasonController();
+const teamTitlesService = new TeamTitlesService();
 
 // Get all teams
 router.get('/', async (req, res) => {
@@ -221,7 +223,10 @@ router.get('/:id', async (req, res): Promise<void> => {
           description: idolData.description,
           legendaryStats: idolData.legendary_stats
         };
-      })
+      }),
+      
+      // Team titles (calculated dynamically)
+      titles: await teamTitlesService.calculateTeamTitles(teamId)
     };
 
     res.json({
@@ -554,6 +559,87 @@ router.get('/:id/recent-matches', async (req, res): Promise<void> => {
     res.status(500).json({
       success: false,
       error: 'Failed to fetch recent matches',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Get team titles ranking
+router.get('/titles/ranking', async (req, res): Promise<void> => {
+  try {
+    const ranking = await teamTitlesService.getTeamTitlesRanking();
+    
+    res.json({
+      success: true,
+      data: ranking,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Team titles ranking error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch team titles ranking',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Get detailed title history for a team
+router.get('/:id/titles/details', async (req, res): Promise<void> => {
+  try {
+    const teamId = req.params.id;
+    const titleDetails = await teamTitlesService.getTeamTitleDetails(teamId);
+    
+    res.json({
+      success: true,
+      data: titleDetails,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Team title details error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch team title details',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Administrative endpoint to clear mock titles
+router.post('/titles/clear-mock', async (req, res): Promise<void> => {
+  try {
+    await teamTitlesService.clearMockTitles();
+    
+    res.json({
+      success: true,
+      message: 'Mock titles cleared successfully',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Clear mock titles error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to clear mock titles',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Administrative endpoint to update titles in database
+router.post('/titles/update-database', async (req, res): Promise<void> => {
+  try {
+    await teamTitlesService.updateTeamTitlesInDatabase();
+    
+    res.json({
+      success: true,
+      message: 'Team titles updated in database successfully',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Update titles in database error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update titles in database',
       timestamp: new Date().toISOString()
     });
   }
