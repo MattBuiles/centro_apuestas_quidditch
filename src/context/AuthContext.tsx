@@ -1464,8 +1464,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   // Función para verificar si un email existe para recuperación
   const checkEmailForRecovery = async (email: string): Promise<boolean> => {
     try {
-      const response = await apiClient.post('/auth/forgot-password', { email });
-      return response.success;
+      const response = await apiClient.post<{ exists: boolean }>('/auth/check-email', { email });
+      return response.success && response.data?.exists === true;
     } catch (error) {
       console.error('Error checking email for recovery:', error);
       return false;

@@ -34,6 +34,7 @@ router.post('/register', registerValidation, validateRequest, authController.reg
 router.post('/refresh', authController.refreshToken);
 router.get('/me', authenticate, authController.getProfile);
 router.post('/forgot-password', forgotPasswordValidation, validateRequest, authController.forgotPassword);
+router.post('/check-email', forgotPasswordValidation, validateRequest, authController.checkEmailExists);
 router.post('/reset-password', resetPasswordValidation, validateRequest, authController.resetPassword);
 
 export default router;
