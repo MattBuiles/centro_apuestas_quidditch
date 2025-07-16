@@ -50,6 +50,74 @@ export class UsersRepository {
     return await this.connection.run(sql, [newBalance, userId]);
   }
 
+  public async updateUserProfile(userId: string, userData: { username?: string; email?: string }): Promise<DatabaseResult> {
+    const updates: string[] = [];
+    const params: any[] = [];
+    
+    if (userData.username !== undefined) {
+      updates.push('username = ?');
+      params.push(userData.username);
+    }
+    
+    if (userData.email !== undefined) {
+      updates.push('email = ?');
+      params.push(userData.email);
+    }
+    
+    if (updates.length === 0) {
+      throw new Error('No fields to update');
+    }
+    
+    updates.push('updated_at = datetime(\'now\')');
+    params.push(userId);
+    
+    const sql = `
+      UPDATE users 
+      SET ${updates.join(', ')}
+      WHERE id = ?
+    `;
+    
+    return await this.connection.run(sql, params);
+  }
+
+  public async updateUserPassword(userId: string, hashedPassword: string): Promise<DatabaseResult> {
+    const sql = `
+      UPDATE users 
+      SET password = ?, updated_at = datetime('now')
+      WHERE id = ?
+    `;
+    return await this.connection.run(sql, [hashedPassword, userId]);
+  }
+
+  public async getUserPasswordById(userId: string): Promise<{ password: string } | null> {
+    const sql = `
+      SELECT password
+      FROM users 
+      WHERE id = ?
+    `;
+    const result = await this.connection.get(sql, [userId]);
+    return result as { password: string } | null;
+  }
+
+  public async getUserByEmailForRecovery(email: string): Promise<{ id: string; email: string } | null> {
+    const sql = `
+      SELECT id, email
+      FROM users 
+      WHERE email = ?
+    `;
+    const result = await this.connection.get(sql, [email]);
+    return result as { id: string; email: string } | null;
+  }
+
+  public async updateUserPasswordByEmail(email: string, hashedPassword: string): Promise<DatabaseResult> {
+    const sql = `
+      UPDATE users 
+      SET password = ?, updated_at = datetime('now')
+      WHERE email = ?
+    `;
+    return await this.connection.run(sql, [hashedPassword, email]);
+  }
+
   public async getAllUsers(): Promise<unknown[]> {
     const sql = `
       SELECT 

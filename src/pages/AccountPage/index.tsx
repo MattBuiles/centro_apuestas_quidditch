@@ -21,10 +21,12 @@ const TrophyIcon = () => <span className={styles.icon}>🏆</span>;
 
 // Define sub-components for each account section
 const ProfileSection = () => {
-    const { user, updateUserProfile, validateCurrentPassword, validatePassword, updatePassword } = useAuth();
+    const { user, updateUserProfile, validatePassword, updatePassword, getUserStats, loadUserStatsFromBackend } = useAuth();
     const [isEditing, setIsEditing] = useState(false);
     const [isChangingAvatar, setIsChangingAvatar] = useState(false);
-    const [isChangingPassword, setIsChangingPassword] = useState(false);    const [formData, setFormData] = useState({
+    const [isChangingPassword, setIsChangingPassword] = useState(false);
+    const [isLoadingStats, setIsLoadingStats] = useState(false);
+    const [formData, setFormData] = useState({
         username: user?.username || '',
         email: user?.email || ''
     });
@@ -42,7 +44,7 @@ const ProfileSection = () => {
         { id: 'hufflepuff', src: '/src/assets/Hufflepuff_Logo.png', name: 'Hufflepuff' },
         { id: 'cannons', src: '/src/assets/Chudley Cannons_Logo.png', name: 'Chudley Cannons' },
         { id: 'harpies', src: '/src/assets/Holyhead Harpies_Logo.png', name: 'Holyhead Harpies' },
-    ];// Update form data when user changes (important for real-time sync)
+    ];    // Update form data when user changes (important for real-time sync)
     useEffect(() => {
         if (user) {
             setFormData(prev => ({
@@ -53,10 +55,35 @@ const ProfileSection = () => {
         }
     }, [user]);
 
-    const handleAvatarChange = (avatarSrc: string) => {
-        updateUserProfile({ avatar: avatarSrc });
-        setIsChangingAvatar(false);
-    };    const handleSave = (e: React.FormEvent) => {
+    // Cargar estadísticas del usuario cuando se monta el componente
+    useEffect(() => {
+        const loadStats = async () => {
+            setIsLoadingStats(true);
+            try {
+                await loadUserStatsFromBackend();
+            } catch (error) {
+                console.error('Error loading user stats:', error);
+            } finally {
+                setIsLoadingStats(false);
+            }
+        };
+        
+        loadStats();
+    }, []); // Solo ejecutar una vez al montar el componente
+
+    // Obtener estadísticas actuales del contexto
+    const userStats = getUserStats();
+
+    const handleAvatarChange = async (avatarSrc: string) => {
+        try {
+            await updateUserProfile({ avatar: avatarSrc });
+            setIsChangingAvatar(false);
+        } catch (error) {
+            console.error('Error updating avatar:', error);
+            // Avatar changes are local only, so they shouldn't fail normally
+            setIsChangingAvatar(false);
+        }
+    };    const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         
         if (!formData.username || !formData.email) {
@@ -64,24 +91,35 @@ const ProfileSection = () => {
             return;
         }
         
-        // Update user profile in context (this will update the sidebar automatically)
-        updateUserProfile({
-            username: formData.username,
-            email: formData.email
-        });
-
-        // Here you would typically call an API to update user info
-        console.log('Saving user data:', {
-            username: formData.username,
-            email: formData.email
-        });
-        
-        // Exit edit mode
-        setIsEditing(false);
-        
-        // Show success message
-        alert('Perfil actualizado exitosamente');
-    };    const handleCancel = () => {
+        try {
+            // Update user profile in context (this will update the sidebar automatically and call backend)
+            await updateUserProfile({
+                username: formData.username,
+                email: formData.email
+            });
+            
+            // Exit edit mode
+            setIsEditing(false);
+            
+            // Show success message
+            alert('Perfil actualizado exitosamente');
+        } catch (error) {
+            console.error('Error updating profile:', error);
+            
+            // Show error message based on the error
+            if (error instanceof Error) {
+                if (error.message.includes('Username already exists')) {
+                    alert('Error: El nombre de usuario ya está en uso. Por favor elige otro.');
+                } else if (error.message.includes('Email already exists')) {
+                    alert('Error: El correo electrónico ya está en uso. Por favor usa otro.');
+                } else {
+                    alert('Error al actualizar el perfil: ' + error.message);
+                }
+            } else {
+                alert('Error al actualizar el perfil. Por favor intenta de nuevo.');
+            }
+        }
+    };const handleCancel = () => {
         // Reset form data to current user data
         if (user) {
             setFormData({
@@ -90,19 +128,14 @@ const ProfileSection = () => {
             });
         }
         setIsEditing(false);
-    };    const handlePasswordChange = (e: React.FormEvent) => {
+    };    const handlePasswordChange = async (e: React.FormEvent) => {
         e.preventDefault();
         
         if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
             alert('Por favor complete todos los campos');
             return;
         }
-        
-        // Validar contraseña actual usando la función del contexto
-        if (!validateCurrentPassword(passwordData.currentPassword)) {
-            alert('La contraseña actual no es correcta. Peeves está riéndose de ti. 🃏');
-            return;
-        }// Validar nueva contraseña
+        // Solo validar que las contraseñas coincidan en el frontend
         if (passwordData.newPassword !== passwordData.confirmPassword) {
             alert('Las contraseñas no coinciden. Incluso la magia requiere precisión. ✨');
             return;
@@ -117,7 +150,7 @@ const ProfileSection = () => {
 
         try {
             // Actualizar contraseña usando la función del contexto
-            updatePassword(passwordData.newPassword);
+            await updatePassword(passwordData.currentPassword, passwordData.newPassword);
         } catch (error) {
             if (error instanceof Error) {
                 alert(`Error al cambiar contraseña: ${error.message} 🔮`);
@@ -149,13 +182,6 @@ const ProfileSection = () => {
             confirmPassword: ''
         });
         setIsChangingPassword(false);
-    };
-
-    const userStats = {
-        totalBets: 47,
-        winRate: 68,
-        totalWinnings: 1250,
-        favoriteTeam: 'Gryffindor'
     };
 
     return (
@@ -345,29 +371,35 @@ const ProfileSection = () => {
                         <TrophyIcon />
                         Estadísticas del Mago
                     </h3>
-                    <div className={styles.statsGrid}>
-                        <div className={`${styles.statCard} ${styles.yellow}`}>
-                            <div className={styles.statValue}>{userStats.totalBets}</div>
-                            <div className={styles.statLabel}>Apuestas Totales</div>
+                    {isLoadingStats ? (
+                        <div className={styles.loadingStats}>
+                            <p>🔮 Consultando el oráculo mágico...</p>
                         </div>
-                        <div className={`${styles.statCard} ${styles.green}`}>
-                            <div className={styles.statValue}>{userStats.winRate}%</div>
-                            <div className={styles.statLabel}>Tasa de Éxito</div>
-                        </div>
-                        <div className={`${styles.statCard} ${styles.purple}`}>
-                            <div className={styles.statValue}>{userStats.totalWinnings}</div>
-                            <div className={styles.statLabel}>Galeones Ganados</div>
-                        </div>                        <div className={`${styles.statCard} ${styles.blue}`}>
-                            <div className={styles.teamFavoriteIcon}>
-                                <img 
-                                    src={teamLogos[userStats.favoriteTeam]} 
-                                    alt={userStats.favoriteTeam}
-                                    className={styles.teamLogo}
-                                />
+                    ) : (
+                        <div className={styles.statsGrid}>
+                            <div className={`${styles.statCard} ${styles.yellow}`}>
+                                <div className={styles.statValue}>{userStats.totalBets}</div>
+                                <div className={styles.statLabel}>Apuestas Totales</div>
                             </div>
-                            <div className={styles.statLabel}>Equipo Favorito</div>
+                            <div className={`${styles.statCard} ${styles.green}`}>
+                                <div className={styles.statValue}>{userStats.winRate}%</div>
+                                <div className={styles.statLabel}>Tasa de Éxito</div>
+                            </div>
+                            <div className={`${styles.statCard} ${styles.purple}`}>
+                                <div className={styles.statValue}>{userStats.totalWinnings}</div>
+                                <div className={styles.statLabel}>Galeones Ganados</div>
+                            </div>                        <div className={`${styles.statCard} ${styles.blue}`}>
+                                <div className={styles.teamFavoriteIcon}>
+                                    <img 
+                                        src={teamLogos[userStats.favoriteTeam]} 
+                                        alt={userStats.favoriteTeam}
+                                        className={styles.teamLogo}
+                                    />
+                                </div>
+                                <div className={styles.statLabel}>Equipo Favorito</div>
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </Card>
             </div>
         </div>

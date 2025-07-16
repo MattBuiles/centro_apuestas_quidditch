@@ -15,7 +15,7 @@ const RecoveryPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showOwlAnimation, setShowOwlAnimation] = useState(false);  const [validatedUserId, setValidatedUserId] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { getPredefinedAccounts, resetPasswordByEmail, validatePassword } = useAuth();
+  const { checkEmailForRecovery, resetPasswordByEmail, validatePassword } = useAuth();
   const handleEmailSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -29,12 +29,11 @@ const RecoveryPage: React.FC = () => {
       return;
     }
 
-    // Verificar si el email está registrado en las cuentas predefinidas o registradas
-    setTimeout(() => {
-      const accounts = getPredefinedAccounts();
-      const accountExists = accounts.find(account => account.email === email);
+    // Verificar si el email está registrado usando el backend
+    try {
+      const emailExists = await checkEmailForRecovery(email);
       
-      if (accountExists) {
+      if (emailExists) {
         setValidatedUserId(email); // Usamos el email como identificador temporal
         setShowOwlAnimation(true);
         setMessage('🦉 ¡Una lechuza ha llevado tu solicitud a Madame Pomfrey! Email verificado exitosamente...');
@@ -51,7 +50,11 @@ const RecoveryPage: React.FC = () => {
         setMessageType('error');
       }
       setIsLoading(false);
-    }, 1500);
+    } catch (error) {
+      setMessage('Ha ocurrido un error mágico al verificar el correo. Inténtalo nuevamente.');
+      setMessageType('error');
+      setIsLoading(false);
+    }
   };  const handlePasswordSubmit = async (e: FormEvent) => {
     e.preventDefault();
     
@@ -76,10 +79,13 @@ const RecoveryPage: React.FC = () => {
     }
 
     setIsLoading(true);
-    setMessage(null);    // Actualizar contraseña usando la función del contexto
-    setTimeout(() => {
-      try {
-        if (validatedUserId && resetPasswordByEmail(validatedUserId, newPassword)) {
+    setMessage(null);
+
+    // Actualizar contraseña usando la función del contexto
+    try {
+      if (validatedUserId) {
+        const success = await resetPasswordByEmail(validatedUserId, newPassword);
+        if (success) {
           setMessage('✨ ¡La nueva contraseña ha sido hechizada con éxito! Ahora puedes iniciar sesión con tu nueva contraseña mágica.');
           setMessageType('success');
           setIsLoading(false);
@@ -93,12 +99,12 @@ const RecoveryPage: React.FC = () => {
           setMessageType('error');
           setIsLoading(false);
         }
-      } catch (error) {
-        setMessage(error instanceof Error ? error.message : 'Ha ocurrido un error mágico. Por favor, inténtalo nuevamente.');
-        setMessageType('error');
-        setIsLoading(false);
       }
-    }, 2000);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Ha ocurrido un error mágico. Por favor, inténtalo nuevamente.');
+      setMessageType('error');
+      setIsLoading(false);
+    }
   };return (
     <div className={styles.recoveryPageContainer}>
       <Card className={styles.recoveryCard}>

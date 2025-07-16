@@ -191,10 +191,7 @@ export class BetResolutionService {
       const status = isWon ? 'won' : 'lost';
       await this.db.updateBetStatus(bet.id, status);
 
-      // If bet won, update user balance and create transaction
-      if (isWon) {
-        await this.payoutWinningBet(bet);
-      }
+      // Note: Balance update and transaction creation is handled in updateBetStatus method
 
       return {
         success: true,
@@ -336,42 +333,13 @@ export class BetResolutionService {
   }
 
   /**
-   * Pay out a winning bet
+   * Pay out a winning bet - DEPRECATED: Logic moved to BetsRepository.updateBetStatus()
+   * This method is no longer used to prevent duplicate balance updates
    */
   private async payoutWinningBet(bet: any): Promise<void> {
-    try {
-      // Get current user balance
-      const user = await this.db.getUserById(bet.user_id) as any;
-      if (!user) {
-        throw new Error(`User ${bet.user_id} not found`);
-      }
-
-      // Calculate payout (potential win amount)
-      const payout = bet.potential_win;
-      const newBalance = user.balance + payout;
-
-      // Update user balance
-      await this.db.updateUserBalance(bet.user_id, newBalance);
-
-      // Create transaction record
-      const transactionId = this.generateId();
-      await this.db.createTransaction({
-        id: transactionId,
-        userId: bet.user_id,
-        type: 'bet_win',
-        amount: payout,
-        balanceBefore: user.balance,
-        balanceAfter: newBalance,
-        description: `Bet win: ${bet.potential_win} coins`,
-        referenceId: bet.id
-      });
-
-      console.log(`💰 Paid out ${payout} coins to user ${user.username} for winning bet ${bet.id}`);
-
-    } catch (error) {
-      console.error(`❌ Error paying out bet ${bet.id}:`, error);
-      throw error;
-    }
+    // This method is deprecated to prevent duplicate balance updates
+    // The payout logic is now handled in BetsRepository.updateBetStatus()
+    console.log(`⚠️ WARNING: payoutWinningBet called for bet ${bet.id} - this should not happen anymore`);
   }
 
   /**
