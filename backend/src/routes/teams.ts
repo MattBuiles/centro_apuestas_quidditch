@@ -74,9 +74,15 @@ router.get('/', async (req, res) => {
     const db = Database.getInstance();
     const teams = await db.all('SELECT * FROM teams ORDER BY name');
     
+    // Calculate points for each team and add to response
+    const teamsWithPoints = teams.map(team => ({
+      ...(team as object),
+      points: ((team as TeamRow).wins || 0) * 3 + ((team as TeamRow).draws || 0) * 1
+    }));
+    
     res.json({
       success: true,
-      data: teams,
+      data: teamsWithPoints,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
