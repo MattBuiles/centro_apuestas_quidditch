@@ -74,10 +74,16 @@ const ProfileSection = () => {
     // Obtener estadísticas actuales del contexto
     const userStats = getUserStats();
 
-    const handleAvatarChange = (avatarSrc: string) => {
-        updateUserProfile({ avatar: avatarSrc });
-        setIsChangingAvatar(false);
-    };    const handleSave = (e: React.FormEvent) => {
+    const handleAvatarChange = async (avatarSrc: string) => {
+        try {
+            await updateUserProfile({ avatar: avatarSrc });
+            setIsChangingAvatar(false);
+        } catch (error) {
+            console.error('Error updating avatar:', error);
+            // Avatar changes are local only, so they shouldn't fail normally
+            setIsChangingAvatar(false);
+        }
+    };    const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         
         if (!formData.username || !formData.email) {
@@ -85,24 +91,35 @@ const ProfileSection = () => {
             return;
         }
         
-        // Update user profile in context (this will update the sidebar automatically)
-        updateUserProfile({
-            username: formData.username,
-            email: formData.email
-        });
-
-        // Here you would typically call an API to update user info
-        console.log('Saving user data:', {
-            username: formData.username,
-            email: formData.email
-        });
-        
-        // Exit edit mode
-        setIsEditing(false);
-        
-        // Show success message
-        alert('Perfil actualizado exitosamente');
-    };    const handleCancel = () => {
+        try {
+            // Update user profile in context (this will update the sidebar automatically and call backend)
+            await updateUserProfile({
+                username: formData.username,
+                email: formData.email
+            });
+            
+            // Exit edit mode
+            setIsEditing(false);
+            
+            // Show success message
+            alert('Perfil actualizado exitosamente');
+        } catch (error) {
+            console.error('Error updating profile:', error);
+            
+            // Show error message based on the error
+            if (error instanceof Error) {
+                if (error.message.includes('Username already exists')) {
+                    alert('Error: El nombre de usuario ya está en uso. Por favor elige otro.');
+                } else if (error.message.includes('Email already exists')) {
+                    alert('Error: El correo electrónico ya está en uso. Por favor usa otro.');
+                } else {
+                    alert('Error al actualizar el perfil: ' + error.message);
+                }
+            } else {
+                alert('Error al actualizar el perfil. Por favor intenta de nuevo.');
+            }
+        }
+    };const handleCancel = () => {
         // Reset form data to current user data
         if (user) {
             setFormData({

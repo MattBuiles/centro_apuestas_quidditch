@@ -149,6 +149,80 @@ router.get('/:id', authenticate, async (req: AuthenticatedRequest, res) => {
   }
 });
 
+// PUT /api/users/profile - Update current user profile
+router.put('/profile', authenticate, async (req: AuthenticatedRequest, res) => {
+  try {
+    const user = req.user!;
+    const { username, email } = req.body;
+    
+    // Validate input
+    if (!username && !email) {
+      return res.status(400).json({
+        success: false,
+        error: 'At least one field (username or email) must be provided',
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    // Check if username already exists (if provided)
+    if (username) {
+      const existingUserByUsername = await db.get(
+        'SELECT id FROM users WHERE username = ? AND id != ?',
+        [username, user.userId]
+      );
+      
+      if (existingUserByUsername) {
+        return res.status(409).json({
+          success: false,
+          error: 'Username already exists',
+          timestamp: new Date().toISOString()
+        });
+      }
+    }
+    
+    // Check if email already exists (if provided)
+    if (email) {
+      const existingUserByEmail = await db.get(
+        'SELECT id FROM users WHERE email = ? AND id != ?',
+        [email, user.userId]
+      );
+      
+      if (existingUserByEmail) {
+        return res.status(409).json({
+          success: false,
+          error: 'Email already exists',
+          timestamp: new Date().toISOString()
+        });
+      }
+    }
+    
+    // Update user profile
+    const updateData: { username?: string; email?: string } = {};
+    if (username) updateData.username = username;
+    if (email) updateData.email = email;
+    
+    await db.updateUserProfile(user.userId, updateData);
+    
+    // Get updated user data
+    const updatedUser = await db.getUserById(user.userId);
+    
+    return res.json({
+      success: true,
+      data: updatedUser,
+      message: 'Profile updated successfully',
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 // PUT /api/users/:id/balance - Update user balance (admin only)
 router.put('/:id/balance', authenticate, async (req: AuthenticatedRequest, res) => {
   try {
