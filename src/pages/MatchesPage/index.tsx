@@ -213,8 +213,23 @@ const MatchesPage = () => {
           const dateB = new Date(b.date);
           return dateA.getTime() - dateB.getTime(); // Chronological order
         });
-        // Limit to only 5 closest upcoming matches
-        filteredMatches = filteredMatches.slice(0, 5);
+        // For upcoming tab, apply search filter first, then limit to 5 if no search
+        if (searchTerm.trim()) {
+          filteredMatches = filteredMatches.filter(match => {
+            const homeTeamName = season.teams?.find(t => t.id === match.localId)?.name || match.localId;
+            const awayTeamName = season.teams?.find(t => t.id === match.visitanteId)?.name || match.visitanteId;
+            
+            // Format names for better searching
+            const formatName = (name: string) => name.replace(/[-_]/g, ' ').toLowerCase();
+            const searchLower = searchTerm.toLowerCase();
+            
+            return formatName(homeTeamName).includes(searchLower) ||
+                   formatName(awayTeamName).includes(searchLower);
+          });
+        } else {
+          // Only limit to 5 when there's no search term
+          filteredMatches = filteredMatches.slice(0, 5);
+        }
         break;
       case 'live':
         filteredMatches = partidos.filter(match => match.status === 'live');
@@ -236,7 +251,7 @@ const MatchesPage = () => {
         filteredMatches = partidos;
     }
 
-    // Apply search filter (except for upcoming tab since we already limited it)
+    // Apply search filter to live and today tabs
     if (searchTerm.trim() && activeTab !== 'upcoming') {
       filteredMatches = filteredMatches.filter(match => {
         const homeTeamName = season.teams?.find(t => t.id === match.localId)?.name || match.localId;
@@ -412,7 +427,23 @@ const MatchesPage = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className={styles.searchInput}
                 />
+                {searchTerm && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setSearchTerm('')}
+                    className={styles.clearSearchButton}
+                  >
+                    ✕ Limpiar
+                  </Button>
+                )}
               </div>
+              
+              {searchTerm && (
+                <div className={styles.searchResultsIndicator}>
+                  🔍 Buscando equipos que contengan: <strong>"{searchTerm}"</strong>
+                </div>
+              )}
             </div>
 
             <div className={styles.tabsContainer}>
@@ -450,29 +481,44 @@ const MatchesPage = () => {
                   <Card className={styles.noMatchesCard}>
                     <div className={styles.noMatchesContent}>
                       <div className={styles.noMatchesIcon}>
-                        {activeTab === 'upcoming' && '⏰'}
-                        {activeTab === 'live' && '🔴'}
-                        {activeTab === 'today' && '📅'}
+                        {searchTerm ? '🔍' : (
+                          <>
+                            {activeTab === 'upcoming' && '⏰'}
+                            {activeTab === 'live' && '🔴'}
+                            {activeTab === 'today' && '📅'}
+                          </>
+                        )}
                       </div>
                       <h3 className={styles.noMatchesTitle}>
-                        {activeTab === 'upcoming' && 'No hay partidos próximos'}
-                        {activeTab === 'live' && 'No hay partidos en vivo'}
-                        {activeTab === 'today' && 'No hay partidos hoy'}
+                        {searchTerm ? 'No se encontraron partidos' : (
+                          <>
+                            {activeTab === 'upcoming' && 'No hay partidos próximos'}
+                            {activeTab === 'live' && 'No hay partidos en vivo'}
+                            {activeTab === 'today' && 'No hay partidos hoy'}
+                          </>
+                        )}
                       </h3>
                       <p className={styles.noMatchesText}>
-                        {activeTab === 'upcoming' && 'Avanza el tiempo virtual para generar los próximos 5 partidos más cercanos.'}
-                        {activeTab === 'live' && 'Inicia la simulación de un partido para verlo en vivo.'}
-                        {activeTab === 'today' && 'Avanza el tiempo hasta el día de un partido.'}
+                        {searchTerm ? 'No se encontraron partidos con los equipos buscados. Intenta con un término de búsqueda diferente.' : (
+                          <>
+                            {activeTab === 'upcoming' && 'Avanza el tiempo virtual para generar los próximos 5 partidos más cercanos.'}
+                            {activeTab === 'live' && 'Inicia la simulación de un partido para verlo en vivo.'}
+                            {activeTab === 'today' && 'Avanza el tiempo hasta el día de un partido.'}
+                          </>
+                        )}
                       </p>
                       {searchTerm && (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => setSearchTerm('')}
-                          className={styles.clearSearchButton}
-                        >
-                          🔍 Limpiar búsqueda
-                        </Button>
+                        <div className={styles.searchResultsIndicator}>
+                          <span>🔍 Mostrando resultados para: <strong>"{searchTerm}"</strong></span>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => setSearchTerm('')}
+                            className={styles.clearSearchButton}
+                          >
+                            ✕ Limpiar búsqueda
+                          </Button>
+                        </div>
                       )}
                     </div>
                   </Card>
