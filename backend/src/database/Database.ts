@@ -246,6 +246,14 @@ export class Database {
     return await this.users.getUserPasswordById(userId);
   }
 
+  public async getUserByEmailForRecovery(email: string): Promise<{ id: string; email: string } | null> {
+    return await this.users.getUserByEmailForRecovery(email);
+  }
+
+  public async updateUserPasswordByEmail(email: string, hashedPassword: string): Promise<DatabaseResult> {
+    return await this.users.updateUserPasswordByEmail(email, hashedPassword);
+  }
+
   public async getAllUsers(): Promise<unknown[]> {
     return await this.users.getAllUsers();
   }

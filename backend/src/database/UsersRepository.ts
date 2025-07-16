@@ -99,6 +99,25 @@ export class UsersRepository {
     return result as { password: string } | null;
   }
 
+  public async getUserByEmailForRecovery(email: string): Promise<{ id: string; email: string } | null> {
+    const sql = `
+      SELECT id, email
+      FROM users 
+      WHERE email = ?
+    `;
+    const result = await this.connection.get(sql, [email]);
+    return result as { id: string; email: string } | null;
+  }
+
+  public async updateUserPasswordByEmail(email: string, hashedPassword: string): Promise<DatabaseResult> {
+    const sql = `
+      UPDATE users 
+      SET password = ?, updated_at = datetime('now')
+      WHERE email = ?
+    `;
+    return await this.connection.run(sql, [hashedPassword, email]);
+  }
+
   public async getAllUsers(): Promise<unknown[]> {
     const sql = `
       SELECT 
