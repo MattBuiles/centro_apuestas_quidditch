@@ -366,20 +366,6 @@ const LeagueTimeControl: React.FC<VirtualTimeControlProps> = ({
               </span>
             </div>
 
-            <div className={styles.infoRow}>
-              <span className={styles.label}>⚡ Velocidad de tiempo:</span>
-              <span className={styles.value}>
-                {leagueTimeInfo.timeSpeed}x
-              </span>
-            </div>
-
-            <div className={styles.infoRow}>
-              <span className={styles.label}>🤖 Modo automático:</span>
-              <span className={styles.value}>
-                {leagueTimeInfo.autoMode ? '✅ Activado' : '❌ Desactivado'}
-              </span>
-            </div>
-
             {leagueTimeInfo.nextSeasonDate && (
               <div className={styles.infoRow}>
                 <span className={styles.label}>📅 Próxima temporada:</span>
