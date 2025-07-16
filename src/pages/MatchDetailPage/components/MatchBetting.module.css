@@ -1,37 +1,80 @@
 /* ========================================
-   MATCH BETTING - GOLDEN VAULT
+   MATCH BETTING - SIMPLIFIED GOLDEN VAULT
    ======================================== */
 
-/* Main Betting Container */
-.bettingContainer {
-  position: relative;
-  margin: 0;
+/* Betting Tab Container */
+.bettingTab {
+  min-height: 400px;
   background: linear-gradient(135deg, 
-    rgba(218, 165, 32, 0.15) 0%,
-    rgba(184, 134, 11, 0.1) 50%,
-    rgba(218, 165, 32, 0.15) 100%);
-  border-radius: 25px;
+    rgba(218, 165, 32, 0.08) 0%,
+    rgba(255, 255, 255, 0.95) 25%,
+    rgba(255, 255, 255, 0.9) 50%,
+    rgba(184, 134, 11, 0.05) 75%,
+    rgba(218, 165, 32, 0.08) 100%);
+  border-radius: 20px;
+  padding: 0;
+  position: relative;
   overflow: hidden;
-  animation: vaultGlow 5s ease-in-out infinite;
 }
 
-@keyframes vaultGlow {
-  0%, 100% { box-shadow: 0 0 40px rgba(218, 165, 32, 0.3); }
-  50% { box-shadow: 0 0 60px rgba(218, 165, 32, 0.5), 0 0 90px rgba(106, 13, 173, 0.3); }
+.bettingContainer {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
-.bettingContainer::before {
-  content: '💰💎';
-  position: absolute;
-  top: 15px;
-  right: 20px;
+/* Main Betting Card */
+.bettingMainCard {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(218, 165, 32, 0.05) 25%,
+    rgba(255, 255, 255, 0.9) 50%,
+    rgba(184, 134, 11, 0.03) 75%,
+    rgba(255, 255, 255, 0.95) 100%);
+  border-radius: 15px;
+  padding: 2rem;
+  border: 2px solid rgba(218, 165, 32, 0.2);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.bettingMainCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(218, 165, 32, 0.2);
+  border-color: rgba(218, 165, 32, 0.4);
+}
+
+/* Betting Header */
+.bettingHeader {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.bettingTitle {
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  font-weight: 900;
+  color: #6A0DAD;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, #DAA520, #B8860B, #6A0DAD);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 2px 8px rgba(218, 165, 32, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.titleIcon {
   font-size: 2rem;
-  opacity: 0.6;
-  animation: treasureSpin 8s linear infinite;
-  z-index: 1;
+  animation: coinSpin 3s linear infinite;
 }
 
-@keyframes treasureSpin {
+@keyframes coinSpin {
   0% { transform: rotate(0deg) scale(1); }
   25% { transform: rotate(90deg) scale(1.1); }
   50% { transform: rotate(180deg) scale(1); }
@@ -39,32 +82,262 @@
   100% { transform: rotate(360deg) scale(1); }
 }
 
-/* Coming Soon Card */
-.comingSoon {
+.bettingSubtitle {
+  font-size: 1.1rem;
+  color: rgba(106, 13, 173, 0.8);
+  font-style: italic;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Betting Content */
+.bettingContent {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Live Indicator */
+.liveIndicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
   background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.8) 0%,
-    rgba(218, 165, 32, 0.08) 50%,
-    rgba(255, 255, 255, 0.6) 100%);
+    rgba(220, 20, 60, 0.1) 0%,
+    rgba(255, 255, 255, 0.9) 50%,
+    rgba(220, 20, 60, 0.1) 100%);
   border-radius: 25px;
-  padding: 3rem;
+  border: 2px solid rgba(220, 20, 60, 0.3);
+  animation: livePulse 2s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+  0%, 100% { 
+    box-shadow: 0 0 10px rgba(220, 20, 60, 0.3);
+    transform: scale(1);
+  }
+  50% { 
+    box-shadow: 0 0 20px rgba(220, 20, 60, 0.5);
+    transform: scale(1.02);
+  }
+}
+
+.liveIcon {
+  font-size: 1.2rem;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0.3; }
+}
+
+.liveText {
+  font-weight: 700;
+  color: #dc143c;
+  font-size: 1.1rem;
+}
+
+.liveMinute {
+  font-weight: 600;
+  color: rgba(220, 20, 60, 0.8);
+  background: rgba(220, 20, 60, 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+}
+
+/* Match Preview */
+.matchPreview {
+  background: linear-gradient(135deg, 
+    rgba(106, 13, 173, 0.05) 0%,
+    rgba(255, 255, 255, 0.9) 50%,
+    rgba(218, 165, 32, 0.05) 100%);
+  border-radius: 15px;
+  padding: 1.5rem;
+  border: 1px solid rgba(106, 13, 173, 0.2);
+  margin-bottom: 1rem;
+}
+
+.teamsPreview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.teamPreview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.teamName {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #6A0DAD;
   text-align: center;
-  border: 2px solid;
-  border-image: linear-gradient(45deg, 
-    rgba(218, 165, 32, 0.6) 0%,
-    rgba(106, 13, 173, 0.8) 50%,
-    rgba(218, 165, 32, 0.6) 100%) 1;
-  backdrop-filter: blur(15px);
+}
+
+.teamScore {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #DAA520;
+  background: linear-gradient(135deg, #DAA520, #B8860B);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.vsSection {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 1rem;
+}
+
+.vs {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: rgba(106, 13, 173, 0.6);
+  padding: 0.5rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, 
+    rgba(218, 165, 32, 0.1) 0%,
+    rgba(255, 255, 255, 0.9) 100%);
+  border: 2px solid rgba(218, 165, 32, 0.3);
+}
+
+.matchInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  text-align: center;
+}
+
+.matchDate,
+.matchTime,
+.matchLocation {
+  font-size: 0.9rem;
+  color: rgba(106, 13, 173, 0.7);
+  font-weight: 500;
+}
+
+/* Betting Features */
+.bettingFeatures {
+  background: linear-gradient(135deg, 
+    rgba(218, 165, 32, 0.05) 0%,
+    rgba(255, 255, 255, 0.9) 50%,
+    rgba(106, 13, 173, 0.05) 100%);
+  border-radius: 15px;
+  padding: 1.5rem;
+  border: 1px solid rgba(218, 165, 32, 0.2);
+}
+
+.featuresTitle {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #6A0DAD;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.featuresIcon {
+  font-size: 1.4rem;
+  animation: targetSpin 4s linear infinite;
+}
+
+@keyframes targetSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.featuresList {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 0.75rem;
+}
+
+.featureItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  border: 1px solid rgba(218, 165, 32, 0.1);
+  transition: all 0.2s ease;
+}
+
+.featureItem:hover {
+  background: rgba(218, 165, 32, 0.1);
+  border-color: rgba(218, 165, 32, 0.3);
+  transform: translateX(5px);
+}
+
+.featureIcon {
+  font-size: 1.2rem;
+  animation: featureFloat 3s ease-in-out infinite;
+}
+
+@keyframes featureFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-3px); }
+}
+
+.featureText {
+  color: rgba(106, 13, 173, 0.8);
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+/* Betting Actions */
+.bettingActions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.bettingLink {
+  text-decoration: none;
+  width: 100%;
+  max-width: 400px;
+}
+
+.bettingButton {
+  width: 100%;
+  background: linear-gradient(135deg, #DAA520, #B8860B);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 15px;
+  font-weight: 700;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   position: relative;
-  transition: all 0.4s ease;
   overflow: hidden;
 }
 
-.comingSoon:hover {
+.bettingButton:hover {
+  background: linear-gradient(135deg, #B8860B, #DAA520);
   transform: translateY(-3px);
-  box-shadow: 0 12px 35px rgba(218, 165, 32, 0.3);
+  box-shadow: 0 10px 25px rgba(218, 165, 32, 0.4);
 }
 
-.comingSoon::before {
+.bettingButton::before {
   content: '';
   position: absolute;
   top: 0;
@@ -73,30 +346,269 @@
   height: 100%;
   background: linear-gradient(90deg, 
     transparent 0%,
-    rgba(218, 165, 32, 0.2) 50%,
+    rgba(255, 255, 255, 0.3) 50%,
     transparent 100%);
-  animation: goldenShimmer 4s ease-in-out infinite;
+  animation: buttonShimmer 3s ease-in-out infinite;
 }
 
-@keyframes goldenShimmer {
+@keyframes buttonShimmer {
   0% { left: -100%; }
   50% { left: 100%; }
   100% { left: 100%; }
 }
 
-/* Coming Soon Content */
-.comingSoon h3 {
-  font-size: clamp(1.8rem, 4vw, 2.5rem);
-  font-weight: 900;
+.buttonIcon {
+  font-size: 1.3rem;
+  animation: diceRoll 2s ease-in-out infinite;
+}
+
+@keyframes diceRoll {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(90deg); }
+  50% { transform: rotate(180deg); }
+  75% { transform: rotate(270deg); }
+}
+
+.liveWarning {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, 
+    rgba(255, 193, 7, 0.1) 0%,
+    rgba(255, 255, 255, 0.9) 50%,
+    rgba(255, 193, 7, 0.1) 100%);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  font-size: 0.9rem;
+  color: rgba(255, 193, 7, 0.8);
+  text-align: center;
+}
+
+.warningIcon {
+  font-size: 1.1rem;
+  animation: warning 2s ease-in-out infinite;
+}
+
+@keyframes warning {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.warningText {
+  font-weight: 500;
+  color: #B8860B;
+}
+
+/* Betting Footer */
+.bettingFooter {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .bettingFooter {
+    grid-template-columns: 1fr;
+  }
+}
+
+.bettingInfo {
+  background: linear-gradient(135deg, 
+    rgba(106, 13, 173, 0.05) 0%,
+    rgba(255, 255, 255, 0.95) 50%,
+    rgba(218, 165, 32, 0.03) 100%);
+  border-radius: 15px;
+  padding: 1.5rem;
+  border: 1px solid rgba(106, 13, 173, 0.2);
+}
+
+.bettingInfo h3 {
   color: #6A0DAD;
-  margin-bottom: 1.5rem;
-  background: linear-gradient(135deg, #DAA520, #B8860B, #6A0DAD);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: 0 2px 8px rgba(218, 165, 32, 0.3);
-  position: relative;
-  z-index: 2;
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.infoIcon {
+  font-size: 1.3rem;
+  animation: infoGlow 2s ease-in-out infinite;
+}
+
+@keyframes infoGlow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+.infoItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(106, 13, 173, 0.1);
+  font-size: 0.9rem;
+}
+
+.infoItem:last-child {
+  border-bottom: none;
+}
+
+.infoLabel {
+  color: rgba(106, 13, 173, 0.8);
+  font-weight: 500;
+}
+
+.infoValue {
+  color: #6A0DAD;
+  font-weight: 600;
+}
+
+.responsibleGaming {
+  background: linear-gradient(135deg, 
+    rgba(40, 167, 69, 0.05) 0%,
+    rgba(255, 255, 255, 0.95) 50%,
+    rgba(23, 162, 184, 0.03) 100%);
+  border-radius: 15px;
+  padding: 1.5rem;
+  border: 1px solid rgba(40, 167, 69, 0.2);
+  text-align: center;
+}
+
+.responsibleGaming h3 {
+  color: #28a745;
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.responsibleIcon {
+  font-size: 1.2rem;
+  animation: shieldPulse 3s ease-in-out infinite;
+}
+
+@keyframes shieldPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.responsibleGaming p {
+  color: rgba(40, 167, 69, 0.8);
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  line-height: 1.4;
+}
+
+/* Disabled State */
+.bettingDisabled {
+  text-align: center;
+  padding: 3rem;
+  background: linear-gradient(135deg, 
+    rgba(108, 117, 125, 0.05) 0%,
+    rgba(255, 255, 255, 0.95) 50%,
+    rgba(108, 117, 125, 0.03) 100%);
+  border-radius: 20px;
+  border: 2px solid rgba(108, 117, 125, 0.2);
+  margin: 2rem;
+}
+
+.disabledTitle {
+  font-size: 1.8rem;
+  color: #6c757d;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.disabledIcon {
+  font-size: 2rem;
+  animation: lockShake 2s ease-in-out infinite;
+}
+
+@keyframes lockShake {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-5deg); }
+  75% { transform: rotate(5deg); }
+}
+
+.disabledMessage {
+  color: rgba(108, 117, 125, 0.8);
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+  line-height: 1.4;
+}
+
+.viewOtherBets {
+  text-decoration: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .bettingContainer {
+    padding: 1rem;
+  }
+  
+  .bettingMainCard {
+    padding: 1.5rem;
+  }
+  
+  .bettingTitle {
+    font-size: 1.5rem;
+  }
+  
+  .teamsPreview {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .teamPreview {
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+  }
+  
+  .featuresList {
+    grid-template-columns: 1fr;
+  }
+  
+  .bettingButton {
+    font-size: 1rem;
+    padding: 0.875rem 1.5rem;
+  }
+}
+
+/* Magical Effects */
+.bettingMainCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%,
+    rgba(218, 165, 32, 0.1) 50%,
+    transparent 100%);
+  animation: cardShimmer 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes cardShimmer {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: 100%; }
 }
 
 .comingSoon p {
