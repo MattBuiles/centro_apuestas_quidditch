@@ -420,7 +420,9 @@ interface AuthContextType {
   validateCurrentPassword: (password: string) => boolean;
   validatePassword: (password: string) => string | null;
   updatePassword: (currentPassword: string, newPassword: string) => Promise<void>;  // Nueva función para cambiar contraseña
-  resetPasswordByEmail: (email: string, newPassword: string) => boolean;
+  checkEmailForRecovery: (email: string) => Promise<boolean>; // Nueva función para verificar email
+  resetPasswordByEmail: (email: string, newPassword: string) => Promise<boolean>;
+
   // Nueva función para obtener las cuentas predefinidas (útil para debugging)
   getPredefinedAccounts: () => { email: string; username: string; role: string }[];  // Funciones para manejo de apuestas
   placeBet: (bet: Omit<UserBet, 'id' | 'userId' | 'date' | 'status'>) => Promise<boolean>;
@@ -1459,30 +1461,53 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
+  // Función para verificar si un email existe para recuperación
+  const checkEmailForRecovery = async (email: string): Promise<boolean> => {
+    try {
+      const response = await apiClient.post('/auth/forgot-password', { email });
+      return response.success;
+    } catch (error) {
+      console.error('Error checking email for recovery:', error);
+      return false;
+    }
+  };
+
   // Función para restablecer contraseña por email
-  const resetPasswordByEmail = (email: string, newPassword: string): boolean => {
-    const account = findAccountByEmail(email);
-    if (account) {
+  const resetPasswordByEmail = async (email: string, newPassword: string): Promise<boolean> => {
+    try {
       // Validar la nueva contraseña
       const passwordError = validatePassword(newPassword);
       if (passwordError) {
         throw new Error(passwordError);
       }
 
-      // Actualizar en la lista de cuentas actuales
-      setCurrentAccounts(prev => 
-        prev.map(acc => 
-          acc.user.email === email 
-            ? { ...acc, password: newPassword }
-            : acc
-        )
-      );
-      
-      // También guardar en localStorage para compatibilidad
-      saveUserCredentials(account.user.id, newPassword);
-      return true;
+      // Llamar al backend para restablecer la contraseña
+      const response = await apiClient.post('/auth/reset-password', {
+        email,
+        newPassword
+      });
+
+      if (response.success) {
+        // También actualizar en localStorage para compatibilidad con sistema actual
+        const account = findAccountByEmail(email);
+        if (account) {
+          setCurrentAccounts(prev => 
+            prev.map(acc => 
+              acc.user.email === email 
+                ? { ...acc, password: newPassword }
+                : acc
+            )
+          );
+          saveUserCredentials(account.user.id, newPassword);
+        }
+        return true;
+      }
+      return false;
+
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      throw error;
     }
-    return false;
   };
 
   // Función para obtener información de las cuentas predefinidas (sin contraseñas)
@@ -1509,8 +1534,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         updateUserProfile,
         validateCurrentPassword,
         validatePassword,
-        updatePassword,        resetPasswordByEmail,
-        getPredefinedAccounts,        // Funciones de apuestas
+        updatePassword,
+        checkEmailForRecovery,
+        resetPasswordByEmail,
+        getPredefinedAccounts,
+
+        // Funciones de apuestas
         placeBet,
         getUserBets,
         loadUserBetsFromBackend,
