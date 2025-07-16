@@ -4,7 +4,6 @@ import { LeagueTimeInfo } from '@/services/leagueTimeService';
 import { FEATURES } from '@/config/features';
 import { Match } from '@/types/league';
 import { useAuth } from '@/context/AuthContext';
-import Button from '@/components/common/Button';
 import styles from './LeagueTimeControl.module.css';
 
 interface VirtualTimeControlProps {
@@ -329,14 +328,13 @@ const LeagueTimeControl: React.FC<VirtualTimeControlProps> = ({
     <div className={styles.container}>
       <div className={styles.header}>
         <h3>🕐 Control de Tiempo de Liga</h3>
-        <Button
-          variant="outline"
-          size="sm"
+        <button
+          className={styles.btnOutline}
           onClick={loadLeagueTimeInfo}
           disabled={isLoading}
         >
           🔄 Actualizar
-        </Button>
+        </button>
       </div>
 
       {error && (
@@ -355,7 +353,7 @@ const LeagueTimeControl: React.FC<VirtualTimeControlProps> = ({
         <div className={styles.content}>
           <div className={styles.currentInfo}>
             <div className={styles.infoRow}>
-              <span className={styles.label}>📅 Fecha actual:</span>
+              <span className={styles.label}>📅 Fecha actual del tiempo virtual:</span>
               <span className={styles.value}>
                 {formatDate(leagueTimeInfo.currentDate)}
               </span>
@@ -396,56 +394,59 @@ const LeagueTimeControl: React.FC<VirtualTimeControlProps> = ({
           </div>
 
           <div className={styles.controls}>
-            <Button
-              variant="primary"
+            <button
+              className={styles.btnPrimary}
               onClick={handleAdvanceOneDay}
               disabled={isAdvancing}
             >
-              {isAdvancing ? '⏳' : '📅'} Avanzar 1 día
-            </Button>
+              {isAdvancing ? '⏳' : '📅'} Avanzar 1 Día
+            </button>
 
-            <Button
-              variant="primary"
+            <button
+              className={styles.btnPrimary}
               onClick={handleAdvanceOneWeek}
               disabled={isAdvancing}
             >
-              {isAdvancing ? '⏳' : '📆'} Avanzar 1 semana
-            </Button>
+              {isAdvancing ? '⏳' : '📆'} Avanzar 1 Semana
+            </button>
 
-            <Button
-              variant="secondary"
+            <button
+              className={styles.btnPrimary}
               onClick={handleAdvanceToNextMatch}
               disabled={isAdvancing}
             >
-              {isAdvancing ? '⏳' : '⚽'} Al próximo partido
-            </Button>
+              {isAdvancing ? '⏳' : '⚽'} Ir al Próximo Partido
+            </button>
 
-            <Button
-              variant="magical"
+            <button
+              className={styles.btnDanger}
               onClick={handleSimulateCompleteSeason}
               disabled={isAdvancing}
             >
-              {isAdvancing ? '⏳' : '�'} Simular resto de temporada
-            </Button>
+              {isAdvancing ? '⏳' : '🎯'} Simular Resto de Temporada
+            </button>
 
-            {isSeasonFinished() && (
-              <Button
-                variant="primary"
-                onClick={handleStartNextSeason}
-                disabled={isAdvancing}
-              >
-                {isAdvancing ? '⏳' : '🆕'} Iniciar próxima temporada
-              </Button>
-            )}
-
-            <Button
-              variant="outline"
+            <button
+              className={styles.btnOutline}
               onClick={handleResetDatabase}
               disabled={isAdvancing}
             >
-              {isAdvancing ? '⏳' : '🔄'} Resetear base de datos
-            </Button>
+              {isAdvancing ? '⏳' : '🔄'} Resetear Base de Datos
+            </button>
           </div>
+
+          {isSeasonFinished() && (
+            <div className={styles.seasonFinished}>
+              <p>¡La temporada ha finalizado!</p>
+              <button
+                className={styles.btnSecondary}
+                onClick={handleStartNextSeason}
+                disabled={isAdvancing}
+              >
+                {isAdvancing ? '⏳' : '🆕'} Iniciar Nueva Temporada
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
