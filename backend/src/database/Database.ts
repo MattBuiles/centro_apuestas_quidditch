@@ -233,6 +233,27 @@ export class Database {
     return await this.users.updateUserBalance(userId, newBalance);
   }
 
+  // Update user profile
+  public async updateUserProfile(userId: string, userData: { username?: string; email?: string }): Promise<DatabaseResult> {
+    return await this.users.updateUserProfile(userId, userData);
+  }
+
+  public async updateUserPassword(userId: string, hashedPassword: string): Promise<DatabaseResult> {
+    return await this.users.updateUserPassword(userId, hashedPassword);
+  }
+
+  public async getUserPasswordById(userId: string): Promise<{ password: string } | null> {
+    return await this.users.getUserPasswordById(userId);
+  }
+
+  public async getUserByEmailForRecovery(email: string): Promise<{ id: string; email: string } | null> {
+    return await this.users.getUserByEmailForRecovery(email);
+  }
+
+  public async updateUserPasswordByEmail(email: string, hashedPassword: string): Promise<DatabaseResult> {
+    return await this.users.updateUserPasswordByEmail(email, hashedPassword);
+  }
+
   public async getAllUsers(): Promise<unknown[]> {
     return await this.users.getAllUsers();
   }
@@ -317,6 +338,10 @@ export class Database {
 
   public async getUserTransactions(userId: string, limit: number = 50): Promise<unknown[]> {
     return await this.admin.getUserTransactions(userId, limit);
+  }
+
+  public async getUserStats(userId: string): Promise<unknown> {
+    return await this.admin.getUserStats(userId);
   }
 
   public async createAdminLog(logData: AdminLogData): Promise<DatabaseResult> {

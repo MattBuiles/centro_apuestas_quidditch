@@ -19,10 +19,22 @@ const registerValidation = [
   body('password').isLength({ min: 6 })
 ];
 
+const forgotPasswordValidation = [
+  body('email').isEmail().normalizeEmail()
+];
+
+const resetPasswordValidation = [
+  body('email').isEmail().normalizeEmail(),
+  body('newPassword').isLength({ min: 6 })
+];
+
 // Routes
 router.post('/login', loginValidation, validateRequest, authController.login);
 router.post('/register', registerValidation, validateRequest, authController.register);
 router.post('/refresh', authController.refreshToken);
 router.get('/me', authenticate, authController.getProfile);
+router.post('/forgot-password', forgotPasswordValidation, validateRequest, authController.forgotPassword);
+router.post('/check-email', forgotPasswordValidation, validateRequest, authController.checkEmailExists);
+router.post('/reset-password', resetPasswordValidation, validateRequest, authController.resetPassword);
 
 export default router;

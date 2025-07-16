@@ -50,6 +50,82 @@ export class AdminRepository {
     return await this.connection.all(sql, [userId, limit]);
   }
 
+  // User statistics methods
+  public async getUserStats(userId: string): Promise<unknown> {
+    console.log('🔍 Getting user stats for userId:', userId);
+    
+    try {
+      // Get total bets count
+      const totalBetsResult = await this.connection.get(`
+        SELECT COUNT(*) as total_bets FROM bets WHERE user_id = ?
+      `, [userId]) as { total_bets: number };
+      console.log('📊 Total bets result:', totalBetsResult);
+
+      // Get won bets count
+      const wonBetsResult = await this.connection.get(`
+        SELECT COUNT(*) as won_bets FROM bets WHERE user_id = ? AND status = 'won'
+      `, [userId]) as { won_bets: number };
+      console.log('🏆 Won bets result:', wonBetsResult);
+
+      // Get total winnings directly from bets (potential_win for won bets)
+      const winningsResult = await this.connection.get(`
+        SELECT COALESCE(SUM(potential_win - amount), 0) as total_winnings 
+        FROM bets 
+        WHERE user_id = ? AND status = 'won'
+      `, [userId]) as { total_winnings: number };
+      console.log('💰 Winnings result:', winningsResult);
+
+      // Simplified favorite team query - just get the first team they bet on
+      let favoriteTeam = 'Gryffindor'; // Default fallback
+      try {
+        const favoriteTeamResult = await this.connection.get(`
+          SELECT t.name, COUNT(*) as bet_count
+          FROM bets b
+          JOIN matches m ON b.match_id = m.id
+          JOIN teams t ON (t.id = m.home_team_id OR t.id = m.away_team_id)
+          WHERE b.user_id = ?
+          GROUP BY t.name
+          ORDER BY bet_count DESC
+          LIMIT 1
+        `, [userId]) as { name: string; bet_count: number } | undefined;
+        
+        console.log('⚡ Favorite team result:', favoriteTeamResult);
+        
+        if (favoriteTeamResult?.name) {
+          favoriteTeam = favoriteTeamResult.name;
+        }
+      } catch (teamError) {
+        console.warn('⚠️ Could not determine favorite team:', teamError);
+      }
+
+      const totalBets = totalBetsResult?.total_bets || 0;
+      const wonBets = wonBetsResult?.won_bets || 0;
+      const winRate = totalBets > 0 ? Math.round((wonBets / totalBets) * 100) : 0;
+      const totalWinnings = Math.round(winningsResult?.total_winnings || 0);
+
+      const stats = {
+        totalBets,
+        winRate,
+        totalWinnings,
+        favoriteTeam
+      };
+
+      console.log('📈 Final user stats:', stats);
+      return stats;
+    } catch (error) {
+      console.error('❌ Error getting user stats:', error);
+      // Return default stats on error
+      const defaultStats = {
+        totalBets: 0,
+        winRate: 0,
+        totalWinnings: 0,
+        favoriteTeam: 'Gryffindor'
+      };
+      console.log('🔄 Returning default stats:', defaultStats);
+      return defaultStats;
+    }
+  }
+
   // Admin logs methods
   public async createAdminLog(logData: AdminLogData): Promise<DatabaseResult> {
     const sql = `

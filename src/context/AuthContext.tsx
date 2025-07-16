@@ -58,6 +58,14 @@ interface UserTransaction {
   userId: string;
 }
 
+// Interfaz para las estadísticas del usuario
+interface UserStats {
+  totalBets: number;
+  winRate: number;
+  totalWinnings: number;
+  favoriteTeam: string;
+}
+
 // 5 cuentas predefinidas
 const PREDEFINED_ACCOUNTS: UserAccount[] = [
   {
@@ -408,11 +416,13 @@ interface AuthContextType {
   logout: () => void;
   updateUserBalance: (newBalance: number) => void;
   syncUserBalance: () => Promise<void>;
-  updateUserProfile: (userData: Partial<Pick<User, 'username' | 'email' | 'avatar'>>) => void;
+  updateUserProfile: (userData: Partial<Pick<User, 'username' | 'email' | 'avatar'>>) => Promise<void>;
   validateCurrentPassword: (password: string) => boolean;
   validatePassword: (password: string) => string | null;
-  updatePassword: (newPassword: string) => void;  // Nueva función para restablecer contraseña por email
-  resetPasswordByEmail: (email: string, newPassword: string) => boolean;
+  updatePassword: (currentPassword: string, newPassword: string) => Promise<void>;  // Nueva función para cambiar contraseña
+  checkEmailForRecovery: (email: string) => Promise<boolean>; // Nueva función para verificar email
+  resetPasswordByEmail: (email: string, newPassword: string) => Promise<boolean>;
+
   // Nueva función para obtener las cuentas predefinidas (útil para debugging)
   getPredefinedAccounts: () => { email: string; username: string; role: string }[];  // Funciones para manejo de apuestas
   placeBet: (bet: Omit<UserBet, 'id' | 'userId' | 'date' | 'status'>) => Promise<boolean>;
@@ -424,6 +434,9 @@ interface AuthContextType {
   getUserTransactions: () => UserTransaction[];
   addTransaction: (transaction: Omit<UserTransaction, 'id' | 'userId' | 'date'>) => Promise<void>;
   loadUserTransactionsFromBackend: () => Promise<UserTransaction[]>;
+  // Funciones para manejo de estadísticas
+  getUserStats: () => UserStats;
+  loadUserStatsFromBackend: () => Promise<UserStats>;
   error: string | null;
 }
 
@@ -447,6 +460,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [currentAccounts, setCurrentAccounts] = useState<UserAccount[]>(PREDEFINED_ACCOUNTS);
   const [userBets, setUserBets] = useState<UserBet[]>([]);
   const [userTransactions, setUserTransactions] = useState<UserTransaction[]>([]);
+  const [userStats, setUserStats] = useState<UserStats>({
+    totalBets: 0,
+    winRate: 0,
+    totalWinnings: 0,
+    favoriteTeam: 'Gryffindor'
+  });
   const navigate = useNavigate();
 
   // Función para encontrar una cuenta por email
@@ -900,30 +919,83 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, [user?.id, FEATURES.USE_BACKEND_BETS]);
 
   // ...existing code...
-  const updateUserProfile = (userData: Partial<Pick<User, 'username' | 'email' | 'avatar'>>) => {
-    if (user) {
-      const updatedUser = { ...user, ...userData };
-      setUser(updatedUser);
-      
-      // Update the account in the current accounts list
-      setCurrentAccounts(prev => 
-        prev.map(account => 
-          account.user.id === user.id 
-            ? { ...account, user: updatedUser }
-            : account
-        )
-      );
-      
-      // Update the stored user data
-      const storedInLocal = localStorage.getItem('user');
-      const storedInSession = sessionStorage.getItem('user');
-      
-      if (storedInLocal) {
-        localStorage.setItem('user', JSON.stringify(updatedUser));
+  const updateUserProfile = async (userData: Partial<Pick<User, 'username' | 'email' | 'avatar'>>) => {
+    if (!user) return;
+    
+    try {
+      // Si tenemos username o email y el backend está habilitado, actualizamos en el backend
+      if (FEATURES.USE_BACKEND_BETS && (userData.username || userData.email)) {
+        const updateData: { username?: string; email?: string } = {};
+        if (userData.username) updateData.username = userData.username;
+        if (userData.email) updateData.email = userData.email;
+        
+        const response = await apiClient.put('/users/profile', updateData);
+        
+        if (response.success && response.data) {
+          // Actualizar con los datos del backend
+          const backendUser = response.data as any;
+          const updatedUser = { 
+            ...user, 
+            username: backendUser.username,
+            email: backendUser.email,
+            // Mantener el avatar local si no viene del backend
+            avatar: userData.avatar || user.avatar
+          };
+          
+          setUser(updatedUser);
+          
+          // Update the account in the current accounts list
+          setCurrentAccounts(prev => 
+            prev.map(account => 
+              account.user.id === user.id 
+                ? { ...account, user: updatedUser }
+                : account
+            )
+          );
+          
+          // Update the stored user data
+          const storedInLocal = localStorage.getItem('user');
+          const storedInSession = sessionStorage.getItem('user');
+          
+          if (storedInLocal) {
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+          }
+          if (storedInSession) {
+            sessionStorage.setItem('user', JSON.stringify(updatedUser));
+          }
+          
+          return; // Salir early si el backend fue exitoso
+        } else {
+          throw new Error(response.error || 'Failed to update profile');
+        }
       }
-      if (storedInSession) {
-        sessionStorage.setItem('user', JSON.stringify(updatedUser));
-      }
+    } catch (error) {
+      console.error('Error updating profile in backend:', error);
+      throw error; // Re-throw para que el frontend pueda manejar el error
+    }
+    
+    // Si no hay backend o solo se actualiza el avatar, actualizar localmente
+    const updatedUser = { ...user, ...userData };
+    setUser(updatedUser);
+    
+    // Update the account in the current accounts list
+    setCurrentAccounts(prev => 
+      prev.map(account => 
+        account.user.id === user.id 
+          ? { ...account, user: updatedUser }
+          : account
+      )
+    );
+    
+    // Update the stored user data
+    const storedInLocal = localStorage.getItem('user');
+    const storedInSession = sessionStorage.getItem('user');
+    
+    if (storedInLocal) {
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+    }
+    if (storedInSession) {
+      sessionStorage.setItem('user', JSON.stringify(updatedUser));
     }
   };
   // Función para validar la contraseña actual
@@ -935,14 +1007,30 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return account ? account.password === password : false;
   };
   // Función para actualizar la contraseña
-  const updatePassword = (newPassword: string) => {
-    if (user) {
-      // Validar la nueva contraseña
-      const passwordError = validatePassword(newPassword);
-      if (passwordError) {
-        throw new Error(passwordError);
+  const updatePassword = async (currentPassword: string, newPassword: string): Promise<void> => {
+    if (!user) {
+      throw new Error('No user authenticated');
+    }
+
+    // Validar la nueva contraseña
+    const passwordError = validatePassword(newPassword);
+    if (passwordError) {
+      throw new Error(passwordError);
+    }
+
+    try {
+      const response = await apiClient.put('/users/password', {
+        currentPassword,
+        newPassword
+      });
+
+      if (!response.success) {
+        throw new Error(response.error || 'Error updating password');
       }
 
+      // También actualizar en localStorage para compatibilidad con el sistema actual
+      saveUserCredentials(user.id, newPassword);
+      
       // Actualizar en la lista de cuentas actuales
       setCurrentAccounts(prev => 
         prev.map(account => 
@@ -951,9 +1039,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             : account
         )
       );
-      
-      // También guardar en localStorage para compatibilidad
-      saveUserCredentials(user.id, newPassword);
+
+    } catch (error) {
+      console.error('Error updating password:', error);
+      throw error;
     }
   };
 
@@ -1108,6 +1197,49 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     return userTransactions;
   }, [user, userTransactions]);
+
+  // Cargar estadísticas del usuario desde el backend
+  const loadUserStatsFromBackend = useCallback(async (): Promise<UserStats> => {
+    console.log('📊 loadUserStatsFromBackend called');
+    
+    if (!user || !FEATURES.USE_BACKEND_BETS) {
+      console.log('📊 Returning early - no user or backend disabled');
+      return userStats;
+    }
+
+    try {
+      console.log('📊 Making API call to /users/stats');
+      const response = await apiClient.get('/users/stats') as any;
+      console.log('📊 User stats API Response:', response);
+      
+      if (response.success && response.data) {
+        const backendStats = response.data;
+        console.log('📊 Backend stats:', backendStats);
+        
+        const transformedStats: UserStats = {
+          totalBets: backendStats.totalBets || 0,
+          winRate: backendStats.winRate || 0,
+          totalWinnings: backendStats.totalWinnings || 0,
+          favoriteTeam: backendStats.favoriteTeam || 'Gryffindor'
+        };
+
+        console.log('📊 Transformed stats:', transformedStats);
+        setUserStats(transformedStats);
+        return transformedStats;
+      } else {
+        console.log('📊 No data in response or response failed');
+      }
+    } catch (error) {
+      console.error('📊 Error loading user stats from backend:', error);
+    }
+
+    return userStats;
+  }, [user, userStats]);
+
+  // Obtener estadísticas del usuario
+  const getUserStats = (): UserStats => {
+    return userStats;
+  };
 
   // Obtener el número de apuestas realizadas hoy
   const getTodayBetsCount = (): number => {
@@ -1329,30 +1461,53 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
+  // Función para verificar si un email existe para recuperación
+  const checkEmailForRecovery = async (email: string): Promise<boolean> => {
+    try {
+      const response = await apiClient.post<{ exists: boolean }>('/auth/check-email', { email });
+      return response.success && response.data?.exists === true;
+    } catch (error) {
+      console.error('Error checking email for recovery:', error);
+      return false;
+    }
+  };
+
   // Función para restablecer contraseña por email
-  const resetPasswordByEmail = (email: string, newPassword: string): boolean => {
-    const account = findAccountByEmail(email);
-    if (account) {
+  const resetPasswordByEmail = async (email: string, newPassword: string): Promise<boolean> => {
+    try {
       // Validar la nueva contraseña
       const passwordError = validatePassword(newPassword);
       if (passwordError) {
         throw new Error(passwordError);
       }
 
-      // Actualizar en la lista de cuentas actuales
-      setCurrentAccounts(prev => 
-        prev.map(acc => 
-          acc.user.email === email 
-            ? { ...acc, password: newPassword }
-            : acc
-        )
-      );
-      
-      // También guardar en localStorage para compatibilidad
-      saveUserCredentials(account.user.id, newPassword);
-      return true;
+      // Llamar al backend para restablecer la contraseña
+      const response = await apiClient.post('/auth/reset-password', {
+        email,
+        newPassword
+      });
+
+      if (response.success) {
+        // También actualizar en localStorage para compatibilidad con sistema actual
+        const account = findAccountByEmail(email);
+        if (account) {
+          setCurrentAccounts(prev => 
+            prev.map(acc => 
+              acc.user.email === email 
+                ? { ...acc, password: newPassword }
+                : acc
+            )
+          );
+          saveUserCredentials(account.user.id, newPassword);
+        }
+        return true;
+      }
+      return false;
+
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      throw error;
     }
-    return false;
   };
 
   // Función para obtener información de las cuentas predefinidas (sin contraseñas)
@@ -1379,8 +1534,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         updateUserProfile,
         validateCurrentPassword,
         validatePassword,
-        updatePassword,        resetPasswordByEmail,
-        getPredefinedAccounts,        // Funciones de apuestas
+        updatePassword,
+        checkEmailForRecovery,
+        resetPasswordByEmail,
+        getPredefinedAccounts,
+
+        // Funciones de apuestas
         placeBet,
         getUserBets,
         loadUserBetsFromBackend,
@@ -1390,6 +1549,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         getUserTransactions,
         addTransaction,
         loadUserTransactionsFromBackend,
+        // Funciones para manejo de estadísticas
+        getUserStats,
+        loadUserStatsFromBackend,
         error,
       }}
     >

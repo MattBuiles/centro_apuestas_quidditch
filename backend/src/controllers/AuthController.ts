@@ -201,4 +201,136 @@ export class AuthController {
       });
     }
   };
+
+  public forgotPassword = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { email } = req.body;
+
+      // Check if user exists with this email
+      const user = await this.db.getUserByEmailForRecovery(email);
+
+      if (!user) {
+        // Don't reveal if email exists or not for security
+        res.json({
+          success: true,
+          message: 'If an account with this email exists, a password recovery code has been sent.',
+          timestamp: new Date().toISOString()
+        });
+        return;
+      }
+
+      // Simulate sending recovery email by logging to console
+      console.log('🦉 RECOVERY EMAIL SIMULATION 🦉');
+      console.log('='.repeat(50));
+      console.log(`📧 To: ${email}`);
+      console.log(`👤 User ID: ${user.id}`);
+      console.log(`🔐 Recovery Code: MAGIC-${Math.random().toString(36).substr(2, 8).toUpperCase()}`);
+      console.log(`⏰ Timestamp: ${new Date().toISOString()}`);
+      console.log('📜 Message: "Una lechuza mágica ha llevado tu código de recuperación!"');
+      console.log('='.repeat(50));
+
+      res.json({
+        success: true,
+        message: 'If an account with this email exists, a password recovery code has been sent.',
+        timestamp: new Date().toISOString()
+      });
+
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
+
+  public checkEmailExists = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { email } = req.body;
+
+      // Check if user exists with this email
+      const user = await this.db.getUserByEmailForRecovery(email);
+
+      if (user) {
+        res.json({
+          success: true,
+          data: { exists: true },
+          message: 'Email exists in our system',
+          timestamp: new Date().toISOString()
+        });
+      } else {
+        res.json({
+          success: true,
+          data: { exists: false },
+          message: 'Email not found in our system',
+          timestamp: new Date().toISOString()
+        });
+      }
+
+    } catch (error) {
+      console.error('Check email error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
+
+  public resetPassword = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { email, newPassword } = req.body;
+
+      // Validate input
+      if (!email || !newPassword) {
+        res.status(400).json({
+          success: false,
+          error: 'Email and new password are required',
+          timestamp: new Date().toISOString()
+        });
+        return;
+      }
+
+      // Check if user exists
+      const user = await this.db.getUserByEmailForRecovery(email);
+      if (!user) {
+        res.status(404).json({
+          success: false,
+          error: 'User not found',
+          timestamp: new Date().toISOString()
+        });
+        return;
+      }
+
+      // Hash new password
+      const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+      // Update password in database
+      await this.db.updateUserPasswordByEmail(email, hashedNewPassword);
+
+      // Log successful password reset
+      console.log('🔐 PASSWORD RESET SUCCESSFUL 🔐');
+      console.log('='.repeat(40));
+      console.log(`📧 Email: ${email}`);
+      console.log(`👤 User ID: ${user.id}`);
+      console.log(`⏰ Reset Time: ${new Date().toISOString()}`);
+      console.log('✨ Password successfully updated with bcrypt hashing');
+      console.log('='.repeat(40));
+
+      res.json({
+        success: true,
+        message: 'Password reset successfully',
+        timestamp: new Date().toISOString()
+      });
+
+    } catch (error) {
+      console.error('Reset password error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
 }
