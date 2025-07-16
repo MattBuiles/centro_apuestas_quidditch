@@ -58,6 +58,14 @@ interface UserTransaction {
   userId: string;
 }
 
+// Interfaz para las estadísticas del usuario
+interface UserStats {
+  totalBets: number;
+  winRate: number;
+  totalWinnings: number;
+  favoriteTeam: string;
+}
+
 // 5 cuentas predefinidas
 const PREDEFINED_ACCOUNTS: UserAccount[] = [
   {
@@ -424,6 +432,9 @@ interface AuthContextType {
   getUserTransactions: () => UserTransaction[];
   addTransaction: (transaction: Omit<UserTransaction, 'id' | 'userId' | 'date'>) => Promise<void>;
   loadUserTransactionsFromBackend: () => Promise<UserTransaction[]>;
+  // Funciones para manejo de estadísticas
+  getUserStats: () => UserStats;
+  loadUserStatsFromBackend: () => Promise<UserStats>;
   error: string | null;
 }
 
@@ -447,6 +458,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [currentAccounts, setCurrentAccounts] = useState<UserAccount[]>(PREDEFINED_ACCOUNTS);
   const [userBets, setUserBets] = useState<UserBet[]>([]);
   const [userTransactions, setUserTransactions] = useState<UserTransaction[]>([]);
+  const [userStats, setUserStats] = useState<UserStats>({
+    totalBets: 0,
+    winRate: 0,
+    totalWinnings: 0,
+    favoriteTeam: 'Gryffindor'
+  });
   const navigate = useNavigate();
 
   // Función para encontrar una cuenta por email
@@ -1109,6 +1126,49 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return userTransactions;
   }, [user, userTransactions]);
 
+  // Cargar estadísticas del usuario desde el backend
+  const loadUserStatsFromBackend = useCallback(async (): Promise<UserStats> => {
+    console.log('📊 loadUserStatsFromBackend called');
+    
+    if (!user || !FEATURES.USE_BACKEND_BETS) {
+      console.log('📊 Returning early - no user or backend disabled');
+      return userStats;
+    }
+
+    try {
+      console.log('📊 Making API call to /users/stats');
+      const response = await apiClient.get('/users/stats') as any;
+      console.log('📊 User stats API Response:', response);
+      
+      if (response.success && response.data) {
+        const backendStats = response.data;
+        console.log('📊 Backend stats:', backendStats);
+        
+        const transformedStats: UserStats = {
+          totalBets: backendStats.totalBets || 0,
+          winRate: backendStats.winRate || 0,
+          totalWinnings: backendStats.totalWinnings || 0,
+          favoriteTeam: backendStats.favoriteTeam || 'Gryffindor'
+        };
+
+        console.log('📊 Transformed stats:', transformedStats);
+        setUserStats(transformedStats);
+        return transformedStats;
+      } else {
+        console.log('📊 No data in response or response failed');
+      }
+    } catch (error) {
+      console.error('📊 Error loading user stats from backend:', error);
+    }
+
+    return userStats;
+  }, [user, userStats]);
+
+  // Obtener estadísticas del usuario
+  const getUserStats = (): UserStats => {
+    return userStats;
+  };
+
   // Obtener el número de apuestas realizadas hoy
   const getTodayBetsCount = (): number => {
     const today = new Date().toDateString();
@@ -1390,6 +1450,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         getUserTransactions,
         addTransaction,
         loadUserTransactionsFromBackend,
+        // Funciones para manejo de estadísticas
+        getUserStats,
+        loadUserStatsFromBackend,
         error,
       }}
     >

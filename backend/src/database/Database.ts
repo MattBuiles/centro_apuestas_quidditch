@@ -319,6 +319,10 @@ export class Database {
     return await this.admin.getUserTransactions(userId, limit);
   }
 
+  public async getUserStats(userId: string): Promise<unknown> {
+    return await this.admin.getUserStats(userId);
+  }
+
   public async createAdminLog(logData: AdminLogData): Promise<DatabaseResult> {
     return await this.admin.createAdminLog(logData);
   }

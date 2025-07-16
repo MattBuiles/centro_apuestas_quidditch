@@ -76,6 +76,28 @@ router.get('/', authenticate, async (req: AuthenticatedRequest, res) => {
   }
 });
 
+// GET /api/users/stats - Get current user statistics
+router.get('/stats', authenticate, async (req: AuthenticatedRequest, res) => {
+  try {
+    const user = req.user!;
+    
+    const stats = await db.getUserStats(user.userId);
+    
+    return res.json({
+      success: true,
+      data: stats,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error fetching user stats:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 // GET /api/users/:id - Get specific user details (admin only)
 router.get('/:id', authenticate, async (req: AuthenticatedRequest, res) => {
   try {
