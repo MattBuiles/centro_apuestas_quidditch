@@ -21,7 +21,7 @@ const TrophyIcon = () => <span className={styles.icon}>🏆</span>;
 
 // Define sub-components for each account section
 const ProfileSection = () => {
-    const { user, updateUserProfile, validateCurrentPassword, validatePassword, updatePassword, getUserStats, loadUserStatsFromBackend } = useAuth();
+    const { user, updateUserProfile, validatePassword, updatePassword, getUserStats, loadUserStatsFromBackend } = useAuth();
     const [isEditing, setIsEditing] = useState(false);
     const [isChangingAvatar, setIsChangingAvatar] = useState(false);
     const [isChangingPassword, setIsChangingPassword] = useState(false);
@@ -128,19 +128,14 @@ const ProfileSection = () => {
             });
         }
         setIsEditing(false);
-    };    const handlePasswordChange = (e: React.FormEvent) => {
+    };    const handlePasswordChange = async (e: React.FormEvent) => {
         e.preventDefault();
         
         if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
             alert('Por favor complete todos los campos');
             return;
         }
-        
-        // Validar contraseña actual usando la función del contexto
-        if (!validateCurrentPassword(passwordData.currentPassword)) {
-            alert('La contraseña actual no es correcta. Peeves está riéndose de ti. 🃏');
-            return;
-        }// Validar nueva contraseña
+        // Solo validar que las contraseñas coincidan en el frontend
         if (passwordData.newPassword !== passwordData.confirmPassword) {
             alert('Las contraseñas no coinciden. Incluso la magia requiere precisión. ✨');
             return;
@@ -155,7 +150,7 @@ const ProfileSection = () => {
 
         try {
             // Actualizar contraseña usando la función del contexto
-            updatePassword(passwordData.newPassword);
+            await updatePassword(passwordData.currentPassword, passwordData.newPassword);
         } catch (error) {
             if (error instanceof Error) {
                 alert(`Error al cambiar contraseña: ${error.message} 🔮`);

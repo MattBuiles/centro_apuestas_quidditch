@@ -419,7 +419,7 @@ interface AuthContextType {
   updateUserProfile: (userData: Partial<Pick<User, 'username' | 'email' | 'avatar'>>) => Promise<void>;
   validateCurrentPassword: (password: string) => boolean;
   validatePassword: (password: string) => string | null;
-  updatePassword: (newPassword: string) => void;  // Nueva función para restablecer contraseña por email
+  updatePassword: (currentPassword: string, newPassword: string) => Promise<void>;  // Nueva función para cambiar contraseña
   resetPasswordByEmail: (email: string, newPassword: string) => boolean;
   // Nueva función para obtener las cuentas predefinidas (útil para debugging)
   getPredefinedAccounts: () => { email: string; username: string; role: string }[];  // Funciones para manejo de apuestas
@@ -1005,14 +1005,30 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return account ? account.password === password : false;
   };
   // Función para actualizar la contraseña
-  const updatePassword = (newPassword: string) => {
-    if (user) {
-      // Validar la nueva contraseña
-      const passwordError = validatePassword(newPassword);
-      if (passwordError) {
-        throw new Error(passwordError);
+  const updatePassword = async (currentPassword: string, newPassword: string): Promise<void> => {
+    if (!user) {
+      throw new Error('No user authenticated');
+    }
+
+    // Validar la nueva contraseña
+    const passwordError = validatePassword(newPassword);
+    if (passwordError) {
+      throw new Error(passwordError);
+    }
+
+    try {
+      const response = await apiClient.put('/users/password', {
+        currentPassword,
+        newPassword
+      });
+
+      if (!response.success) {
+        throw new Error(response.error || 'Error updating password');
       }
 
+      // También actualizar en localStorage para compatibilidad con el sistema actual
+      saveUserCredentials(user.id, newPassword);
+      
       // Actualizar en la lista de cuentas actuales
       setCurrentAccounts(prev => 
         prev.map(account => 
@@ -1021,9 +1037,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             : account
         )
       );
-      
-      // También guardar en localStorage para compatibilidad
-      saveUserCredentials(user.id, newPassword);
+
+    } catch (error) {
+      console.error('Error updating password:', error);
+      throw error;
     }
   };
 

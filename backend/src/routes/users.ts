@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { Database } from '../database/Database';
 import { authenticate, AuthenticatedRequest } from '../middleware/auth';
+import bcrypt from 'bcryptjs';
 
 const router = Router();
 const db = Database.getInstance();
@@ -220,6 +221,74 @@ router.put('/profile', authenticate, async (req: AuthenticatedRequest, res) => {
       error: 'Internal server error',
       timestamp: new Date().toISOString()
     });
+  }
+});
+
+// PUT /api/users/password - Change current user password
+router.put('/password', authenticate, async (req: AuthenticatedRequest, res) => {
+  try {
+    const user = req.user!;
+    const { currentPassword, newPassword } = req.body;
+
+    // Validate input
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        error: 'Current password and new password are required',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Validate new password length
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        error: 'New password must be at least 6 characters long',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Get current user password from database
+    const userPassword = await db.getUserPasswordById(user.userId);
+    if (!userPassword) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Verify current password
+    const isValidPassword = await bcrypt.compare(currentPassword, userPassword.password);
+    if (!isValidPassword) {
+      return res.status(401).json({
+        success: false,
+        error: 'Current password is incorrect',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Hash new password
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password in database
+    await db.updateUserPassword(user.userId, hashedNewPassword);
+
+    res.json({
+      success: true,
+      message: 'Password updated successfully',
+      timestamp: new Date().toISOString()
+    });
+    return;
+
+  } catch (error) {
+    console.error('Error updating password:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      timestamp: new Date().toISOString()
+    });
+    return;
   }
 });
 
