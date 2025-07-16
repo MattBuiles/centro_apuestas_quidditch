@@ -215,6 +215,10 @@ export class Database {
     return await this.teams.getTeamHistoricalIdols(teamId);
   }
 
+  public async getTeamAchievements(teamId: string): Promise<unknown[]> {
+    return await this.teams.getTeamAchievements(teamId);
+  }
+
   // ============== USERS/AUTH METHODS ==============
   
   public async getUserByEmail(email: string): Promise<unknown> {
