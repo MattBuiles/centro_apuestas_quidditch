@@ -375,7 +375,7 @@ const ProfileSection = () => {
 };
 
 const WalletSection = () => {
-    const { user, updateUserBalance, getUserTransactions, addTransaction } = useAuth();
+    const { user, updateUserBalance, getUserTransactions, addTransaction, loadUserTransactionsFromBackend } = useAuth();
     const [showDepositModal, setShowDepositModal] = useState(false);
     const [showWithdrawModal, setShowWithdrawModal] = useState(false);
     const [depositAmount, setDepositAmount] = useState('');
@@ -384,6 +384,23 @@ const WalletSection = () => {
     const [showNotification, setShowNotification] = useState(false);
     const [notificationMessage, setNotificationMessage] = useState('');
     const [balanceUpdated, setBalanceUpdated] = useState(false);
+    const [isLoadingTransactions, setIsLoadingTransactions] = useState(false);
+
+    // Cargar transacciones del backend cuando se monta el componente
+    useEffect(() => {
+        const loadTransactions = async () => {
+            setIsLoadingTransactions(true);
+            try {
+                await loadUserTransactionsFromBackend();
+            } catch (error) {
+                console.error('Error loading user transactions:', error);
+            } finally {
+                setIsLoadingTransactions(false);
+            }
+        };
+        
+        loadTransactions();
+    }, []); // Solo ejecutar una vez al montar el componente
 
     // Obtener transacciones del contexto, ordenadas por fecha descendente
     const transactions = getUserTransactions().sort((a, b) => {
@@ -406,32 +423,31 @@ const WalletSection = () => {
         setTimeout(() => setBalanceUpdated(false), 600);
     };
 
-    const handleDeposit = async () => {        if (depositAmount && Number(depositAmount) > 0) {
+    const handleDeposit = async () => {
+        if (depositAmount && Number(depositAmount) > 0) {
             setIsProcessing(true);
             
-            // Simular delay de procesamiento
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            
-            const amount = Number(depositAmount);
-            
-            // Actualizar balance del usuario
-            if (updateUserBalance && user) {
-                updateUserBalance(user.balance + amount);
+            try {
+                const amount = Number(depositAmount);
+                
+                // Hacer la transacción a través del backend
+                await addTransaction({
+                    type: 'deposit',
+                    amount: amount,
+                    description: `Depósito de ${amount} galeones`
+                });
+                
+                setShowDepositModal(false);
+                setDepositAmount('');
+                
+                // Mostrar notificación de éxito
+                showSuccessNotification(`✨ ¡Depósito exitoso! +${amount} galeones añadidos a tu bóveda`);
+            } catch (error) {
+                console.error('Error en depósito:', error);
+                alert('❌ Error al procesar el depósito. Inténtalo nuevamente.');
+            } finally {
+                setIsProcessing(false);
             }
-            
-            // Agregar transacción al historial usando el contexto
-            addTransaction({
-                type: 'deposit',
-                amount: amount,
-                description: `Depósito de ${amount} galeones`
-            });
-            
-            setShowDepositModal(false);
-            setDepositAmount('');
-            setIsProcessing(false);
-            
-            // Mostrar notificación de éxito
-            showSuccessNotification(`✨ ¡Depósito exitoso! +${amount} galeones añadidos a tu bóveda`);
         }
     };
 
@@ -444,29 +460,28 @@ const WalletSection = () => {
                 alert('🚫 ¡No tienes suficientes galeones para este retiro!');
                 return;
             }
-              setIsProcessing(true);
             
-            // Simular delay de procesamiento
-            await new Promise(resolve => setTimeout(resolve, 1500));
+            setIsProcessing(true);
             
-            // Actualizar balance del usuario
-            if (updateUserBalance && user) {
-                updateUserBalance(user.balance - amount);
+            try {
+                // Hacer la transacción a través del backend
+                await addTransaction({
+                    type: 'withdraw',
+                    amount: -amount, // Negativo para retiros
+                    description: `Retiro de ${amount} galeones a Gringotts`
+                });
+                
+                setShowWithdrawModal(false);
+                setWithdrawAmount('');
+                
+                // Mostrar notificación de éxito
+                showSuccessNotification(`🏦 ¡Retiro exitoso! ${amount} galeones transferidos a Gringotts`);
+            } catch (error) {
+                console.error('Error en retiro:', error);
+                alert('❌ Error al procesar el retiro. Inténtalo nuevamente.');
+            } finally {
+                setIsProcessing(false);
             }
-            
-            // Agregar transacción al historial usando el contexto
-            addTransaction({
-                type: 'withdraw',
-                amount: -amount,
-                description: `Retiro de ${amount} galeones a Gringotts`
-            });
-            
-            setShowWithdrawModal(false);
-            setWithdrawAmount('');
-            setIsProcessing(false);
-            
-            // Mostrar notificación de éxito
-            showSuccessNotification(`🏦 ¡Retiro exitoso! ${amount} galeones transferidos a Gringotts`);
         }
     };
 
