@@ -375,7 +375,7 @@ const ProfileSection = () => {
 };
 
 const WalletSection = () => {
-    const { user, updateUserBalance, getUserTransactions, addTransaction, loadUserTransactionsFromBackend } = useAuth();
+    const { user, getUserTransactions, addTransaction, loadUserTransactionsFromBackend } = useAuth();
     const [showDepositModal, setShowDepositModal] = useState(false);
     const [showWithdrawModal, setShowWithdrawModal] = useState(false);
     const [depositAmount, setDepositAmount] = useState('');
@@ -384,25 +384,21 @@ const WalletSection = () => {
     const [showNotification, setShowNotification] = useState(false);
     const [notificationMessage, setNotificationMessage] = useState('');
     const [balanceUpdated, setBalanceUpdated] = useState(false);
-    const [isLoadingTransactions, setIsLoadingTransactions] = useState(false);
 
     // Cargar transacciones del backend cuando se monta el componente
     useEffect(() => {
         const loadTransactions = async () => {
-            setIsLoadingTransactions(true);
             try {
                 await loadUserTransactionsFromBackend();
             } catch (error) {
                 console.error('Error loading user transactions:', error);
-            } finally {
-                setIsLoadingTransactions(false);
             }
         };
         
         loadTransactions();
     }, []); // Solo ejecutar una vez al montar el componente
 
-    // Obtener transacciones del contexto, ordenadas por fecha descendente
+    // Obtener transacciones del contexto, ordenadas por fecha descendente (más recientes arriba)
     const transactions = getUserTransactions().sort((a, b) => {
         const dateA = new Date(a.date).getTime();
         const dateB = new Date(b.date).getTime();
@@ -412,7 +408,7 @@ const WalletSection = () => {
             return dateB - dateA;
         }
         
-        // Si las fechas son iguales, ordenar por ID descendente (más reciente primero)
+        // Si las fechas son iguales, ordenar por ID descendente (números)
         return b.id - a.id;    });
 
     const showSuccessNotification = (message: string) => {
