@@ -233,8 +233,17 @@ export class Database {
     return await this.users.updateUserBalance(userId, newBalance);
   }
 
+  // Update user profile
   public async updateUserProfile(userId: string, userData: { username?: string; email?: string }): Promise<DatabaseResult> {
     return await this.users.updateUserProfile(userId, userData);
+  }
+
+  public async updateUserPassword(userId: string, hashedPassword: string): Promise<DatabaseResult> {
+    return await this.users.updateUserPassword(userId, hashedPassword);
+  }
+
+  public async getUserPasswordById(userId: string): Promise<{ password: string } | null> {
+    return await this.users.getUserPasswordById(userId);
   }
 
   public async getAllUsers(): Promise<unknown[]> {
