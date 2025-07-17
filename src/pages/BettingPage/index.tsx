@@ -509,40 +509,6 @@ const BettingPage: React.FC = () => {
                       </button>
                     </div>
                   </div>
-
-                  {/* Special Events */}
-                  <div className={styles.betTypeSection}>
-                    <h5 className={styles.betSectionTitle}>
-                      <span className={styles.sectionIcon}>🔮</span>
-                      Eventos Especiales
-                    </h5>
-                    <div className={styles.optionsGrid}>
-                      {[
-                        { id: `${selectedMatch}-special-expulsion`, selection: 'expulsion', odds: 5.25, description: 'Un jugador será expulsado' },
-                        { id: `${selectedMatch}-special-broom`, selection: 'broom-break', odds: 4.50, description: 'Se romperá una escoba' },
-                        { id: `${selectedMatch}-special-fall`, selection: 'seeker-fall', odds: 3.75, description: 'Un buscador caerá de su escoba' },
-                        { id: `${selectedMatch}-special-bludger`, selection: 'bludger-referee', odds: 12.50, description: 'Una bludger golpeará al árbitro' },
-                        { id: `${selectedMatch}-special-suspension`, selection: 'suspension', odds: 8.25, description: 'El partido será suspendido temporalmente' },
-                      ].map(option => {
-                        const betOption: BetOption = { ...option, type: 'special', matchId: selectedMatch };
-                        const isSelected = selectedBets.some(bet => bet.id === option.id);
-                        return (
-                          <button
-                            key={option.id}
-                            type="button"
-                            className={`${styles.betOptionCard} ${isSelected ? styles.betOptionCardActive : ''}`}
-                            onClick={() => handleBetSelection(betOption)}
-                          >
-                            <div className={styles.optionInfo}>
-                              <span className={styles.optionName}>{option.description}</span>
-                              <span className={styles.optionOdds}>{option.odds}x</span>
-                            </div>
-                            {isSelected && <div className={styles.selectedIndicator}>✓</div>}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
                 </div>
               );
             })()}
