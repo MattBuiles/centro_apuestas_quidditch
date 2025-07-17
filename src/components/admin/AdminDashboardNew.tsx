@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { apiClient } from '@/utils/apiClient';
+import { useAuth } from '@/context/AuthContext';
 import styles from './AdminDashboardNew.module.css';
 
 // Interfaces
@@ -62,11 +63,8 @@ interface RiskAlert {
   timestamp: string;
 }
 
-interface ApiResponseData<T> {
-  data: T;
-}
-
 const AdminDashboardNew = () => {
+  const { user, isAuthenticated } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [betsByDay, setBetsByDay] = useState<BetsByDay[]>([]);
   const [popularTeams, setPopularTeams] = useState<PopularTeam[]>([]);
@@ -78,32 +76,31 @@ const AdminDashboardNew = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadDashboardData();
+  const loadDashboardData = useCallback(async () => {
+    console.log('🔄 loadDashboardData called');
+    console.log('🔍 Auth state:', { isAuthenticated, isAdmin: user?.role === 'admin', userId: user?.id });
     
-    // Auto-refresh every 2 minutes to reduce server load
-    const interval = setInterval(loadDashboardData, 120000);
-    
-    return () => clearInterval(interval);
-  }, []);
+    if (!isAuthenticated || user?.role !== 'admin') {
+      console.log('❌ Not authenticated or not admin, skipping load');
+      return;
+    }
 
-  const loadDashboardData = async () => {
+    setIsLoading(true);
+    setError(null);
+    console.log('📡 Starting dashboard data load...');
+
     try {
-      setIsLoading(true);
-      setError(null);
-
       // Load critical data first
       const statsRes = await apiClient.get('/admin/dashboard/stats');
       console.log('✅ DASHBOARD STATS RESPONSE:', statsRes);
       console.log('✅ DASHBOARD STATS DATA:', statsRes.data);
       
-      // Verificar la estructura de la respuesta
-      const responseData = statsRes.data as { data?: DashboardStats } & DashboardStats;
-      if (responseData && typeof responseData === 'object' && 'data' in responseData && responseData.data) {
-        console.log('✅ NESTED STATS DATA:', responseData.data);
-        setStats(responseData.data);
-      } else if (responseData && typeof responseData === 'object' && 'totalUsers' in responseData) {
-        console.log('✅ DIRECT STATS DATA:', responseData);
+      // El apiClient ya extrae los datos de la respuesta del backend
+      const responseData = statsRes.data;
+      console.log('📊 Raw response data:', responseData);
+      
+      if (responseData && typeof responseData === 'object' && 'totalUsers' in responseData) {
+        console.log('✅ STATS DATA EXTRACTED:', responseData);
         setStats(responseData as DashboardStats);
       } else {
         console.warn('⚠️ Unexpected stats response structure:', responseData);
@@ -121,33 +118,50 @@ const AdminDashboardNew = () => {
         console.log('✅ POPULAR TEAMS RESPONSE:', popularTeamsRes.data);
         console.log('✅ RISK ANALYSIS RESPONSE:', riskAnalysisRes.data);
 
-        setBetsByDay((betsByDayRes.data as ApiResponseData<BetsByDay[]>).data);
-        setPopularTeams((popularTeamsRes.data as ApiResponseData<PopularTeam[]>).data);
-        setRiskAnalysis((riskAnalysisRes.data as ApiResponseData<RiskAnalysis>).data);
+        // El apiClient ya extrae los datos de la respuesta del backend
+        if (betsByDayRes.data && Array.isArray(betsByDayRes.data)) {
+          console.log('✅ SETTING BETS BY DAY:', betsByDayRes.data);
+          setBetsByDay(betsByDayRes.data as BetsByDay[]);
+        }
+        if (popularTeamsRes.data && Array.isArray(popularTeamsRes.data)) {
+          console.log('✅ SETTING POPULAR TEAMS:', popularTeamsRes.data);
+          setPopularTeams(popularTeamsRes.data as PopularTeam[]);
+        }
+        if (riskAnalysisRes.data && typeof riskAnalysisRes.data === 'object') {
+          console.log('✅ SETTING RISK ANALYSIS:', riskAnalysisRes.data);
+          setRiskAnalysis(riskAnalysisRes.data as RiskAnalysis);
+        }
       } catch (error) {
         console.warn('Error loading first batch:', error);
       }
 
-      // Small delay before next batch
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Wait a bit before loading more
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       try {
-        const [activeUsersRes, performanceMetricsRes] = await Promise.all([
+        const [activeUsersRes, performanceRes] = await Promise.all([
           apiClient.get('/admin/dashboard/active-users'),
           apiClient.get('/admin/dashboard/performance-metrics'),
         ]);
 
         console.log('✅ ACTIVE USERS RESPONSE:', activeUsersRes.data);
-        console.log('✅ PERFORMANCE METRICS RESPONSE:', performanceMetricsRes.data);
+        console.log('✅ PERFORMANCE RESPONSE:', performanceRes.data);
 
-        setActiveUsers((activeUsersRes.data as ApiResponseData<ActiveUser[]>).data);
-        setPerformanceMetrics((performanceMetricsRes.data as ApiResponseData<PerformanceMetrics>).data);
+        // El apiClient ya extrae los datos de la respuesta del backend
+        if (activeUsersRes.data && Array.isArray(activeUsersRes.data)) {
+          console.log('✅ SETTING ACTIVE USERS:', activeUsersRes.data);
+          setActiveUsers(activeUsersRes.data as ActiveUser[]);
+        }
+        if (performanceRes.data && typeof performanceRes.data === 'object') {
+          console.log('✅ SETTING PERFORMANCE METRICS:', performanceRes.data);
+          setPerformanceMetrics(performanceRes.data as PerformanceMetrics);
+        }
       } catch (error) {
         console.warn('Error loading second batch:', error);
       }
 
-      // Small delay before final batch
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Wait again before final load
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       try {
         const [recentActivityRes, riskAlertsRes] = await Promise.all([
@@ -158,19 +172,41 @@ const AdminDashboardNew = () => {
         console.log('✅ RECENT ACTIVITY RESPONSE:', recentActivityRes.data);
         console.log('✅ RISK ALERTS RESPONSE:', riskAlertsRes.data);
 
-        setRecentActivity((recentActivityRes.data as ApiResponseData<ActivityItem[]>).data);
-        setRiskAlerts((riskAlertsRes.data as ApiResponseData<RiskAlert[]>).data);
+        // El apiClient ya extrae los datos de la respuesta del backend
+        if (recentActivityRes.data && Array.isArray(recentActivityRes.data)) {
+          console.log('✅ SETTING RECENT ACTIVITY:', recentActivityRes.data);
+          setRecentActivity(recentActivityRes.data as ActivityItem[]);
+        }
+        if (riskAlertsRes.data && Array.isArray(riskAlertsRes.data)) {
+          console.log('✅ SETTING RISK ALERTS:', riskAlertsRes.data);
+          setRiskAlerts(riskAlertsRes.data as RiskAlert[]);
+        }
       } catch (error) {
         console.warn('Error loading third batch:', error);
       }
 
-    } catch (error) {
-      console.error('Error loading dashboard data:', error);
-      setError('Error al cargar los datos del dashboard');
+      console.log('✅ All dashboard data loaded successfully');
+    } catch (error: unknown) {
+      console.error('❌ Failed to load dashboard data:', error);
+      if (error instanceof Error && error.message.includes('401')) {
+        console.log('🔐 Authentication error detected');
+        setError('Session expired. Please login again.');
+      } else {
+        setError('Failed to load dashboard data. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [isAuthenticated, user?.role, user?.id]);
+
+  useEffect(() => {
+    loadDashboardData();
+    
+    // Auto-refresh every 2 minutes to reduce server load
+    const interval = setInterval(loadDashboardData, 120000);
+    
+    return () => clearInterval(interval);
+  }, [loadDashboardData]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-ES', {
