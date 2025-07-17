@@ -593,9 +593,28 @@ export class BetResolutionService {
       case 'snitch_catcher':
       case 'snitch':
         // Snitch catcher bet - predict which team catches the snitch
-        if (matchResult.snitchCaught && matchResult.snitchCaughtBy === prediction) {
-          isWon = true;
-          reason = `Snitch caught by predicted team`;
+        if (matchResult.snitchCaught) {
+          // Get the home and away team IDs to compare with snitch_caught_by
+          const homeTeamId = match.home_team_id;
+          const awayTeamId = match.away_team_id;
+          
+          let predictedCorrectly = false;
+          
+          if (prediction === 'home' && matchResult.snitchCaughtBy === homeTeamId) {
+            predictedCorrectly = true;
+          } else if (prediction === 'away' && matchResult.snitchCaughtBy === awayTeamId) {
+            predictedCorrectly = true;
+          } else if (matchResult.snitchCaughtBy === prediction) {
+            // Direct team ID/name match
+            predictedCorrectly = true;
+          }
+          
+          if (predictedCorrectly) {
+            isWon = true;
+            reason = `Snitch caught by predicted team (${prediction})`;
+          } else {
+            reason = `Snitch caught by ${matchResult.snitchCaughtBy}, predicted ${prediction}`;
+          }
         } else if (!matchResult.snitchCaught && prediction === 'none') {
           isWon = true;
           reason = `Snitch not caught as predicted`;
