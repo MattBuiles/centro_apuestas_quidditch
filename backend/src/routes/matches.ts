@@ -88,6 +88,47 @@ router.get('/upcoming/:limit', async (req, res) => {
   }
 });
 
+// GET /api/matches/highlighted/:limit - Get highlighted matches (live + upcoming) with limit
+router.get('/highlighted/:limit', async (req, res) => {
+  try {
+    const limit = parseInt(req.params.limit) || 3;
+    const db = Database.getInstance();
+    
+    // Get live matches first, then upcoming matches to fill the remaining slots
+    const liveMatches = await db.getMatchesByStatus('live');
+    const upcomingMatches = await db.getUpcomingMatches(limit);
+    
+    // Combine live and upcoming matches, prioritizing live matches
+    const allMatches = [...liveMatches, ...upcomingMatches];
+    
+    // Simple deduplication using Set and Map
+    const seenIds = new Set();
+    const uniqueMatches = allMatches.filter((match) => {
+      const matchObj = match as { id: string };
+      if (seenIds.has(matchObj.id)) {
+        return false;
+      }
+      seenIds.add(matchObj.id);
+      return true;
+    }).slice(0, limit);
+    
+    res.json({
+      success: true,
+      data: uniqueMatches,
+      message: 'Highlighted matches retrieved successfully',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error fetching highlighted matches:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: 'Failed to retrieve highlighted matches',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 // GET /api/matches/next-unplayed - Get next unplayed match based on virtual time
 router.get('/next-unplayed', async (req, res) => {
   try {
