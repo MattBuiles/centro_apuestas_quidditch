@@ -234,6 +234,21 @@ export class VirtualTimeService {
     
     await this.saveState();
 
+    // After all matches are simulated, ensure all combined bets are resolved
+    if (matchesSimulated.length > 0) {
+      try {
+        const { BetResolutionService } = await import('./BetResolutionService');
+        const betResolutionService = BetResolutionService.getInstance();
+        const combinedBetsResult = await betResolutionService.resolveAllPendingCombinedBets();
+        if (combinedBetsResult.resolved > 0) {
+          console.log(`🎊 Additional combined bets resolved after time advance: ${combinedBetsResult.resolved}`);
+        }
+      } catch (error) {
+        console.error('❌ Error resolving combined bets after time advance:', error);
+        // Don't throw - time advance should succeed even if bet resolution fails
+      }
+    }
+
     return {
       newDate,
       matchesSimulated,
