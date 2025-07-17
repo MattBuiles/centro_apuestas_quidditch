@@ -673,6 +673,31 @@ export class BetResolutionService {
         }
         break;
 
+      case 'score':
+        // Score bet - predict exact match score
+        if (prediction === 'exact') {
+          // Para apuestas legacy que solo tienen 'exact' sin el marcador específico
+          isWon = false;
+          reason = `Score bet with 'exact' prediction not supported - need specific score (e.g., '150-90')`;
+        } else {
+          // Format: "150-90" (home_score-away_score)
+          const scoreMatch = prediction.match(/^(\d+)-(\d+)$/);
+          if (scoreMatch) {
+            const predictedHomeScore = parseInt(scoreMatch[1]);
+            const predictedAwayScore = parseInt(scoreMatch[2]);
+            
+            if (matchResult.homeScore === predictedHomeScore && matchResult.awayScore === predictedAwayScore) {
+              isWon = true;
+              reason = `Exact score match: ${predictedHomeScore}-${predictedAwayScore}`;
+            } else {
+              reason = `Predicted score ${predictedHomeScore}-${predictedAwayScore}, actual score ${matchResult.homeScore}-${matchResult.awayScore}`;
+            }
+          } else {
+            reason = `Invalid score prediction format: ${prediction}. Use format like '150-90'`;
+          }
+        }
+        break;
+
       case 'combined':
         // Combined bet - multiple predictions (advanced logic)
         const combinedResult = await this.resolveCombinedBet(bet, matchResult, match);
@@ -768,7 +793,8 @@ export class BetResolutionService {
       'snitch': prediction === 'home' ? 'snitch-home' : prediction === 'away' ? 'snitch-away' : 'snitch-none',
       'total_score': prediction.includes('over') ? 'total-over' : 'total-under',
       'match_duration': prediction.includes('over') ? 'duration-over' : 'duration-under',
-      'time': this.getTimeRangeBetType(prediction) // Nuevo mapeo para rangos de tiempo
+      'time': this.getTimeRangeBetType(prediction), // Nuevo mapeo para rangos de tiempo
+      'score': 'score-exact' // Nuevo mapeo para apuestas de marcador exacto
     };
 
     const betTypeId = betTypeMapping[type];
@@ -801,6 +827,8 @@ export class BetResolutionService {
           return this.evaluateDurationBet(mockBet, matchResult, match, 'under', { id: betTypeId } as BetType);
         case 'time-range':
           return this.evaluateTimeRangeBet(mockBet, matchResult, match, prediction);
+        case 'score-exact':
+          return this.evaluateScoreBet(mockBet, matchResult, match, prediction);
       }
     }
 
@@ -935,6 +963,31 @@ export class BetResolutionService {
             }
           } else {
             reason = `Invalid time range format: ${prediction}`;
+          }
+        }
+        break;
+
+      case 'score':
+        // Score bet - predict exact match score
+        if (prediction === 'exact') {
+          // Para apuestas legacy que solo tienen 'exact' sin el marcador específico
+          isWon = false;
+          reason = `Score bet with 'exact' prediction not supported - need specific score (e.g., '150-90')`;
+        } else {
+          // Format: "150-90" (home_score-away_score)
+          const scoreMatch = prediction.match(/^(\d+)-(\d+)$/);
+          if (scoreMatch) {
+            const predictedHomeScore = parseInt(scoreMatch[1]);
+            const predictedAwayScore = parseInt(scoreMatch[2]);
+            
+            if (matchResult.homeScore === predictedHomeScore && matchResult.awayScore === predictedAwayScore) {
+              isWon = true;
+              reason = `Exact score match: ${predictedHomeScore}-${predictedAwayScore}`;
+            } else {
+              reason = `Predicted score ${predictedHomeScore}-${predictedAwayScore}, actual score ${matchResult.homeScore}-${matchResult.awayScore}`;
+            }
+          } else {
+            reason = `Invalid score prediction format: ${prediction}. Use format like '150-90'`;
           }
         }
         break;
@@ -1098,6 +1151,46 @@ export class BetResolutionService {
     }
 
     return { isWon, reason, betType };
+  }
+
+  /**
+   * Evaluar apuesta de marcador exacto
+   */
+  private evaluateScoreBet(bet: any, matchResult: MatchResult, match: any, prediction: string): {
+    isWon: boolean;
+    reason: string;
+  } {
+    if (prediction === 'exact') {
+      // Para apuestas legacy que solo tienen 'exact' sin el marcador específico
+      return {
+        isWon: false,
+        reason: `Apuesta de marcador con predicción 'exact' no soportada - necesita marcador específico (ej: '150-90')`
+      };
+    }
+
+    // Format: "150-90" (home_score-away_score)
+    const scoreMatch = prediction.match(/^(\d+)-(\d+)$/);
+    if (!scoreMatch) {
+      return {
+        isWon: false,
+        reason: `Formato de marcador inválido: ${prediction}. Use formato como '150-90'`
+      };
+    }
+
+    const predictedHomeScore = parseInt(scoreMatch[1]);
+    const predictedAwayScore = parseInt(scoreMatch[2]);
+
+    if (matchResult.homeScore === predictedHomeScore && matchResult.awayScore === predictedAwayScore) {
+      return {
+        isWon: true,
+        reason: `Marcador exacto acertado: ${predictedHomeScore}-${predictedAwayScore}`
+      };
+    } else {
+      return {
+        isWon: false,
+        reason: `Marcador predicho ${predictedHomeScore}-${predictedAwayScore}, marcador real ${matchResult.homeScore}-${matchResult.awayScore}`
+      };
+    }
   }
 
   /**
