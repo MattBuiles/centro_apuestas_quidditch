@@ -621,8 +621,22 @@ export class BetResolutionService {
           } else {
             reason = `Match duration ${matchResult.duration} min didn't meet prediction ${prediction}`;
           }
+        } else if (prediction.includes('+')) {
+          // Format: "120+" (more than X minutes)
+          const thresholdMatch = prediction.match(/^(\d+)\+$/);
+          if (thresholdMatch) {
+            const threshold = parseInt(thresholdMatch[1]);
+            if (matchResult.duration > threshold) {
+              isWon = true;
+              reason = `Match duration ${matchResult.duration} min was over ${threshold} min as predicted`;
+            } else {
+              reason = `Match duration ${matchResult.duration} min was not over ${threshold} min as predicted`;
+            }
+          } else {
+            reason = `Invalid time prediction format: ${prediction}`;
+          }
         } else {
-          // Format: "30-60" (time range)
+          // Format: "30-60" or "0-30" (time range)
           const timeRangeMatch = prediction.match(/^(\d+)-(\d+)$/);
           if (timeRangeMatch) {
             const minTime = parseInt(timeRangeMatch[1]);
@@ -872,20 +886,37 @@ export class BetResolutionService {
         break;
 
       case 'time':
-        // Time range bet - predict if duration falls within a range
-        const timeRangeMatch = prediction.match(/^(\d+)-(\d+)$/);
-        if (timeRangeMatch) {
-          const minTime = parseInt(timeRangeMatch[1]);
-          const maxTime = parseInt(timeRangeMatch[2]);
-          
-          if (matchResult.duration >= minTime && matchResult.duration <= maxTime) {
-            isWon = true;
-            reason = `Match duration ${matchResult.duration} min was within range ${minTime}-${maxTime} min`;
+        // Time range bet - predict if duration falls within a range or exceeds a threshold
+        if (prediction.includes('+')) {
+          // Format: "120+" (more than X minutes)
+          const thresholdMatch = prediction.match(/^(\d+)\+$/);
+          if (thresholdMatch) {
+            const threshold = parseInt(thresholdMatch[1]);
+            if (matchResult.duration > threshold) {
+              isWon = true;
+              reason = `Match duration ${matchResult.duration} min was over ${threshold} min as predicted`;
+            } else {
+              reason = `Match duration ${matchResult.duration} min was not over ${threshold} min as predicted`;
+            }
           } else {
-            reason = `Match duration ${matchResult.duration} min was outside range ${minTime}-${maxTime} min`;
+            reason = `Invalid time prediction format: ${prediction}`;
           }
         } else {
-          reason = `Invalid time range format: ${prediction}`;
+          // Format: "30-60" or "0-30" (time range)
+          const timeRangeMatch = prediction.match(/^(\d+)-(\d+)$/);
+          if (timeRangeMatch) {
+            const minTime = parseInt(timeRangeMatch[1]);
+            const maxTime = parseInt(timeRangeMatch[2]);
+            
+            if (matchResult.duration >= minTime && matchResult.duration <= maxTime) {
+              isWon = true;
+              reason = `Match duration ${matchResult.duration} min was within range ${minTime}-${maxTime} min`;
+            } else {
+              reason = `Match duration ${matchResult.duration} min was outside range ${minTime}-${maxTime} min`;
+            }
+          } else {
+            reason = `Invalid time range format: ${prediction}`;
+          }
         }
         break;
 
@@ -1080,6 +1111,10 @@ export class BetResolutionService {
     if (prediction.match(/^\d+-\d+$/)) {
       return 'time-range';
     }
+    // Para formatos como "120+", usamos un tipo over
+    if (prediction.match(/^\d+\+$/)) {
+      return 'duration-over';
+    }
     return 'duration-over'; // fallback
   }
 
@@ -1090,28 +1125,54 @@ export class BetResolutionService {
     isWon: boolean;
     reason: string;
   } {
-    const timeRangeMatch = prediction.match(/^(\d+)-(\d+)$/);
-    if (!timeRangeMatch) {
-      return {
-        isWon: false,
-        reason: `Formato de rango de tiempo inválido: ${prediction}`
-      };
-    }
-
-    const minTime = parseInt(timeRangeMatch[1]);
-    const maxTime = parseInt(timeRangeMatch[2]);
     const duration = matchResult.duration;
 
-    if (duration >= minTime && duration <= maxTime) {
-      return {
-        isWon: true,
-        reason: `Duración ${duration} minutos estuvo dentro del rango ${minTime}-${maxTime} minutos`
-      };
+    if (prediction.includes('+')) {
+      // Format: "120+" (more than X minutes)
+      const thresholdMatch = prediction.match(/^(\d+)\+$/);
+      if (!thresholdMatch) {
+        return {
+          isWon: false,
+          reason: `Formato de tiempo inválido: ${prediction}`
+        };
+      }
+      
+      const threshold = parseInt(thresholdMatch[1]);
+      if (duration > threshold) {
+        return {
+          isWon: true,
+          reason: `Duración ${duration} minutos fue mayor a ${threshold} minutos como se predijo`
+        };
+      } else {
+        return {
+          isWon: false,
+          reason: `Duración ${duration} minutos no fue mayor a ${threshold} minutos como se predijo`
+        };
+      }
     } else {
-      return {
-        isWon: false,
-        reason: `Duración ${duration} minutos estuvo fuera del rango ${minTime}-${maxTime} minutos`
-      };
+      // Format: "30-60" or "0-30" (time range)
+      const timeRangeMatch = prediction.match(/^(\d+)-(\d+)$/);
+      if (!timeRangeMatch) {
+        return {
+          isWon: false,
+          reason: `Formato de rango de tiempo inválido: ${prediction}`
+        };
+      }
+
+      const minTime = parseInt(timeRangeMatch[1]);
+      const maxTime = parseInt(timeRangeMatch[2]);
+
+      if (duration >= minTime && duration <= maxTime) {
+        return {
+          isWon: true,
+          reason: `Duración ${duration} minutos estuvo dentro del rango ${minTime}-${maxTime} minutos`
+        };
+      } else {
+        return {
+          isWon: false,
+          reason: `Duración ${duration} minutos estuvo fuera del rango ${minTime}-${maxTime} minutos`
+        };
+      }
     }
   }
 }
