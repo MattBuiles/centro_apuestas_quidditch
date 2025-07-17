@@ -128,54 +128,102 @@ export class TeamsRepository {
 
   public async getTeamRivalries(teamId: string): Promise<unknown[]> {
     const sql = `
+      WITH RivalryStats AS (
+        SELECT 
+          CASE 
+            WHEN m.home_team_id = ? THEN m.away_team_id
+            ELSE m.home_team_id
+          END as opponent_id,
+          CASE 
+            WHEN m.home_team_id = ? THEN at.name
+            ELSE ht.name
+          END as opponent_name,
+          COUNT(*) as total_matches,
+          SUM(CASE 
+            WHEN m.home_team_id = ? AND m.home_score > m.away_score THEN 1
+            WHEN m.away_team_id = ? AND m.away_score > m.home_score THEN 1
+            ELSE 0
+          END) as wins,
+          SUM(CASE 
+            WHEN m.home_team_id = ? AND m.home_score < m.away_score THEN 1
+            WHEN m.away_team_id = ? AND m.away_score < m.home_score THEN 1
+            ELSE 0
+          END) as losses,
+          SUM(CASE 
+            WHEN m.home_score = m.away_score THEN 1
+            ELSE 0
+          END) as draws,
+          ROUND(AVG(CASE 
+            WHEN m.home_team_id = ? AND m.home_score > m.away_score THEN 1.0
+            WHEN m.away_team_id = ? AND m.away_score > m.home_score THEN 1.0
+            ELSE 0.0
+          END) * 100, 1) as win_percentage
+        FROM matches m
+        JOIN teams ht ON m.home_team_id = ht.id
+        JOIN teams at ON m.away_team_id = at.id
+        WHERE 
+          (m.home_team_id = ? OR m.away_team_id = ?)
+          AND m.status = 'finished'
+          AND m.home_score IS NOT NULL 
+          AND m.away_score IS NOT NULL
+        GROUP BY opponent_id, opponent_name
+        HAVING total_matches >= 2
+      ),
+      LastMatches AS (
+        SELECT 
+          CASE 
+            WHEN m.home_team_id = ? THEN m.away_team_id
+            ELSE m.home_team_id
+          END as opponent_id,
+          m.date as last_match_date,
+          CASE 
+            WHEN m.home_team_id = ? AND m.home_score > m.away_score THEN 'win'
+            WHEN m.away_team_id = ? AND m.away_score > m.home_score THEN 'win'
+            WHEN m.home_score = m.away_score THEN 'draw'
+            ELSE 'loss'
+          END as last_match_result,
+          CASE 
+            WHEN m.home_team_id = ? THEN m.home_score
+            ELSE m.away_score
+          END as last_match_team_score,
+          CASE 
+            WHEN m.home_team_id = ? THEN m.away_score
+            ELSE m.home_score
+          END as last_match_opponent_score,
+          ROW_NUMBER() OVER (PARTITION BY 
+            CASE 
+              WHEN m.home_team_id = ? THEN m.away_team_id
+              ELSE m.home_team_id
+            END
+            ORDER BY m.date DESC
+          ) as rn
+        FROM matches m
+        WHERE 
+          (m.home_team_id = ? OR m.away_team_id = ?)
+          AND m.status = 'finished'
+          AND m.home_score IS NOT NULL 
+          AND m.away_score IS NOT NULL
+      )
       SELECT 
-        CASE 
-          WHEN m.home_team_id = ? THEN m.away_team_id
-          ELSE m.home_team_id
-        END as opponent_id,
-        CASE 
-          WHEN m.home_team_id = ? THEN at.name
-          ELSE ht.name
-        END as opponent_name,
-        COUNT(*) as total_matches,
-        SUM(CASE 
-          WHEN m.home_team_id = ? AND m.home_score > m.away_score THEN 1
-          WHEN m.away_team_id = ? AND m.away_score > m.home_score THEN 1
-          ELSE 0
-        END) as wins,
-        SUM(CASE 
-          WHEN m.home_team_id = ? AND m.home_score < m.away_score THEN 1
-          WHEN m.away_team_id = ? AND m.away_score < m.home_score THEN 1
-          ELSE 0
-        END) as losses,
-        SUM(CASE 
-          WHEN m.home_score = m.away_score THEN 1
-          ELSE 0
-        END) as draws,
-        ROUND(AVG(CASE 
-          WHEN m.home_team_id = ? AND m.home_score > m.away_score THEN 1.0
-          WHEN m.away_team_id = ? AND m.away_score > m.home_score THEN 1.0
-          ELSE 0.0
-        END) * 100, 1) as win_percentage,
-        MAX(m.date) as last_match_date,
-        '' as last_match_result,
-        0 as last_match_team_score,
-        0 as last_match_opponent_score
-      FROM matches m
-      JOIN teams ht ON m.home_team_id = ht.id
-      JOIN teams at ON m.away_team_id = at.id
-      WHERE 
-        (m.home_team_id = ? OR m.away_team_id = ?)
-        AND m.status = 'finished'
-        AND m.home_score IS NOT NULL 
-        AND m.away_score IS NOT NULL
-      GROUP BY opponent_id, opponent_name
-      HAVING total_matches >= 2
-      ORDER BY total_matches DESC, win_percentage DESC
+        rs.opponent_id,
+        rs.opponent_name,
+        rs.total_matches,
+        rs.wins,
+        rs.losses,
+        rs.draws,
+        rs.win_percentage,
+        lm.last_match_date,
+        lm.last_match_result,
+        lm.last_match_team_score,
+        lm.last_match_opponent_score
+      FROM RivalryStats rs
+      LEFT JOIN LastMatches lm ON rs.opponent_id = lm.opponent_id AND lm.rn = 1
+      ORDER BY rs.total_matches DESC, rs.win_percentage DESC
       LIMIT 10
     `;
     return await this.connection.all(sql, [
-      teamId, teamId, teamId, teamId, teamId, teamId, teamId, teamId, teamId, teamId
+      teamId, teamId, teamId, teamId, teamId, teamId, teamId, teamId, teamId, teamId,
+      teamId, teamId, teamId, teamId, teamId, teamId, teamId, teamId
     ]);
   }
 
