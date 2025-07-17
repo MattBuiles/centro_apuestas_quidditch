@@ -8,9 +8,25 @@ interface MatchResult {
   snitchCaughtBy: string;
 }
 
+interface BetType {
+  id: string;
+  name: string;
+  description: string;
+  base_odds: number;
+  options: string;
+  is_active: boolean;
+}
+
+interface BetEvaluationResult {
+  isWon: boolean;
+  reason: string;
+  betType?: BetType;
+}
+
 export class BetResolutionService {
   private static instance: BetResolutionService;
   private db: Database;
+  private betTypesCache: Map<string, BetType> = new Map();
 
   private constructor() {
     this.db = Database.getInstance();
@@ -21,6 +37,89 @@ export class BetResolutionService {
       BetResolutionService.instance = new BetResolutionService();
     }
     return BetResolutionService.instance;
+  }
+
+  /**
+   * Cargar tipos de apuestas de la base de datos
+   */
+  private async loadBetTypes(): Promise<void> {
+    try {
+      const betTypes = await this.db.all('SELECT * FROM bet_types WHERE is_active = 1') as BetType[];
+      this.betTypesCache.clear();
+      
+      for (const betType of betTypes) {
+        this.betTypesCache.set(betType.id, betType);
+      }
+      
+      console.log(`📋 Loaded ${betTypes.length} active bet types from database`);
+    } catch (error) {
+      console.error('❌ Error loading bet types:', error);
+    }
+  }
+
+  /**
+   * Obtener tipo de apuesta por ID
+   */
+  private async getBetType(betTypeId: string): Promise<BetType | null> {
+    if (this.betTypesCache.size === 0) {
+      await this.loadBetTypes();
+    }
+    
+    return this.betTypesCache.get(betTypeId) || null;
+  }
+
+  /**
+   * Evaluar apuesta usando información del tipo de apuesta
+   */
+  private async evaluateBetUsingType(bet: any, matchResult: MatchResult, match: any): Promise<BetEvaluationResult> {
+    const betType = await this.getBetType(bet.bet_type_id);
+    
+    if (!betType) {
+      return {
+        isWon: false,
+        reason: `Tipo de apuesta ${bet.bet_type_id} no encontrado o inactivo`
+      };
+    }
+
+    // Evaluar según el tipo de apuesta
+    switch (betType.id) {
+      case 'winner-home':
+        return this.evaluateWinnerBet(bet, matchResult, match, 'home', betType);
+      
+      case 'winner-away':
+        return this.evaluateWinnerBet(bet, matchResult, match, 'away', betType);
+      
+      case 'winner-draw':
+        return this.evaluateWinnerBet(bet, matchResult, match, 'draw', betType);
+      
+      case 'snitch-home':
+        return this.evaluateSnitchBet(bet, matchResult, match, 'home', betType);
+      
+      case 'snitch-away':
+        return this.evaluateSnitchBet(bet, matchResult, match, 'away', betType);
+      
+      case 'snitch-none':
+        return this.evaluateSnitchBet(bet, matchResult, match, 'none', betType);
+      
+      case 'total-over':
+        return this.evaluateTotalBet(bet, matchResult, match, 'over', betType);
+      
+      case 'total-under':
+        return this.evaluateTotalBet(bet, matchResult, match, 'under', betType);
+      
+      case 'duration-over':
+        return this.evaluateDurationBet(bet, matchResult, match, 'over', betType);
+      
+      case 'duration-under':
+        return this.evaluateDurationBet(bet, matchResult, match, 'under', betType);
+      
+      default:
+        return {
+          isWon: false,
+          reason: `Tipo de apuesta ${betType.id} no soportado`,
+          betType
+        };
+    }
   }
 
   /**
@@ -320,10 +419,12 @@ export class BetResolutionService {
     error?: string;
   }> {
     try {
+      console.log(`🔍 Resolviendo apuesta combinada ${combinedBet.id} con predicción: ${combinedBet.prediction}`);
+      
       const predictions = this.parseCombinedPrediction(combinedBet.prediction);
       const results = [];
       
-      // For single-match combined bets, all predictions are for the same match
+      // Para apuestas combinadas de un solo partido, todas las predicciones son para el mismo partido
       const primaryMatch = matchesData.get(combinedBet.match_id);
       const primaryMatchResult: MatchResult = {
         homeScore: primaryMatch.home_score || 0,
@@ -333,7 +434,7 @@ export class BetResolutionService {
         snitchCaughtBy: primaryMatch.snitch_caught_by || ''
       };
 
-      // Evaluate each prediction
+      // Evaluar cada predicción
       for (const prediction of predictions) {
         const targetMatchId = prediction.matchId || combinedBet.match_id;
         const targetMatch = matchesData.get(targetMatchId);
@@ -341,7 +442,7 @@ export class BetResolutionService {
         if (!targetMatch) {
           return {
             success: false,
-            error: `Match data not found for match ${targetMatchId}`
+            error: `Datos del partido ${targetMatchId} no encontrados`
           };
         }
 
@@ -353,6 +454,7 @@ export class BetResolutionService {
           snitchCaughtBy: targetMatch.snitch_caught_by || ''
         };
 
+        // Evaluar la predicción individual
         const predictionResult = this.evaluateSinglePrediction(
           prediction.type, 
           prediction.value, 
@@ -367,19 +469,28 @@ export class BetResolutionService {
           correct: predictionResult.isWon,
           reason: predictionResult.reason
         });
+
+        console.log(`  📊 ${prediction.type}:${prediction.value} -> ${predictionResult.isWon ? '✅' : '❌'} (${predictionResult.reason})`);
       }
       
-      // For combined bets, ALL predictions must be correct
+      // Para apuestas combinadas, TODAS las predicciones deben ser correctas
       const allCorrect = results.every(r => r.correct);
       const correctCount = results.filter(r => r.correct).length;
       
       const status = allCorrect ? 'won' : 'lost';
-      const reason = allCorrect 
-        ? `All ${results.length} predictions correct: ${results.map(r => `${r.type}(${r.reason})`).join(', ')}`
-        : `Only ${correctCount}/${results.length} predictions correct. Failed: ${results.filter(r => !r.correct).map(r => `${r.type}(${r.reason})`).join(', ')}`;
+      
+      let reason: string;
+      if (allCorrect) {
+        reason = `Todas las ${results.length} predicciones correctas: ${results.map(r => `${r.type}(${r.reason})`).join(', ')}`;
+      } else {
+        const failedPredictions = results.filter(r => !r.correct);
+        reason = `Solo ${correctCount}/${results.length} predicciones correctas. Fallaron: ${failedPredictions.map(r => `${r.type}(${r.reason})`).join(', ')}`;
+      }
 
-      // Update bet status in database
+      // Actualizar estado de la apuesta en base de datos
       await this.db.updateBetStatus(combinedBet.id, status);
+
+      console.log(`🎯 Apuesta combinada ${combinedBet.id} resultado: ${status.toUpperCase()} - ${reason}`);
 
       return {
         success: true,
@@ -388,9 +499,10 @@ export class BetResolutionService {
       };
 
     } catch (error) {
+      console.error(`❌ Error resolviendo apuesta combinada ${combinedBet.id}:`, error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Error desconocido'
       };
     }
   }
@@ -404,108 +516,119 @@ export class BetResolutionService {
     reason?: string;
     error?: string;
   }> {
-    const { type, prediction } = bet;
-
-    let isWon = false;
-    let reason = '';
-
     try {
-      // Determine if bet is won based on type and prediction
-      switch (type) {
-        case 'winner':
-          // Winner bet - predict which team wins
-          if (matchResult.homeScore > matchResult.awayScore && prediction === 'home') {
-            isWon = true;
-            reason = `Home team ${match.homeTeamName} won`;
-          } else if (matchResult.awayScore > matchResult.homeScore && prediction === 'away') {
-            isWon = true;
-            reason = `Away team ${match.awayTeamName} won`;
-          } else if (matchResult.homeScore === matchResult.awayScore && prediction === 'draw') {
-            isWon = true;
-            reason = 'Match ended in a draw';
-          } else {
-            reason = `Predicted ${this.getPredictionDescription(prediction, match)}, but ${this.getActualResultDescription(matchResult, match)}`;
-          }
-          break;
+      let evaluationResult: BetEvaluationResult;
 
-        case 'total_score':
-          // Total score bet - predict over/under total points
-          const totalScore = matchResult.homeScore + matchResult.awayScore;
-          const [overUnder, threshold] = prediction.split('_'); // e.g., "over_300" or "under_250"
-          const thresholdValue = parseInt(threshold);
-          
-          if (overUnder === 'over' && totalScore > thresholdValue) {
-            isWon = true;
-            reason = `Total score ${totalScore} was over ${thresholdValue}`;
-          } else if (overUnder === 'under' && totalScore < thresholdValue) {
-            isWon = true;
-            reason = `Total score ${totalScore} was under ${thresholdValue}`;
-          } else {
-            reason = `Total score ${totalScore} didn't meet prediction ${prediction}`;
-          }
-          break;
-
-        case 'snitch_catcher':
-          // Snitch catcher bet - predict which team catches the snitch
-          if (matchResult.snitchCaught && matchResult.snitchCaughtBy === prediction) {
-            isWon = true;
-            reason = `Snitch caught by predicted team`;
-          } else if (!matchResult.snitchCaught && prediction === 'none') {
-            isWon = true;
-            reason = `Snitch not caught as predicted`;
-          } else {
-            reason = `Snitch ${matchResult.snitchCaught ? 'caught by ' + matchResult.snitchCaughtBy : 'not caught'}, predicted ${prediction}`;
-          }
-          break;
-
-        case 'match_duration':
-          // Match duration bet - predict over/under duration
-          const [durationOverUnder, durationThreshold] = prediction.split('_'); // e.g., "over_90" or "under_120"
-          const durationThresholdValue = parseInt(durationThreshold);
-          
-          if (durationOverUnder === 'over' && matchResult.duration > durationThresholdValue) {
-            isWon = true;
-            reason = `Match duration ${matchResult.duration} min was over ${durationThresholdValue} min`;
-          } else if (durationOverUnder === 'under' && matchResult.duration < durationThresholdValue) {
-            isWon = true;
-            reason = `Match duration ${matchResult.duration} min was under ${durationThresholdValue} min`;
-          } else {
-            reason = `Match duration ${matchResult.duration} min didn't meet prediction ${prediction}`;
-          }
-          break;
-
-        case 'combined':
-          // Combined bet - multiple predictions (advanced logic)
-          const combinedResult = await this.resolveCombinedBet(bet, matchResult, match);
-          isWon = combinedResult.isWon;
-          reason = combinedResult.reason;
-          break;
-
-        default:
-          return {
-            success: false,
-            error: `Unknown bet type: ${type}`
-          };
+      // Primero intentar evaluar usando bet_types si existe bet_type_id
+      if (bet.bet_type_id) {
+        console.log(`🎯 Evaluando apuesta ${bet.id} usando bet_type_id: ${bet.bet_type_id}`);
+        evaluationResult = await this.evaluateBetUsingType(bet, matchResult, match);
+      } else {
+        // Fallback al sistema anterior para compatibilidad
+        console.log(`⚠️ Apuesta ${bet.id} sin bet_type_id, usando sistema legacy`);
+        evaluationResult = await this.evaluateBetLegacy(bet, matchResult, match);
       }
 
-      // Update bet status in database
-      const status = isWon ? 'won' : 'lost';
+      const status = evaluationResult.isWon ? 'won' : 'lost';
+      
+      // Actualizar estado de la apuesta en base de datos
       await this.db.updateBetStatus(bet.id, status);
-
-      // Note: Balance update and transaction creation is handled in updateBetStatus method
 
       return {
         success: true,
         status,
-        reason
+        reason: evaluationResult.reason
       };
 
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Error desconocido'
       };
     }
+  }
+
+  /**
+   * Evaluar apuesta usando el sistema legacy para compatibilidad
+   */
+  private async evaluateBetLegacy(bet: any, matchResult: MatchResult, match: any): Promise<BetEvaluationResult> {
+    const { type, prediction } = bet;
+    let isWon = false;
+    let reason = '';
+
+    switch (type) {
+      case 'winner':
+        // Winner bet - predict which team wins
+        if (matchResult.homeScore > matchResult.awayScore && prediction === 'home') {
+          isWon = true;
+          reason = `Home team ${match.homeTeamName} won`;
+        } else if (matchResult.awayScore > matchResult.homeScore && prediction === 'away') {
+          isWon = true;
+          reason = `Away team ${match.awayTeamName} won`;
+        } else if (matchResult.homeScore === matchResult.awayScore && prediction === 'draw') {
+          isWon = true;
+          reason = 'Match ended in a draw';
+        } else {
+          reason = `Predicted ${this.getPredictionDescription(prediction, match)}, but ${this.getActualResultDescription(matchResult, match)}`;
+        }
+        break;
+
+      case 'total_score':
+        // Total score bet - predict over/under total points
+        const totalScore = matchResult.homeScore + matchResult.awayScore;
+        const [overUnder, threshold] = prediction.split('_'); // e.g., "over_300" or "under_250"
+        const thresholdValue = parseInt(threshold);
+        
+        if (overUnder === 'over' && totalScore > thresholdValue) {
+          isWon = true;
+          reason = `Total score ${totalScore} was over ${thresholdValue}`;
+        } else if (overUnder === 'under' && totalScore < thresholdValue) {
+          isWon = true;
+          reason = `Total score ${totalScore} was under ${thresholdValue}`;
+        } else {
+          reason = `Total score ${totalScore} didn't meet prediction ${prediction}`;
+        }
+        break;
+
+      case 'snitch_catcher':
+        // Snitch catcher bet - predict which team catches the snitch
+        if (matchResult.snitchCaught && matchResult.snitchCaughtBy === prediction) {
+          isWon = true;
+          reason = `Snitch caught by predicted team`;
+        } else if (!matchResult.snitchCaught && prediction === 'none') {
+          isWon = true;
+          reason = `Snitch not caught as predicted`;
+        } else {
+          reason = `Snitch ${matchResult.snitchCaught ? 'caught by ' + matchResult.snitchCaughtBy : 'not caught'}, predicted ${prediction}`;
+        }
+        break;
+
+      case 'match_duration':
+        // Match duration bet - predict over/under duration
+        const [durationOverUnder, durationThreshold] = prediction.split('_'); // e.g., "over_90" or "under_120"
+        const durationThresholdValue = parseInt(durationThreshold);
+        
+        if (durationOverUnder === 'over' && matchResult.duration > durationThresholdValue) {
+          isWon = true;
+          reason = `Match duration ${matchResult.duration} min was over ${durationThresholdValue} min`;
+        } else if (durationOverUnder === 'under' && matchResult.duration < durationThresholdValue) {
+          isWon = true;
+          reason = `Match duration ${matchResult.duration} min was under ${durationThresholdValue} min`;
+        } else {
+          reason = `Match duration ${matchResult.duration} min didn't meet prediction ${prediction}`;
+        }
+        break;
+
+      case 'combined':
+        // Combined bet - multiple predictions (advanced logic)
+        const combinedResult = await this.resolveCombinedBet(bet, matchResult, match);
+        return { isWon: combinedResult.isWon, reason: combinedResult.reason };
+
+      default:
+        throw new Error(`Unknown bet type: ${type}`);
+    }
+
+    return { isWon, reason };
   }
 
   /**
@@ -516,17 +639,17 @@ export class BetResolutionService {
     reason: string;
   }> {
     try {
-      console.log(`🔍 Resolving combined bet: ${bet.prediction}`);
+      console.log(`🔍 Resolviendo apuesta combinada: ${bet.prediction}`);
       
-      // Parse the combined prediction from the format "type:value,type:value"
+      // Parsear la predicción combinada del formato "type:value,type:value"
       const predictions = this.parseCombinedPredictionString(bet.prediction);
-      console.log(`📋 Parsed predictions:`, predictions);
+      console.log(`📋 Predicciones parseadas:`, predictions);
       
-      // For combined bets, all predictions must be correct
+      // Para apuestas combinadas, todas las predicciones deben ser correctas
       const results = [];
       
       for (const pred of predictions) {
-        // Evaluate each prediction
+        // Evaluar cada predicción usando la nueva lógica mejorada
         const predictionResult = this.evaluateSinglePrediction(pred.type, pred.value, matchResult, match);
         
         results.push({
@@ -536,27 +659,33 @@ export class BetResolutionService {
           reason: predictionResult.reason
         });
         
-        console.log(`  ${pred.type}:${pred.value} -> ${predictionResult.isWon ? '✅' : '❌'} (${predictionResult.reason})`);
+        console.log(`  📊 ${pred.type}:${pred.value} -> ${predictionResult.isWon ? '✅' : '❌'} (${predictionResult.reason})`);
       }
       
       const allCorrect = results.every(r => r.correct);
       const correctCount = results.filter(r => r.correct).length;
       
+      let reason: string;
+      if (allCorrect) {
+        reason = `Todas las ${results.length} predicciones correctas: ${results.map(r => `${r.type}(${r.reason})`).join(', ')}`;
+      } else {
+        const failedPredictions = results.filter(r => !r.correct);
+        reason = `Solo ${correctCount}/${results.length} predicciones correctas. Fallaron: ${failedPredictions.map(r => `${r.type}(${r.reason})`).join(', ')}`;
+      }
+      
       const result = {
         isWon: allCorrect,
-        reason: allCorrect 
-          ? `All ${results.length} predictions correct: ${results.map(r => `${r.type}(${r.reason})`).join(', ')}`
-          : `Only ${correctCount}/${results.length} predictions correct. Failed: ${results.filter(r => !r.correct).map(r => `${r.type}(${r.reason})`).join(', ')}`
+        reason
       };
       
-      console.log(`🎯 Combined bet result: ${result.isWon ? 'WON' : 'LOST'} - ${result.reason}`);
+      console.log(`🎯 Resultado apuesta combinada: ${result.isWon ? 'GANADA' : 'PERDIDA'} - ${result.reason}`);
       return result;
       
     } catch (error) {
-      console.error(`❌ Error processing combined bet ${bet.id}:`, error);
+      console.error(`❌ Error procesando apuesta combinada ${bet.id}:`, error);
       return {
         isWon: false,
-        reason: `Error processing combined bet: ${error instanceof Error ? error.message : 'Unknown error'}`
+        reason: `Error procesando apuesta combinada: ${error instanceof Error ? error.message : 'Error desconocido'}`
       };
     }
   }
@@ -575,6 +704,60 @@ export class BetResolutionService {
    * Evaluate a single prediction without database updates
    */
   private evaluateSinglePrediction(type: string, prediction: string, matchResult: MatchResult, match: any): {
+    isWon: boolean;
+    reason: string;
+  } {
+    // Mapear tipos legacy a bet_types
+    const betTypeMapping: { [key: string]: string } = {
+      'winner': prediction === 'home' ? 'winner-home' : prediction === 'away' ? 'winner-away' : 'winner-draw',
+      'snitch_catcher': prediction === 'home' ? 'snitch-home' : prediction === 'away' ? 'snitch-away' : 'snitch-none',
+      'snitch': prediction === 'home' ? 'snitch-home' : prediction === 'away' ? 'snitch-away' : 'snitch-none',
+      'total_score': prediction.includes('over') ? 'total-over' : 'total-under',
+      'match_duration': prediction.includes('over') ? 'duration-over' : 'duration-under',
+      'time': this.getTimeRangeBetType(prediction) // Nuevo mapeo para rangos de tiempo
+    };
+
+    const betTypeId = betTypeMapping[type];
+    
+    if (betTypeId) {
+      // Usar la nueva lógica basada en bet_types
+      const mockBet = { bet_type_id: betTypeId, prediction: prediction };
+      
+      // Evaluar usando los métodos específicos
+      switch (betTypeId) {
+        case 'winner-home':
+          return this.evaluateWinnerBet(mockBet, matchResult, match, 'home', { id: betTypeId } as BetType);
+        case 'winner-away':
+          return this.evaluateWinnerBet(mockBet, matchResult, match, 'away', { id: betTypeId } as BetType);
+        case 'winner-draw':
+          return this.evaluateWinnerBet(mockBet, matchResult, match, 'draw', { id: betTypeId } as BetType);
+        case 'snitch-home':
+          return this.evaluateSnitchBet(mockBet, matchResult, match, 'home', { id: betTypeId } as BetType);
+        case 'snitch-away':
+          return this.evaluateSnitchBet(mockBet, matchResult, match, 'away', { id: betTypeId } as BetType);
+        case 'snitch-none':
+          return this.evaluateSnitchBet(mockBet, matchResult, match, 'none', { id: betTypeId } as BetType);
+        case 'total-over':
+          return this.evaluateTotalBet(mockBet, matchResult, match, 'over', { id: betTypeId } as BetType);
+        case 'total-under':
+          return this.evaluateTotalBet(mockBet, matchResult, match, 'under', { id: betTypeId } as BetType);
+        case 'duration-over':
+          return this.evaluateDurationBet(mockBet, matchResult, match, 'over', { id: betTypeId } as BetType);
+        case 'duration-under':
+          return this.evaluateDurationBet(mockBet, matchResult, match, 'under', { id: betTypeId } as BetType);
+        case 'time-range':
+          return this.evaluateTimeRangeBet(mockBet, matchResult, match, prediction);
+      }
+    }
+
+    // Fallback al sistema legacy para compatibilidad
+    return this.evaluateSinglePredictionLegacy(type, prediction, matchResult, match);
+  }
+
+  /**
+   * Evaluate a single prediction using legacy system for compatibility
+   */
+  private evaluateSinglePredictionLegacy(type: string, prediction: string, matchResult: MatchResult, match: any): {
     isWon: boolean;
     reason: string;
   } {
@@ -667,6 +850,24 @@ export class BetResolutionService {
         }
         break;
 
+      case 'time':
+        // Time range bet - predict if duration falls within a range
+        const timeRangeMatch = prediction.match(/^(\d+)-(\d+)$/);
+        if (timeRangeMatch) {
+          const minTime = parseInt(timeRangeMatch[1]);
+          const maxTime = parseInt(timeRangeMatch[2]);
+          
+          if (matchResult.duration >= minTime && matchResult.duration <= maxTime) {
+            isWon = true;
+            reason = `Match duration ${matchResult.duration} min was within range ${minTime}-${maxTime} min`;
+          } else {
+            reason = `Match duration ${matchResult.duration} min was outside range ${minTime}-${maxTime} min`;
+          }
+        } else {
+          reason = `Invalid time range format: ${prediction}`;
+        }
+        break;
+
       default:
         isWon = false;
         reason = `Unknown bet type: ${type}`;
@@ -708,5 +909,188 @@ export class BetResolutionService {
 
   private generateId(): string {
     return 'txn_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+  }
+
+  /**
+   * Métodos de evaluación específicos usando bet_types
+   */
+
+  /**
+   * Evaluar apuesta de ganador
+   */
+  private evaluateWinnerBet(bet: any, matchResult: MatchResult, match: any, expectedWinner: string, betType: BetType): BetEvaluationResult {
+    const { homeScore, awayScore } = matchResult;
+    let isWon = false;
+    let reason = '';
+
+    if (expectedWinner === 'home' && homeScore > awayScore) {
+      isWon = true;
+      reason = `${match.homeTeamName} ganó ${homeScore}-${awayScore}`;
+    } else if (expectedWinner === 'away' && awayScore > homeScore) {
+      isWon = true;
+      reason = `${match.awayTeamName} ganó ${awayScore}-${homeScore}`;
+    } else if (expectedWinner === 'draw' && homeScore === awayScore) {
+      isWon = true;
+      reason = `Empate ${homeScore}-${awayScore}`;
+    } else {
+      // Apuesta perdida
+      if (homeScore > awayScore) {
+        reason = `Se predijo ${this.getTeamNameByWinner(expectedWinner, match)}, pero ganó ${match.homeTeamName} ${homeScore}-${awayScore}`;
+      } else if (awayScore > homeScore) {
+        reason = `Se predijo ${this.getTeamNameByWinner(expectedWinner, match)}, pero ganó ${match.awayTeamName} ${awayScore}-${homeScore}`;
+      } else {
+        reason = `Se predijo ${this.getTeamNameByWinner(expectedWinner, match)}, pero fue empate ${homeScore}-${awayScore}`;
+      }
+    }
+
+    return { isWon, reason, betType };
+  }
+
+  /**
+   * Evaluar apuesta de snitch
+   */
+  private evaluateSnitchBet(bet: any, matchResult: MatchResult, match: any, expectedCatcher: string, betType: BetType): BetEvaluationResult {
+    const { snitchCaught, snitchCaughtBy } = matchResult;
+    let isWon = false;
+    let reason = '';
+
+    if (expectedCatcher === 'none') {
+      if (!snitchCaught) {
+        isWon = true;
+        reason = 'La snitch no fue capturada como se predijo';
+      } else {
+        reason = `Se predijo que la snitch no sería capturada, pero fue capturada por ${this.getTeamNameById(snitchCaughtBy, match)}`;
+      }
+    } else {
+      if (snitchCaught) {
+        const homeTeamId = match.home_team_id;
+        const awayTeamId = match.away_team_id;
+        
+        if ((expectedCatcher === 'home' && snitchCaughtBy === homeTeamId) || 
+            (expectedCatcher === 'away' && snitchCaughtBy === awayTeamId)) {
+          isWon = true;
+          reason = `La snitch fue capturada por ${this.getTeamNameById(snitchCaughtBy, match)} como se predijo`;
+        } else {
+          reason = `Se predijo que la snitch sería capturada por ${this.getTeamNameByWinner(expectedCatcher, match)}, pero fue capturada por ${this.getTeamNameById(snitchCaughtBy, match)}`;
+        }
+      } else {
+        reason = `Se predijo que la snitch sería capturada por ${this.getTeamNameByWinner(expectedCatcher, match)}, pero no fue capturada`;
+      }
+    }
+
+    return { isWon, reason, betType };
+  }
+
+  /**
+   * Evaluar apuesta de total de puntos
+   */
+  private evaluateTotalBet(bet: any, matchResult: MatchResult, match: any, overUnder: string, betType: BetType): BetEvaluationResult {
+    const totalScore = matchResult.homeScore + matchResult.awayScore;
+    let isWon = false;
+    let reason = '';
+
+    // Extraer el umbral de la predicción del usuario
+    const threshold = this.extractThresholdFromPrediction(bet.prediction);
+    
+    if (overUnder === 'over' && totalScore > threshold) {
+      isWon = true;
+      reason = `Total de puntos ${totalScore} fue mayor que ${threshold}`;
+    } else if (overUnder === 'under' && totalScore < threshold) {
+      isWon = true;
+      reason = `Total de puntos ${totalScore} fue menor que ${threshold}`;
+    } else {
+      reason = `Total de puntos ${totalScore} no cumplió con la predicción ${overUnder} ${threshold}`;
+    }
+
+    return { isWon, reason, betType };
+  }
+
+  /**
+   * Evaluar apuesta de duración
+   */
+  private evaluateDurationBet(bet: any, matchResult: MatchResult, match: any, overUnder: string, betType: BetType): BetEvaluationResult {
+    const duration = matchResult.duration;
+    let isWon = false;
+    let reason = '';
+
+    // Extraer el umbral de la predicción del usuario
+    const threshold = this.extractThresholdFromPrediction(bet.prediction);
+    
+    if (overUnder === 'over' && duration > threshold) {
+      isWon = true;
+      reason = `Duración ${duration} minutos fue mayor que ${threshold} minutos`;
+    } else if (overUnder === 'under' && duration < threshold) {
+      isWon = true;
+      reason = `Duración ${duration} minutos fue menor que ${threshold} minutos`;
+    } else {
+      reason = `Duración ${duration} minutos no cumplió con la predicción ${overUnder} ${threshold} minutos`;
+    }
+
+    return { isWon, reason, betType };
+  }
+
+  /**
+   * Métodos auxiliares
+   */
+  private getTeamNameByWinner(winner: string, match: any): string {
+    if (winner === 'home') return match.homeTeamName;
+    if (winner === 'away') return match.awayTeamName;
+    if (winner === 'draw') return 'empate';
+    return winner;
+  }
+
+  private getTeamNameById(teamId: string, match: any): string {
+    if (teamId === match.home_team_id) return match.homeTeamName;
+    if (teamId === match.away_team_id) return match.awayTeamName;
+    return teamId;
+  }
+
+  private extractThresholdFromPrediction(prediction: string): number {
+    // Extraer número de predicciones como "over_300", "under_250", etc.
+    const match = prediction.match(/\d+/);
+    return match ? parseInt(match[0]) : 0;
+  }
+
+  /**
+   * Determina el tipo de apuesta para rangos de tiempo
+   */
+  private getTimeRangeBetType(prediction: string): string {
+    // Para rangos de tiempo como "30-60", usamos un tipo genérico
+    if (prediction.match(/^\d+-\d+$/)) {
+      return 'time-range';
+    }
+    return 'duration-over'; // fallback
+  }
+
+  /**
+   * Evalúa apuestas de rango de tiempo
+   */
+  private evaluateTimeRangeBet(bet: any, matchResult: MatchResult, match: any, prediction: string): {
+    isWon: boolean;
+    reason: string;
+  } {
+    const timeRangeMatch = prediction.match(/^(\d+)-(\d+)$/);
+    if (!timeRangeMatch) {
+      return {
+        isWon: false,
+        reason: `Formato de rango de tiempo inválido: ${prediction}`
+      };
+    }
+
+    const minTime = parseInt(timeRangeMatch[1]);
+    const maxTime = parseInt(timeRangeMatch[2]);
+    const duration = matchResult.duration;
+
+    if (duration >= minTime && duration <= maxTime) {
+      return {
+        isWon: true,
+        reason: `Duración ${duration} minutos estuvo dentro del rango ${minTime}-${maxTime} minutos`
+      };
+    } else {
+      return {
+        isWon: false,
+        reason: `Duración ${duration} minutos estuvo fuera del rango ${minTime}-${maxTime} minutos`
+      };
+    }
   }
 }
