@@ -228,7 +228,9 @@ router.get('/:id', async (req, res): Promise<void> => {
           losses: rivalryData.losses,
           draws: rivalryData.draws,
           winPercentage: rivalryData.win_percentage,
-          lastMatch: rivalryData.last_match_date ? {
+          lastMatch: rivalryData.last_match_date && 
+                     rivalryData.last_match_team_score !== null && 
+                     rivalryData.last_match_opponent_score !== null ? {
             date: rivalryData.last_match_date,
             result: rivalryData.last_match_result,
             score: `${rivalryData.last_match_team_score}-${rivalryData.last_match_opponent_score}`
