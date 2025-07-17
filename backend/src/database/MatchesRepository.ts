@@ -303,6 +303,16 @@ export class MatchesRepository {
         if (resolution.errors.length > 0) {
           console.warn('⚠️ Bet resolution errors:', resolution.errors);
         }
+
+        // Also check if any combined bets can now be resolved
+        console.log('🔍 Checking for resolvable combined bets after match completion...');
+        const combinedResolution = await betResolutionService.resolveAllPendingCombinedBets();
+        if (combinedResolution.resolved > 0) {
+          console.log(`✅ Combined bets resolved: ${combinedResolution.resolved} resolved, ${combinedResolution.errors.length} errors`);
+        }
+        if (combinedResolution.errors.length > 0) {
+          console.warn('⚠️ Combined bet resolution errors:', combinedResolution.errors);
+        }
       } catch (betError) {
         console.error('❌ Error resolving bets for match:', betError);
         // Don't throw - match should still finish successfully even if bet resolution fails
