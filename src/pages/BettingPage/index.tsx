@@ -50,14 +50,7 @@ const BettingPage: React.FC = () => {
 
   const totalSteps = 3;
 
-  useEffect(() => {
-    if (paramMatchId) {
-        setSelectedMatch(paramMatchId);
-    }
-    loadMatchesFromSimulation();
-  }, [paramMatchId]);
-
-  // Show admin message if user cannot bet
+  // Show admin message if user cannot bet - Check this BEFORE any useEffect
   if (!canBet) {
     return (
       <AdminMessage 
@@ -111,6 +104,13 @@ const BettingPage: React.FC = () => {
     
     setIsLoading(false);
   };
+
+  useEffect(() => {
+    if (paramMatchId) {
+        setSelectedMatch(paramMatchId);
+    }
+    loadMatchesFromSimulation();
+  }, [paramMatchId]);
 
   // Calculate combined odds and potential winnings
   const calculateCombinedOdds = () => {
