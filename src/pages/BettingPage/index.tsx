@@ -5,7 +5,7 @@ import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
 import AdminMessage from '@/components/common/AdminMessage';
 import { apiClient } from '@/utils/apiClient';
-import { Match, Season } from '@/types/league';
+import { Season } from '@/types/league';
 import { useAuth } from '@/context/AuthContext';
 
 // Types for betting system
@@ -34,6 +34,17 @@ interface BettingMatch {
   status: 'upcoming' | 'live' | 'finished';
 }
 
+// Interface for backend match data
+interface BackendMatch {
+  id: string;
+  homeTeamName?: string;
+  awayTeamName?: string;
+  home_team_name?: string;
+  away_team_name?: string;
+  date: string;
+  status: string;
+}
+
 const BettingPage: React.FC = () => {
   const { matchId: paramMatchId } = useParams<{ matchId?: string }>();
   const { user, canBet, placeBet, getTodayBetsCount, canPlaceBet } = useAuth(); // Get user for balance and betting permissions
@@ -50,19 +61,6 @@ const BettingPage: React.FC = () => {
 
   const totalSteps = 3;
 
-  // Show admin message if user cannot bet - Check this BEFORE any useEffect
-  if (!canBet) {
-    return (
-      <AdminMessage 
-        title="Funcionalidad Restringida"
-        message="Los administradores no pueden realizar apuestas. Tu rol está destinado a la gestión y supervisión del sistema de apuestas de Quidditch."
-        redirectTo="/account"
-        redirectLabel="Ir al Panel de Administración"
-        icon="⚡"
-      />
-    );
-  }
-
   const loadMatchesFromSimulation = async () => {
     setIsLoading(true);
     
@@ -70,24 +68,24 @@ const BettingPage: React.FC = () => {
       // First try to load from backend
       const response = await apiClient.get('/matches');
       
-      if (response.success && response.data) {
+      if (response.success && response.data && Array.isArray(response.data)) {
         const backendMatches = response.data;
         const bettableMatches = backendMatches
-          .filter((match: any) => {
+          .filter((match: BackendMatch) => {
             // Only allow betting on upcoming and live matches
             return ['scheduled', 'live', 'upcoming'].includes(match.status);
           })
-          .map((match: any) => ({
+          .map((match: BackendMatch) => ({
             id: match.id,
-            name: `${match.homeTeamName} vs ${match.awayTeamName}`,
+            name: `${match.homeTeamName || match.home_team_name} vs ${match.awayTeamName || match.away_team_name}`,
             date: new Date(match.date).toLocaleDateString('es-ES', {
               month: 'short',
               day: 'numeric',
               hour: '2-digit',
               minute: '2-digit'
             }),
-            homeTeam: match.homeTeamName,
-            awayTeam: match.awayTeamName,
+            homeTeam: match.homeTeamName || match.home_team_name,
+            awayTeam: match.awayTeamName || match.away_team_name,
             status: match.status === 'live' ? 'live' : 'upcoming'
           } as BettingMatch));
         
@@ -111,6 +109,19 @@ const BettingPage: React.FC = () => {
     }
     loadMatchesFromSimulation();
   }, [paramMatchId]);
+
+  // Show admin message if user cannot bet - Check this AFTER hooks
+  if (!canBet) {
+    return (
+      <AdminMessage 
+        title="Funcionalidad Restringida"
+        message="Los administradores no pueden realizar apuestas. Tu rol está destinado a la gestión y supervisión del sistema de apuestas de Quidditch."
+        redirectTo="/account"
+        redirectLabel="Ir al Panel de Administración"
+        icon="⚡"
+      />
+    );
+  }
 
   // Calculate combined odds and potential winnings
   const calculateCombinedOdds = () => {
