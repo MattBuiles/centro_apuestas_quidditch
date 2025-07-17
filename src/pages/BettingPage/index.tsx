@@ -173,7 +173,7 @@ const BettingPage: React.FC = () => {
     const scoreOption: BetOption = {
       id: `${selectedMatch}-score-exact`,
       type: 'score',
-      selection: 'exact',
+      selection: `${scoreHome}-${scoreAway}`,
       odds: 8.50,
       description: `Puntuación exacta: ${scoreHome}-${scoreAway}`,
       matchId: selectedMatch
