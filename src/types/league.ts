@@ -77,6 +77,8 @@ export interface Match {
   // Backward compatibility
   homeTeamId: string;
   awayTeamId: string;
+  homeTeamName?: string; // Team names from backend joins
+  awayTeamName?: string;
   date: Date;
   events: GameEvent[];
   // Match status and metadata

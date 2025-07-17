@@ -85,6 +85,8 @@ const adaptBackendMatch = (backendMatch: BackendMatch): Match => {
     visitanteId: awayTeamId || '',
     homeTeamId: homeTeamId || '',
     awayTeamId: awayTeamId || '',
+    homeTeamName: backendMatch.homeTeamName || homeTeamId || '',
+    awayTeamName: backendMatch.awayTeamName || awayTeamId || '',
     fecha: new Date(backendMatch.date),
     date: new Date(backendMatch.date),
     eventos: adaptedEvents,
@@ -208,6 +210,33 @@ export const getUpcomingMatches = async (limit: number = 10): Promise<Match[]> =
     }
   } else {
     throw new Error('Backend API is disabled - upcoming matches cannot be retrieved');
+  }
+};
+
+// Obtener partidos destacados (en vivo + próximos)
+export const getHighlightedMatches = async (limit: number = 3): Promise<Match[]> => {
+  if (FEATURES.USE_BACKEND_MATCHES) {
+    try {
+      if (FEATURES.DEBUG_API) {
+        console.log(`🔄 Fetching ${limit} highlighted matches from backend...`);
+      }
+
+      const response = await apiClient.get<BackendMatch[]>(`/matches/highlighted/${limit}`);
+      
+      if (response.success && response.data) {
+        if (FEATURES.DEBUG_API) {
+          console.log('✅ Highlighted matches fetched from backend:', response.data.length);
+        }
+        return response.data.map(adaptBackendMatch);
+      } else {
+        throw new Error('Backend response was not successful');
+      }
+    } catch (error) {
+      console.error('❌ Error fetching highlighted matches from backend:', error);
+      throw new Error('Highlighted matches cannot be retrieved - backend unavailable');
+    }
+  } else {
+    throw new Error('Backend API is disabled - highlighted matches cannot be retrieved');
   }
 };
 

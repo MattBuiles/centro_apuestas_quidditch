@@ -5,58 +5,43 @@ import Button from '@/components/common/Button'
 import CTAButton from '@/components/common/CTAButton'
 import TeamLogo from '@/components/teams/TeamLogo'
 import { useAuth } from '@/context/AuthContext'
-import { leagueTimeService } from '@/services/leagueTimeService'
-import { Match, Team } from '@/types/league'
+import { getHighlightedMatches } from '@/services/matchesService'
+import { Match } from '@/types/league'
 import { FEATURES } from '@/config/features'
 import welcomeLogo from '@/assets/Welcome_Logo.png'
 import styles from './HomePage.module.css'
 
 const HomePage = () => {
   const [featuredMatches, setFeaturedMatches] = useState<Match[]>([]);
-  const [teams, setTeams] = useState<Team[]>([]);
   const { canBet, isAdmin } = useAuth();
   useEffect(() => {
-    // Load featured matches from league time service
+    // Load featured matches using the new highlighted matches endpoint
     const loadFeaturedMatches = async () => {
-      if (FEATURES.USE_BACKEND_LEAGUE_TIME) {
+      if (FEATURES.USE_BACKEND_MATCHES) {
         try {
-          const leagueInfo = await leagueTimeService.getLeagueTimeInfo();
-          if (leagueInfo.activeSeason) {
-            // Get next 3 upcoming matches - use 'matches' from backend
-            const upcomingMatches = leagueInfo.activeSeason.matches
-              .filter((match: Match) => match.status === 'scheduled')
-              .sort((a: Match, b: Match) => new Date(a.date).getTime() - new Date(b.date).getTime())
-              .slice(0, 3);
-            
-            setFeaturedMatches(upcomingMatches);
-            setTeams(leagueInfo.activeSeason.teams); // use 'teams' from backend
-          }
+          // Get the 3 most relevant matches (live + upcoming)
+          const highlightedMatches = await getHighlightedMatches(3);
+          setFeaturedMatches(highlightedMatches);
         } catch (error) {
-          console.error('Failed to load league information:', error);
+          console.error('Failed to load highlighted matches:', error);
           setFeaturedMatches([]);
-          setTeams([]);
         }
       } else {
         // No backend available, use empty state
         setFeaturedMatches([]);
-        setTeams([]);
       }
     };
     
     loadFeaturedMatches();
   }, []);
 
-  const getTeamName = (teamId: string) => {
-    const team = teams.find(t => t.id === teamId);
-    return team?.name || teamId;
-  };
-
   const getMatchStatus = (match: Match) => {
     if (match.status === 'live') return 'En Vivo';
     if (match.status === 'finished') return 'Finalizado';
+    if (match.status === 'scheduled') return 'Programado';
     
-    const matchDate = new Date(match.date); // Use 'date' from backend
-    const now = new Date(); // Use real time for now
+    const matchDate = new Date(match.date);
+    const now = new Date();
     const diffInHours = (matchDate.getTime() - now.getTime()) / (1000 * 60 * 60);
     
     if (diffInHours < 24) return 'Próximo';
@@ -227,14 +212,15 @@ const HomePage = () => {
 
         <div className={styles.matchesGrid}>
           {featuredMatches.length > 0 ? featuredMatches.map((match, index) => {
-            const homeTeamName = getTeamName(match.localId);
-            const awayTeamName = getTeamName(match.visitanteId);
+            const homeTeamName = match.homeTeamName || match.localId || 'Home Team';
+            const awayTeamName = match.awayTeamName || match.visitanteId || 'Away Team';
             const matchStatus = getMatchStatus(match);
             
             return (
               <div key={match.id} className={styles.matchCard}>
-                <div className={styles.matchBadge}>
+                <div className={`${styles.matchBadge} ${match.status === 'live' ? styles.liveBadge : ''}`}>
                   <span>{matchStatus}</span>
+                  {match.status === 'live' && <span className={styles.liveDot}></span>}
                 </div>
                 
                 <div className={styles.matchHeader}>
