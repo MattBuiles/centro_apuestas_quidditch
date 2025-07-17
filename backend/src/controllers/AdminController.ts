@@ -644,4 +644,395 @@ export class AdminController {
       throw new Error(`Failed to finalize active season: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
+
+  /**
+   * Get dashboard statistics for admin panel
+   */
+  public getDashboardStats = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+      // Optimized single query for all dashboard stats
+      const statsResult = await this.db.get(`
+        SELECT 
+          (SELECT COUNT(*) FROM users WHERE role = "user") as totalUsers,
+          (SELECT COUNT(DISTINCT user_id) FROM bets WHERE placed_at >= datetime('now', '-30 days')) as activeUsers,
+          (SELECT COUNT(*) FROM bets) as totalBets,
+          (SELECT COUNT(*) FROM bets WHERE DATE(placed_at) = DATE('now')) as betsToday,
+          (SELECT COALESCE(SUM(amount), 0) FROM bets) as totalRevenue,
+          (SELECT COALESCE(AVG(amount), 0) FROM bets) as averageBet,
+          (SELECT COUNT(*) FROM bets WHERE status IN ('won', 'lost')) as totalResolved,
+          (SELECT COUNT(*) FROM bets WHERE status = 'won') as totalWon
+      `) as {
+        totalUsers: number;
+        activeUsers: number;
+        totalBets: number;
+        betsToday: number;
+        totalRevenue: number;
+        averageBet: number;
+        totalResolved: number;
+        totalWon: number;
+      };
+
+      const winRate = statsResult.totalResolved > 0 ? 
+        (statsResult.totalWon / statsResult.totalResolved) * 100 : 0;
+
+      res.json({
+        success: true,
+        data: {
+          totalUsers: statsResult.totalUsers,
+          activeUsers: statsResult.activeUsers,
+          totalBets: statsResult.totalBets,
+          betsToday: statsResult.betsToday,
+          totalRevenue: statsResult.totalRevenue,
+          averageBet: parseFloat(statsResult.averageBet.toFixed(2)),
+          winRate: parseFloat(winRate.toFixed(1))
+        },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error getting dashboard stats:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error',
+        message: 'Failed to retrieve dashboard statistics',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
+
+  /**
+   * Get bets grouped by day of week
+   */
+  public getBetsByDay = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+      const betsByDay = await this.db.all(`
+        SELECT 
+          CASE strftime('%w', placed_at)
+            WHEN '0' THEN 'D'
+            WHEN '1' THEN 'L'
+            WHEN '2' THEN 'M'
+            WHEN '3' THEN 'M'
+            WHEN '4' THEN 'J'
+            WHEN '5' THEN 'V'
+            WHEN '6' THEN 'S'
+          END as day,
+          COUNT(*) as count
+        FROM bets 
+        WHERE placed_at >= datetime('now', '-30 days')
+        GROUP BY strftime('%w', placed_at)
+        ORDER BY strftime('%w', placed_at)
+      `);
+
+      // Initialize all days with 0
+      const daysMap = new Map([
+        ['D', 0], ['L', 0], ['M', 0], ['M', 0], ['J', 0], ['V', 0], ['S', 0]
+      ]);
+
+      // Update with actual data
+      (betsByDay as Array<{ day: string; count: number }>).forEach((row) => {
+        daysMap.set(row.day, row.count);
+      });
+
+      const result = Array.from(daysMap.entries()).map(([day, count]) => ({
+        day,
+        count
+      }));
+
+      res.json({
+        success: true,
+        data: result,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error getting bets by day:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error',
+        message: 'Failed to retrieve bets by day',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
+
+  /**
+   * Get most popular teams by bet count
+   */
+  public getPopularTeams = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+      const popularTeams = await this.db.all(`
+        SELECT 
+          t.name,
+          t.colors as house_color,
+          COUNT(b.id) as betCount,
+          ROUND(COUNT(b.id) * 100.0 / (SELECT COUNT(*) FROM bets), 1) as percentage
+        FROM teams t
+        JOIN matches m ON t.id = m.home_team_id OR t.id = m.away_team_id
+        JOIN bets b ON m.id = b.match_id
+        GROUP BY t.id, t.name, t.colors
+        ORDER BY betCount DESC
+        LIMIT 4
+      `);
+
+      res.json({
+        success: true,
+        data: popularTeams,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error getting popular teams:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error',
+        message: 'Failed to retrieve popular teams',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
+
+  /**
+   * Get risk analysis data
+   */
+  public getRiskAnalysis = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+      // Optimized single query for all risk analysis data
+      const riskData = await this.db.get(`
+        SELECT 
+          (SELECT COUNT(*) FROM bets WHERE amount > 500 AND placed_at >= datetime('now', '-7 days')) as criticalAlerts,
+          (SELECT COUNT(*) FROM bets WHERE amount > 200 AND placed_at >= datetime('now', '-7 days')) as highAmountBets,
+          (SELECT COUNT(DISTINCT user_id) FROM bets WHERE amount > 300 
+           GROUP BY user_id HAVING COUNT(*) > 10) as riskUsers
+      `) as {
+        criticalAlerts: number;
+        highAmountBets: number;
+        riskUsers: number | null;
+      };
+
+      res.json({
+        success: true,
+        data: {
+          criticalAlerts: riskData.criticalAlerts,
+          highAmountBets: riskData.highAmountBets,
+          riskUsers: riskData.riskUsers || 0
+        },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error getting risk analysis:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error',
+        message: 'Failed to retrieve risk analysis',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
+
+  /**
+   * Get most active users
+   */
+  public getActiveUsers = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+      const activeUsers = await this.db.all(`
+        SELECT 
+          u.username,
+          COUNT(b.id) as betCount,
+          COALESCE(SUM(b.amount), 0) as totalAmount,
+          ROUND(
+            COUNT(CASE WHEN b.status = 'won' THEN 1 END) * 100.0 / 
+            NULLIF(COUNT(CASE WHEN b.status IN ('won', 'lost') THEN 1 END), 0), 
+            1
+          ) as winRate,
+          CASE 
+            WHEN SUM(b.amount) > 2000 THEN 10
+            WHEN SUM(b.amount) > 1000 THEN 8
+            WHEN SUM(b.amount) > 500 THEN 6
+            ELSE 4
+          END as riskLevel
+        FROM users u
+        JOIN bets b ON u.id = b.user_id
+        WHERE u.role = 'user'
+        GROUP BY u.id, u.username
+        ORDER BY betCount DESC, totalAmount DESC
+        LIMIT 4
+      `);
+
+      res.json({
+        success: true,
+        data: (activeUsers as Array<{
+          username: string;
+          betCount: number;
+          totalAmount: number;
+          winRate: number;
+          riskLevel: number;
+        }>).map((user) => ({
+          username: user.username,
+          betCount: user.betCount,
+          totalAmount: user.totalAmount,
+          winRate: user.winRate || 0,
+          riskLevel: user.riskLevel
+        })),
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error getting active users:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error',
+        message: 'Failed to retrieve active users',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
+
+  /**
+   * Get platform performance metrics
+   */
+  public getPerformanceMetrics = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+      // Optimized single query for all performance metrics
+      const metricsData = await this.db.get(`
+        SELECT 
+          (SELECT COALESCE(SUM(amount), 0) FROM bets) as totalBetAmount,
+          (SELECT COALESCE(SUM(CASE WHEN status = 'won' THEN potential_win ELSE 0 END), 0) FROM bets) as totalPayouts,
+          (SELECT COALESCE(AVG(user_total), 0) 
+           FROM (SELECT SUM(amount) as user_total FROM bets WHERE placed_at >= datetime('now', '-30 days') GROUP BY user_id)) as avgSpending,
+          (SELECT COUNT(*) / 24.0 FROM bets WHERE placed_at >= datetime('now', '-24 hours')) as betsPerHour,
+          (SELECT COUNT(DISTINCT CASE WHEN b.user_id IS NOT NULL THEN u.id END) * 100.0 / COUNT(u.id)
+           FROM users u LEFT JOIN bets b ON u.id = b.user_id AND b.placed_at >= datetime('now', '-30 days')
+           WHERE u.role = 'user') as activeUserRate
+      `) as {
+        totalBetAmount: number;
+        totalPayouts: number;
+        avgSpending: number;
+        betsPerHour: number;
+        activeUserRate: number;
+      };
+
+      const profitMargin = metricsData.totalBetAmount > 0 ? 
+        ((metricsData.totalBetAmount - metricsData.totalPayouts) / metricsData.totalBetAmount) * 100 : 0;
+
+      res.json({
+        success: true,
+        data: {
+          profitMargin: parseFloat(profitMargin.toFixed(1)),
+          avgSpendingPerUser: parseFloat(metricsData.avgSpending.toFixed(0)),
+          betsPerHour: parseFloat(metricsData.betsPerHour.toFixed(1)),
+          activeUserRate: parseFloat((metricsData.activeUserRate || 0).toFixed(1))
+        },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error getting performance metrics:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error',
+        message: 'Failed to retrieve performance metrics',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
+
+  /**
+   * Get recent platform activity
+   */
+  public getRecentActivity = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+      const recentActivity = await this.db.all(`
+        SELECT 
+          'user_register' as type,
+          u.username,
+          'Nuevo usuario registrado' as description,
+          u.created_at as timestamp,
+          NULL as amount
+        FROM users u
+        WHERE u.role = 'user' AND u.created_at >= datetime('now', '-7 days')
+        
+        UNION ALL
+        
+        SELECT 
+          CASE 
+            WHEN b.status = 'won' THEN 'bet_won'
+            WHEN b.status = 'lost' THEN 'bet_lost'
+            ELSE 'bet_placed'
+          END as type,
+          u.username,
+          'Apuesta realizada en ' || ht.name || ' vs ' || at.name as description,
+          b.placed_at as timestamp,
+          b.amount
+        FROM bets b
+        JOIN users u ON b.user_id = u.id
+        JOIN matches m ON b.match_id = m.id
+        JOIN teams ht ON m.home_team_id = ht.id
+        JOIN teams at ON m.away_team_id = at.id
+        WHERE b.placed_at >= datetime('now', '-7 days')
+        
+        ORDER BY timestamp DESC
+        LIMIT 20
+      `);
+
+      res.json({
+        success: true,
+        data: recentActivity,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error getting recent activity:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error',
+        message: 'Failed to retrieve recent activity',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
+
+  /**
+   * Get current risk alerts
+   */
+  public getRiskAlerts = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+      // Optimized single query for all risk alerts using UNION
+      const riskAlerts = await this.db.all(`
+        SELECT 
+          'high_amount' as type,
+          u.username,
+          'Apuesta de alto monto detectada' as description,
+          b.amount,
+          b.placed_at as timestamp
+        FROM bets b
+        JOIN users u ON b.user_id = u.id
+        WHERE b.amount > 1000 AND b.placed_at >= datetime('now', '-24 hours')
+        
+        UNION ALL
+        
+        SELECT 
+          'suspicious_pattern' as type,
+          u.username,
+          'Patrón de apuestas sospechoso detectado' as description,
+          CAST(SUM(b.amount) as INTEGER) as amount,
+          MAX(b.placed_at) as timestamp
+        FROM users u
+        JOIN bets b ON u.id = b.user_id
+        WHERE b.placed_at >= datetime('now', '-24 hours')
+        GROUP BY u.id, u.username
+        HAVING COUNT(b.id) > 20 OR SUM(b.amount) > 5000
+        
+        ORDER BY timestamp DESC
+        LIMIT 10
+      `);
+
+      res.json({
+        success: true,
+        data: riskAlerts,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error getting risk alerts:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error',
+        message: 'Failed to retrieve risk alerts',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
 }

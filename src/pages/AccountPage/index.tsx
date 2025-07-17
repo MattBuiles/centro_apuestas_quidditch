@@ -6,7 +6,7 @@ import Card from '@/components/common/Card';
 import userLogoSrc from '@/assets/User_Logo.png';
 import user2LogoSrc from '@/assets/User2_Logo.png';
 import { teamLogos } from '@/assets/teamLogos';
-import AdminDashboard from '@/components/admin/AdminDashboard';
+import AdminDashboardNew from '@/components/admin/AdminDashboardNew';
 import AdminBetsHistory from '@/components/admin/AdminBetsHistory';
 import AdminBetsStatistics from '@/components/admin/AdminBetsStatistics';
 import AdminUsersManagement from '@/components/admin/AdminUsersManagement';
@@ -986,7 +986,7 @@ const AdminAccountPage = ({ user, logout }: { user: any; logout: () => void }) =
 
         {/* Admin Main Content */}
         <main className={styles.mainContent}>          <Routes>
-            <Route index element={<AdminDashboard />} />
+            <Route index element={<AdminDashboardNew />} />
             <Route path="bets-history" element={<AdminBetsHistory />} />
             <Route path="bets-statistics" element={<AdminBetsStatistics />} />
             <Route path="users-management" element={<AdminUsersManagement />} />            <Route path="*" element={<Navigate to="/account" replace />} />

@@ -27,4 +27,28 @@ router.post('/create-season', adminController.createNewSeason);
 // GET /api/admin/logs - Get admin logs
 router.get('/logs', adminController.getAdminLogs);
 
+// GET /api/admin/dashboard/stats - Get dashboard statistics
+router.get('/dashboard/stats', adminController.getDashboardStats);
+
+// GET /api/admin/dashboard/bets-by-day - Get bets grouped by day of week
+router.get('/dashboard/bets-by-day', adminController.getBetsByDay);
+
+// GET /api/admin/dashboard/popular-teams - Get most popular teams by bet count
+router.get('/dashboard/popular-teams', adminController.getPopularTeams);
+
+// GET /api/admin/dashboard/risk-analysis - Get risk analysis data
+router.get('/dashboard/risk-analysis', adminController.getRiskAnalysis);
+
+// GET /api/admin/dashboard/active-users - Get most active users
+router.get('/dashboard/active-users', adminController.getActiveUsers);
+
+// GET /api/admin/dashboard/performance-metrics - Get platform performance metrics
+router.get('/dashboard/performance-metrics', adminController.getPerformanceMetrics);
+
+// GET /api/admin/dashboard/recent-activity - Get recent platform activity
+router.get('/dashboard/recent-activity', adminController.getRecentActivity);
+
+// GET /api/admin/dashboard/risk-alerts - Get current risk alerts
+router.get('/dashboard/risk-alerts', adminController.getRiskAlerts);
+
 export default router;
