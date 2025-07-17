@@ -94,7 +94,20 @@ const AdminDashboardNew = () => {
 
       // Load critical data first
       const statsRes = await apiClient.get('/admin/dashboard/stats');
-      setStats((statsRes.data as ApiResponseData<DashboardStats>).data);
+      console.log('✅ DASHBOARD STATS RESPONSE:', statsRes);
+      console.log('✅ DASHBOARD STATS DATA:', statsRes.data);
+      
+      // Verificar la estructura de la respuesta
+      const responseData = statsRes.data as { data?: DashboardStats } & DashboardStats;
+      if (responseData && typeof responseData === 'object' && 'data' in responseData && responseData.data) {
+        console.log('✅ NESTED STATS DATA:', responseData.data);
+        setStats(responseData.data);
+      } else if (responseData && typeof responseData === 'object' && 'totalUsers' in responseData) {
+        console.log('✅ DIRECT STATS DATA:', responseData);
+        setStats(responseData as DashboardStats);
+      } else {
+        console.warn('⚠️ Unexpected stats response structure:', responseData);
+      }
 
       // Load the rest in smaller batches with delays
       try {
@@ -103,6 +116,10 @@ const AdminDashboardNew = () => {
           apiClient.get('/admin/dashboard/popular-teams'),
           apiClient.get('/admin/dashboard/risk-analysis'),
         ]);
+
+        console.log('✅ BETS BY DAY RESPONSE:', betsByDayRes.data);
+        console.log('✅ POPULAR TEAMS RESPONSE:', popularTeamsRes.data);
+        console.log('✅ RISK ANALYSIS RESPONSE:', riskAnalysisRes.data);
 
         setBetsByDay((betsByDayRes.data as ApiResponseData<BetsByDay[]>).data);
         setPopularTeams((popularTeamsRes.data as ApiResponseData<PopularTeam[]>).data);
@@ -120,6 +137,9 @@ const AdminDashboardNew = () => {
           apiClient.get('/admin/dashboard/performance-metrics'),
         ]);
 
+        console.log('✅ ACTIVE USERS RESPONSE:', activeUsersRes.data);
+        console.log('✅ PERFORMANCE METRICS RESPONSE:', performanceMetricsRes.data);
+
         setActiveUsers((activeUsersRes.data as ApiResponseData<ActiveUser[]>).data);
         setPerformanceMetrics((performanceMetricsRes.data as ApiResponseData<PerformanceMetrics>).data);
       } catch (error) {
@@ -134,6 +154,9 @@ const AdminDashboardNew = () => {
           apiClient.get('/admin/dashboard/recent-activity'),
           apiClient.get('/admin/dashboard/risk-alerts'),
         ]);
+
+        console.log('✅ RECENT ACTIVITY RESPONSE:', recentActivityRes.data);
+        console.log('✅ RISK ALERTS RESPONSE:', riskAlertsRes.data);
 
         setRecentActivity((recentActivityRes.data as ApiResponseData<ActivityItem[]>).data);
         setRiskAlerts((riskAlertsRes.data as ApiResponseData<RiskAlert[]>).data);

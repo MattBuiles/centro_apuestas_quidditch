@@ -650,7 +650,7 @@ export class AdminController {
    */
   public getDashboardStats = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
-      // Optimized single query for all dashboard stats
+      // Optimized single query for all dashboard stats with virtual time support
       const statsResult = await this.db.get(`
         SELECT 
           (SELECT COUNT(*) FROM users WHERE role = "user") as totalUsers,
@@ -672,22 +672,27 @@ export class AdminController {
         totalWon: number;
       };
 
+      console.log('📊 Dashboard stats query result:', statsResult);
+
       const winRate = statsResult.totalResolved > 0 ? 
         (statsResult.totalWon / statsResult.totalResolved) * 100 : 0;
 
-      res.json({
+      const response = {
         success: true,
         data: {
-          totalUsers: statsResult.totalUsers,
-          activeUsers: statsResult.activeUsers,
-          totalBets: statsResult.totalBets,
-          betsToday: statsResult.betsToday,
-          totalRevenue: statsResult.totalRevenue,
-          averageBet: parseFloat(statsResult.averageBet.toFixed(2)),
+          totalUsers: statsResult.totalUsers || 0,
+          activeUsers: statsResult.activeUsers || 0,
+          totalBets: statsResult.totalBets || 0,
+          betsToday: statsResult.betsToday || 0,
+          totalRevenue: statsResult.totalRevenue || 0,
+          averageBet: parseFloat((statsResult.averageBet || 0).toFixed(2)),
           winRate: parseFloat(winRate.toFixed(1))
         },
         timestamp: new Date().toISOString()
-      });
+      };
+
+      console.log('📊 Dashboard stats response:', response);
+      res.json(response);
     } catch (error) {
       console.error('Error getting dashboard stats:', error);
       res.status(500).json({
@@ -717,10 +722,11 @@ export class AdminController {
           END as day,
           COUNT(*) as count
         FROM bets 
-        WHERE placed_at >= datetime('now', '-30 days')
         GROUP BY strftime('%w', placed_at)
         ORDER BY strftime('%w', placed_at)
       `);
+
+      console.log('📅 Bets by day query result:', betsByDay);
 
       // Initialize all days with 0
       const daysMap = new Map([
@@ -763,18 +769,20 @@ export class AdminController {
           t.name,
           t.colors as house_color,
           COUNT(b.id) as betCount,
-          ROUND(COUNT(b.id) * 100.0 / (SELECT COUNT(*) FROM bets), 1) as percentage
+          ROUND(COUNT(b.id) * 100.0 / CASE WHEN (SELECT COUNT(*) FROM bets) = 0 THEN 1 ELSE (SELECT COUNT(*) FROM bets) END, 1) as percentage
         FROM teams t
-        JOIN matches m ON t.id = m.home_team_id OR t.id = m.away_team_id
-        JOIN bets b ON m.id = b.match_id
+        LEFT JOIN matches m ON t.id = m.home_team_id OR t.id = m.away_team_id
+        LEFT JOIN bets b ON m.id = b.match_id
         GROUP BY t.id, t.name, t.colors
         ORDER BY betCount DESC
         LIMIT 4
       `);
 
+      console.log('🏏 Popular teams query result:', popularTeams);
+
       res.json({
         success: true,
-        data: popularTeams,
+        data: popularTeams || [],
         timestamp: new Date().toISOString()
       });
     } catch (error) {
@@ -944,7 +952,7 @@ export class AdminController {
           u.created_at as timestamp,
           NULL as amount
         FROM users u
-        WHERE u.role = 'user' AND u.created_at >= datetime('now', '-7 days')
+        WHERE u.role = 'user' AND u.created_at >= datetime('now', '-30 days')
         
         UNION ALL
         
@@ -960,18 +968,19 @@ export class AdminController {
           b.amount
         FROM bets b
         JOIN users u ON b.user_id = u.id
-        JOIN matches m ON b.match_id = m.id
-        JOIN teams ht ON m.home_team_id = ht.id
-        JOIN teams at ON m.away_team_id = at.id
-        WHERE b.placed_at >= datetime('now', '-7 days')
+        LEFT JOIN matches m ON b.match_id = m.id
+        LEFT JOIN teams ht ON m.home_team_id = ht.id
+        LEFT JOIN teams at ON m.away_team_id = at.id
         
         ORDER BY timestamp DESC
         LIMIT 20
       `);
 
+      console.log('📈 Recent activity query result:', recentActivity.length, 'items');
+
       res.json({
         success: true,
-        data: recentActivity,
+        data: recentActivity || [],
         timestamp: new Date().toISOString()
       });
     } catch (error) {
