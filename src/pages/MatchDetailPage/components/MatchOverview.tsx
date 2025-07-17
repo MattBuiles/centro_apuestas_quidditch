@@ -123,39 +123,16 @@ const MatchOverview: React.FC<MatchOverviewProps> = ({
         {/* Simulación para partidos en vivo */}
         {currentMatchStatus === 'live' && (
           <div className={styles.liveTimeline}>
-            {/* Debug information */}
-            <div style={{ 
-              background: '#f0f0f0', 
-              padding: '10px', 
-              margin: '10px 0', 
-              borderRadius: '5px',
-              fontSize: '12px'
-            }}>
-              <strong>🔍 Debug Info:</strong><br/>
-              • Backend habilitado: {FEATURES.USE_BACKEND_MATCHES ? 'Sí' : 'No'}<br/>
-              • Estado del partido: {currentMatchStatus}<br/>
-              • RealMatch existe: {realMatch ? 'Sí' : 'No'}<br/>
-              • HomeTeam existe: {homeTeam ? 'Sí' : 'No'}<br/>
-              • AwayTeam existe: {awayTeam ? 'Sí' : 'No'}<br/>
-              • Match ID: {match.id}<br/>
-              • Show Live Simulation: {showLiveSimulation ? 'Sí' : 'No'}
-            </div>
-            
             {realMatch && homeTeam && awayTeam ? (
               FEATURES.USE_BACKEND_MATCHES ? (
                 // Nuevo sistema backend: usar LiveMatchViewer directamente
-                <div>
-                  <div style={{ background: '#e8f5e8', padding: '10px', margin: '10px 0', borderRadius: '5px' }}>
-                    ✅ Mostrando LiveMatchViewer con backend
-                  </div>
-                  <LiveMatchViewer 
-                    match={realMatch} 
-                    homeTeam={homeTeam} 
-                    awayTeam={awayTeam}
-                    refreshInterval={3}
-                    onMatchEnd={onMatchEnd}
-                  />
-                </div>
+                <LiveMatchViewer 
+                  match={realMatch} 
+                  homeTeam={homeTeam} 
+                  awayTeam={awayTeam}
+                  refreshInterval={3}
+                  onMatchEnd={onMatchEnd}
+                />
               ) : (
                 // Sistema anterior: mostrar botón de inicio primero, luego LiveMatchViewer
                 <>
