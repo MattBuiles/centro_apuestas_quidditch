@@ -123,8 +123,8 @@ const MatchBetting: React.FC<MatchBettingProps> = ({ match }) => {
                   <span className={styles.featureText}>Captura de la Snitch Dorada</span>
                 </div>
                 <div className={styles.featureItem}>
-                  <span className={styles.featureIcon}>⚡</span>
-                  <span className={styles.featureText}>Apuestas especiales y eventos únicos</span>
+                  <span className={styles.featureIcon}>⏱️</span>
+                  <span className={styles.featureText}>Duración del partido</span>
                 </div>
                 {isLive && (
                   <div className={styles.featureItem}>

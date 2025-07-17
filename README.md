@@ -186,7 +186,7 @@ backend/                # Backend API (Nueva arquitectura)
   - Resultado del partido (Local/Visitante/Empate)
   - Resultado exacto
   - Captura de la Snitch
-  - Eventos especiales
+  - Duración del partido
 - **Apuestas Combinadas**: Múltiples selecciones en un solo boleto
 - **Límites Diarios**: Máximo 3 apuestas por usuario por día
 - **Gestión de Balance**: Sistema de Galeones virtuales

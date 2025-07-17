@@ -189,14 +189,7 @@ export class DatabaseSeed {
       // Duration bets
       { id: 'duration-short', name: 'Partido Corto', description: 'Duración menor a 30 minutos', category: 'duration', base_odds: 7.50, risk_level: 'high' },
       { id: 'duration-medium', name: 'Duración Media', description: 'Duración entre 30-60 minutos', category: 'duration', base_odds: 3.25, risk_level: 'medium' },
-      { id: 'duration-long', name: 'Partido Largo', description: 'Duración mayor a 60 minutos', category: 'duration', base_odds: 2.10, risk_level: 'medium' },
-      
-      // Special events
-      { id: 'expulsion', name: 'Expulsión', description: 'Un jugador será expulsado durante el partido', category: 'special', base_odds: 5.25, risk_level: 'high' },
-      { id: 'broom-break', name: 'Escoba Rota', description: 'Se romperá una escoba durante el partido', category: 'special', base_odds: 4.50, risk_level: 'high' },
-      { id: 'seeker-fall', name: 'Caída de Buscador', description: 'Un buscador caerá de su escoba', category: 'special', base_odds: 3.75, risk_level: 'medium' },
-      { id: 'bludger-referee', name: 'Bludger al Árbitro', description: 'Una bludger golpeará al árbitro', category: 'special', base_odds: 12.50, risk_level: 'high' },
-      { id: 'first-score', name: 'Primer Gol', description: 'Primer equipo en anotar', category: 'special', base_odds: 1.95, risk_level: 'low' }
+      { id: 'duration-long', name: 'Partido Largo', description: 'Duración mayor a 60 minutos', category: 'duration', base_odds: 2.10, risk_level: 'medium' }
     ];
 
     for (const betType of betTypes) {
