@@ -591,6 +591,7 @@ export class BetResolutionService {
         break;
 
       case 'snitch_catcher':
+      case 'snitch':
         // Snitch catcher bet - predict which team catches the snitch
         if (matchResult.snitchCaught && matchResult.snitchCaughtBy === prediction) {
           isWon = true;
@@ -604,18 +605,38 @@ export class BetResolutionService {
         break;
 
       case 'match_duration':
-        // Match duration bet - predict over/under duration
-        const [durationOverUnder, durationThreshold] = prediction.split('_'); // e.g., "over_90" or "under_120"
-        const durationThresholdValue = parseInt(durationThreshold);
-        
-        if (durationOverUnder === 'over' && matchResult.duration > durationThresholdValue) {
-          isWon = true;
-          reason = `Match duration ${matchResult.duration} min was over ${durationThresholdValue} min`;
-        } else if (durationOverUnder === 'under' && matchResult.duration < durationThresholdValue) {
-          isWon = true;
-          reason = `Match duration ${matchResult.duration} min was under ${durationThresholdValue} min`;
+      case 'time':
+        // Match duration bet - predict over/under duration or time range
+        if (prediction.includes('_')) {
+          // Format: "over_90" or "under_120"
+          const [durationOverUnder, durationThreshold] = prediction.split('_');
+          const durationThresholdValue = parseInt(durationThreshold);
+          
+          if (durationOverUnder === 'over' && matchResult.duration > durationThresholdValue) {
+            isWon = true;
+            reason = `Match duration ${matchResult.duration} min was over ${durationThresholdValue} min`;
+          } else if (durationOverUnder === 'under' && matchResult.duration < durationThresholdValue) {
+            isWon = true;
+            reason = `Match duration ${matchResult.duration} min was under ${durationThresholdValue} min`;
+          } else {
+            reason = `Match duration ${matchResult.duration} min didn't meet prediction ${prediction}`;
+          }
         } else {
-          reason = `Match duration ${matchResult.duration} min didn't meet prediction ${prediction}`;
+          // Format: "30-60" (time range)
+          const timeRangeMatch = prediction.match(/^(\d+)-(\d+)$/);
+          if (timeRangeMatch) {
+            const minTime = parseInt(timeRangeMatch[1]);
+            const maxTime = parseInt(timeRangeMatch[2]);
+            
+            if (matchResult.duration >= minTime && matchResult.duration <= maxTime) {
+              isWon = true;
+              reason = `Match duration ${matchResult.duration} min was within predicted range ${minTime}-${maxTime} min`;
+            } else {
+              reason = `Match duration ${matchResult.duration} min was outside predicted range ${minTime}-${maxTime} min`;
+            }
+          } else {
+            reason = `Invalid time prediction format: ${prediction}`;
+          }
         }
         break;
 
