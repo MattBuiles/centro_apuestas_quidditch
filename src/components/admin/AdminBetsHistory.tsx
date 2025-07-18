@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import Card from '@/components/common/Card';
 import Button from '@/components/common/Button';
 import { apiClient } from '@/utils/apiClient';
@@ -25,6 +24,13 @@ interface FilterOptions {
   dateFrom: string;
   dateTo: string;
   user: string;
+}
+
+interface ApiResponse<T> {
+  success: boolean;
+  data?: {
+    data: T[];
+  };
 }
 
 const AdminBetsHistory = () => {
@@ -54,7 +60,7 @@ const AdminBetsHistory = () => {
     
     try {
       // Fetch betting history from backend
-      const response = await apiClient.get('/bets?limit=1000');
+      const response = await apiClient.get('/bets?limit=1000') as ApiResponse<any>;
       
       if (response.success) {
         // Transform backend data to match frontend interface
@@ -315,7 +321,6 @@ const AdminBetsHistory = () => {
                 <th>Estado</th>
                 <th>Fecha</th>
                 <th>Resuelto</th>
-                <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -355,28 +360,6 @@ const AdminBetsHistory = () => {
                   <td className={styles.date}>{formatDate(bet.placedAt)}</td>
                   <td className={styles.resolvedDate}>
                     {bet.resolvedAt ? formatDate(bet.resolvedAt) : '-'}
-                  </td>
-                  <td>
-                    <div className={styles.actionButtons}>
-                      <Link
-                        to={`/admin/bets/${bet.id}`}
-                        className={styles.viewButton}
-                      >
-                        👁️
-                      </Link>
-                      <Link
-                        to={`/admin/users/${bet.userId}`}
-                        className={styles.userButton}
-                      >
-                        👤
-                      </Link>
-                      <Link
-                        to={`/match/${bet.matchId}`}
-                        className={styles.matchButton}
-                      >
-                        ⚽
-                      </Link>
-                    </div>
                   </td>
                 </tr>
               ))}
