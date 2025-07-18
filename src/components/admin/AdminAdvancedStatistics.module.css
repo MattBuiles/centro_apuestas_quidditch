@@ -1,0 +1,619 @@
+/* AdminAdvancedStatistics.module.css */
+
+.advancedStats {
+  padding: 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  color: white;
+}
+
+.header {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  color: white;
+}
+
+.icon {
+  font-size: 2rem;
+}
+
+.subtitle {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  margin: 0;
+  font-weight: 400;
+}
+
+/* Loading */
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 16px;
+  color: white;
+}
+
+.loadingSpinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Filters */
+.filtersCard {
+  margin-bottom: 24px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.filtersHeader {
+  padding: 20px 24px 0;
+}
+
+.filtersHeader h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.filterIcon {
+  font-size: 1.2rem;
+}
+
+.filtersContent {
+  padding: 20px 24px;
+}
+
+.periodSection {
+  margin-bottom: 20px;
+}
+
+.periodSection label {
+  display: block;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.periodButtons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.activeButton {
+  background: #3B82F6 !important;
+  color: white !important;
+}
+
+.filterInputs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.filterGroup label {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 6px;
+  font-size: 0.875rem;
+}
+
+.filterSelect,
+.filterInput {
+  padding: 8px 12px;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  background: white;
+  color: #374151;
+}
+
+.filterSelect:focus,
+.filterInput:focus {
+  outline: none;
+  border-color: #3B82F6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.clearButton {
+  align-self: flex-start;
+}
+
+/* Indicators Grid */
+.indicatorsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.indicatorCard {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.indicatorIcon {
+  font-size: 2rem;
+  width: 60px;
+  height: 60px;
+  background: #F3F4F6;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.indicatorContent {
+  flex: 1;
+}
+
+.indicatorValue {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1F2937;
+  margin-bottom: 4px;
+  line-height: 1;
+}
+
+.indicatorLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6B7280;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.indicatorChange {
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Charts Row */
+.chartsRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 1024px) {
+  .chartsRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chartCard {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.chartHeader {
+  margin-bottom: 20px;
+}
+
+.chartHeader h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.chartIcon {
+  font-size: 1.2rem;
+}
+
+/* Pie Chart */
+.pieChartContainer {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.pieChart {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  position: relative;
+  background: conic-gradient(
+    #10B981 0deg 72deg,
+    #EF4444 72deg 216deg,
+    #F59E0B 216deg 360deg
+  );
+  flex-shrink: 0;
+}
+
+.pieChartLegend {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legendColor {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.legendLabel {
+  font-size: 0.875rem;
+  color: #374151;
+  font-weight: 500;
+}
+
+/* Line Chart */
+.lineChartContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.lineChart {
+  height: 120px;
+  display: flex;
+  align-items: end;
+  gap: 4px;
+  padding: 10px 0;
+}
+
+.chartBar {
+  flex: 1;
+  background: #3B82F6;
+  border-radius: 3px 3px 0 0;
+  min-height: 8px;
+  transition: all 0.3s ease;
+}
+
+.chartBar:hover {
+  background: #2563EB;
+}
+
+/* SVG Line Chart Styles */
+.lineChartSvg {
+  width: 100%;
+  height: 200px;
+  background: #FAFAFA;
+  border-radius: 8px;
+  border: 1px solid #E5E7EB;
+}
+
+.gridLine {
+  stroke: #E5E7EB;
+  stroke-width: 1;
+  stroke-dasharray: 2,2;
+}
+
+.axisLabel {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 11px;
+  fill: #6B7280;
+  font-weight: 500;
+}
+
+.trendLine {
+  fill: none;
+  stroke: #3B82F6;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.3));
+}
+
+.dataPoint {
+  fill: #3B82F6;
+  stroke: white;
+  stroke-width: 2;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.dataPointHover {
+  fill: transparent;
+  stroke: transparent;
+  r: 8;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.dataPointHover:hover + .dataPoint,
+.dataPoint:hover {
+  fill: #1D4ED8;
+  r: 6;
+  transform: scale(1.2);
+}
+
+.dataPointHover:hover ~ .tooltipText,
+.tooltipText {
+  opacity: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 10px;
+  fill: #374151;
+  font-weight: 600;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.dataPointHover:hover ~ .tooltipText {
+  opacity: 1;
+}
+
+.trendUp {
+  color: #10B981 !important;
+}
+
+.trendDown {
+  color: #EF4444 !important;
+}
+
+/* Enhanced chart stats */
+.chartStats {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.chartStat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 140px;
+}
+
+.statLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6B7280;
+  letter-spacing: 0.05em;
+}
+
+.statValue {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1F2937;
+}
+
+/* Rankings Row */
+.rankingsRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 1024px) {
+  .rankingsRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+.rankingCard {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.rankingHeader {
+  margin-bottom: 20px;
+}
+
+.rankingHeader h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.rankingIcon {
+  font-size: 1.2rem;
+}
+
+.rankingList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rankingItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #F9FAFB;
+  border-radius: 8px;
+  border-left: 4px solid #E5E7EB;
+}
+
+.rankingItem:first-child {
+  border-left-color: #F59E0B;
+}
+
+.rankingItem:nth-child(2) {
+  border-left-color: #6B7280;
+}
+
+.rankingItem:nth-child(3) {
+  border-left-color: #CD7F32;
+}
+
+.rankNumber {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #3B82F6;
+  min-width: 24px;
+  text-align: center;
+}
+
+.rankInfo {
+  flex: 1;
+}
+
+.rankName {
+  font-weight: 600;
+  color: #1F2937;
+  margin-bottom: 2px;
+}
+
+.rankDetails {
+  font-size: 0.875rem;
+  color: #6B7280;
+}
+
+.rankMetric {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #10B981;
+  padding: 4px 8px;
+  background: #ECFDF5;
+  border-radius: 4px;
+}
+
+/* Risk Analysis */
+.riskCard {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.riskHeader {
+  margin-bottom: 20px;
+}
+
+.riskHeader h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.riskIcon {
+  font-size: 1.2rem;
+}
+
+.riskGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.riskMetric {
+  text-align: center;
+  padding: 16px;
+  background: #F9FAFB;
+  border-radius: 8px;
+  border: 1px solid #E5E7EB;
+}
+
+.riskValue {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1F2937;
+  margin-bottom: 8px;
+  line-height: 1;
+}
+
+.riskLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6B7280;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.riskDescription {
+  font-size: 0.875rem;
+  color: #9CA3AF;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .advancedStats {
+    padding: 16px;
+  }
+  
+  .indicatorsGrid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .filterInputs {
+    grid-template-columns: 1fr;
+  }
+  
+  .pieChartContainer {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .chartStats {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .riskGrid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+  }
+}

@@ -8,7 +8,7 @@ import user2LogoSrc from '@/assets/User2_Logo.png';
 import { teamLogos } from '@/assets/teamLogos';
 import AdminDashboardNew from '@/components/admin/AdminDashboardNew';
 import AdminBetsHistory from '@/components/admin/AdminBetsHistory';
-import AdminBetsStatistics from '@/components/admin/AdminBetsStatistics';
+import AdminAdvancedStatistics from '@/components/admin/AdminAdvancedStatistics';
 import AdminUsersManagement from '@/components/admin/AdminUsersManagement';
 import styles from './AccountPage.module.css';
 
@@ -988,7 +988,7 @@ const AdminAccountPage = ({ user, logout }: { user: any; logout: () => void }) =
         <main className={styles.mainContent}>          <Routes>
             <Route index element={<AdminDashboardNew />} />
             <Route path="bets-history" element={<AdminBetsHistory />} />
-            <Route path="bets-statistics" element={<AdminBetsStatistics />} />
+            <Route path="bets-statistics" element={<AdminAdvancedStatistics />} />
             <Route path="users-management" element={<AdminUsersManagement />} />            <Route path="*" element={<Navigate to="/account" replace />} />
           </Routes>
           <Outlet />
