@@ -51,4 +51,10 @@ router.get('/dashboard/recent-activity', adminController.getRecentActivity);
 // GET /api/admin/dashboard/risk-alerts - Get current risk alerts
 router.get('/dashboard/risk-alerts', adminController.getRiskAlerts);
 
+// GET /api/admin/statistics/advanced - Get advanced statistics with filters
+router.get('/statistics/advanced', adminController.getAdvancedStatistics);
+
+// GET /api/admin/users/list - Get users list for filters
+router.get('/users/list', adminController.getUsersList);
+
 export default router;

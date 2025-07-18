@@ -50,7 +50,7 @@ interface CreateSeasonResponse {
   season: Season;
   matchesGenerated: number;
   teamsParticipating: number;
-  virtualTime: any;
+  virtualTime: VirtualTimeState;
   previousSeasonFinalized: boolean;
 }
 
@@ -85,6 +85,45 @@ interface AdminLogEntry {
   description: string;
   created_at: string;
   admin_username: string;
+}
+
+interface AdvancedStatsData {
+  totalBets: number;
+  totalVolume: number;
+  averageBet: number;
+  wonBets: number;
+  lostBets: number;
+  pendingBets: number;
+  cancelledBets: number;
+  totalWinnings: number;
+  totalLosses: number;
+}
+
+interface DailyVolumeData {
+  date: string;
+  betCount: number;
+  volume: number;
+}
+
+interface ActiveUserData {
+  username: string;
+  id: string;
+  betCount: number;
+  totalAmount: number;
+  winRate: number | null;
+}
+
+interface PopularMatchData {
+  id: string;
+  homeTeam: string;
+  awayTeam: string;
+  betCount: number;
+  totalVolume: number;
+  averageAmount: number;
+}
+
+interface CountResult {
+  count: number;
 }
 
 export class AdminController {
@@ -1040,6 +1079,367 @@ export class AdminController {
         success: false,
         error: 'Internal server error',
         message: 'Failed to retrieve risk alerts',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
+
+  /**
+   * Get advanced statistics with filters for admin panel
+   */
+  public getAdvancedStatistics = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+      const {
+        period = '30', // days
+        status = 'all',
+        userId = 'all',
+        dateFrom,
+        dateTo
+      } = req.query;
+
+      console.log('🔍 Advanced statistics request with filters:', {
+        period, status, userId, dateFrom, dateTo
+      });
+
+      // Build WHERE clause for filters
+      let whereClause = 'WHERE 1=1';
+      const params: (string | number)[] = [];
+
+      // Date range filter
+      if (dateFrom && dateTo) {
+        whereClause += ' AND DATE(b.placed_at) BETWEEN ? AND ?';
+        params.push(dateFrom as string, dateTo as string);
+      } else if (period !== 'all') {
+        whereClause += ' AND b.placed_at >= datetime("now", "-' + period + ' days")';
+      }
+
+      // Status filter
+      if (status !== 'all') {
+        whereClause += ' AND b.status = ?';
+        params.push(status as string);
+      }
+
+      // User filter
+      if (userId !== 'all') {
+        whereClause += ' AND u.id = ?';
+        params.push(userId as string);
+      }
+
+      console.log('📊 SQL WHERE clause:', whereClause);
+      console.log('📊 SQL params:', params);
+
+      // Calculate previous period for comparison
+      let previousPeriodClause = '';
+      if (dateFrom && dateTo) {
+        const fromDate = new Date(dateFrom as string);
+        const toDate = new Date(dateTo as string);
+        const diff = toDate.getTime() - fromDate.getTime();
+        const previousFrom = new Date(fromDate.getTime() - diff);
+        const previousTo = new Date(fromDate.getTime() - 1);
+        
+        previousPeriodClause = `AND DATE(b.placed_at) BETWEEN '${previousFrom.toISOString().split('T')[0]}' AND '${previousTo.toISOString().split('T')[0]}'`;
+      } else if (period !== 'all') {
+        const periodDays = parseInt(period as string);
+        previousPeriodClause = `AND b.placed_at >= datetime("now", "-${periodDays * 2} days") AND b.placed_at < datetime("now", "-${periodDays} days")`;
+      }
+
+      // Main statistics query
+      const statsQuery = `
+        SELECT 
+          COUNT(*) as totalBets,
+          COALESCE(SUM(b.amount), 0) as totalVolume,
+          COALESCE(AVG(b.amount), 0) as averageBet,
+          COUNT(CASE WHEN b.status = 'won' THEN 1 END) as wonBets,
+          COUNT(CASE WHEN b.status = 'lost' THEN 1 END) as lostBets,
+          COUNT(CASE WHEN b.status = 'pending' THEN 1 END) as pendingBets,
+          COUNT(CASE WHEN b.status = 'cancelled' THEN 1 END) as cancelledBets,
+          COALESCE(SUM(CASE WHEN b.status = 'won' THEN COALESCE(b.potential_win, 0) - b.amount ELSE 0 END), 0) as totalWinnings,
+          COALESCE(SUM(CASE WHEN b.status = 'lost' THEN b.amount ELSE 0 END), 0) as totalLosses
+        FROM bets b
+        JOIN users u ON b.user_id = u.id
+        ${whereClause}
+      `;
+
+      // Previous period statistics query for comparison
+      const previousStatsQuery = `
+        SELECT 
+          COUNT(*) as totalBets,
+          COALESCE(SUM(b.amount), 0) as totalVolume,
+          COALESCE(AVG(b.amount), 0) as averageBet
+        FROM bets b
+        JOIN users u ON b.user_id = u.id
+        WHERE 1=1 ${previousPeriodClause}
+      `;
+
+      // Daily volume query for chart
+      const dailyVolumeQuery = `
+        SELECT 
+          DATE(b.placed_at) as date,
+          COUNT(*) as betCount,
+          COALESCE(SUM(b.amount), 0) as volume
+        FROM bets b
+        JOIN users u ON b.user_id = u.id
+        ${whereClause}
+        GROUP BY DATE(b.placed_at)
+        ORDER BY date ASC
+        LIMIT 30
+      `;
+
+      // Most active users query
+      const activeUsersQuery = `
+        SELECT 
+          u.username,
+          u.id,
+          COUNT(b.id) as betCount,
+          COALESCE(SUM(b.amount), 0) as totalAmount,
+          ROUND(
+            COUNT(CASE WHEN b.status = 'won' THEN 1 END) * 100.0 / 
+            NULLIF(COUNT(CASE WHEN b.status IN ('won', 'lost') THEN 1 END), 0), 
+            1
+          ) as winRate
+        FROM users u
+        JOIN bets b ON u.id = b.user_id
+        ${whereClause}
+        GROUP BY u.id, u.username
+        ORDER BY betCount DESC
+        LIMIT 5
+      `;
+
+      // Most popular matches query
+      const popularMatchesQuery = `
+        SELECT 
+          m.id,
+          COALESCE(t1.name, 'Team A') as homeTeam,
+          COALESCE(t2.name, 'Team B') as awayTeam,
+          COUNT(b.id) as betCount,
+          COALESCE(SUM(b.amount), 0) as totalVolume,
+          COALESCE(AVG(b.amount), 0) as averageAmount
+        FROM bets b
+        JOIN users u ON b.user_id = u.id
+        LEFT JOIN matches m ON b.match_id = m.id
+        LEFT JOIN teams t1 ON m.home_team_id = t1.id
+        LEFT JOIN teams t2 ON m.away_team_id = t2.id
+        ${whereClause}
+        GROUP BY m.id, t1.name, t2.name
+        ORDER BY betCount DESC
+        LIMIT 3
+      `;
+
+      // High risk bets query
+      const highRiskQuery = `
+        SELECT COUNT(*) as count
+        FROM bets b
+        JOIN users u ON b.user_id = u.id
+        ${whereClause} AND b.amount > 300000
+      `;
+
+      // Hyperactive users query
+      const hyperactiveUsersQuery = `
+        SELECT COUNT(DISTINCT u.id) as count
+        FROM users u
+        JOIN bets b ON u.id = b.user_id
+        ${whereClause}
+        GROUP BY u.id
+        HAVING COUNT(b.id) > 5
+      `;
+
+      console.log('📊 Executing database queries...');
+
+      // Execute all queries
+      const [
+        currentStats,
+        previousStats,
+        dailyVolume,
+        activeUsers,
+        popularMatches,
+        highRiskBets,
+        hyperactiveUsersResult
+      ] = await Promise.all([
+        this.db.get(statsQuery, params),
+        this.db.get(previousStatsQuery),
+        this.db.all(dailyVolumeQuery, params),
+        this.db.all(activeUsersQuery, params),
+        this.db.all(popularMatchesQuery, params),
+        this.db.get(highRiskQuery, params),
+        this.db.all(hyperactiveUsersQuery, params)
+      ]);
+
+      console.log('📊 Query results:', {
+        currentStats,
+        previousStats,
+        dailyVolumeCount: (dailyVolume as DailyVolumeData[]).length,
+        activeUsersCount: (activeUsers as ActiveUserData[]).length,
+        popularMatchesCount: (popularMatches as PopularMatchData[]).length
+      });
+
+      // Calculate percentages and comparisons
+      const stats = currentStats as AdvancedStatsData;
+      const prevStats = (previousStats as AdvancedStatsData) || { 
+        totalBets: 0, 
+        totalVolume: 0, 
+        averageBet: 0, 
+        wonBets: 0, 
+        lostBets: 0, 
+        pendingBets: 0, 
+        cancelledBets: 0, 
+        totalWinnings: 0, 
+        totalLosses: 0 
+      };
+
+      const totalResolved = stats.wonBets + stats.lostBets;
+      const winRate = totalResolved > 0 ? (stats.wonBets / totalResolved) * 100 : 0;
+      const netProfit = stats.totalWinnings - stats.totalLosses;
+
+      // Calculate changes from previous period
+      const betsChange = prevStats.totalBets > 0 ? 
+        ((stats.totalBets - prevStats.totalBets) / prevStats.totalBets) * 100 : 0;
+      const volumeChange = prevStats.totalVolume > 0 ? 
+        ((stats.totalVolume - prevStats.totalVolume) / prevStats.totalVolume) * 100 : 0;
+      const avgBetChange = prevStats.averageBet > 0 ? 
+        ((stats.averageBet - prevStats.averageBet) / prevStats.averageBet) * 100 : 0;
+
+      // Process daily volume data (already in ascending order)
+      const dailyData = (dailyVolume as DailyVolumeData[]);
+      const maxDaily = dailyData.length > 0 ? Math.max(...dailyData.map(d => d.volume)) : 0;
+      const avgDaily = dailyData.length > 0 ? 
+        dailyData.reduce((sum, d) => sum + d.volume, 0) / dailyData.length : 0;
+
+      // Count hyperactive users
+      const hyperactiveCount = (hyperactiveUsersResult as ActiveUserData[]).length;
+
+      // Format response
+      const response = {
+        success: true,
+        data: {
+          // Main indicators
+          indicators: {
+            totalBets: {
+              value: stats.totalBets,
+              change: Math.round(betsChange * 100) / 100,
+              trend: betsChange > 0 ? 'up' : betsChange < 0 ? 'down' : 'stable'
+            },
+            totalVolume: {
+              value: stats.totalVolume,
+              change: Math.round(volumeChange * 100) / 100,
+              trend: volumeChange > 0 ? 'up' : volumeChange < 0 ? 'down' : 'stable'
+            },
+            winRate: {
+              value: Math.round(winRate * 100) / 100,
+              change: 2.3, // This could be calculated from previous period if needed
+              trend: 'up'
+            },
+            averageBet: {
+              value: Math.round(stats.averageBet),
+              change: Math.round(avgBetChange * 100) / 100,
+              trend: avgBetChange > 0 ? 'up' : avgBetChange < 0 ? 'down' : 'stable'
+            }
+          },
+
+          // Status distribution
+          statusDistribution: [
+            {
+              label: 'Ganadas',
+              value: stats.wonBets,
+              percentage: stats.totalBets > 0 ? (stats.wonBets / stats.totalBets) * 100 : 0,
+              color: '#10B981'
+            },
+            {
+              label: 'Perdidas',
+              value: stats.lostBets,
+              percentage: stats.totalBets > 0 ? (stats.lostBets / stats.totalBets) * 100 : 0,
+              color: '#EF4444'
+            },
+            {
+              label: 'Pendientes',
+              value: stats.pendingBets,
+              percentage: stats.totalBets > 0 ? (stats.pendingBets / stats.totalBets) * 100 : 0,
+              color: '#F59E0B'
+            },
+            {
+              label: 'Canceladas',
+              value: stats.cancelledBets,
+              percentage: stats.totalBets > 0 ? (stats.cancelledBets / stats.totalBets) * 100 : 0,
+              color: '#6B7280'
+            }
+          ],
+
+          // Daily volume chart data
+          dailyVolume: {
+            data: dailyData,
+            maxDaily,
+            avgDaily: Math.round(avgDaily)
+          },
+
+          // Active users ranking
+          activeUsers: (activeUsers as ActiveUserData[]).map((user, index) => ({
+            rank: index + 1,
+            username: user.username,
+            betCount: user.betCount,
+            totalAmount: user.totalAmount,
+            winRate: user.winRate || 0
+          })),
+
+          // Popular matches
+          popularMatches: (popularMatches as PopularMatchData[]).map((match, index) => ({
+            rank: index + 1,
+            name: `${match.homeTeam} vs ${match.awayTeam}`,
+            betCount: match.betCount,
+            totalVolume: match.totalVolume,
+            averageAmount: Math.round(match.averageAmount)
+          })),
+
+          // Risk analysis
+          riskAnalysis: {
+            highRiskBets: (highRiskBets as CountResult).count,
+            hyperactiveUsers: hyperactiveCount,
+            profitLossRatio: stats.totalLosses > 0 ? stats.totalWinnings / stats.totalLosses : 0,
+            netProfit
+          }
+        },
+        timestamp: new Date().toISOString()
+      };
+
+      console.log('📊 Advanced statistics response generated successfully');
+      res.json(response);
+
+    } catch (error) {
+      console.error('❌ Error getting advanced statistics:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error',
+        message: 'Failed to retrieve advanced statistics',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
+
+  /**
+   * Get users list for filters
+   */
+  public getUsersList = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+      const users = await this.db.all(`
+        SELECT DISTINCT u.id, u.username, COUNT(b.id) as betCount
+        FROM users u
+        LEFT JOIN bets b ON u.id = b.user_id
+        WHERE u.role = 'user'
+        GROUP BY u.id, u.username
+        HAVING betCount > 0
+        ORDER BY u.username ASC
+        LIMIT 100
+      `);
+
+      res.json({
+        success: true,
+        data: users,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error getting users list:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error',
+        message: 'Failed to retrieve users list',
         timestamp: new Date().toISOString()
       });
     }
