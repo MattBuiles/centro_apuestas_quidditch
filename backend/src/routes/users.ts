@@ -32,6 +32,7 @@ router.get('/', authenticate, async (req: AuthenticatedRequest, res) => {
         COALESCE(SUM(CASE WHEN b.status = 'lost' THEN b.amount ELSE 0 END), 0) as total_losses,
         COUNT(DISTINCT p.id) as total_predictions,
         COUNT(CASE WHEN p.status = 'correct' THEN 1 END) as correct_predictions,
+        COUNT(CASE WHEN p.status = 'incorrect' THEN 1 END) as incorrect_predictions,
         MAX(b.placed_at) as last_bet_date
       FROM users u
       LEFT JOIN bets b ON u.id = b.user_id

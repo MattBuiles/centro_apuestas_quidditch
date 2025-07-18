@@ -17,7 +17,32 @@ interface User {
   totalWinnings: number;
   totalLosses?: number;
   correctPredictions?: number;
+  incorrectPredictions?: number;
   totalPredictions?: number;
+}
+
+interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  timestamp: string;
+}
+
+interface UsersResponse {
+  data: any[];
+  count: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+interface RegisterResponse {
+  user: {
+    id: string;
+    username: string;
+    email: string;
+    role: string;
+  };
 }
 
 interface FilterOptions {
@@ -74,11 +99,11 @@ const AdminUsersManagement = () => {
     
     try {
       // Fetch users from backend
-      const response = await apiClient.get('/users?limit=1000');
+      const response = await apiClient.get('/users?limit=1000') as ApiResponse<UsersResponse>;
       
-      if (response.success) {
+      if (response.success && response.data) {
         // Transform backend data to match frontend interface
-        const backendUsers = response.data?.data || [];
+        const backendUsers = response.data.data || [];
         const transformedUsers: User[] = backendUsers.map((user: any) => ({
           id: user.id,
           username: user.username,
@@ -92,6 +117,7 @@ const AdminUsersManagement = () => {
           totalWinnings: user.total_winnings || 0,
           totalLosses: user.total_losses || 0,
           correctPredictions: user.correct_predictions || 0,
+          incorrectPredictions: user.incorrect_predictions || 0,
           totalPredictions: user.total_predictions || 0,
         }));
         
@@ -147,12 +173,12 @@ const AdminUsersManagement = () => {
         email: formData.email,
         password: 'defaultPassword123', // You might want to generate a random password
         role: formData.role
-      });
+      }) as ApiResponse<RegisterResponse>;
 
-      if (response.success) {
+      if (response.success && response.data) {
         // If balance adjustment is needed
         if (parseFloat(formData.balance) !== 1000) {
-          await apiClient.post(`/users/${response.data?.user.id}/adjust-balance`, {
+          await apiClient.post(`/users/${response.data.user.id}/adjust-balance`, {
             amount: parseFloat(formData.balance) - 1000,
             reason: 'Initial balance adjustment by admin'
           });
@@ -435,8 +461,8 @@ const AdminUsersManagement = () => {
                   <td>{user.totalBets}</td>
                   <td className={styles.successText}>{formatCurrency(user.totalWinnings)}</td>
                   <td>
-                    {user.totalPredictions > 0 
-                      ? `${user.correctPredictions}/${user.totalPredictions} (${((user.correctPredictions / user.totalPredictions) * 100).toFixed(1)}%)`
+                    {(user.totalPredictions || 0) > 0 
+                      ? `${user.correctPredictions || 0}/${user.totalPredictions || 0} (${(((user.correctPredictions || 0) / (user.totalPredictions || 1)) * 100).toFixed(1)}%)`
                       : 'N/A'
                     }
                   </td>
@@ -452,7 +478,7 @@ const AdminUsersManagement = () => {
                         ✏️
                       </Button>
                       <Button
-                        variant="danger"
+                        variant="secondary"
                         size="sm"
                         onClick={() => openDeleteModal(user)}
                         className={styles.deleteButton}
@@ -679,8 +705,9 @@ const AdminUsersManagement = () => {
                 Cancelar
               </Button>
               <Button
-                variant="danger"
+                variant="secondary"
                 onClick={handleDeleteUser}
+                className={styles.deleteButton}
               >
                 Eliminar Usuario
               </Button>

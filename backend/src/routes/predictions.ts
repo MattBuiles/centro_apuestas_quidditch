@@ -271,6 +271,87 @@ router.get('/statistics', authenticate, async (req: AuthenticatedRequest, res) =
   }
 });
 
+// GET /api/predictions/user/stats - Get user's prediction statistics
+router.get('/user/stats', authenticate, async (req: AuthenticatedRequest, res) => {
+  try {
+    const user = req.user!;
+
+    // Get user's prediction statistics
+    const stats = await db.get(`
+      SELECT 
+        COUNT(*) as total_predictions,
+        COUNT(CASE WHEN status = 'correct' THEN 1 END) as correct_predictions,
+        COUNT(CASE WHEN status = 'incorrect' THEN 1 END) as incorrect_predictions,
+        COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_predictions,
+        CASE 
+          WHEN COUNT(*) > 0 
+          THEN (COUNT(CASE WHEN status = 'correct' THEN 1 END) * 100.0 / COUNT(*))
+          ELSE 0 
+        END as accuracy_percentage,
+        SUM(points) as total_points,
+        AVG(confidence) as average_confidence,
+        COUNT(CASE WHEN prediction = 'home' THEN 1 END) as home_predictions,
+        COUNT(CASE WHEN prediction = 'away' THEN 1 END) as away_predictions,
+        COUNT(CASE WHEN prediction = 'draw' THEN 1 END) as draw_predictions
+      FROM predictions 
+      WHERE user_id = ?
+    `, [user.userId]) as any;
+
+    // Get recent predictions with match details
+    const recentPredictions = await db.all(`
+      SELECT 
+        p.id,
+        p.prediction,
+        p.confidence,
+        p.status,
+        p.points,
+        p.created_at,
+        p.resolved_at,
+        m.date as match_date,
+        ht.name as home_team_name,
+        at.name as away_team_name,
+        m.home_score,
+        m.away_score,
+        m.status as match_status
+      FROM predictions p
+      JOIN matches m ON p.match_id = m.id
+      JOIN teams ht ON m.home_team_id = ht.id
+      JOIN teams at ON m.away_team_id = at.id
+      WHERE p.user_id = ?
+      ORDER BY p.created_at DESC
+      LIMIT 10
+    `, [user.userId]);
+
+    return res.json({
+      success: true,
+      data: {
+        summary: {
+          totalPredictions: stats?.total_predictions || 0,
+          correctPredictions: stats?.correct_predictions || 0,
+          incorrectPredictions: stats?.incorrect_predictions || 0,
+          pendingPredictions: stats?.pending_predictions || 0,
+          accuracyPercentage: Math.round((stats?.accuracy_percentage || 0) * 100) / 100,
+          totalPoints: stats?.total_points || 0,
+          averageConfidence: Math.round((stats?.average_confidence || 0) * 100) / 100,
+          homePredictions: stats?.home_predictions || 0,
+          awayPredictions: stats?.away_predictions || 0,
+          drawPredictions: stats?.draw_predictions || 0
+        },
+        recentPredictions
+      },
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('Error fetching user prediction stats:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 // GET /api/predictions/match/:matchId/stats - Get aggregated prediction statistics for a match
 router.get('/match/:matchId/stats', async (req, res) => {
   try {
