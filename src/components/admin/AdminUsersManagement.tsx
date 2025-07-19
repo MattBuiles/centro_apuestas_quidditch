@@ -300,18 +300,46 @@ const AdminUsersManagement = () => {
     }
   };
 
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'active': return '✅';
+      case 'suspended': return '⚠️';
+      case 'inactive': return '❌';
+      default: return '❓';
+    }
+  };
+
   if (isLoading) {
     return (
-      <div className={styles.loadingContainer}>
-        <div className={styles.loadingSpinner}></div>
-        <p>Cargando usuarios...</p>
+      <div className={styles.adminUsersManagement}>
+        <div className={styles.magicalBg}>
+          <div className={styles.star}></div>
+          <div className={styles.star}></div>
+          <div className={styles.star}></div>
+          <div className={styles.star}></div>
+          <div className={styles.star}></div>
+        </div>
+        <div className={styles.loading}>
+          <div className={styles.loadingSpinner}></div>
+          <p>🔮 Cargando gestión de usuarios...</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className={styles.adminUsersManagement}>
+      {/* Magical Background Effects */}
+      <div className={styles.magicalBg}>
+        <div className={styles.star}></div>
+        <div className={styles.star}></div>
+        <div className={styles.star}></div>
+        <div className={styles.star}></div>
+        <div className={styles.star}></div>
+      </div>
+      
       <div className={styles.header}>
+        <div className={styles.headerGlow}></div>
         <h1 className={styles.title}>
           <span className={styles.icon}>👥</span>
           Gestión de Usuarios
@@ -332,7 +360,10 @@ const AdminUsersManagement = () => {
       {/* Filters */}
       <Card className={styles.filtersCard}>
         <div className={styles.filtersHeader}>
-          <h3>Filtros</h3>
+          <h3 className={styles.filtersTitle}>
+            <span className={styles.filterIcon}>🔮</span>
+            Filtros Mágicos
+          </h3>
         </div>
         <div className={styles.filtersContent}>
           <div className={styles.filterGroup}>
@@ -347,7 +378,7 @@ const AdminUsersManagement = () => {
               <option value="admin">Administrador</option>
             </select>
           </div>
-
+          
           <div className={styles.filterGroup}>
             <label>Estado:</label>
             <select
@@ -361,7 +392,7 @@ const AdminUsersManagement = () => {
               <option value="inactive">Inactivo</option>
             </select>
           </div>
-
+          
           <div className={styles.filterGroup}>
             <label>Buscar:</label>
             <input
@@ -373,15 +404,14 @@ const AdminUsersManagement = () => {
             />
           </div>
         </div>
-      </Card>
-
-      {/* Summary Stats */}
+      </Card>      {/* Summary Stats */}
       <div className={styles.statsGrid}>
         <Card className={styles.statCard}>
           <div className={styles.statIcon}>👤</div>
           <div className={styles.statContent}>
             <h3>{users.length}</h3>
             <p>Total Usuarios</p>
+            <div className={styles.statSparkle}>✨</div>
           </div>
         </Card>
         
@@ -390,6 +420,7 @@ const AdminUsersManagement = () => {
           <div className={styles.statContent}>
             <h3>{users.filter(u => u.status === 'active').length}</h3>
             <p>Usuarios Activos</p>
+            <div className={styles.statSparkle}>⚡</div>
           </div>
         </Card>
         
@@ -398,6 +429,7 @@ const AdminUsersManagement = () => {
           <div className={styles.statContent}>
             <h3>{users.reduce((sum, u) => sum + u.totalBets, 0)}</h3>
             <p>Total Apuestas</p>
+            <div className={styles.statSparkle}>🌟</div>
           </div>
         </Card>
         
@@ -406,6 +438,7 @@ const AdminUsersManagement = () => {
           <div className={styles.statContent}>
             <h3>{formatCurrency(users.reduce((sum, u) => sum + u.balance, 0))}</h3>
             <p>Balance Total</p>
+            <div className={styles.statSparkle}>💫</div>
           </div>
         </Card>
       </div>
@@ -413,7 +446,10 @@ const AdminUsersManagement = () => {
       {/* Users Table */}
       <Card className={styles.tableCard}>
         <div className={styles.tableHeader}>
-          <h3>Usuarios ({filteredUsers.length})</h3>
+          <h3>
+            <span className={styles.tableIcon}>🧙‍♂️</span>
+            Usuarios ({filteredUsers.length})
+          </h3>
         </div>
         
         <div className={styles.tableContainer}>
@@ -434,7 +470,7 @@ const AdminUsersManagement = () => {
             </thead>
             <tbody>
               {currentUsers.map((user) => (
-                <tr key={user.id}>
+                <tr key={user.id} className={styles.tableRow}>
                   <td>
                     <div className={styles.userCell}>
                       <div className={styles.userAvatar}>
@@ -449,24 +485,24 @@ const AdminUsersManagement = () => {
                   <td>{user.email}</td>
                   <td>
                     <span className={`${styles.roleBadge} ${user.role === 'admin' ? styles.adminRole : styles.userRole}`}>
-                      {user.role === 'admin' ? 'Admin' : 'Usuario'}
+                      {user.role === 'admin' ? '👑 Admin' : '👤 Usuario'}
                     </span>
                   </td>
                   <td>
                     <span className={`${styles.statusBadge} ${getStatusBadgeClass(user.status)}`}>
-                      {getStatusText(user.status)}
+                      {getStatusIcon(user.status)} {getStatusText(user.status)}
                     </span>
                   </td>
-                  <td>{formatCurrency(user.balance)}</td>
-                  <td>{user.totalBets}</td>
-                  <td className={styles.successText}>{formatCurrency(user.totalWinnings)}</td>
-                  <td>
+                  <td className={styles.balanceCell}>{formatCurrency(user.balance)}</td>
+                  <td className={styles.numberCell}>{user.totalBets}</td>
+                  <td className={`${styles.successText} ${styles.balanceCell}`}>{formatCurrency(user.totalWinnings)}</td>
+                  <td className={styles.predictionsCell}>
                     {(user.totalPredictions || 0) > 0 
                       ? `${user.correctPredictions || 0}/${user.totalPredictions || 0} (${(((user.correctPredictions || 0) / (user.totalPredictions || 1)) * 100).toFixed(1)}%)`
                       : 'N/A'
                     }
                   </td>
-                  <td>{formatDate(user.registrationDate)}</td>
+                  <td className={styles.dateCell}>{formatDate(user.registrationDate)}</td>
                   <td>
                     <div className={styles.actionButtons}>
                       <Button
@@ -526,7 +562,7 @@ const AdminUsersManagement = () => {
         <div className={styles.modalOverlay}>
           <div className={styles.modal}>
             <div className={styles.modalHeader}>
-              <h3>Crear Nuevo Usuario</h3>
+              <h3>✨ Crear Nuevo Usuario</h3>
               <button
                 className={styles.closeButton}
                 onClick={() => setShowCreateModal(false)}
@@ -537,39 +573,41 @@ const AdminUsersManagement = () => {
             
             <div className={styles.modalContent}>
               <div className={styles.formGroup}>
-                <label>Nombre de Usuario:</label>
+                <label>🧙‍♂️ Nombre de Usuario:</label>
                 <input
                   type="text"
                   value={formData.username}
                   onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
                   className={styles.formInput}
+                  placeholder="Ingresa el nombre de usuario..."
                 />
               </div>
               
               <div className={styles.formGroup}>
-                <label>Email:</label>
+                <label>📧 Email:</label>
                 <input
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                   className={styles.formInput}
+                  placeholder="correo@ejemplo.com"
                 />
               </div>
               
               <div className={styles.formGroup}>
-                <label>Rol:</label>
+                <label>👑 Rol:</label>
                 <select
                   value={formData.role}
                   onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value as 'user' | 'admin' }))}
                   className={styles.formSelect}
                 >
-                  <option value="user">Usuario</option>
-                  <option value="admin">Administrador</option>
+                  <option value="user">👤 Usuario</option>
+                  <option value="admin">👑 Administrador</option>
                 </select>
               </div>
               
               <div className={styles.formGroup}>
-                <label>Balance Inicial:</label>
+                <label>💰 Balance Inicial:</label>
                 <input
                   type="number"
                   value={formData.balance}
@@ -577,6 +615,7 @@ const AdminUsersManagement = () => {
                   className={styles.formInput}
                   min="0"
                   step="10"
+                  placeholder="1000"
                 />
               </div>
             </div>
@@ -593,7 +632,7 @@ const AdminUsersManagement = () => {
                 onClick={handleCreateUser}
                 disabled={!formData.username || !formData.email}
               >
-                Crear Usuario
+                ✨ Crear Usuario
               </Button>
             </div>
           </div>
@@ -605,7 +644,7 @@ const AdminUsersManagement = () => {
         <div className={styles.modalOverlay}>
           <div className={styles.modal}>
             <div className={styles.modalHeader}>
-              <h3>Editar Usuario</h3>
+              <h3>⚙️ Editar Usuario</h3>
               <button
                 className={styles.closeButton}
                 onClick={() => setShowEditModal(false)}
@@ -616,7 +655,7 @@ const AdminUsersManagement = () => {
             
             <div className={styles.modalContent}>
               <div className={styles.formGroup}>
-                <label>Nombre de Usuario:</label>
+                <label>🧙‍♂️ Nombre de Usuario:</label>
                 <input
                   type="text"
                   value={formData.username}
@@ -626,7 +665,7 @@ const AdminUsersManagement = () => {
               </div>
               
               <div className={styles.formGroup}>
-                <label>Email:</label>
+                <label>📧 Email:</label>
                 <input
                   type="email"
                   value={formData.email}
@@ -636,19 +675,19 @@ const AdminUsersManagement = () => {
               </div>
               
               <div className={styles.formGroup}>
-                <label>Rol:</label>
+                <label>👑 Rol:</label>
                 <select
                   value={formData.role}
                   disabled
                   className={`${styles.formSelect} ${styles.disabled}`}
                 >
-                  <option value="user">Usuario</option>
-                  <option value="admin">Administrador</option>
+                  <option value="user">👤 Usuario</option>
+                  <option value="admin">👑 Administrador</option>
                 </select>
               </div>
               
               <div className={styles.formGroup}>
-                <label>Balance:</label>
+                <label>💰 Balance:</label>
                 <input
                   type="number"
                   value={formData.balance}
@@ -671,7 +710,7 @@ const AdminUsersManagement = () => {
                 variant="primary"
                 onClick={handleEditUser}
               >
-                Guardar Cambios
+                💾 Guardar Cambios
               </Button>
             </div>
           </div>
@@ -683,7 +722,7 @@ const AdminUsersManagement = () => {
         <div className={styles.modalOverlay}>
           <div className={styles.modal}>
             <div className={styles.modalHeader}>
-              <h3>Eliminar Usuario</h3>
+              <h3>🗑️ Eliminar Usuario</h3>
               <button
                 className={styles.closeButton}
                 onClick={() => setShowDeleteModal(false)}
@@ -694,7 +733,7 @@ const AdminUsersManagement = () => {
             
             <div className={styles.modalContent}>
               <p>¿Estás seguro de que quieres eliminar al usuario <strong>{selectedUser.username}</strong>?</p>
-              <p className={styles.warningText}>Esta acción no se puede deshacer.</p>
+              <p className={styles.warningText}>⚠️ Esta acción no se puede deshacer.</p>
             </div>
             
             <div className={styles.modalActions}>
@@ -709,7 +748,7 @@ const AdminUsersManagement = () => {
                 onClick={handleDeleteUser}
                 className={styles.deleteButton}
               >
-                Eliminar Usuario
+                🗑️ Eliminar Usuario
               </Button>
             </div>
           </div>
