@@ -16,7 +16,8 @@ const loginValidation = [
 const registerValidation = [
   body('username').isLength({ min: 3, max: 20 }).trim(),
   body('email').isEmail().normalizeEmail(),
-  body('password').isLength({ min: 6 })
+  body('password').isLength({ min: 6 }),
+  body('role').optional().isIn(['user', 'admin'])
 ];
 
 const forgotPasswordValidation = [

@@ -80,18 +80,33 @@ export class AuthController {
 
   public register = async (req: Request<object, ApiResponse<{ user: UserPublic; tokens: AuthTokens }>, RegisterRequest>, res: Response): Promise<void> => {
     try {
-      const { username, email, password } = req.body;
+      const { username, email, password, role } = req.body;
 
-      // Check if user already exists
-      const existingUser = await this.db.get(
-        'SELECT id FROM users WHERE email = ? OR username = ?',
-        [email, username]
+      // Check if user already exists with this email
+      const existingUserByEmail = await this.db.get(
+        'SELECT id FROM users WHERE email = ?',
+        [email]
       );
 
-      if (existingUser) {
+      if (existingUserByEmail) {
         res.status(409).json({
           success: false,
-          error: 'User already exists with this email or username',
+          error: 'Ya existe un usuario con este email',
+          timestamp: new Date().toISOString()
+        });
+        return;
+      }
+
+      // Check if user already exists with this username
+      const existingUserByUsername = await this.db.get(
+        'SELECT id FROM users WHERE username = ?',
+        [username]
+      );
+
+      if (existingUserByUsername) {
+        res.status(409).json({
+          success: false,
+          error: 'Ya existe un usuario con este nombre de usuario',
           timestamp: new Date().toISOString()
         });
         return;
@@ -100,12 +115,15 @@ export class AuthController {
       // Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
 
+      // Determine the role - default to 'user' if not specified or if not valid
+      const userRole = (role === 'admin' || role === 'user') ? role : 'user';
+
       // Create user
       const userId = uuidv4();
       await this.db.run(
         `INSERT INTO users (id, username, email, password, role, balance) 
          VALUES (?, ?, ?, ?, ?, ?)`,
-        [userId, username, email, hashedPassword, 'user', 1000]
+        [userId, username, email, hashedPassword, userRole, 1000]
       );
 
       // Get created user
