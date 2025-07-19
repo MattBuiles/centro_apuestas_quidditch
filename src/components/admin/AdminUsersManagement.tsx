@@ -178,7 +178,7 @@ const AdminUsersManagement = () => {
       if (response.success && response.data) {
         // If balance adjustment is needed
         if (parseFloat(formData.balance) !== 1000) {
-          await apiClient.post(`/users/${response.data.user.id}/adjust-balance`, {
+          await apiClient.put(`/users/${response.data.user.id}/balance`, {
             amount: parseFloat(formData.balance) - 1000,
             reason: 'Initial balance adjustment by admin'
           });
@@ -187,12 +187,20 @@ const AdminUsersManagement = () => {
         await loadUsersData(); // Reload users
         setShowCreateModal(false);
         resetForm();
+        alert('Usuario creado exitosamente');
       } else {
-        alert('Error creating user: ' + response.error);
+        alert('Error al crear usuario: ' + (response.error || 'Error desconocido'));
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating user:', error);
-      alert('Error creating user');
+      // Intentar extraer el mensaje de error específico
+      let errorMessage = 'Error al crear usuario';
+      if (error.message && error.message.includes('409')) {
+        errorMessage = 'Ya existe un usuario con ese email o nombre de usuario';
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      }
+      alert(errorMessage);
     }
   };
 
@@ -203,7 +211,7 @@ const AdminUsersManagement = () => {
       // Update user balance if changed
       const balanceChange = parseFloat(formData.balance) - selectedUser.balance;
       if (balanceChange !== 0) {
-        await apiClient.post(`/users/${selectedUser.id}/adjust-balance`, {
+        await apiClient.put(`/users/${selectedUser.id}/balance`, {
           amount: balanceChange,
           reason: 'Balance adjustment by admin'
         });
