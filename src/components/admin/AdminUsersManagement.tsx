@@ -208,6 +208,29 @@ const AdminUsersManagement = () => {
     if (!selectedUser) return;
 
     try {
+      // Check if user information fields have changed
+      const userDataChanged = 
+        formData.username !== selectedUser.username ||
+        formData.email !== selectedUser.email ||
+        formData.role !== selectedUser.role;
+
+      // Update user information if changed (and user is not admin)
+      if (userDataChanged && selectedUser.role !== 'admin') {
+        const updateData: any = {};
+        
+        if (formData.username !== selectedUser.username) {
+          updateData.username = formData.username;
+        }
+        if (formData.email !== selectedUser.email) {
+          updateData.email = formData.email;
+        }
+        if (formData.role !== selectedUser.role) {
+          updateData.role = formData.role;
+        }
+
+        await apiClient.put(`/users/${selectedUser.id}`, updateData);
+      }
+
       // Update user balance if changed
       const balanceChange = parseFloat(formData.balance) - selectedUser.balance;
       if (balanceChange !== 0) {
@@ -221,9 +244,18 @@ const AdminUsersManagement = () => {
       setShowEditModal(false);
       setSelectedUser(null);
       resetForm();
-    } catch (error) {
+      alert('Usuario actualizado exitosamente');
+    } catch (error: any) {
       console.error('Error updating user:', error);
-      alert('Error updating user');
+      let errorMessage = 'Error al actualizar usuario';
+      
+      if (error.message && error.message.includes('409')) {
+        errorMessage = 'Ya existe un usuario con ese email o nombre de usuario';
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      }
+      
+      alert(errorMessage);
     }
   };
 
@@ -667,8 +699,9 @@ const AdminUsersManagement = () => {
                 <input
                   type="text"
                   value={formData.username}
-                  disabled
-                  className={`${styles.formInput} ${styles.disabled}`}
+                  onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
+                  disabled={selectedUser.role === 'admin'}
+                  className={`${styles.formInput} ${selectedUser.role === 'admin' ? styles.disabled : ''}`}
                 />
               </div>
               
@@ -677,8 +710,9 @@ const AdminUsersManagement = () => {
                 <input
                   type="email"
                   value={formData.email}
-                  disabled
-                  className={`${styles.formInput} ${styles.disabled}`}
+                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                  disabled={selectedUser.role === 'admin'}
+                  className={`${styles.formInput} ${selectedUser.role === 'admin' ? styles.disabled : ''}`}
                 />
               </div>
               
@@ -686,8 +720,9 @@ const AdminUsersManagement = () => {
                 <label>👑 Rol:</label>
                 <select
                   value={formData.role}
-                  disabled
-                  className={`${styles.formSelect} ${styles.disabled}`}
+                  onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value as 'user' | 'admin' }))}
+                  disabled={selectedUser.role === 'admin'}
+                  className={`${styles.formSelect} ${selectedUser.role === 'admin' ? styles.disabled : ''}`}
                 >
                   <option value="user">👤 Usuario</option>
                   <option value="admin">👑 Administrador</option>
@@ -717,6 +752,7 @@ const AdminUsersManagement = () => {
               <Button
                 variant="primary"
                 onClick={handleEditUser}
+                disabled={!formData.username || !formData.email}
               >
                 💾 Guardar Cambios
               </Button>
