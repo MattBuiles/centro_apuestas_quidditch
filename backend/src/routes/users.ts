@@ -370,4 +370,126 @@ router.put('/:id/balance', authenticate, async (req: AuthenticatedRequest, res) 
   }
 });
 
+// PUT /api/users/:id - Update user information (admin only)
+router.put('/:id', authenticate, async (req: AuthenticatedRequest, res) => {
+  try {
+    const user = req.user!;
+    const userId = req.params.id;
+    const { username, email, role } = req.body;
+    
+    if (user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        error: 'Forbidden',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Get target user first
+    const targetUser = await db.getUserById(userId) as any;
+    if (!targetUser) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Prevent editing admin users (except by super admin)
+    if (targetUser.role === 'admin' && user.userId !== targetUser.id) {
+      return res.status(403).json({
+        success: false,
+        error: 'Cannot edit admin users',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Check if new username is taken (if username is being changed)
+    if (username && username !== targetUser.username) {
+      const existingUser = await db.get(
+        'SELECT id FROM users WHERE username = ? AND id != ?',
+        [username, userId]
+      );
+      if (existingUser) {
+        return res.status(409).json({
+          success: false,
+          error: 'Username already exists',
+          timestamp: new Date().toISOString()
+        });
+      }
+    }
+
+    // Check if new email is taken (if email is being changed)
+    if (email && email !== targetUser.email) {
+      const existingUser = await db.get(
+        'SELECT id FROM users WHERE email = ? AND id != ?',
+        [email, userId]
+      );
+      if (existingUser) {
+        return res.status(409).json({
+          success: false,
+          error: 'Email already exists',
+          timestamp: new Date().toISOString()
+        });
+      }
+    }
+
+    // Build update query dynamically
+    const updates: string[] = [];
+    const params: any[] = [];
+
+    if (username) {
+      updates.push('username = ?');
+      params.push(username);
+    }
+    if (email) {
+      updates.push('email = ?');
+      params.push(email);
+    }
+    if (role && (role === 'user' || role === 'admin')) {
+      updates.push('role = ?');
+      params.push(role);
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'No valid fields to update',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Add updated_at and userId to params
+    updates.push('updated_at = CURRENT_TIMESTAMP');
+    params.push(userId);
+
+    // Execute update
+    await db.run(
+      `UPDATE users SET ${updates.join(', ')} WHERE id = ?`,
+      params
+    );
+
+    // Get updated user
+    const updatedUser = await db.get(
+      'SELECT id, username, email, role, balance, created_at, updated_at FROM users WHERE id = ?',
+      [userId]
+    );
+
+    return res.json({
+      success: true,
+      data: updatedUser,
+      message: 'User updated successfully',
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('Error updating user:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 export default router;
