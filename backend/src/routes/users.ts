@@ -37,7 +37,7 @@ router.get('/', authenticate, async (req: AuthenticatedRequest, res) => {
       FROM users u
       LEFT JOIN bets b ON u.id = b.user_id
       LEFT JOIN predictions p ON u.id = p.user_id
-      WHERE u.role = 'user'
+      WHERE 1=1
     `;
 
     const params: (string | number)[] = [];
@@ -45,6 +45,13 @@ router.get('/', authenticate, async (req: AuthenticatedRequest, res) => {
     if (search) {
       sql += ' AND (u.username LIKE ? OR u.email LIKE ?)';
       params.push(`%${search}%`, `%${search}%`);
+    }
+    
+    // Add role filter if specified
+    const role = req.query.role as string;
+    if (role && (role === 'user' || role === 'admin')) {
+      sql += ' AND u.role = ?';
+      params.push(role);
     }
 
     sql += ' GROUP BY u.id ORDER BY u.created_at DESC';

@@ -700,8 +700,7 @@ const AdminUsersManagement = () => {
                   type="text"
                   value={formData.username}
                   onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
-                  disabled={selectedUser.role === 'admin'}
-                  className={`${styles.formInput} ${selectedUser.role === 'admin' ? styles.disabled : ''}`}
+                  className={styles.formInput}
                 />
               </div>
               
@@ -711,8 +710,7 @@ const AdminUsersManagement = () => {
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                  disabled={selectedUser.role === 'admin'}
-                  className={`${styles.formInput} ${selectedUser.role === 'admin' ? styles.disabled : ''}`}
+                  className={styles.formInput}
                 />
               </div>
               
@@ -721,8 +719,7 @@ const AdminUsersManagement = () => {
                 <select
                   value={formData.role}
                   onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value as 'user' | 'admin' }))}
-                  disabled={selectedUser.role === 'admin'}
-                  className={`${styles.formSelect} ${selectedUser.role === 'admin' ? styles.disabled : ''}`}
+                  className={styles.formSelect}
                 >
                   <option value="user">👤 Usuario</option>
                   <option value="admin">👑 Administrador</option>
