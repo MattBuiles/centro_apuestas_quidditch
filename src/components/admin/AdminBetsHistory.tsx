@@ -51,10 +51,6 @@ const AdminBetsHistory = () => {
     loadBetsData();
   }, []);
 
-  useEffect(() => {
-    applyFilters();
-  }, [bets, filters]);
-
   const loadBetsData = async () => {
     setIsLoading(true);
     
@@ -93,7 +89,8 @@ const AdminBetsHistory = () => {
     setIsLoading(false);
   };
 
-  const applyFilters = () => {
+  // Auto-apply filters when they change
+  useEffect(() => {
     let filtered = [...bets];
 
     // Status filter
@@ -120,7 +117,7 @@ const AdminBetsHistory = () => {
 
     setFilteredBets(filtered);
     setCurrentPage(1); // Reset to first page when filters change
-  };
+  }, [bets, filters]);
 
   // Pagination
   const totalPages = Math.ceil(filteredBets.length / itemsPerPage);
@@ -226,55 +223,90 @@ const AdminBetsHistory = () => {
       {/* Filters */}
       <Card className={styles.filtersCard}>
         <div className={styles.filtersHeader}>
-          <h3>Filtros de Búsqueda</h3>
+          <h3 className={styles.filtersTitle}>
+            <span className={styles.filterIcon}>🔍</span>
+            Filtros de Búsqueda
+          </h3>
+          <div className={styles.filtersToggle}>
+            <span className={styles.filtersCount}>
+              {Object.values(filters).filter(value => value && value !== 'all').length} activos
+            </span>
+          </div>
         </div>
-        <div className={styles.filtersContent}>
+        
+        <div className={styles.filtersGrid}>
           <div className={styles.filterGroup}>
-            <label>Estado:</label>
-            <select
-              value={filters.status}
-              onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
-              className={styles.filterSelect}
-            >
-              <option value="all">Todos</option>
-              <option value="won">Ganadas</option>
-              <option value="lost">Perdidas</option>
-              <option value="pending">Pendientes</option>
-              <option value="cancelled">Canceladas</option>
-            </select>
+            <label className={styles.filterLabel}>
+              <span className={styles.labelIcon}>📊</span>
+              Estado:
+            </label>
+            <div className={styles.selectWrapper}>
+              <select
+                value={filters.status}
+                onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+                className={styles.filterSelect}
+              >
+                <option value="all">🏆 Todos los estados</option>
+                <option value="won">✅ Ganadas</option>
+                <option value="lost">❌ Perdidas</option>
+                <option value="pending">⏳ Pendientes</option>
+                <option value="cancelled">🚫 Canceladas</option>
+              </select>
+              <span className={styles.selectArrow}>⌄</span>
+            </div>
           </div>
 
           <div className={styles.filterGroup}>
-            <label>Usuario:</label>
-            <input
-              type="text"
-              placeholder="Buscar por usuario..."
-              value={filters.user}
-              onChange={(e) => setFilters(prev => ({ ...prev, user: e.target.value }))}
-              className={styles.filterInput}
-            />
+            <label className={styles.filterLabel}>
+              <span className={styles.labelIcon}>👤</span>
+              Usuario:
+            </label>
+            <div className={styles.inputWrapper}>
+              <input
+                type="text"
+                placeholder="Buscar por nombre o ID..."
+                value={filters.user}
+                onChange={(e) => setFilters(prev => ({ ...prev, user: e.target.value }))}
+                className={styles.filterInput}
+              />
+              <span className={styles.inputIcon}>🔎</span>
+            </div>
           </div>
 
           <div className={styles.filterGroup}>
-            <label>Desde:</label>
-            <input
-              type="date"
-              value={filters.dateFrom}
-              onChange={(e) => setFilters(prev => ({ ...prev, dateFrom: e.target.value }))}
-              className={styles.filterInput}
-            />
+            <label className={styles.filterLabel}>
+              <span className={styles.labelIcon}>📅</span>
+              Fecha Desde:
+            </label>
+            <div className={styles.inputWrapper}>
+              <input
+                type="date"
+                value={filters.dateFrom}
+                onChange={(e) => setFilters(prev => ({ ...prev, dateFrom: e.target.value }))}
+                className={styles.filterInput}
+              />
+              <span className={styles.inputIcon}>📆</span>
+            </div>
           </div>
 
           <div className={styles.filterGroup}>
-            <label>Hasta:</label>
-            <input
-              type="date"
-              value={filters.dateTo}
-              onChange={(e) => setFilters(prev => ({ ...prev, dateTo: e.target.value }))}
-              className={styles.filterInput}
-            />
+            <label className={styles.filterLabel}>
+              <span className={styles.labelIcon}>📅</span>
+              Fecha Hasta:
+            </label>
+            <div className={styles.inputWrapper}>
+              <input
+                type="date"
+                value={filters.dateTo}
+                onChange={(e) => setFilters(prev => ({ ...prev, dateTo: e.target.value }))}
+                className={styles.filterInput}
+              />
+              <span className={styles.inputIcon}>📆</span>
+            </div>
           </div>
+        </div>
 
+        <div className={styles.filtersActions}>
           <Button
             variant="secondary"
             onClick={() => {
@@ -287,6 +319,7 @@ const AdminBetsHistory = () => {
             }}
             className={styles.clearFiltersButton}
           >
+            <span className={styles.buttonIcon}>🧹</span>
             Limpiar Filtros
           </Button>
         </div>
