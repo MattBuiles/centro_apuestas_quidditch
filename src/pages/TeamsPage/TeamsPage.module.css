@@ -103,6 +103,36 @@
   opacity: 0.9;
 }
 
+.seasonInfo {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-body);
+  font-size: clamp(var(--text-sm), 2.5vw, var(--text-base));
+  color: var(--color-primary);
+  background: rgba(75, 0, 130, 0.1);
+  padding: clamp(var(--spacing-2), 2vw, var(--spacing-3)) clamp(var(--spacing-4), 3vw, var(--spacing-5));
+  border-radius: var(--radius-lg);
+  margin-top: clamp(var(--spacing-3), 2vw, var(--spacing-4));
+  text-align: center;
+  font-weight: 600;
+  border: 1px solid rgba(75, 0, 130, 0.2);
+}
+
+.noDataInfo {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-body);
+  font-size: clamp(var(--text-sm), 2.5vw, var(--text-base));
+  color: var(--color-gray-600);
+  background: rgba(255, 204, 0, 0.1);
+  padding: clamp(var(--spacing-2), 2vw, var(--spacing-3)) clamp(var(--spacing-4), 3vw, var(--spacing-5));
+  border-radius: var(--radius-lg);
+  margin-top: clamp(var(--spacing-3), 2vw, var(--spacing-4));
+  text-align: center;
+  font-style: italic;
+  border: 1px solid rgba(255, 204, 0, 0.3);
+}
+
 /* ===== FILTERS SECTION ===== */
 .filtersSection {
   position: relative;

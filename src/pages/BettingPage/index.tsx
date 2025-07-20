@@ -4,8 +4,8 @@ import styles from './BettingPage.module.css';
 import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
 import AdminMessage from '@/components/common/AdminMessage';
-import { virtualTimeManager } from '@/services/virtualTimeManager';
-import { Match, Season } from '@/types/league';
+import { apiClient } from '@/utils/apiClient';
+import { Season } from '@/types/league';
 import { useAuth } from '@/context/AuthContext';
 
 // Types for betting system
@@ -34,22 +34,21 @@ interface BettingMatch {
   status: 'upcoming' | 'live' | 'finished';
 }
 
+// Interface for backend match data
+interface BackendMatch {
+  id: string;
+  homeTeamName?: string;
+  awayTeamName?: string;
+  home_team_name?: string;
+  away_team_name?: string;
+  date: string;
+  status: string;
+}
+
 const BettingPage: React.FC = () => {
   const { matchId: paramMatchId } = useParams<{ matchId?: string }>();
   const { user, canBet, placeBet, getTodayBetsCount, canPlaceBet } = useAuth(); // Get user for balance and betting permissions
-  // Show admin message if user cannot bet
-  if (!canBet) {
-    return (
-      <AdminMessage 
-        title="Funcionalidad Restringida"
-        message="Los administradores no pueden realizar apuestas. Tu rol está destinado a la gestión y supervisión del sistema de apuestas de Quidditch."
-        redirectTo="/account"
-        redirectLabel="Ir al Panel de Administración"
-        icon="⚡"
-      />
-    );
-  }
-
+  
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedMatch, setSelectedMatch] = useState<string | undefined>(paramMatchId || '');
   const [selectedBets, setSelectedBets] = useState<BetOption[]>([]);
@@ -62,6 +61,48 @@ const BettingPage: React.FC = () => {
 
   const totalSteps = 3;
 
+  const loadMatchesFromSimulation = async () => {
+    setIsLoading(true);
+    
+    try {
+      // First try to load from backend
+      const response = await apiClient.get('/matches');
+      
+      if (response.success && response.data && Array.isArray(response.data)) {
+        const backendMatches = response.data;
+        const bettableMatches = backendMatches
+          .filter((match: BackendMatch) => {
+            // Only allow betting on upcoming and live matches
+            return ['scheduled', 'live', 'upcoming'].includes(match.status);
+          })
+          .map((match: BackendMatch) => ({
+            id: match.id,
+            name: `${match.homeTeamName || match.home_team_name} vs ${match.awayTeamName || match.away_team_name}`,
+            date: new Date(match.date).toLocaleDateString('es-ES', {
+              month: 'short',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            }),
+            homeTeam: match.homeTeamName || match.home_team_name,
+            awayTeam: match.awayTeamName || match.away_team_name,
+            status: match.status === 'live' ? 'live' : 'upcoming'
+          } as BettingMatch));
+        
+        setMatches(bettableMatches);
+      } else {
+        // No backend data available - betting requires backend integration
+        console.warn('No backend data available for betting');
+        setMatches([]);
+      }
+    } catch (error) {
+      console.error('Error loading matches for betting:', error);
+      setMatches([]);
+    }
+    
+    setIsLoading(false);
+  };
+
   useEffect(() => {
     if (paramMatchId) {
         setSelectedMatch(paramMatchId);
@@ -69,81 +110,18 @@ const BettingPage: React.FC = () => {
     loadMatchesFromSimulation();
   }, [paramMatchId]);
 
-  const loadMatchesFromSimulation = () => {
-    setIsLoading(true);
-    
-    const timeState = virtualTimeManager.getState();
-    if (timeState.temporadaActiva) {
-      setSeason(timeState.temporadaActiva);
-      
-      // Get current date for filtering - use virtual time manager instead of real time
-      const today = virtualTimeManager.getFechaVirtualActual();
-      const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-      
-      // Filter matches: only live, today, or the 5 closest upcoming matches
-      let bettableMatches = timeState.temporadaActiva.partidos
-        .filter(match => {
-          // Exclude finished matches
-          if (['finished', 'completed', 'ended'].includes(match.status)) {
-            return false;
-          }
-          
-          // Always include live matches
-          if (match.status === 'live') {
-            return true;
-          }
-          
-          // Include matches from today onwards
-          const matchDate = new Date(match.fecha);
-          return matchDate >= startOfToday;
-        });
-
-      // Sort upcoming matches by date to get the closest ones first
-      const upcomingMatches = bettableMatches
-        .filter(match => match.status !== 'live')
-        .sort((a, b) => {
-          const dateA = new Date(a.fecha);
-          const dateB = new Date(b.fecha);
-          return dateA.getTime() - dateB.getTime();
-        })
-        .slice(0, 5); // Limit to 5 closest upcoming matches
-
-      // Combine live matches with the 5 closest upcoming matches
-      const liveMatches = bettableMatches.filter(match => match.status === 'live');
-      bettableMatches = [...liveMatches, ...upcomingMatches];
-
-      // Transform matches to BettingMatch format
-      const formattedMatches = bettableMatches
-        .map((match: Match) => {
-          const homeTeam = timeState.temporadaActiva!.equipos.find(t => t.id === match.localId);
-          const awayTeam = timeState.temporadaActiva!.equipos.find(t => t.id === match.visitanteId);
-          
-          return {
-            id: match.id,
-            name: `${homeTeam?.name || match.localId} vs ${awayTeam?.name || match.visitanteId}`,
-            date: new Date(match.fecha).toLocaleDateString('es-ES', {
-              month: 'short',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
-            }),
-            homeTeam: homeTeam?.name || match.localId,
-            awayTeam: awayTeam?.name || match.visitanteId,
-            status: match.status === 'live' ? 'live' : 'upcoming'
-          } as BettingMatch;
-        });
-      
-      setMatches(formattedMatches);
-    } else {      // Fallback to mock data
-      const mockAsBettingMatches: BettingMatch[] = mockMatchesForBetting.map(mock => ({
-        ...mock,
-        status: 'upcoming' as const
-      }));
-      setMatches(mockAsBettingMatches);
-    }
-    
-    setIsLoading(false);
-  };
+  // Show admin message if user cannot bet - Check this AFTER hooks
+  if (!canBet) {
+    return (
+      <AdminMessage 
+        title="Funcionalidad Restringida"
+        message="Los administradores no pueden realizar apuestas. Tu rol está destinado a la gestión y supervisión del sistema de apuestas de Quidditch."
+        redirectTo="/account"
+        redirectLabel="Ir al Panel de Administración"
+        icon="⚡"
+      />
+    );
+  }
 
   // Calculate combined odds and potential winnings
   const calculateCombinedOdds = () => {
@@ -195,7 +173,7 @@ const BettingPage: React.FC = () => {
     const scoreOption: BetOption = {
       id: `${selectedMatch}-score-exact`,
       type: 'score',
-      selection: 'exact',
+      selection: `${scoreHome}-${scoreAway}`,
       odds: 8.50,
       description: `Puntuación exacta: ${scoreHome}-${scoreAway}`,
       matchId: selectedMatch
@@ -531,40 +509,6 @@ const BettingPage: React.FC = () => {
                       </button>
                     </div>
                   </div>
-
-                  {/* Special Events */}
-                  <div className={styles.betTypeSection}>
-                    <h5 className={styles.betSectionTitle}>
-                      <span className={styles.sectionIcon}>🔮</span>
-                      Eventos Especiales
-                    </h5>
-                    <div className={styles.optionsGrid}>
-                      {[
-                        { id: `${selectedMatch}-special-expulsion`, selection: 'expulsion', odds: 5.25, description: 'Un jugador será expulsado' },
-                        { id: `${selectedMatch}-special-broom`, selection: 'broom-break', odds: 4.50, description: 'Se romperá una escoba' },
-                        { id: `${selectedMatch}-special-fall`, selection: 'seeker-fall', odds: 3.75, description: 'Un buscador caerá de su escoba' },
-                        { id: `${selectedMatch}-special-bludger`, selection: 'bludger-referee', odds: 12.50, description: 'Una bludger golpeará al árbitro' },
-                        { id: `${selectedMatch}-special-suspension`, selection: 'suspension', odds: 8.25, description: 'El partido será suspendido temporalmente' },
-                      ].map(option => {
-                        const betOption: BetOption = { ...option, type: 'special', matchId: selectedMatch };
-                        const isSelected = selectedBets.some(bet => bet.id === option.id);
-                        return (
-                          <button
-                            key={option.id}
-                            type="button"
-                            className={`${styles.betOptionCard} ${isSelected ? styles.betOptionCardActive : ''}`}
-                            onClick={() => handleBetSelection(betOption)}
-                          >
-                            <div className={styles.optionInfo}>
-                              <span className={styles.optionName}>{option.description}</span>
-                              <span className={styles.optionOdds}>{option.odds}x</span>
-                            </div>
-                            {isSelected && <div className={styles.selectedIndicator}>✓</div>}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
                 </div>
               );
             })()}
@@ -768,12 +712,4 @@ const BettingPage: React.FC = () => {
     </div>
   );
 };
-
-// Mock data
-const mockMatchesForBetting = [
-  { id: '1', name: 'Gryffindor vs Slytherin', date: 'Hoy 19:00', homeTeam: 'Gryffindor', awayTeam: 'Slytherin' },
-  { id: '2', name: 'Hufflepuff vs Ravenclaw', date: 'Mañana 17:30', homeTeam: 'Hufflepuff', awayTeam: 'Ravenclaw' },
-  { id: '3', name: 'Chudley Cannons vs Holyhead Harpies', date: 'Domingo 15:00', homeTeam: 'Chudley Cannons', awayTeam: 'Holyhead Harpies' },
-];
-
 export default BettingPage;

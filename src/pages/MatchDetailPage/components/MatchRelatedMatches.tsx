@@ -2,7 +2,6 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import TeamLogo from '@/components/teams/TeamLogo';
 import { Match } from '@/types/league';
-import { virtualTimeManager } from '@/services/virtualTimeManager';
 import styles from './MatchRelatedMatches.module.css';
 
 interface MatchRelatedMatchesProps {
@@ -22,12 +21,10 @@ const MatchRelatedMatches: React.FC<MatchRelatedMatchesProps> = ({ relatedMatche
       </h2>
       <div className={styles.relatedMatchesGrid}>
         {relatedMatches.map((relatedMatch) => {
-          // Get the season data to resolve team IDs to team names
-          const timeState = virtualTimeManager.getState();
-          const homeTeamData = timeState.temporadaActiva?.equipos.find(t => t.id === relatedMatch.localId);
-          const awayTeamData = timeState.temporadaActiva?.equipos.find(t => t.id === relatedMatch.visitanteId);
-          const homeTeamName = homeTeamData?.name || relatedMatch.localId;
-          const awayTeamName = awayTeamData?.name || relatedMatch.visitanteId;
+          // Simplified version - use IDs directly for now
+          // TODO: Implement proper team name resolution with backend
+          const homeTeamName = relatedMatch.localId;
+          const awayTeamName = relatedMatch.visitanteId;
           
           return (
             <Link 

@@ -186,7 +186,7 @@ backend/                # Backend API (Nueva arquitectura)
   - Resultado del partido (Local/Visitante/Empate)
   - Resultado exacto
   - Captura de la Snitch
-  - Eventos especiales
+  - Duración del partido
 - **Apuestas Combinadas**: Múltiples selecciones en un solo boleto
 - **Límites Diarios**: Máximo 3 apuestas por usuario por día
 - **Gestión de Balance**: Sistema de Galeones virtuales
@@ -263,45 +263,16 @@ rm -rf node_modules && npm install
 
 ## 🚨 Notas Importantes
 
-### 🎭 Cuentas de Prueba Predefinidas
+### 🎭 Cuentas de Admin Predefinidas
 
-El sistema incluye cuentas predefinidas para facilitar las pruebas:
+El sistema incluye cuenta de admin predefinida:
 
 #### 🏰 **Administrador**
 - **Email:** `admin@quidditch.com`
 - **Contraseña:** `admin123`
 - **Usuario:** Administrador Mágico
 - **Rol:** Administrador
-- **Balance:** 0 galeones
-
-#### 🦁 **Gryffindor**
-**Harry Potter**
-- **Email:** `harry@gryffindor.com`
-- **Contraseña:** `patronus123`
-- **Balance:** 250 galeones
-
-**Hermione Granger**
-- **Email:** `hermione@gryffindor.com`
-- **Contraseña:** `magic456`
-- **Balance:** 180 galeones
-
-#### 🐍 **Slytherin**
-**Draco Malfoy**
-- **Email:** `draco@slytherin.com`
-- **Contraseña:** `serpent789`
-- **Balance:** 320 galeones
-
-#### 🦅 **Ravenclaw**
-**Luna Lovegood**
-- **Email:** `luna@ravenclaw.com`
-- **Contraseña:** `nargles321`
-- **Balance:** 95 galeones
-
-#### 🦡 **Hufflepuff**
-**Cedric Diggory**
-- **Email:** `cedric@hufflepuff.com`
-- **Contraseña:** `champion987`
-- **Balance:** 140 galeones
+- **Balance:** 100000 galeones
 
 ### 🔐 Funcionalidades de Autenticación
 

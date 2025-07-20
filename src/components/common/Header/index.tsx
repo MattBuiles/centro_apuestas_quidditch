@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
+import { createPortal } from 'react-dom'
 import { useAuth } from '@/context/AuthContext'
 import Button from '../Button'
 import Logo from '../Logo'
-import Portal from '../Portal'
 import userLogoSrc from '@/assets/User_Logo.png'
 import styles from './Header.module.css'
 
@@ -25,6 +25,39 @@ const Header = () => {
 
   const handleCancelLogout = () => {
     setShowLogoutModal(false)
+  }
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (showLogoutModal) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [showLogoutModal])
+
+  // Close modal on escape key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showLogoutModal) {
+        setShowLogoutModal(false)
+      }
+    }
+
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [showLogoutModal])
+
+  // Handle click outside modal
+  const handleModalBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      setShowLogoutModal(false)
+    }
   }
 
   // Cierra el menú móvil cuando la ruta cambia
@@ -261,33 +294,32 @@ const Header = () => {
       </div>
 
       {/* Logout Confirmation Modal */}
-      {showLogoutModal && (
-        <Portal>
-          <div className={styles.modal}>
-            <div className={styles.modalContent}>
-              <h3 className={styles.modalTitle}>
-                🚪 ¿Seguro que quieres cerrar sesión?
-              </h3>
-              <div className={styles.modalButtons}>
-                <Button
-                  variant="outline"
-                  onClick={handleCancelLogout}
-                  size="sm"
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={handleConfirmLogout}
-                  size="sm"
-                  className="bg-red-600 hover:bg-red-700"
-                >
-                  Aceptar
-                </Button>
-              </div>
+      {showLogoutModal && createPortal(
+        <div className={styles.modal} onClick={handleModalBackdropClick}>
+          <div className={styles.modalContent}>
+            <h3 className={styles.modalTitle}>
+              🚪 ¿Seguro que quieres cerrar sesión?
+            </h3>
+            <div className={styles.modalButtons}>
+              <Button
+                variant="outline"
+                onClick={handleCancelLogout}
+                size="sm"
+              >
+                Cancelar
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleConfirmLogout}
+                size="sm"
+                className="bg-red-600 hover:bg-red-700"
+              >
+                Aceptar
+              </Button>
             </div>
           </div>
-        </Portal>
+        </div>,
+        document.body
       )}
     </header>
   )

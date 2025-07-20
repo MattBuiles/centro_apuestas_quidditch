@@ -1,17 +1,17 @@
-import { Match } from '@/types/league';
+import { apiClient } from '../utils/apiClient';
+import { FEATURES } from '../config/features';
+import { authService } from './authService';
 
 export interface Prediction {
   id: string;
-  matchId: string;
   userId: string;
-  predictedWinner: 'home' | 'away' | 'draw';
-  predictedScore?: {
-    home: number;
-    away: number;
-  };
-  confidence: number; // 1-5 scale
-  timestamp: Date;
-  isCorrect?: boolean; // Set after match ends
+  userName: string;
+  matchId: string;
+  prediction: 'home' | 'away' | 'draw';
+  confidence: number;
+  points?: number;
+  createdAt: Date;
+  status?: 'pending' | 'correct' | 'incorrect';
 }
 
 export interface MatchPredictionStats {
@@ -22,453 +22,480 @@ export interface MatchPredictionStats {
   homeWinPercentage: number;
   awayWinPercentage: number;
   drawPercentage: number;
-  userPrediction?: Prediction;
-}
-
-export interface FinishedMatchData {
-  matchId: string;
-  finalScore: {
-    home: number;
-    away: number;
-  };
-  winner: 'home' | 'away' | 'draw';
-  timeline: Array<{
-    minute: number;
-    event: string;
-    team?: 'home' | 'away';
-    score?: { home: number; away: number };
-  }>;
-  predictions: MatchPredictionStats;
-  finishedAt: Date;
+  userPrediction: Prediction | null;
+  predictions: Prediction[];
 }
 
 export class PredictionsService {
-  private readonly STORAGE_KEY = 'quidditch_predictions';
-  private readonly MOCK_PREDICTIONS_KEY = 'quidditch_mock_predictions';
-  private readonly FINISHED_MATCHES_KEY = 'quidditch_finished_matches';
-  
-  constructor() {
-    this.initializeMockPredictions();
-  }
-  /**
-   * Create a prediction for a match
-   */
-  createPrediction(matchId: string, predictedWinner: 'home' | 'away' | 'draw', confidence: number = 3, predictedScore?: { home: number; away: number }): Prediction {
-    console.log(`🔮 CREATING PREDICTION for match ${matchId}:`);
-    console.log(`   📝 Predicted winner: "${predictedWinner}"`);
-    console.log(`   🎯 Confidence: ${confidence}`);
-    
-    const prediction: Prediction = {
-      id: `pred_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      matchId,
-      userId: 'current_user', // In real app, get from auth context
-      predictedWinner,
-      predictedScore,
-      confidence,
-      timestamp: new Date()
-    };
+  private readonly USER_PREDICTIONS_KEY = 'quidditch_user_predictions';
 
-    console.log(`   💾 Final prediction object:`, prediction);
-    this.savePrediction(prediction);
-    console.log(`   ✅ Prediction saved successfully`);
-    
-    return prediction;
+  constructor() {
+    // Listen to match finish events to auto-consolidate predictions
+    if (typeof window !== 'undefined') {
+      window.addEventListener('matchFinished', this.handleMatchFinished.bind(this) as EventListener);
+    }
+  }
+
+  /**
+   * Submit a prediction for a match
+   */
+  async submitPrediction(
+    matchId: string, 
+    prediction: 'home' | 'away' | 'draw', 
+    confidence: number
+  ): Promise<boolean> {
+    try {
+      console.log('🎯 Attempting to submit prediction:', { matchId, prediction, confidence });
+      
+      // Ensure we're authenticated before making the request
+      const isAuthenticated = await authService.ensureAuthenticated();
+      if (!isAuthenticated) {
+        console.error('❌ Failed to authenticate for predictions');
+        // Fallback to local storage
+        this.storeUserPredictionLocally(matchId, prediction, confidence);
+        return true;
+      }
+
+      console.log('✅ Authentication successful, submitting prediction to backend...');
+      const response = await apiClient.post('/predictions', {
+        matchId,
+        prediction,
+        confidence
+      }) as { success?: boolean; data?: Record<string, unknown> };
+
+      console.log('🎯 Backend prediction response:', response);
+
+      // Check if the response indicates success
+      // The backend returns success at the top level, not nested under data
+      if (response.success) {
+        console.log('✅ Prediction submitted successfully to backend');
+        // Also store locally as backup
+        this.storeUserPredictionLocally(matchId, prediction, confidence);
+        return true;
+      } else {
+        console.error('❌ Backend returned failure:', response);
+        return false;
+      }
+    } catch (error) {
+      console.error('❌ Failed to submit prediction to backend, storing locally:', error);
+      // Fallback to local storage
+      this.storeUserPredictionLocally(matchId, prediction, confidence);
+      return true;
+    }
   }
 
   /**
    * Get user's prediction for a specific match
    */
-  getUserPrediction(matchId: string): Prediction | null {
-    const predictions = this.getAllUserPredictions();
-    return predictions.find(p => p.matchId === matchId) || null;
+  async getUserPrediction(matchId: string): Promise<Prediction | null> {
+    try {
+      // Ensure we're authenticated before making the request
+      const isAuthenticated = await authService.ensureAuthenticated();
+      if (!isAuthenticated) {
+        console.warn('Not authenticated, no predictions available');
+        return null; // Don't use local storage if not authenticated
+      }
+
+      const response = await apiClient.get(`/predictions/match/${matchId}`) as {
+        success?: boolean; 
+        data?: Record<string, unknown> | null;
+      };
+
+      if (response.success && response.data) {
+        console.log('✅ Found user prediction for match:', matchId);
+        console.log('📊 Raw backend data:', response.data);
+        const predictionData = response.data;
+        const transformedPrediction = this.transformBackendPrediction(predictionData);
+        console.log('🔄 Transformed prediction:', transformedPrediction);
+        return transformedPrediction;
+      }
+      
+      console.log('ℹ️ No prediction found for match:', matchId);
+      return null;
+    } catch (error) {
+      console.warn('Failed to get prediction from backend:', error);
+      // Only use local storage as last resort and only if we have a real prediction
+      const localPrediction = this.getUserPredictionLocally(matchId);
+      if (localPrediction) {
+        console.log('📱 Using local prediction for match:', matchId);
+        return localPrediction;
+      }
+      return null;
+    }
   }
 
   /**
    * Get all predictions for a match with statistics
    */
-  getMatchPredictionStats(matchId: string): MatchPredictionStats {
-    const mockPredictions = this.getMockPredictions(matchId);
-    const userPrediction = this.getUserPrediction(matchId);
-    
-    // Include user prediction in totals if it exists
-    const allPredictions = userPrediction 
-      ? [...mockPredictions, userPrediction]
-      : mockPredictions;
-
-    const totalPredictions = allPredictions.length;
-    const homeWinPredictions = allPredictions.filter(p => p.predictedWinner === 'home').length;
-    const awayWinPredictions = allPredictions.filter(p => p.predictedWinner === 'away').length;
-    const drawPredictions = allPredictions.filter(p => p.predictedWinner === 'draw').length;
-
-    return {
-      totalPredictions,
-      homeWinPredictions,
-      awayWinPredictions,
-      drawPredictions,
-      homeWinPercentage: totalPredictions > 0 ? (homeWinPredictions / totalPredictions) * 100 : 0,
-      awayWinPercentage: totalPredictions > 0 ? (awayWinPredictions / totalPredictions) * 100 : 0,
-      drawPercentage: totalPredictions > 0 ? (drawPredictions / totalPredictions) * 100 : 0,
-      userPrediction: userPrediction || undefined
-    };
-  }  /**
-   * Update prediction correctness after match ends
-   */
-  updatePredictionResult(matchId: string, actualResult: 'home' | 'away' | 'draw'): void {
-    console.log(`🔮 UPDATING PREDICTION RESULT for match ${matchId}:`);
-    console.log(`   🏆 Actual result: "${actualResult}"`);
-    
-    const prediction = this.getUserPrediction(matchId);
-    if (!prediction) {
-      console.log(`⚠️ No prediction found for match ${matchId} - user did not make a prediction`);
-      return;
-    }
-    
-    console.log(`   � User predicted: "${prediction.predictedWinner}"`);
-    console.log(`   🔍 Comparison: "${prediction.predictedWinner}" === "${actualResult}"`);
-    console.log(`   📊 Prediction object before update:`, prediction);
-    
-    const wasCorrect = prediction.predictedWinner === actualResult;
-    prediction.isCorrect = wasCorrect;
-    
-    // Force save the updated prediction
-    this.savePrediction(prediction);
-    
-    console.log(`   🎯 Final result: ${wasCorrect ? '✅ CORRECT' : '❌ INCORRECT'}`);
-    console.log(`   💾 Saved isCorrect: ${prediction.isCorrect}`);
-    
-    // Verify the save worked by retrieving it again
-    const verifyPrediction = this.getUserPrediction(matchId);
-    if (verifyPrediction && verifyPrediction.isCorrect === wasCorrect) {
-      console.log(`   ✅ Verification successful: prediction correctly saved`);
-    } else {
-      console.error(`   ❌ Verification failed: prediction may not have been saved correctly`);
-      console.log(`   🔧 Retry saving prediction...`);
-      // Retry save once more
-      this.savePrediction(prediction);
-    }
-  }
-
-  /**
-   * Save finished match data with timeline and predictions
-   */
-  saveFinishedMatchData(matchData: FinishedMatchData): void {
+  async getMatchPredictionStats(matchId: string): Promise<MatchPredictionStats> {
     try {
-      const finishedMatches = this.getAllFinishedMatches();
+      // Get user's own prediction
+      const userPrediction = await this.getUserPrediction(matchId);
       
-      // Remove existing entry if it exists
-      const filteredMatches = finishedMatches.filter(m => m.matchId !== matchData.matchId);
+      console.log(`📊 Getting stats for match ${matchId}:`, {
+        hasUserPrediction: !!userPrediction,
+        userPrediction: userPrediction?.prediction || 'none'
+      });
       
-      // Add new entry
-      filteredMatches.push(matchData);
+      // Get community prediction statistics from backend
+      try {
+        const response = await apiClient.get(`/predictions/match/${matchId}/stats`) as {
+          success?: boolean;
+          data?: {
+            totalPredictions: number;
+            homeWinPredictions: number;
+            awayWinPredictions: number;
+            drawPredictions: number;
+            homeWinPercentage: number;
+            awayWinPercentage: number;
+            drawPercentage: number;
+            averageConfidence: number;
+          };
+        };
+
+        if (response.success && response.data) {
+          console.log('📊 Community prediction stats from backend:', response.data);
+          return {
+            totalPredictions: response.data.totalPredictions,
+            homeWinPredictions: response.data.homeWinPredictions,
+            awayWinPredictions: response.data.awayWinPredictions,
+            drawPredictions: response.data.drawPredictions,
+            homeWinPercentage: response.data.homeWinPercentage,
+            awayWinPercentage: response.data.awayWinPercentage,
+            drawPercentage: response.data.drawPercentage,
+            userPrediction,
+            predictions: [] // We don't need individual predictions for stats display
+          };
+        }
+      } catch (error) {
+        console.warn('Failed to get community stats from backend:', error);
+      }
       
-      localStorage.setItem(this.FINISHED_MATCHES_KEY, JSON.stringify(filteredMatches));
+      // Fallback: Return stats based only on user prediction if backend fails
+      const stats: MatchPredictionStats = {
+        totalPredictions: userPrediction ? 1 : 0,
+        homeWinPredictions: userPrediction?.prediction === 'home' ? 1 : 0,
+        awayWinPredictions: userPrediction?.prediction === 'away' ? 1 : 0,
+        drawPredictions: userPrediction?.prediction === 'draw' ? 1 : 0,
+        homeWinPercentage: userPrediction?.prediction === 'home' ? 100 : 0,
+        awayWinPercentage: userPrediction?.prediction === 'away' ? 100 : 0,
+        drawPercentage: userPrediction?.prediction === 'draw' ? 100 : 0,
+        userPrediction,
+        predictions: userPrediction ? [userPrediction] : []
+      };
+
+      return stats;
     } catch (error) {
-      console.error('Error saving finished match data:', error);
+      console.error('Failed to get match prediction stats:', error);
+      // Return empty stats
+      return {
+        totalPredictions: 0,
+        homeWinPredictions: 0,
+        awayWinPredictions: 0,
+        drawPredictions: 0,
+        homeWinPercentage: 0,
+        awayWinPercentage: 0,
+        drawPercentage: 0,
+        userPrediction: null,
+        predictions: []
+      };
     }
-  }
-
-  /**
-   * Get finished match data
-   */
-  getFinishedMatchData(matchId: string): FinishedMatchData | null {
-    const finishedMatches = this.getAllFinishedMatches();
-    return finishedMatches.find(m => m.matchId === matchId) || null;
-  }
-
-  /**
-   * Get all finished matches
-   */
-  private getAllFinishedMatches(): FinishedMatchData[] {
-    try {
-      const stored = localStorage.getItem(this.FINISHED_MATCHES_KEY);
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  }
-
-  /**
-   * Check if match data is saved
-   */
-  hasFinishedMatchData(matchId: string): boolean {
-    return this.getFinishedMatchData(matchId) !== null;
   }
 
   /**
    * Get all user predictions
    */
-  getAllUserPredictions(): Prediction[] {
+  async getAllUserPredictions(): Promise<Prediction[]> {
     try {
-      const stored = localStorage.getItem(this.STORAGE_KEY);
-      return stored ? JSON.parse(stored) : [];
-    } catch {
+      const response = await apiClient.get('/predictions') as {
+        data?: { success?: boolean; data?: unknown[] }
+      };
+
+      if (response.data?.success && response.data?.data) {
+        return response.data.data.map((pred: unknown) => 
+          this.transformBackendPrediction(pred as Record<string, unknown>)
+        );
+      }
+      
+      return [];
+    } catch (error) {
+      console.warn('Failed to get predictions from backend, checking local storage:', error);
+      // Fallback to local storage
+      return this.getAllUserPredictionsLocally();
+    }
+  }
+
+  /**
+   * Transform backend prediction data to frontend format
+   */
+  private transformBackendPrediction(data: Record<string, unknown>): Prediction {
+    console.log('🔄 Transforming backend prediction data:', data);
+    
+    const dateValue = data.created_at || data.createdAt;
+    const parsedDate = typeof dateValue === 'string' || typeof dateValue === 'number' 
+      ? new Date(dateValue) 
+      : new Date();
+    
+    const prediction = (data.prediction as 'home' | 'away' | 'draw') || 'home';
+    console.log('📊 Prediction value from backend:', {
+      original: data.prediction,
+      transformed: prediction
+    });
+      
+    const result = {
+      id: String(data.id || ''),
+      userId: String(data.user_id || data.userId || ''),
+      userName: String(data.username || data.userName || 'Unknown'),
+      matchId: String(data.match_id || data.matchId || ''),
+      prediction: prediction,
+      confidence: Number(data.confidence) || 3,
+      points: Number(data.points) || 0,
+      createdAt: parsedDate,
+      status: (data.status as 'pending' | 'correct' | 'incorrect') || 'pending'
+    };
+    
+    console.log('✅ Transformed prediction:', result);
+    return result;
+  }
+
+  /**
+   * Store prediction locally as backup
+   */
+  private storeUserPredictionLocally(
+    matchId: string, 
+    prediction: 'home' | 'away' | 'draw', 
+    confidence: number
+  ): void {
+    try {
+      console.log('💾 Storing prediction locally:', { matchId, prediction, confidence });
+      
+      const newPrediction: Prediction = {
+        id: `pred_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        userId: 'current_user',
+        userName: 'Current User',
+        matchId,
+        prediction,
+        confidence,
+        createdAt: new Date(),
+        status: 'pending'
+      };
+
+      console.log('📝 Created prediction object:', newPrediction);
+
+      const predictions = this.getAllUserPredictionsLocally();
+      // Remove existing prediction for this match
+      const filteredPredictions = predictions.filter(p => p.matchId !== matchId);
+      filteredPredictions.push(newPrediction);
+      
+      localStorage.setItem(this.USER_PREDICTIONS_KEY, JSON.stringify(filteredPredictions));
+      console.log('✅ Prediction stored in localStorage');
+    } catch (error) {
+      console.error('Error storing prediction locally:', error);
+    }
+  }
+
+  /**
+   * Get user prediction from local storage
+   */
+  private getUserPredictionLocally(matchId: string): Prediction | null {
+    try {
+      const predictions = this.getAllUserPredictionsLocally();
+      return predictions.find(p => p.matchId === matchId) || null;
+    } catch (error) {
+      console.error('Error getting prediction locally:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get all user predictions from local storage
+   */
+  private getAllUserPredictionsLocally(): Prediction[] {
+    try {
+      const stored = localStorage.getItem(this.USER_PREDICTIONS_KEY);
+      if (!stored) return [];
+      
+      const predictions = JSON.parse(stored);
+      // Convert date strings back to Date objects
+      return predictions.map((p: Prediction) => ({
+        ...p,
+        createdAt: new Date(p.createdAt)
+      }));
+    } catch (error) {
+      console.error('Error getting all predictions locally:', error);
       return [];
     }
   }
 
   /**
-   * Get user's prediction statistics
+   * Handle automatic prediction consolidation when a match finishes
    */
-  getUserPredictionStats(): {
-    total: number;
-    correct: number;
-    accuracy: number;
-    pending: number;
-  } {
-    const predictions = this.getAllUserPredictions();
-    const finished = predictions.filter(p => p.isCorrect !== undefined);
-    const correct = finished.filter(p => p.isCorrect === true).length;
-    const pending = predictions.filter(p => p.isCorrect === undefined).length;
-
-    return {
-      total: predictions.length,
-      correct,
-      accuracy: finished.length > 0 ? (correct / finished.length) * 100 : 0,
-      pending
-    };
-  }
-
-  /**
-   * Check if predictions are allowed for a match
-   */
-  canMakePrediction(match: Match): boolean {
-    // Can predict if match is scheduled or live but not started simulation
-    return match.status === 'scheduled' || 
-           (match.status === 'live' && (match.currentMinute === undefined || match.currentMinute === 0));
-  }
-
-  /**
-   * Save prediction to localStorage
-   */
-  private savePrediction(prediction: Prediction): void {
+  private async handleMatchFinished(event: Event): Promise<void> {
+    const customEvent = event as CustomEvent;
+    const { matchId, homeScore, awayScore } = customEvent.detail;
+    
     try {
-      const predictions = this.getAllUserPredictions();
-      const existingIndex = predictions.findIndex(p => p.matchId === prediction.matchId);
+      const actualResult = this.calculateMatchResult(homeScore, awayScore);
+      await this.consolidatePrediction(matchId, actualResult);
       
-      if (existingIndex >= 0) {
-        predictions[existingIndex] = prediction;
-      } else {
-        predictions.push(prediction);
-      }
-      
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(predictions));
+      console.log(`🔮 Auto-consolidated prediction for match ${matchId}: ${actualResult}`);
     } catch (error) {
-      console.error('Error saving prediction:', error);
+      console.error('Error auto-consolidating prediction:', error);
     }
   }
 
   /**
-   * Generate mock predictions for other users
+   * Calculate match result from scores
    */
-  private getMockPredictions(matchId: string): Prediction[] {
-    const mockPredictionsData = this.getAllMockPredictions();
-    return mockPredictionsData[matchId] || [];
+  private calculateMatchResult(homeScore: number, awayScore: number): 'home' | 'away' | 'draw' {
+    if (homeScore > awayScore) return 'home';
+    if (awayScore > homeScore) return 'away';
+    return 'draw';
   }
 
   /**
-   * Initialize mock predictions for demonstration
+   * Consolidate a prediction after match completion
    */
-  private initializeMockPredictions(): void {
-    const existing = localStorage.getItem(this.MOCK_PREDICTIONS_KEY);
-    if (existing) return; // Already initialized
-
-    // Generate some mock predictions for common match IDs
-    const mockData: Record<string, Prediction[]> = {};
-    
-    // This would be populated with actual match IDs from the simulation
-    const sampleMatchIds = ['1', '2', '3', '4', '5'];
-    
-    sampleMatchIds.forEach(matchId => {
-      mockData[matchId] = this.generateMockPredictionsForMatch(matchId);
-    });
-
-    localStorage.setItem(this.MOCK_PREDICTIONS_KEY, JSON.stringify(mockData));
-  }  /**
-   * Generate mock predictions for a specific match
-   */
-  private generateMockPredictionsForMatch(matchId: string): Prediction[] {
-    const predictions: Prediction[] = [];
-    const numPredictions = Math.floor(Math.random() * 50) + 148; // 148-198 predictions (as requested: 148 additional)
-
-    // List of magical wizard names for more immersive experience
-    const wizardNames = [
-      'Albus_Dumbledore', 'Minerva_McGonagall', 'Severus_Snape', 'Rubeus_Hagrid', 'Hermione_Granger',
-      'Luna_Lovegood', 'Neville_Longbottom', 'Cedric_Diggory', 'Cho_Chang', 'Dean_Thomas',
-      'Seamus_Finnigan', 'Lavender_Brown', 'Parvati_Patil', 'Padma_Patil', 'Lee_Jordan',
-      'Oliver_Wood', 'Marcus_Flint', 'Viktor_Krum', 'Fleur_Delacour', 'Gabrielle_Delacour',
-      'Bill_Weasley', 'Charlie_Weasley', 'Percy_Weasley', 'Fred_Weasley', 'George_Weasley',
-      'Ginny_Weasley', 'Ron_Weasley', 'Arthur_Weasley', 'Molly_Weasley', 'Sirius_Black',
-      'Remus_Lupin', 'Tonks_Lupin', 'Mad_Eye_Moody', 'Kingsley_Shacklebolt', 'Auror_Smith',
-      'Professor_Sprout', 'Professor_Flitwick', 'Professor_Trelawney', 'Professor_Binns', 'Madam_Hooch',
-      'Madam_Pomfrey', 'Madam_Pince', 'Nearly_Headless_Nick', 'Fat_Lady', 'Bloody_Baron',
-      'Grey_Lady', 'Fat_Friar', 'Peeves_Poltergeist', 'Dobby_Elf', 'Winky_Elf',
-      'Kreacher_Elf', 'Griphook_Goblin', 'Firenze_Centaur', 'Bane_Centaur', 'Ronan_Centaur',
-      'Grawp_Giant', 'Aragog_Spider', 'Buckbeak_Hippogriff', 'Norbert_Dragon', 'Fluffy_Dog',
-      'Phoenix_Fawkes', 'Hedwig_Owl', 'Errol_Owl', 'Pigwidgeon_Owl', 'Crookshanks_Cat',
-      'Mrs_Norris_Cat', 'Scabbers_Rat', 'Trevor_Toad', 'Wizard_Alex', 'Sorceress_Maya',
-      'Enchanter_Kai', 'Mystic_Zara', 'Spellcaster_Leo', 'Witch_Iris', 'Warlock_Rex',
-      'Sage_Nova', 'Oracle_Vera', 'Mage_Finn', 'Conjurer_Lux', 'Druid_Sage', 'Rune_Master',
-      'Crystal_Gazer', 'Star_Reader', 'Moon_Whisperer', 'Sun_Caller', 'Storm_Weaver', 
-      'Shadow_Walker', 'Light_Bringer', 'Time_Keeper', 'Dream_Weaver', 'Spirit_Guide',
-      'Ancient_Wizard', 'Young_Apprentice', 'Elder_Sage', 'Wise_Oracle', 'Brave_Auror',
-      'Clever_Ravenclaw', 'Loyal_Hufflepuff', 'Cunning_Slytherin', 'Bold_Gryffindor', 'House_Elf_Helper',
-      'Quidditch_Fan_01', 'Quidditch_Fan_02', 'Quidditch_Fan_03', 'Quidditch_Fan_04', 'Quidditch_Fan_05',
-      'Magical_Analyst', 'Sports_Prophet', 'Game_Seer', 'Match_Oracle', 'Victory_Predictor',
-      'Score_Whisperer', 'Snitch_Tracker', 'Seeker_Expert', 'Chaser_Specialist', 'Keeper_Judge',
-      'Beater_Critic', 'Team_Strategist', 'Magic_Statistician', 'Quidditch_Historian', 'Legendary_Fan'
-    ];
-
-    for (let i = 0; i < numPredictions; i++) {
-      // More realistic distribution: slight home advantage but closer odds
-      const weights = [0.42, 0.38, 0.20]; // Home slight favorite, away close second, draw less likely
-      const randomValue = Math.random();
-      
-      let predictedWinner: 'home' | 'away' | 'draw';
-      if (randomValue < weights[0]) {
-        predictedWinner = 'home';
-      } else if (randomValue < weights[0] + weights[1]) {
-        predictedWinner = 'away';
-      } else {
-        predictedWinner = 'draw';
-      }
-
-      // Pick a random wizard name
-      const wizardName = wizardNames[Math.floor(Math.random() * wizardNames.length)];
-      
-      predictions.push({
-        id: `mock_pred_${matchId}_${i}`,
-        matchId,
-        userId: `${wizardName}_${i}`,
-        predictedWinner,
-        confidence: Math.floor(Math.random() * 5) + 1,
-        timestamp: new Date(Date.now() - Math.random() * 86400000 * 14) // Last 14 days for variety
-      });
-    }
-
-    return predictions;
-  }
-
-  /**
-   * Get all mock predictions
-   */
-  private getAllMockPredictions(): Record<string, Prediction[]> {
+  async consolidatePrediction(matchId: string, actualResult: 'home' | 'away' | 'draw'): Promise<void> {
     try {
-      const stored = localStorage.getItem(this.MOCK_PREDICTIONS_KEY);
-      return stored ? JSON.parse(stored) : {};
-    } catch {
-      return {};
-    }
-  }
-  /**
-   * Add mock predictions for a new match
-   */
-  addMockPredictionsForMatch(matchId: string): void {
-    const mockData = this.getAllMockPredictions();
-    if (!mockData[matchId]) {
-      mockData[matchId] = this.generateMockPredictionsForMatch(matchId);
-      localStorage.setItem(this.MOCK_PREDICTIONS_KEY, JSON.stringify(mockData));
-    }
-  }
-  /**
-   * DEBUG: Manually check and fix prediction for a match
-   */
-  debugPredictionForMatch(matchId: string): void {
-    console.log(`🔧 DEBUG: Manually checking prediction for match ${matchId}`);
-    
-    const prediction = this.getUserPrediction(matchId);
-    if (!prediction) {
-      console.log(`❌ No prediction found for match ${matchId}`);
-      return;
-    }
-    
-    console.log(`📊 Current prediction:`, prediction);
-    console.log(`🔍 Current isCorrect status: ${prediction.isCorrect}`);
-      // Try to find the match and determine result manually
-    if (typeof window !== 'undefined' && (window as unknown as { debugQuidditch?: { virtualTimeManager?: { getState(): { temporadaActiva?: { partidos: { id: string; status: string; homeScore: number; awayScore: number }[] } } } } }).debugQuidditch?.virtualTimeManager) {
-      const timeManager = (window as unknown as { debugQuidditch: { virtualTimeManager: { getState(): { temporadaActiva?: { partidos: { id: string; status: string; homeScore: number; awayScore: number }[] } } } } }).debugQuidditch.virtualTimeManager;
-      const state = timeManager.getState();
+      const userPrediction = await this.getUserPrediction(matchId);
       
-      if (state.temporadaActiva) {
-        const match = state.temporadaActiva.partidos.find((p: { id: string; status: string; homeScore: number; awayScore: number }) => p.id === matchId);
-        if (match && match.status === 'finished') {
-          console.log(`🏆 Found finished match:`, match);
-          
-          const actualResult = 
-            match.homeScore > match.awayScore ? 'home' :
-            match.awayScore > match.homeScore ? 'away' : 'draw';
-          
-          console.log(`🎯 Manual calculation: ${match.homeScore} vs ${match.awayScore} = ${actualResult}`);
-          console.log(`🔍 Prediction vs Result: "${prediction.predictedWinner}" vs "${actualResult}"`);
-          console.log(`⚡ Should be correct: ${prediction.predictedWinner === actualResult}`);
-          
-          // Force update the prediction
-          this.updatePredictionResult(matchId, actualResult);
-        } else {
-          console.log(`❌ Match not found or not finished:`, match);
-        }
+      if (!userPrediction) {
+        console.log(`No prediction found for match ${matchId} to consolidate`);
+        return;
       }
+
+      const isCorrect = userPrediction.prediction === actualResult;
+      const points = this.calculatePredictionPoints(userPrediction.confidence, isCorrect);
+
+      // Update prediction with result
+      const updatedPrediction: Prediction = {
+        ...userPrediction,
+        status: isCorrect ? 'correct' : 'incorrect',
+        points
+      };
+
+      // Save updated prediction
+      await this.updatePredictionResult(updatedPrediction);
+      
+      // Emit consolidation event
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('predictionConsolidated', {
+          detail: { 
+            matchId, 
+            prediction: updatedPrediction, 
+            actualResult,
+            isCorrect,
+            points
+          }
+        }));
+      }
+
+      console.log(`✅ Prediction consolidated for match ${matchId}: ${isCorrect ? 'CORRECT' : 'INCORRECT'} (+${points} points)`);
+    } catch (error) {
+      console.error('Error consolidating prediction:', error);
+    }
+  }
+
+  /**
+   * Calculate points earned from a prediction
+   */
+  private calculatePredictionPoints(confidence: number, isCorrect: boolean): number {
+    if (!isCorrect) return 0;
+    
+    // Base points for correct prediction
+    const basePoints = 10;
+    // Bonus points based on confidence (1-5 scale)
+    const confidenceBonus = confidence * 2;
+    
+    return basePoints + confidenceBonus;
+  }
+
+  /**
+   * Update prediction result in storage
+   */
+  private async updatePredictionResult(updatedPrediction: Prediction): Promise<void> {
+    try {
+      // Try to update in backend first
+      if (FEATURES.USE_BACKEND_PREDICTIONS) {
+        await apiClient.put(`/predictions/${updatedPrediction.id}`, {
+          status: updatedPrediction.status,
+          points: updatedPrediction.points
+        });
+      }
+    } catch (error) {
+      console.warn('Failed to update prediction in backend, updating locally:', error);
+    }
+    
+    // Always update locally as backup
+    this.updatePredictionLocally(updatedPrediction);
+  }
+
+  /**
+   * Update prediction in local storage
+   */
+  private updatePredictionLocally(updatedPrediction: Prediction): void {
+    try {
+      const predictions = this.getAllUserPredictionsLocally();
+      const index = predictions.findIndex(p => p.id === updatedPrediction.id);
+      
+      if (index >= 0) {
+        predictions[index] = updatedPrediction;
+        localStorage.setItem(this.USER_PREDICTIONS_KEY, JSON.stringify(predictions));
+      }
+    } catch (error) {
+      console.error('Error updating prediction locally:', error);
+    }
+  }
+
+  /**
+   * Get user prediction statistics
+   */
+  async getUserStats(): Promise<{
+    totalPredictions: number;
+    correctPredictions: number;
+    accuracy: number;
+    totalPoints: number;
+    pendingPredictions: number;
+  }> {
+    try {
+      const predictions = await this.getAllUserPredictions();
+      const finishedPredictions = predictions.filter(p => p.status && p.status !== 'pending');
+      const correctPredictions = finishedPredictions.filter(p => p.status === 'correct');
+      const totalPoints = predictions.reduce((sum, p) => sum + (p.points || 0), 0);
+      const pendingPredictions = predictions.filter(p => !p.status || p.status === 'pending');
+
+      return {
+        totalPredictions: predictions.length,
+        correctPredictions: correctPredictions.length,
+        accuracy: finishedPredictions.length > 0 ? (correctPredictions.length / finishedPredictions.length) * 100 : 0,
+        totalPoints,
+        pendingPredictions: pendingPredictions.length
+      };
+    } catch (error) {
+      console.error('Error getting user stats:', error);
+      return {
+        totalPredictions: 0,
+        correctPredictions: 0,
+        accuracy: 0,
+        totalPoints: 0,
+        pendingPredictions: 0
+      };
+    }
+  }
+
+  /**
+   * Clear all local predictions (for debugging)
+   */
+  clearAllLocalPredictions(): void {
+    try {
+      localStorage.removeItem(this.USER_PREDICTIONS_KEY);
+      console.log('🧹 All local predictions cleared');
+    } catch (error) {
+      console.error('Error clearing local predictions:', error);
     }
   }
 }
 
 // Export singleton instance
 export const predictionsService = new PredictionsService();
-
-// Make debug function and service available globally
-if (typeof window !== 'undefined') {
-  (window as unknown as { debugPrediction: (matchId: string) => void }).debugPrediction = (matchId: string) => {
-    predictionsService.debugPredictionForMatch(matchId);
-  };
-  
-  // Expose predictionsService globally for debugging
-  (window as unknown as { predictionsService: PredictionsService }).predictionsService = predictionsService;
-  
-  // Add comprehensive debug helper
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (window as any).testPredictionFlow = (matchId: string) => {
-    console.log(`🔧 TESTING FULL PREDICTION FLOW for match ${matchId}`);
-    
-    // Step 1: Check if prediction exists
-    const prediction = predictionsService.getUserPrediction(matchId);
-    if (!prediction) {
-      console.log('❌ No prediction found. Creating one for testing...');
-      predictionsService.createPrediction(matchId, 'home', 4);
-    } else {
-      console.log('✅ Existing prediction found:', prediction);
-    }
-    
-    // Step 2: Check match status
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (typeof window !== 'undefined' && (window as any).virtualTimeManager) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const timeManager = (window as any).virtualTimeManager;
-      const state = timeManager.getState();
-      
-      if (state.temporadaActiva) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const match = state.temporadaActiva.partidos.find((p: any) => p.id === matchId);
-        if (match) {
-          console.log('🏆 Match found:', {
-            id: match.id,
-            status: match.status,
-            homeScore: match.homeScore,
-            awayScore: match.awayScore,
-            finished: !!match.resultado
-          });
-        } else {
-          console.log('❌ Match not found in current season');
-        }
-      }
-    }
-    
-    // Step 3: Test manual evaluation
-    console.log('🧪 Testing manual evaluation with "away" result...');
-    predictionsService.updatePredictionResult(matchId, 'away');
-    
-    // Step 4: Check final state
-    const finalPrediction = predictionsService.getUserPrediction(matchId);
-    console.log('🎯 Final prediction state:', finalPrediction);
-    
-    return finalPrediction;
-  };
-}

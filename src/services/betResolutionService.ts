@@ -3,8 +3,9 @@
  * Handles automatic resolution of bets when matches finish
  */
 
-import { virtualTimeManager } from './virtualTimeManager';
+import { leagueTimeService } from './leagueTimeService';
 import { matchResultsService } from './matchResultsService';
+import { FEATURES } from '@/config/features';
 
 // Import types from AuthContext
 interface UserBet {
@@ -124,6 +125,14 @@ class BetResolutionService {
         resolutionResults.push(...userResults);
       }
 
+      // After resolving single-match bets, check for combined bets that can now be resolved
+      try {
+        const combinedResults = await this.resolveAllPendingCombinedBets();
+        resolutionResults.push(...combinedResults);
+      } catch (error) {
+        console.error('❌ Error resolving combined bets:', error);
+      }
+
       console.log(`✅ Resolved ${resolutionResults.length} bets total`);
       return resolutionResults;
     } catch (error) {
@@ -158,47 +167,10 @@ class BetResolutionService {
       };
     }
 
-    // Fallback to virtual time manager
-    const timeState = virtualTimeManager.getState();
-    console.log(`🔍 Checking virtual time manager state for match ${matchId}...`);
+    // Note: VirtualTimeManager has been deprecated in favor of backend league time service
+    // Since backend league time is enabled, match results should come from backend
+    console.log(`⚠️ Could not find match ${matchId} in backend. This might indicate a sync issue.`);
     
-    if (timeState.temporadaActiva) {
-      const match = timeState.temporadaActiva.partidos.find(m => m.id === matchId);
-      console.log(`🔍 Found match in virtual time manager:`, match);
-      
-      if (match && match.status === 'finished') {
-        const homeTeam = timeState.temporadaActiva.equipos.find(t => t.id === match.localId);
-        const awayTeam = timeState.temporadaActiva.equipos.find(t => t.id === match.visitanteId);
-        
-        if (homeTeam && awayTeam) {
-          console.log(`✅ Found completed match in virtual time manager:`, {
-            homeTeam: homeTeam.name,
-            awayTeam: awayTeam.name,
-            score: `${match.homeScore || 0}-${match.awayScore || 0}`
-          });
-          
-          return {
-            matchId,
-            homeTeamId: homeTeam.id,
-            awayTeamId: awayTeam.id,
-            homeTeamName: homeTeam.name,
-            awayTeamName: awayTeam.name,
-            homeScore: match.homeScore || 0,
-            awayScore: match.awayScore || 0,
-            winner: (match.homeScore || 0) > (match.awayScore || 0) ? 'home' :
-                    (match.awayScore || 0) > (match.homeScore || 0) ? 'away' : 'draw',
-            snitchCaught: match.events?.some(e => e.type === 'SNITCH_CAUGHT') || false,
-            snitchCaughtBy: match.events?.find(e => e.type === 'SNITCH_CAUGHT')?.teamId,
-            duration: match.currentMinute || 90,
-            finalScore: {
-              home: match.homeScore || 0,
-              away: match.awayScore || 0
-            }
-          };
-        }
-      }
-    }
-
     console.warn(`❌ No match result found for matchId: ${matchId}`);
     return null;
   }
@@ -651,6 +623,146 @@ class BetResolutionService {
       console.error('❌ DEBUG: Error during forced resolution:', error);
     }
   }
+
+  /**
+   * Resolve all pending combined bets that may now be resolvable
+   */
+  public async resolveAllPendingCombinedBets(): Promise<BetResolutionResult[]> {
+    console.log(`🔍 Checking all pending combined bets for resolution`);
+    
+    const allUserIds = this.getAllUserIds();
+    const allResults: BetResolutionResult[] = [];
+
+    for (const userId of allUserIds) {
+      try {
+        const storedBets = localStorage.getItem(`userBets_${userId}`);
+        if (!storedBets) continue;
+
+        const userBets: UserBet[] = JSON.parse(storedBets);
+        const activeCombinedBets = userBets.filter(bet => 
+          bet.status === 'active' && bet.options.length > 1
+        );
+
+        for (const combinedBet of activeCombinedBets) {
+          const canResolve = this.canResolveCombinedBet(combinedBet);
+          if (canResolve.canResolve && canResolve.matchResults) {
+            const result = this.resolveCombinedBet(combinedBet, canResolve.matchResults);
+            allResults.push(result);
+
+            // Update bet status and user balance
+            this.updateBetStatus(userId, combinedBet.id, result.won ? 'won' : 'lost', result);
+            
+            if (result.won && result.winAmount > 0) {
+              this.updateUserBalance(userId, result.winAmount);
+              this.addWinTransaction(userId, combinedBet, result.winAmount);
+            }
+
+            console.log(`${result.won ? '🎉' : '💔'} Resolved combined bet ${combinedBet.id}: ${result.reason} (${result.won ? `+${result.winAmount}G` : 'lost'})`);
+          }
+        }
+      } catch (error) {
+        console.error(`Error resolving combined bets for user ${userId}:`, error);
+      }
+    }
+
+    if (allResults.length > 0) {
+      console.log(`✅ Resolved ${allResults.length} combined bets`);
+    }
+
+    return allResults;
+  }
+
+  /**
+   * Check if a combined bet can be resolved (all matches finished)
+   */
+  private canResolveCombinedBet(combinedBet: UserBet): {
+    canResolve: boolean;
+    reason?: string;
+    matchResults?: Map<string, MatchResult>;
+  } {
+    const matchIds = new Set<string>();
+    
+    // Collect all unique match IDs from the bet options
+    for (const option of combinedBet.options) {
+      matchIds.add(option.matchId);
+    }
+
+    const matchResults = new Map<string, MatchResult>();
+
+    // Check if all matches are finished and get their results
+    for (const matchId of matchIds) {
+      const matchResult = this.getMatchResult(matchId);
+      if (!matchResult) {
+        return {
+          canResolve: false,
+          reason: `Match ${matchId} result not available`
+        };
+      }
+      matchResults.set(matchId, matchResult);
+    }
+
+    return {
+      canResolve: true,
+      matchResults
+    };
+  }
+
+  /**
+   * Resolve a combined bet using match results
+   */
+  private resolveCombinedBet(combinedBet: UserBet, matchResults: Map<string, MatchResult>): BetResolutionResult {
+    const baseResult: BetResolutionResult = {
+      betId: combinedBet.id,
+      userId: combinedBet.userId,
+      won: false,
+      winAmount: 0,
+      reason: '',
+      optionResults: []
+    };
+
+    const optionResults: Array<{
+      option: BetOption;
+      won: boolean;
+      reason: string;
+    }> = [];
+
+    // Check each bet option
+    for (const option of combinedBet.options) {
+      const matchResult = matchResults.get(option.matchId);
+      if (!matchResult) {
+        optionResults.push({
+          option,
+          won: false,
+          reason: `No result available for match ${option.matchId}`
+        });
+        continue;
+      }
+
+      const optionResult = this.checkBetOption(option, matchResult);
+      
+      optionResults.push({
+        option,
+        won: optionResult.won,
+        reason: optionResult.reason
+      });
+    }
+
+    // For combined bets, ALL options must win
+    const allWon = optionResults.every(result => result.won);
+    const wonCount = optionResults.filter(result => result.won).length;
+
+    baseResult.won = allWon;
+    baseResult.optionResults = optionResults;
+    
+    if (allWon) {
+      baseResult.winAmount = combinedBet.potentialWin;
+      baseResult.reason = `All ${optionResults.length} predictions correct`;
+    } else {
+      baseResult.reason = `Only ${wonCount}/${optionResults.length} predictions correct`;
+    }
+
+    return baseResult;
+  }
 }
 
 // Export singleton instance
@@ -662,15 +774,24 @@ if (typeof window !== 'undefined') {
     betResolutionService: BetResolutionService;
     debugMatchBets: (matchId: string) => void;
     debugResolveMatch: (matchId: string) => Promise<void>;
+    debugResolveCombinedBets: () => Promise<void>;
   }).betResolutionService = betResolutionService;
   
   // Add global debug functions
   (window as unknown as { 
     debugMatchBets: (matchId: string) => void;
     debugResolveMatch: (matchId: string) => Promise<void>;
+    debugResolveCombinedBets: () => Promise<void>;
   }).debugMatchBets = (matchId: string) => betResolutionService.debugMatchBets(matchId);
   
   (window as unknown as { 
     debugResolveMatch: (matchId: string) => Promise<void>;
   }).debugResolveMatch = (matchId: string) => betResolutionService.debugResolveMatch(matchId);
+
+  (window as unknown as { 
+    debugResolveCombinedBets: () => Promise<void>;
+  }).debugResolveCombinedBets = async () => {
+    const results = await betResolutionService.resolveAllPendingCombinedBets();
+    console.log(`🎊 Debug: Resolved ${results.length} combined bets`);
+  };
 }

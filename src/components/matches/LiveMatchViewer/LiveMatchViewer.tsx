@@ -32,6 +32,18 @@ const LiveMatchViewer: React.FC<LiveMatchViewerProps> = ({
   const [eventFeed, setEventFeed] = useState<GameEvent[]>([]);
   const [lastEventCount, setLastEventCount] = useState(0);
 
+  // Debug logging
+  console.log('🔍 LiveMatchViewer Debug Info:', {
+    match,
+    homeTeam,
+    awayTeam,
+    matchState,
+    isSimulating,
+    eventFeed,
+    autoRefresh,
+    refreshInterval
+  });
+
   // Monitor for match completion and save results
   const updateMatchState = useCallback(() => {
     const currentState = liveMatchSimulator.getMatchState(match.id);
@@ -49,7 +61,13 @@ const LiveMatchViewer: React.FC<LiveMatchViewerProps> = ({
         
         // Save detailed match result
         console.log('🎯 Match ended, saving detailed results...');
-        liveMatchSimulator.saveDetailedMatchResult(match.id, match, homeTeam, awayTeam);
+        liveMatchSimulator.saveDetailedMatchResult(match.id, match, homeTeam, awayTeam)
+          .then(() => {
+            console.log('📋 Match result saving completed');
+          })
+          .catch((error) => {
+            console.error('❌ Error saving match result:', error);
+          });
         
         // Resolve bets for finished match
         console.log('💰 Resolving bets for finished match...');
@@ -147,10 +165,16 @@ const LiveMatchViewer: React.FC<LiveMatchViewerProps> = ({
     return `${minute}'`;
   };
 
-  const getTeamName = (teamId: string): string => {
+  const getTeamName = (teamId: unknown): string => {
+    // Validate teamId is a string
+    if (typeof teamId !== 'string') {
+      console.error('getTeamName received non-string teamId:', teamId);
+      return 'Equipo Desconocido';
+    }
+    
     if (teamId === homeTeam.id) return homeTeam.name;
     if (teamId === awayTeam.id) return awayTeam.name;
-    return 'Unknown Team';
+    return 'Equipo Desconocido';
   };
 
   if (!matchState && !isSimulating) {
@@ -311,7 +335,7 @@ const LiveMatchViewer: React.FC<LiveMatchViewerProps> = ({
           
           {matchState.snitchCaught && (
             <div className={styles.snitchCaughtMessage}>
-              ✨ La Snitch Dorada fue atrapada por {getTeamName(matchState.snitchCaughtBy || '')}
+              ✨ La Snitch Dorada fue atrapada por {getTeamName(matchState.snitchCaughtBy || 'unknown')}
             </div>
           )}
           

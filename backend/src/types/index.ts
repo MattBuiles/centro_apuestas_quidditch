@@ -185,6 +185,7 @@ export interface RegisterRequest {
   username: string;
   email: string;
   password: string;
+  role?: 'user' | 'admin';
 }
 
 export interface WebSocketMessage {
@@ -291,4 +292,77 @@ export interface JWTPayload {
   role: string;
   iat?: number;
   exp?: number;
+}
+
+// Database row interfaces for SQL queries
+export interface TeamRow {
+  id: string;
+  name: string;
+  logo?: string;
+  founded?: number;
+  description?: string;
+  stadium?: string;
+  colors?: string; // JSON string
+  matches_played?: number;
+  wins?: number;
+  losses?: number;
+  draws?: number;
+  points_for?: number;
+  points_against?: number;
+  snitch_catches?: number;
+  attack_strength?: number;
+  defense_strength?: number;
+  seeker_skill?: number;
+  keeper_skill?: number;
+  chaser_skill?: number;
+  beater_skill?: number;
+  slogan?: string;
+  history?: string;
+  titles?: number;
+  achievements?: string; // JSON string
+}
+
+export interface Player {
+  id: string;
+  name: string;
+  team_id: string;
+  position: 'keeper' | 'seeker' | 'beater' | 'chaser';
+  skill_level: number;
+  is_starting: boolean;
+  years_active?: number;
+  number?: number;
+  achievements?: string[]; // JSON array
+}
+
+export interface MatchRow {
+  id: string;
+  season_id: string;
+  home_team_id: string;
+  away_team_id: string;
+  date: string;
+  status: string;
+  home_score?: number;
+  away_score?: number;
+  snitch_caught?: boolean;
+  snitch_caught_by?: string;
+  duration?: number;
+  odds_home_win?: number;
+  odds_away_win?: number;
+  odds_draw?: number;
+  odds_total_over?: number;
+  odds_total_under?: number;
+  odds_snitch_home?: number;
+  odds_snitch_away?: number;
+}
+
+export interface MatchResult {
+  matchId: string;
+  homeScore: number;
+  awayScore: number;
+  duration: number;
+  snitchCaught: boolean;
+  snitchCaughtBy?: string;
+  events: MatchEvent[];
+  weather: 'sunny' | 'cloudy' | 'rainy' | 'stormy' | 'foggy' | 'windy';
+  attendance: number;
 }

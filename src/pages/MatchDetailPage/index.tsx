@@ -1,757 +1,857 @@
-import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { Component, ReactNode, useState, useEffect, useRef, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Match, Team } from '@/types/league';
+import { getMatchDetails, getRelatedMatches } from '@/services/matchesService';
+import { getTeams } from '@/services/teamsService';
+import { PredictionsService, MatchPredictionStats, Prediction } from '@/services/predictionsService';
+import { FEATURES } from '@/config/features';
+import Card from '@/components/common/Card';
 import Button from '@/components/common/Button';
 import TeamLogo from '@/components/teams/TeamLogo';
-import { Team, Match } from '@/types/league';
-import { virtualTimeManager } from '@/services/virtualTimeManager';
-import { PredictionsService, MatchPredictionStats, Prediction, FinishedMatchData } from '@/services/predictionsService';
-import { matchResultsService } from '@/services/matchResultsService';
-import { useAuth } from '@/context/AuthContext';
-
-// Import subcomponents
 import {
   MatchOverview,
-  MatchPredictions,
   MatchStats,
   MatchLineups,
   MatchHeadToHead,
-  MatchBetting,
+  MatchRelatedMatches,
   MatchDetailedAnalysis,
-  MatchRelatedMatches
+  MatchPredictions,
+  MatchBetting,
 } from './components';
-
 import styles from './MatchDetailPage.module.css';
 
-// Tab definitions with magical icons
-type TabType = 'overview' | 'predictions' | 'stats' | 'lineups' | 'head-to-head' | 'betting' | 'detailed-analysis';
+type TabType = 'overview' | 'predictions' | 'stats' | 'lineups' | 'head-to-head' | 'betting' | 'analysis' | 'related';
 
-interface TabConfig {
-  id: TabType;
-  label: string;
-  icon: string;
-  magicalIcon: string;
-  description: string;
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+  errorInfo: React.ErrorInfo | null;
 }
 
-const tabs: TabConfig[] = [
-  { 
-    id: 'overview', 
-    label: 'Cronología', 
-    icon: '📊', 
-    magicalIcon: '⚡', 
-    description: 'Cronología en vivo del encuentro mágico' 
-  },
-  { 
-    id: 'predictions', 
-    label: 'Predicciones', 
-    icon: '🔮', 
-    magicalIcon: '🌟', 
-    description: 'Predicciones y pronósticos místicos' 
-  },
-  { 
-    id: 'stats', 
-    label: 'Estadísticas', 
-    icon: '📈', 
-    magicalIcon: '⚡', 
-    description: 'Análisis detallado del rendimiento' 
-  },
-  { 
-    id: 'lineups', 
-    label: 'Alineaciones', 
-    icon: '👥', 
-    magicalIcon: '🏆', 
-    description: 'Formaciones y jugadores estrella' 
-  },
-  { 
-    id: 'head-to-head', 
-    label: 'Cara a Cara', 
-    icon: '⚔️', 
-    magicalIcon: '🔥', 
-    description: 'Historial de enfrentamientos épicos' 
-  },  { 
-    id: 'betting', 
-    label: 'Apuestas', 
-    icon: '💰', 
-    magicalIcon: '💎', 
-    description: 'Mercados de apuestas disponibles' 
-  },
-  { 
-    id: 'detailed-analysis', 
-    label: 'Análisis Detallado', 
-    icon: '📊', 
-    magicalIcon: '🔍', 
-    description: 'Análisis completo post-partido con cronología y estadísticas avanzadas' 
+interface ErrorBoundaryProps {
+  children: ReactNode;
+  fallback?: ReactNode;
+}
+
+class MatchDetailErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = {
+      hasError: false,
+      error: null,
+      errorInfo: null
+    };
   }
-];
 
-// Mock data - replace with actual data fetching
-interface MatchDetails {
-  id: string;
-  homeTeam: string;
-  awayTeam: string;
-  homeScore: number;
-  awayScore: number;
-  status: 'live' | 'upcoming' | 'finished';
-  minute?: string;
-  date: string;
-  time: string;
-  location: string;
+  static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
+    return {
+      hasError: true,
+      error
+    };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('MatchDetailPage Error Boundary caught an error:', error, errorInfo);
+    this.setState({
+      error,
+      errorInfo
+    });
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback || (
+        <div style={{ 
+          padding: '20px', 
+          textAlign: 'center', 
+          backgroundColor: '#f8f9fa', 
+          border: '1px solid #dee2e6',
+          borderRadius: '8px',
+          margin: '20px'
+        }}>
+          <h2>⚠️ Error en Detalles del Partido</h2>
+          <p>Ha ocurrido un error al mostrar los detalles del partido.</p>
+          <details style={{ marginTop: '20px', textAlign: 'left' }}>
+            <summary>Detalles técnicos del error</summary>
+            <pre style={{ 
+              backgroundColor: '#f1f3f4', 
+              padding: '10px', 
+              borderRadius: '4px',
+              overflow: 'auto',
+              fontSize: '12px'
+            }}>
+              {this.state.error && this.state.error.toString()}
+              {this.state.errorInfo && this.state.errorInfo.componentStack}
+            </pre>
+          </details>
+          <button 
+            onClick={() => window.location.reload()} 
+            style={{
+              marginTop: '20px',
+              padding: '10px 20px',
+              backgroundColor: '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Recargar Página
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
 }
 
-// Mock teams for live simulation
-const mockHomeTeam: Team = {
-  id: 'gryffindor',
-  name: 'Gryffindor',
-  house: 'Gryffindor',
-  fuerzaAtaque: 85,
-  fuerzaDefensa: 78,
-  attackStrength: 85,
-  defenseStrength: 78,
-  seekerSkill: 90,
-  chaserSkill: 85,
-  keeperSkill: 80,
-  beaterSkill: 75,
-  venue: 'Gryffindor Tower Pitch'
-};
-
-const mockAwayTeam: Team = {
-  id: 'slytherin',
-  name: 'Slytherin',
-  house: 'Slytherin',
-  fuerzaAtaque: 82,
-  fuerzaDefensa: 88,
-  attackStrength: 82,
-  defenseStrength: 88,
-  seekerSkill: 85,
-  chaserSkill: 80,
-  keeperSkill: 90,
-  beaterSkill: 85,
-  venue: 'Slytherin Dungeon Pitch'
-};
-
-const mockMatchDetail: MatchDetails = {
-  id: '1',
-  homeTeam: 'Gryffindor',
-  awayTeam: 'Slytherin',
-  homeScore: 120,
-  awayScore: 90,
-  status: 'live',
-  minute: "75'",
-  date: 'Hoy',
-  time: '19:00',
-  location: 'Campo de Quidditch de Hogwarts',
-};
-
-const MatchDetailPage = () => {
+const MatchDetailPage: React.FC = () => {
   const { matchId } = useParams<{ matchId: string }>();
-  const { isAuthenticated, canBet: userCanBet } = useAuth();
-  const [match, setMatch] = useState<MatchDetails | null>(null);
-  const [realMatch, setRealMatch] = useState<Match | null>(null);
+  const navigate = useNavigate();
+  
+  const [match, setMatch] = useState<Match | null>(null);
   const [homeTeam, setHomeTeam] = useState<Team | null>(null);
   const [awayTeam, setAwayTeam] = useState<Team | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [relatedMatches, setRelatedMatches] = useState<Match[]>([]);
   const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showLiveSimulation, setShowLiveSimulation] = useState(false);
   const [isStartingMatch, setIsStartingMatch] = useState(false);
   
   // Predictions state
-  const [predictionsService] = useState(() => new PredictionsService());
-  const [predictionStats, setPredictionStats] = useState<MatchPredictionStats | null>(null);
   const [userPrediction, setUserPrediction] = useState<Prediction | null>(null);
+  const [predictionStats, setPredictionStats] = useState<MatchPredictionStats | null>(null);
   const [isPredicting, setIsPredicting] = useState(false);
-  // Related matches state
-  const [relatedMatches, setRelatedMatches] = useState<Match[]>([]);
-  // State for finished match data
-  const [finishedMatchData, setFinishedMatchData] = useState<FinishedMatchData | null>(null);  // State for detailed match results
-  const [hasDetailedResults, setHasDetailedResults] = useState(false);
-  const [detailedMatchResult, setDetailedMatchResult] = useState<ReturnType<typeof matchResultsService.getMatchResult> | null>(null);
   
-  // Helper function to get team roster data with real player names
-  const getTeamRosterData = (teamName: string) => {
-    const teamMockData: { [key: string]: { roster: { id: string; name: string; position: string; number: number; yearsActive: number; achievements: string[] }[] } } = {
-      'Gryffindor': {
-        roster: [
-          { id: 'hp', name: 'Harry Potter', position: 'Buscador', number: 7, yearsActive: 6, achievements: ["Buscador más joven en un siglo"] },
-          { id: 'kg', name: 'Katie Bell', position: 'Cazadora', number: 6, yearsActive: 4, achievements: ["100+ goles en su carrera"] },
-          { id: 'aw', name: 'Angelina Johnson', position: 'Cazadora', number: 8, yearsActive: 5, achievements: ["Capitana del equipo"] },
-          { id: 'as', name: 'Alicia Spinnet', position: 'Cazadora', number: 12, yearsActive: 4, achievements: ["Especialista en tiros largos"] },
-          { id: 'fw', name: 'Fred Weasley', position: 'Golpeador', number: 5, yearsActive: 4, achievements: ["Mejor golpeador defensivo"] },
-          { id: 'gw', name: 'George Weasley', position: 'Golpeador', number: 4, yearsActive: 4, achievements: ["Mejor golpeador ofensivo"] },
-          { id: 'ow', name: 'Oliver Wood', position: 'Guardián', number: 1, yearsActive: 5, achievements: ["95% efectividad en paradas"] }
-        ]
-      },
-      'Slytherin': {
-        roster: [
-          { id: 'dm', name: 'Draco Malfoy', position: 'Buscador', number: 7, yearsActive: 4, achievements: ["Buscador más estratégico"] },
-          { id: 'mf', name: 'Marcus Flint', position: 'Cazador', number: 9, yearsActive: 6, achievements: ["Capitán más exitoso"] },
-          { id: 'ap', name: 'Adrian Pucey', position: 'Cazador', number: 8, yearsActive: 4, achievements: ["Especialista en goles largos"] },
-          { id: 'gz', name: 'Blaise Zabini', position: 'Cazador', number: 11, yearsActive: 3, achievements: ["Mejor promedio de gol"] },
-          { id: 'cb', name: 'Vincent Crabbe', position: 'Golpeador', number: 3, yearsActive: 3, achievements: ["Golpeador más intimidante"] },
-          { id: 'gg', name: 'Gregory Goyle', position: 'Golpeador', number: 2, yearsActive: 3, achievements: ["Especialista en fuerza"] },
-          { id: 'mp', name: 'Miles Bletchley', position: 'Guardián', number: 1, yearsActive: 3, achievements: ["Guardián más joven"] }
-        ]
-      },      'Ravenclaw': {
-        roster: [
-          { id: 'cc', name: 'Cho Chang', position: 'Buscadora', number: 7, yearsActive: 5, achievements: ["Velocidad récord en captura de Snitch"] },
-          { id: 'rd', name: 'Roger Davies', position: 'Cazador', number: 9, yearsActive: 4, achievements: ["Goleador del año - Liga Escolar"] },
-          { id: 'js', name: 'Jeremy Stretton', position: 'Cazador', number: 6, yearsActive: 3, achievements: ["Pase perfecto - 95% precisión"] },
-          { id: 'rb', name: 'Randolph Burrow', position: 'Cazador', number: 12, yearsActive: 2, achievements: ["Promesa del año - Mejor novato"] },
-          { id: 'jq', name: 'Jason Samuels', position: 'Golpeador', number: 4, yearsActive: 4, achievements: ["Defensor implacable del aire"] },
-          { id: 'ag', name: 'Anthony Goldstein', position: 'Golpeador', number: 3, yearsActive: 3, achievements: ["Jugada defensiva del año"] },
-          { id: 'gb', name: 'Grant Page', position: 'Guardián', number: 1, yearsActive: 4, achievements: ["Portero del año - 89% paradas"] }
-        ]
-      },
-      'Hufflepuff': {
-        roster: [
-          { id: 'cd', name: 'Cedric Diggory', position: 'Buscador', number: 7, yearsActive: 5, achievements: ["Leyenda viviente de Hufflepuff"] },
-          { id: 'zs', name: 'Zacharias Smith', position: 'Cazador', number: 9, yearsActive: 3, achievements: ["Anotador más consistente del equipo"] },
-          { id: 'hm', name: 'Heidi Macavoy', position: 'Cazadora', number: 8, yearsActive: 4, achievements: ["Mejor jugadora femenina - 3 años"] },
-          { id: 'tm', name: 'Tamsin Applebee', position: 'Cazadora', number: 6, yearsActive: 3, achievements: ["Especialista en corners y tiros libres"] },
-          { id: 'mc', name: 'Malcolm Preece', position: 'Golpeador', number: 4, yearsActive: 4, achievements: ["Golpeador más técnico y preciso"] },
-          { id: 'ac', name: 'Andrew Kirke', position: 'Golpeador', number: 3, yearsActive: 2, achievements: ["Revelación del año - Mejor debutante"] },          { id: 'hs', name: 'Herbert Fleet', position: 'Guardián', number: 1, yearsActive: 5, achievements: ["Guardián más confiable - 92% paradas"] }
-        ]
-      },
-      'Chudley Cannons': {
-        roster: [
-          { id: 'rw', name: 'Ron Weasley', position: 'Guardián', number: 1, yearsActive: 2, achievements: ["Guardián estrella en ascenso"] },
-          { id: 'bc1', name: 'Barry Ryan', position: 'Cazador', number: 9, yearsActive: 8, achievements: ["Veterano del equipo - 200+ partidos"] },
-          { id: 'bc2', name: 'Joey Jenkins', position: 'Cazador', number: 7, yearsActive: 6, achievements: ["Especialista en jugadas rápidas"] },
-          { id: 'bc3', name: 'Galvin Gudgeon', position: 'Cazador', number: 11, yearsActive: 4, achievements: ["Mejor anotador de la temporada"] },
-          { id: 'bb1', name: 'Roderick Plumpton', position: 'Golpeador', number: 4, yearsActive: 7, achievements: ["Defensor más temido de la liga"] },
-          { id: 'bb2', name: 'Dragomir Gorgovitch', position: 'Golpeador', number: 3, yearsActive: 5, achievements: ["Mejor golpeador defensivo"] },
-          { id: 'bs', name: 'Cho Chang Jr.', position: 'Buscadora', number: 8, yearsActive: 3, achievements: ["Promesa más brillante del equipo"] }
-        ]
-      },
-      'Holyhead Harpies': {
-        roster: [
-          { id: 'gw', name: 'Ginny Weasley', position: 'Cazadora', number: 7, yearsActive: 4, achievements: ["Estrella emergente del Quidditch"] },
-          { id: 'hh1', name: 'Wilda Griffiths', position: 'Cazadora', number: 9, yearsActive: 9, achievements: ["Capitana y líder histórica"] },
-          { id: 'hh2', name: 'Valmai Morgan', position: 'Cazadora', number: 6, yearsActive: 7, achievements: ["Anotadora más precisa del equipo"] },
-          { id: 'hh3', name: 'Gwendolyn Morgan', position: 'Golpeadora', number: 4, yearsActive: 6, achievements: ["Hermana legendaria"] },
-          { id: 'hh4', name: 'Gwenog Jones', position: 'Golpeadora', number: 2, yearsActive: 10, achievements: ["Capitana legendaria retirada"] },
-          { id: 'hh5', name: 'Glynnis Griffiths', position: 'Guardiana', number: 1, yearsActive: 8, achievements: ["Portera más confiable de la liga"] },
-          { id: 'hh6', name: 'Artemis Fido', position: 'Buscadora', number: 3, yearsActive: 5, achievements: ["Velocidad supersónica certificada"] }
-        ]
-      }
-    };
+  // Create predictions service as a ref to avoid recreating it
+  const predictionsServiceRef = useRef<PredictionsService | null>(null);
+  if (!predictionsServiceRef.current) {
+    predictionsServiceRef.current = new PredictionsService();
+  }
+  const predictionsService = predictionsServiceRef.current;
 
-    return teamMockData[teamName] || { roster: [] };
-  };
-
-  useEffect(() => {
-    // Get the real match from virtual time manager
-    setIsLoading(true);
+  // Function to load predictions data - preserves optimistic updates
+  const loadPredictionsData = useCallback(async (matchId: string, preserveOptimistic = false) => {
+    if (!FEATURES.USE_BACKEND_PREDICTIONS) return;
     
-    const timeState = virtualTimeManager.getState();
-    if (timeState.temporadaActiva && matchId) {
-      const foundMatch = timeState.temporadaActiva.partidos.find(p => p.id === matchId);
-      
-      if (foundMatch) {
-        setRealMatch(foundMatch);
-        
-        // Find teams
-        const foundHomeTeam = timeState.temporadaActiva.equipos.find(t => t.id === foundMatch.localId);
-        const foundAwayTeam = timeState.temporadaActiva.equipos.find(t => t.id === foundMatch.visitanteId);
-          setHomeTeam(foundHomeTeam || mockHomeTeam);
-        setAwayTeam(foundAwayTeam || mockAwayTeam);
-        
-        // Check if detailed results are available for finished matches
-        let finalHomeScore = foundMatch.homeScore || 0;
-        let finalAwayScore = foundMatch.awayScore || 0;
-        
-        if (foundMatch.status === 'finished') {
-          const detailedResults = matchResultsService.getMatchResult(foundMatch.id);
-          setHasDetailedResults(detailedResults !== null);
-          setDetailedMatchResult(detailedResults);
-          
-          // Use detailed results scores if available (more accurate)
-          if (detailedResults) {
-            finalHomeScore = detailedResults.finalScore.home;
-            finalAwayScore = detailedResults.finalScore.away;
-          }
-        } else {
-          setHasDetailedResults(false);
-          setDetailedMatchResult(null);
-        }
-
-        // Convert to MatchDetails format with correct scores
-        const matchDetails: MatchDetails = {
-          id: foundMatch.id,
-          homeTeam: foundHomeTeam?.name || foundMatch.localId,
-          awayTeam: foundAwayTeam?.name || foundMatch.visitanteId,
-          homeScore: finalHomeScore,
-          awayScore: finalAwayScore,
-          status: foundMatch.status === 'scheduled' ? 'upcoming' : 
-                 foundMatch.status === 'live' ? 'live' : 'finished',
-          minute: foundMatch.currentMinute?.toString(),
-          date: new Date(foundMatch.fecha).toLocaleDateString('es-ES'),
-          time: new Date(foundMatch.fecha).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
-          location: foundMatch.venue || 'Campo de Quidditch',
-        };
-        setMatch(matchDetails);
-        
-        // Load prediction data and ensure mock predictions exist
-        predictionsService.addMockPredictionsForMatch(foundMatch.id);
-        const stats = predictionsService.getMatchPredictionStats(foundMatch.id);
-        setPredictionStats(stats);
-        setUserPrediction(stats.userPrediction || null);// Set default tab based on match status
-        if (foundMatch.status === 'scheduled') {
-          setActiveTab('predictions'); // Show predictions for upcoming matches
-        } else {
-          setActiveTab('overview'); // Show timeline for live and finished matches
-        }
-        
-        // Check if match is already in live simulation
-        if (foundMatch.status === 'live') {
-          const liveState = virtualTimeManager.getEstadoPartidoEnVivo(foundMatch.id);
-          if (liveState) {
-            setShowLiveSimulation(true);
-          }
-        }
-        
-        // Get related matches (next 2 upcoming matches)
-        const upcomingMatches = timeState.temporadaActiva.partidos
-          .filter(p => p.status === 'scheduled' && p.id !== foundMatch.id)
-          .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
-          .slice(0, 2);
-        setRelatedMatches(upcomingMatches);
-        
-      } else {
-        // Fallback to mock data if match not found
-        setMatch(mockMatchDetail);
-        setHomeTeam(mockHomeTeam);
-        setAwayTeam(mockAwayTeam);
-      }
-    } else {
-      // Fallback to mock data
-      setMatch(mockMatchDetail);
-      setHomeTeam(mockHomeTeam);
-      setAwayTeam(mockAwayTeam);
-    }
-    
-    setIsLoading(false);
-  }, [matchId, predictionsService]);
-
-  // Check if we have saved finished match data
-  useEffect(() => {
-    if (matchId && match && match.status === 'finished') {
-      const savedData = predictionsService.getFinishedMatchData(matchId);
-      if (savedData) {
-        setFinishedMatchData(savedData);
-      } else if (realMatch) {
-        // Save current match data for future reference
-        const timelineEvents = [
-          { minute: 0, event: 'Inicio del partido', score: { home: 0, away: 0 } },
-          { minute: 45, event: 'Final del primer tiempo', score: { home: Math.floor(realMatch.homeScore! / 2), away: Math.floor(realMatch.awayScore! / 2) } },
-          { minute: 90, event: 'Final del partido', score: { home: realMatch.homeScore!, away: realMatch.awayScore! } }
-        ];
-
-        const winner: 'home' | 'away' | 'draw' = 
-          realMatch.homeScore! > realMatch.awayScore! ? 'home' :
-          realMatch.awayScore! > realMatch.homeScore! ? 'away' : 'draw';
-
-        const matchData: FinishedMatchData = {
-          matchId: realMatch.id,
-          finalScore: {
-            home: realMatch.homeScore!,
-            away: realMatch.awayScore!
-          },
-          winner,
-          timeline: timelineEvents,
-          predictions: predictionStats!,
-          finishedAt: new Date()
-        };
-
-        predictionsService.saveFinishedMatchData(matchData);
-        setFinishedMatchData(matchData);
-      }
-    }  }, [matchId, match, realMatch, predictionStats, predictionsService]);
-  
-  // Listen for prediction updates when matches finish
-  useEffect(() => {    const handlePredictionsUpdate = (event: CustomEvent) => {
-      console.log(`🎪 PREDICTIONS UPDATE EVENT RECEIVED:`, event.detail);
-      const { matchId: updatedMatchId, result } = event.detail;
-      
-      if (updatedMatchId === matchId && matchId) {
-        console.log(`🔮 Processing predictions update for match ${matchId}, result: ${result}`);
-        
-        // Refresh user prediction to get updated isCorrect status
-        const updatedPrediction = predictionsService.getUserPrediction(matchId);
-        console.log(`📊 Updated prediction from service:`, updatedPrediction);
-        setUserPrediction(updatedPrediction);
-        
-        // Refresh prediction stats
-        const updatedStats = predictionsService.getMatchPredictionStats(matchId);
-        setPredictionStats(updatedStats);
-        
-        console.log(`🔄 About to reload page in 1 second...`);
-        // Force component re-render to show updated results
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
-      } else {
-        console.log(`⚠️ Event is for different match: ${updatedMatchId} vs current ${matchId}`);
-      }
-    };
-
-    if (typeof window !== 'undefined') {
-      window.addEventListener('predictionsUpdated', handlePredictionsUpdate as EventListener);
-      
-      return () => {
-        window.removeEventListener('predictionsUpdated', handlePredictionsUpdate as EventListener);
-      };
-    }
-  }, [matchId, predictionsService]);
-
-  const handleTabClick = (tabId: TabType) => {
-    setActiveTab(tabId);
-  };
-  
-  const handlePrediction = async (winner: 'home' | 'away' | 'draw') => {
-    if (!match || !isAuthenticated) return;
-    
-    console.log(`🎯 UI PREDICTION CREATION for match ${match.id}:`);
-    console.log(`   🏠 Home team: "${match.homeTeam}"`);
-    console.log(`   🚗 Away team: "${match.awayTeam}"`);
-    console.log(`   👤 User clicked: "${winner}"`);
-    console.log(`   📊 Match object:`, match);
-    console.log(`   🔗 Real match data:`, realMatch);
-    
-    setIsPredicting(true);
     try {
-      const prediction = predictionsService.createPrediction(match.id, winner);
-      setUserPrediction(prediction);
-      // Update prediction stats
-      const updatedStats = predictionsService.getMatchPredictionStats(match.id);
-      setPredictionStats(updatedStats);
+      console.log('🔄 Loading predictions data for match:', matchId, { preserveOptimistic });
+      
+      // Don't clear state if we want to preserve optimistic updates
+      if (!preserveOptimistic) {
+        setUserPrediction(null);
+        setPredictionStats(null);
+      }
+      
+      // Force a small delay to ensure any backend processing is complete
+      await new Promise(resolve => setTimeout(resolve, 50));
+      
+      // Load user prediction with retry logic
+      let userPred = null;
+      let retryCount = 0;
+      const maxRetries = preserveOptimistic ? 1 : 3; // Less retries when preserving optimistic
+      
+      while (retryCount < maxRetries) {
+        try {
+          userPred = await predictionsService.getUserPrediction(matchId);
+          if (userPred) break;
+          
+          if (retryCount < maxRetries - 1) {
+            console.log(`⏳ Retry ${retryCount + 1}/${maxRetries} for user prediction...`);
+            await new Promise(resolve => setTimeout(resolve, 200));
+          }
+        } catch (retryError) {
+          console.warn(`Retry ${retryCount + 1} failed:`, retryError);
+        }
+        retryCount++;
+      }
+      
+      console.log('📊 User prediction loaded:', userPred ? {
+        id: userPred.id,
+        prediction: userPred.prediction,
+        confidence: userPred.confidence,
+        status: userPred.status
+      } : 'No prediction found');
+      
+      // Only update user prediction if we got valid data or not preserving optimistic
+      if (userPred || !preserveOptimistic) {
+        setUserPrediction(userPred);
+      }
+      
+      // Load prediction stats
+      const stats = await predictionsService.getMatchPredictionStats(matchId);
+      console.log('📈 Prediction stats loaded:', stats ? {
+        totalPredictions: stats.totalPredictions,
+        userHasPrediction: !!stats.userPrediction
+      } : 'No stats found');
+      
+      setPredictionStats(stats);
+      
+      console.log('✅ Predictions data reload completed successfully');
     } catch (error) {
-      console.error('Error creating prediction:', error);
-    } finally {
-      setIsPredicting(false);
+      console.error('❌ Failed to load predictions data:', error);
+      // Only clear data if not preserving optimistic updates
+      if (!preserveOptimistic) {
+        setUserPrediction(null);
+        setPredictionStats(null);
+      }
     }
+  }, [predictionsService]);
+
+  const loadMatchData = useCallback(async (id: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Load match data
+      const matchData = await getMatchDetails(id);
+      if (!matchData) {
+        throw new Error('Partido no encontrado');
+      }
+
+      setMatch(matchData);
+
+      // Load team data
+      const teams = await getTeams();
+      
+      // Debug logging to understand the data structure
+      console.log('🔍 Match data received from backend:', {
+        id: matchData.id,
+        homeTeamId: matchData.homeTeamId,
+        awayTeamId: matchData.awayTeamId,
+        localId: matchData.localId,
+        visitanteId: matchData.visitanteId,
+        status: matchData.status,
+        fullMatchData: matchData
+      });
+      console.log('🔍 Available teams:', teams.map(t => ({ id: t.id, name: t.name })));
+      
+      // Helper function to find team by various matching criteria
+      const findTeam = (teamIdentifier: string) => {
+        if (!teamIdentifier) return null;
+        
+        // Try exact ID match first
+        let team = teams.find(t => t.id === teamIdentifier);
+        if (team) return team;
+        
+        // Try exact name match
+        team = teams.find(t => t.name === teamIdentifier);
+        if (team) return team;
+        
+        // Try case-insensitive ID match
+        team = teams.find(t => t.id.toLowerCase() === teamIdentifier.toLowerCase());
+        if (team) return team;
+        
+        // Try case-insensitive name match
+        team = teams.find(t => t.name.toLowerCase() === teamIdentifier.toLowerCase());
+        if (team) return team;
+        
+        // Try partial match (contains)
+        team = teams.find(t => 
+          t.name.toLowerCase().includes(teamIdentifier.toLowerCase()) ||
+          t.id.toLowerCase().includes(teamIdentifier.toLowerCase())
+        );
+        if (team) return team;
+        
+        // Try mapping common backend IDs to frontend IDs
+        const idMappings: { [key: string]: string } = {
+          '1': 'gryffindor',
+          '2': 'slytherin', 
+          '3': 'ravenclaw',
+          '4': 'hufflepuff',
+          '5': 'chudley-cannons',
+          '6': 'holyhead-harpies'
+        };
+        
+        if (idMappings[teamIdentifier]) {
+          team = teams.find(t => t.id === idMappings[teamIdentifier]);
+          if (team) return team;
+        }
+        
+        return null;
+      };
+      
+      const homeTeam = findTeam(matchData.homeTeamId);
+      const awayTeam = findTeam(matchData.awayTeamId);
+
+      console.log('🔍 Team matching results:', { 
+        homeTeamId: matchData.homeTeamId,
+        homeTeamFound: homeTeam?.name || 'NOT FOUND',
+        awayTeamId: matchData.awayTeamId,
+        awayTeamFound: awayTeam?.name || 'NOT FOUND'
+      });
+
+      let finalHomeTeam = homeTeam;
+      let finalAwayTeam = awayTeam;
+
+      if (!finalHomeTeam || !finalAwayTeam) {
+        console.error('❌ Team matching failed:', {
+          requestedHome: matchData.homeTeamId,
+          foundHome: finalHomeTeam?.name,
+          requestedAway: matchData.awayTeamId,
+          foundAway: finalAwayTeam?.name,
+          availableTeams: teams.map(t => ({ id: t.id, name: t.name }))
+        });
+        
+        // Instead of failing, create placeholder teams for development
+        if (!finalHomeTeam) {
+          console.warn('⚠️ Creating placeholder home team for:', matchData.homeTeamId);
+          finalHomeTeam = {
+            id: matchData.homeTeamId,
+            name: matchData.homeTeamId || 'Equipo Local',
+            house: 'Unknown',
+            fuerzaAtaque: 50,
+            fuerzaDefensa: 50,
+            attackStrength: 50,
+            defenseStrength: 50,
+            seekerSkill: 50,
+            chaserSkill: 50,
+            keeperSkill: 50,
+            beaterSkill: 50,
+            logo: '/images/default-team.png',
+            colors: { primary: '#000000', secondary: '#ffffff' },
+            venue: 'Estadio Desconocido',
+            founded: 1000,
+            slogan: 'Equipo en desarrollo'
+          };
+        }
+        
+        if (!finalAwayTeam) {
+          console.warn('⚠️ Creating placeholder away team for:', matchData.awayTeamId);
+          finalAwayTeam = {
+            id: matchData.awayTeamId,
+            name: matchData.awayTeamId || 'Equipo Visitante',
+            house: 'Unknown',
+            fuerzaAtaque: 50,
+            fuerzaDefensa: 50,
+            attackStrength: 50,
+            defenseStrength: 50,
+            seekerSkill: 50,
+            chaserSkill: 50,
+            keeperSkill: 50,
+            beaterSkill: 50,
+            logo: '/images/default-team.png',
+            colors: { primary: '#000000', secondary: '#ffffff' },
+            venue: 'Estadio Desconocido',
+            founded: 1000,
+            slogan: 'Equipo en desarrollo'
+          };
+        }
+        
+        console.log('⚠️ Using placeholder teams to continue loading the match');
+      }
+
+      setHomeTeam(finalHomeTeam);
+      setAwayTeam(finalAwayTeam);
+
+      // Load related matches
+      if (finalHomeTeam && finalAwayTeam) {
+        try {
+          const related = await getRelatedMatches(finalHomeTeam.id, finalAwayTeam.id);
+          setRelatedMatches(related);
+        } catch (relatedError) {
+          console.warn('Failed to load related matches:', relatedError);
+          setRelatedMatches([]);
+        }
+      }
+
+      // Check if match is live to show simulation
+      if (matchData.status === 'live') {
+        setShowLiveSimulation(true);
+      }
+
+    } catch (err) {
+      console.error('Error loading match data:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Error cargando datos del partido';
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (matchId) {
+      loadMatchData(matchId);
+      // Load predictions data but preserve any optimistic updates
+      loadPredictionsData(matchId, false);
+    } else {
+      setError('ID de partido no proporcionado');
+      setIsLoading(false);
+    }
+  }, [matchId, loadMatchData, loadPredictionsData]);
+
+  // Handle making a prediction with simplified logic
+  const handlePrediction = async (winner: 'home' | 'away' | 'draw') => {
+    if (!match || isPredicting) return;
+    
+    // Only allow predictions on scheduled matches
+    if (match.status !== 'scheduled') {
+      console.warn('Cannot predict on non-scheduled match:', match.status);
+      return;
+    }
+    
+    console.log('🎯 Making prediction for match:', {
+      matchId: match.id,
+      prediction: winner,
+      confidence: 3
+    });
+    
+    // Set loading state
+    setIsPredicting(true);
+    
+    try {
+      // Create optimistic prediction immediately
+      const optimisticPrediction: Prediction = {
+        id: `temp_${Date.now()}`,
+        userId: 'current_user',
+        userName: 'Current User',
+        matchId: match.id,
+        prediction: winner,
+        confidence: 3,
+        points: 0,
+        createdAt: new Date(),
+        status: 'pending'
+      };
+      
+      // Update UI immediately
+      setUserPrediction(optimisticPrediction);
+      console.log('✨ UI updated with selected team:', winner);
+      
+      // Submit to backend
+      const success = await predictionsService.submitPrediction(match.id, winner, 3);
+      
+      if (success) {
+        console.log('✅ Prediction submitted successfully');
+        
+        // Give backend time to process
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Try to get real data from backend
+        try {
+          const realPrediction = await predictionsService.getUserPrediction(match.id);
+          if (realPrediction) {
+            setUserPrediction(realPrediction);
+            console.log('✅ Updated with real backend data');
+          }
+        } catch (backendError) {
+          console.warn('⚠️ Could not get backend data, keeping optimistic update:', backendError);
+        }
+      } else {
+        console.warn('⚠️ Backend submission failed, keeping optimistic update');
+      }
+      
+    } catch (error) {
+      console.error('❌ Prediction error:', error);
+      // Keep the optimistic prediction for better UX
+    }
+    
+    // Always clear loading state
+    setIsPredicting(false);
+    console.log('🎉 Prediction process completed');
   };
 
   const handleStartMatch = async () => {
-    if (!realMatch || realMatch.status !== 'live') return;
-    
-    setIsStartingMatch(true);
+    if (!match) return;
+
     try {
-      const liveState = await virtualTimeManager.comenzarPartidoEnVivo(realMatch.id);
-      if (liveState) {
-        setShowLiveSimulation(true);
-      }
-    } catch (error) {
-      console.error('Error starting match:', error);
+      setIsStartingMatch(true);
+      setError(null);
+      
+      // TODO: Integrate with backend API to mark match as live
+      // For now, just show the simulation interface
+      console.log('Starting live simulation for match:', match.id);
+      
+      // Simulate marking match as live
+      setShowLiveSimulation(true);
+      
+      // You can add API call here when backend is ready
+      // await apiClient.patch(`/matches/${match.id}/start-live`);
+      
+    } catch (err) {
+      console.error('Error starting match:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Error iniciando la simulación del partido';
+      setError(errorMessage);
     } finally {
       setIsStartingMatch(false);
     }
   };
 
-  const canPredict = () => {
-    return match && (match.status === 'upcoming' || (match.status === 'live' && !showLiveSimulation));
-  };  const canBet = () => {
-    return userCanBet && match && (match.status === 'upcoming' || match.status === 'live');
-  };
-
-  // Generate tabs dynamically based on match status
-  const getTabsForMatch = (): TabConfig[] => {
-    const baseTabs = [...tabs];
-    
-    // For finished matches, change 'Cronología' to 'Resumen' and move 'detailed-analysis' after it
-    if (match?.status === 'finished') {
-      const overviewTabIndex = baseTabs.findIndex(tab => tab.id === 'overview');
-      const detailedAnalysisTabIndex = baseTabs.findIndex(tab => tab.id === 'detailed-analysis');
-      
-      if (overviewTabIndex !== -1) {
-        baseTabs[overviewTabIndex] = {
-          ...baseTabs[overviewTabIndex],
-          label: 'Resumen',
-          description: 'Resumen del encuentro finalizado'
-        };
-      }
-      
-      // Move detailed-analysis tab to position after overview (resumen)
-      if (detailedAnalysisTabIndex !== -1 && overviewTabIndex !== -1) {
-        const detailedTab = baseTabs.splice(detailedAnalysisTabIndex, 1)[0];
-        baseTabs.splice(overviewTabIndex + 1, 0, detailedTab);
-      }
+  const handleMatchEnd = (endedMatchState: unknown) => {
+    console.log('Match ended:', endedMatchState);
+    setShowLiveSimulation(false);
+    // Refresh match data to show final results
+    if (matchId) {
+      loadMatchData(matchId);
     }
-    
-    return baseTabs;
   };
 
-  // Get available tabs based on match status and user permissions
-  const availableTabs = getTabsForMatch().filter(tab => {
-    if (tab.id === 'betting' && !canBet()) return false;
-    if (tab.id === 'detailed-analysis' && (!hasDetailedResults || match?.status !== 'finished')) return false;
-    return true;
-  });
+  const formatDate = (date: Date | string) => {
+    try {
+      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      if (isNaN(dateObj.getTime())) {
+        return 'Fecha inválida';
+      }
+      return dateObj.toLocaleDateString('es-ES', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch (err) {
+      console.error('Error formatting date:', err);
+      return 'Fecha inválida';
+    }
+  };
+
+  const formatTime = (date: Date | string) => {
+    try {
+      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      if (isNaN(dateObj.getTime())) {
+        return 'Hora inválida';
+      }
+      return dateObj.toLocaleTimeString('es-ES', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (err) {
+      console.error('Error formatting time:', err);
+      return 'Hora inválida';
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    const statusConfig = {
+      'scheduled': { text: 'Programado', class: styles.scheduled },
+      'live': { text: 'En Vivo', class: styles.live },
+      'finished': { text: 'Finalizado', class: styles.finished },
+      'postponed': { text: 'Pospuesto', class: styles.postponed }
+    };
+
+    const config = statusConfig[status as keyof typeof statusConfig] || 
+                  { text: status || 'Estado desconocido', class: styles.unknown };
+    
+    return (
+      <span className={`${styles.statusBadge} ${config.class}`}>
+        {config.text}
+      </span>
+    );
+  };
+
+  // Debug function - make available globally for testing
+  if (typeof window !== 'undefined') {
+    (window as typeof window & { clearAllPredictions?: () => void }).clearAllPredictions = () => {
+      // Clear all prediction-related localStorage
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.includes('prediction') || key.includes('quidditch'))) {
+          keysToRemove.push(key);
+        }
+      }
+      
+      keysToRemove.forEach(key => {
+        localStorage.removeItem(key);
+        console.log('🧹 Removed:', key);
+      });
+      
+      // Clear service cache
+      predictionsService.clearAllLocalPredictions();
+      
+      // Reset component state
+      setUserPrediction(null);
+      setPredictionStats(null);
+      
+      console.log('🧹 All predictions and related data cleared - refresh page to reload');
+    };
+    
+    // Also add a function to check current predictions
+    (window as typeof window & { checkPredictions?: () => void }).checkPredictions = () => {
+      console.log('📊 Current userPrediction:', userPrediction);
+      console.log('📈 Current predictionStats:', predictionStats);
+      console.log('💾 LocalStorage predictions:', localStorage.getItem('quidditch_user_predictions'));
+    };
+  }
 
   if (isLoading) {
     return (
       <div className={styles.loadingContainer}>
-        <div className={styles.magicalLoader}>
-          <div className={styles.goldenSnitch}></div>
-          <p className={styles.loadingText}>Convocando la magia del Quidditch...</p>
+        <div className={styles.loadingSpinner}>
+          <div className={styles.spinner}></div>
+          <p>Cargando detalles del partido...</p>
         </div>
       </div>
     );
   }
 
-  if (!match) {
+  if (error) {
     return (
       <div className={styles.errorContainer}>
-        <div className={styles.errorCard}>
-          <div className={styles.errorIcon}>🏟️</div>
-          <h2>Partido no encontrado</h2>
-          <p>El encuentro que buscas parece haber volado más alto que una Snitch Dorada.</p>
-          <Link to="/matches">
-            <Button>Volver a Partidos</Button>
-          </Link>
-        </div>
+        <Card className={styles.errorCard}>
+          <h2>Error al Cargar el Partido</h2>
+          <p>{error}</p>
+          <div className={styles.errorActions}>
+            <Button onClick={() => navigate('/matches')} variant="primary">
+              Volver a Partidos
+            </Button>
+            <Button onClick={() => matchId && loadMatchData(matchId)} variant="outline">
+              Reintentar
+            </Button>
+          </div>
+        </Card>
       </div>
     );
   }
 
-  return (
-    <div className={styles.magicalContainer}>
-      {/* Magical Background Elements */}
-      <div className={styles.magicalBackground}>
-        <div className={styles.floatingParticle}></div>
-        <div className={styles.floatingParticle}></div>
-        <div className={styles.floatingParticle}></div>
+  if (!match || !homeTeam || !awayTeam) {
+    return (
+      <div className={styles.errorContainer}>
+        <Card className={styles.errorCard}>
+          <h2>Partido No Encontrado</h2>
+          <p>No se pudo encontrar la información del partido solicitado.</p>
+          <Button onClick={() => navigate('/matches')} variant="primary">
+            Volver a Partidos
+          </Button>
+        </Card>
       </div>
+    );
+  }
 
-      {/* Breadcrumbs */}
-      <nav className={styles.breadcrumbs}>
-        <Link to="/" className={styles.breadcrumbLink}>
-          <span className={styles.breadcrumbIcon}>🏠</span>
-          Inicio
-        </Link>
-        <span className={styles.breadcrumbSeparator}>✨</span>
-        <Link to="/matches" className={styles.breadcrumbLink}>
-          <span className={styles.breadcrumbIcon}>⚡</span>
-          Partidos
-        </Link>
-        <span className={styles.breadcrumbSeparator}>✨</span>
-        <span className={styles.breadcrumbCurrent}>
-          {match.homeTeam} vs {match.awayTeam}
-        </span>
-      </nav>
+  // Transform match data for compatibility with components
+  const transformedMatch = {
+    id: match.id,
+    homeTeam: homeTeam?.name || 'Equipo Local',
+    awayTeam: awayTeam?.name || 'Equipo Visitante',
+    homeScore: match.homeScore || 0,
+    awayScore: match.awayScore || 0,
+    status: match.status === 'scheduled' ? 'upcoming' : match.status as 'live' | 'upcoming' | 'finished',
+    minute: match.currentMinute ? `${match.currentMinute}'` : undefined,
+    date: formatDate(match.date),
+    time: formatTime(match.date),
+    location: match.venue || 'Estadio de Quidditch'
+  };
 
-      {/* Match Header */}
-      <header className={styles.matchHeader}>
-        <div className={styles.statusBadgeContainer}>
-          {match.status === 'live' && (
-            <div className={`${styles.statusBadge} ${styles.live}`}>
-              <span className={styles.statusIcon}>🔴</span>
-              EN VIVO
-            </div>
-          )}
-          {match.status === 'finished' && (
-            <div className={`${styles.statusBadge} ${styles.finished}`}>
-              <span className={styles.statusIcon}>✅</span>
-              FINALIZADO
-            </div>
-          )}
-          {match.status === 'upcoming' && (
-            <div className={`${styles.statusBadge} ${styles.upcoming}`}>
-              <span className={styles.statusIcon}>⏰</span>
-              PRÓXIMO
-            </div>
-          )}
-        </div>
+  // Debug logging
+  console.log('🔍 MatchDetailPage Debug Info:', {
+    match,
+    homeTeam,
+    awayTeam,
+    transformedMatch,
+    showLiveSimulation,
+    FEATURES_BACKEND: FEATURES.USE_BACKEND_MATCHES
+  });
 
-        <div className={styles.matchTitle}>
-          <h1 className={styles.title}>
-            <span className={styles.titleAccent}>Duelo Mágico</span>
-            {match.homeTeam} vs {match.awayTeam}
-          </h1>
-          <div className={styles.matchMeta}>
-            <span className={styles.metaItem}>
-              <span className={styles.metaIcon}>📅</span>
-              {match.date}
-            </span>
-            <span className={styles.metaItem}>
-              <span className={styles.metaIcon}>🕐</span>
-              {match.time}
-            </span>            <span className={styles.metaItem}>
-              <span className={styles.metaIcon}>🏆</span>
-              Liga Profesional Quidditch
-            </span>
-            <span className={styles.metaItem}>
-              <span className={styles.metaIcon}>🏟️</span>
-              {match.location}
-            </span>
+  return (
+    <MatchDetailErrorBoundary>
+      <div className={styles.matchDetailContainer}>
+        {/* Magical floating particles */}
+        <div className={styles.floatingParticle}></div>
+        <div className={styles.floatingParticle}></div>
+        <div className={styles.floatingParticle}></div>
+        
+        {/* Header */}
+        <div className={styles.header}>
+          <Button 
+            onClick={() => navigate('/matches')} 
+            variant="outline" 
+            className={styles.backButton}
+          >
+            ← Volver a Partidos
+          </Button>
+          
+          <div className={styles.matchTitle}>
+            <h1>Detalles del Partido</h1>
+            <div className={styles.matchInfo}>
+              <span className={styles.matchDate}>{transformedMatch.date}</span>
+              <span className={styles.matchTime}>{transformedMatch.time}</span>
+              {getStatusBadge(match.status)}
+            </div>
           </div>
         </div>
-      </header>
 
-      {/* Magical Scoreboard */}
-      <section className={styles.magicalScoreboard}>
-        <div className={styles.teamContainer}>          <div className={`${styles.teamCard} ${styles.homeTeam}`}>
-            <div className={styles.teamBadge}>Local</div>
-            <TeamLogo teamName={match.homeTeam} size="xl" className={styles.teamLogo} />
-            <h2 className={styles.teamName}>{match.homeTeam}</h2>
-            <div className={styles.teamScore}>{match.homeScore}</div>
-            {detailedMatchResult && match.status === 'finished' && (
-              <div className={styles.scoreBreakdown}>
-                <small>Quaffle: {detailedMatchResult.statistics.quaffleGoals.home * 10}pts</small>
-                {detailedMatchResult.statistics.snitchPoints.home > 0 && (
-                  <small>Snitch: {detailedMatchResult.statistics.snitchPoints.home}pts</small>
+        {/* Main Match Card */}
+        <Card className={styles.mainMatchCard}>
+          <div className={styles.matchHeader}>
+            <div className={styles.teamSection}>
+              <div className={styles.team}>
+                <TeamLogo teamName={homeTeam.name} size="xl" />
+                <h2 className={styles.teamName}>{homeTeam.name}</h2>
+              </div>
+              
+              <div className={styles.scoreSection}>
+                <div className={styles.score}>
+                  <span className={styles.homeScore}>{transformedMatch.homeScore}</span>
+                  <span className={styles.scoreSeparator}>-</span>
+                  <span className={styles.awayScore}>{transformedMatch.awayScore}</span>
+                </div>
+                {transformedMatch.minute && (
+                  <div className={styles.minute}>
+                    {transformedMatch.minute}
+                  </div>
                 )}
               </div>
-            )}
-          </div>
-
-          <div className={styles.scoreCenter}>
-            <div className={styles.vsContainer}>
-              <span className={styles.vsText}>VS</span>
-              <div className={styles.magicalOrb}></div>
-            </div>            <div className={styles.matchStatus}>
-              {match.status === 'live' && match.minute && (
-                <div className={styles.liveTimer}>
-                  <span className={styles.timerIcon}>⚡</span>
-                  {match.minute}
-                </div>
-              )}
-              {match.status === 'finished' && (
-                <div className={styles.finalIndicator}>
-                  <span className={styles.finalIcon}>🏁</span>
-                  Final
-                  {detailedMatchResult && (
-                    <div className={styles.detailedIndicator}>
-                      <small>Duración: {detailedMatchResult.matchDuration}min</small>
-                    </div>
-                  )}
-                </div>
-              )}
-              {match.status === 'upcoming' && (
-                <div className={styles.upcomingIndicator}>
-                  <span className={styles.upcomingIcon}>🌟</span>
-                  Próximamente
-                </div>
-              )}
-            </div>
-          </div>          <div className={`${styles.teamCard} ${styles.awayTeam}`}>
-            <div className={styles.teamBadge}>Visitante</div>
-            <TeamLogo teamName={match.awayTeam} size="xl" className={styles.teamLogo} />
-            <h2 className={styles.teamName}>{match.awayTeam}</h2>
-            <div className={styles.teamScore}>{match.awayScore}</div>
-            {detailedMatchResult && match.status === 'finished' && (
-              <div className={styles.scoreBreakdown}>
-                <small>Quaffle: {detailedMatchResult.statistics.quaffleGoals.away * 10}pts</small>
-                {detailedMatchResult.statistics.snitchPoints.away > 0 && (
-                  <small>Snitch: {detailedMatchResult.statistics.snitchPoints.away}pts</small>
-                )}
+              
+              <div className={styles.team}>
+                <TeamLogo teamName={awayTeam.name} size="xl" />
+                <h2 className={styles.teamName}>{awayTeam.name}</h2>
               </div>
-            )}
+            </div>
           </div>
-        </div>
+        </Card>
 
-        {/* Quick Actions */}
-        {canBet() && (
-          <div className={styles.quickActions}>
-            <Link to={`/betting/${match.id}`}>
-              <Button className={styles.primaryAction}>
-                <span className={styles.actionIcon}>💎</span>
-                Apostar en este Duelo
-              </Button>
-            </Link>
-          </div>
-        )}
-      </section>
-
-      {/* Magical Tab Navigation */}
-      <nav className={styles.tabNavigation}>
-        <div className={styles.tabContainer}>
-          {availableTabs.map((tab) => (
+        {/* Tabs Navigation */}
+        <div className={styles.tabsContainer}>
+          <div className={styles.tabsHeader}>
             <button
-              key={tab.id}
-              className={`${styles.tabButton} ${activeTab === tab.id ? styles.active : ''}`}
-              onClick={() => handleTabClick(tab.id)}
-              title={tab.description}
+              className={`${styles.tab} ${activeTab === 'overview' ? styles.active : ''}`}
+              onClick={() => setActiveTab('overview')}
             >
-              <span className={styles.tabIcon}>
-                {activeTab === tab.id ? tab.magicalIcon : tab.icon}
-              </span>
-              <span className={styles.tabLabel}>{tab.label}</span>
-              {activeTab === tab.id && <div className={styles.tabIndicator}></div>}
+              Resumen
             </button>
-          ))}
+            {FEATURES.USE_BACKEND_PREDICTIONS && (
+              <button
+                className={`${styles.tab} ${activeTab === 'predictions' ? styles.active : ''}`}
+                onClick={() => setActiveTab('predictions')}
+              >
+                Predicciones
+              </button>
+            )}
+            <button
+              className={`${styles.tab} ${activeTab === 'stats' ? styles.active : ''}`}
+              onClick={() => setActiveTab('stats')}
+            >
+              Estadísticas
+            </button>
+            <button
+              className={`${styles.tab} ${activeTab === 'lineups' ? styles.active : ''}`}
+              onClick={() => setActiveTab('lineups')}
+            >
+              Alineaciones
+            </button>
+            <button
+              className={`${styles.tab} ${activeTab === 'head-to-head' ? styles.active : ''}`}
+              onClick={() => setActiveTab('head-to-head')}
+            >
+              Historial
+            </button>
+            {FEATURES.USE_BACKEND_BETS && (
+              <button
+                className={`${styles.tab} ${activeTab === 'betting' ? styles.active : ''}`}
+                onClick={() => setActiveTab('betting')}
+              >
+                Apuestas
+              </button>
+            )}
+            <button
+              className={`${styles.tab} ${activeTab === 'analysis' ? styles.active : ''}`}
+              onClick={() => setActiveTab('analysis')}
+            >
+              Análisis
+            </button>
+            <button
+              className={`${styles.tab} ${activeTab === 'related' ? styles.active : ''}`}
+              onClick={() => setActiveTab('related')}
+            >
+              Relacionados
+            </button>
+          </div>
+
+          {/* Tab Content */}
+          <div className={styles.tabContent}>
+            {activeTab === 'overview' && (
+              <MatchOverview
+                match={transformedMatch}
+                realMatch={match}
+                homeTeam={homeTeam}
+                awayTeam={awayTeam}
+                showLiveSimulation={showLiveSimulation}
+                isStartingMatch={isStartingMatch}
+                userPrediction={null}
+                finishedMatchData={null}
+                onStartMatch={handleStartMatch}
+                onMatchEnd={handleMatchEnd}
+              />
+            )}
+            
+            {activeTab === 'predictions' && FEATURES.USE_BACKEND_PREDICTIONS && (
+              <MatchPredictions
+                match={transformedMatch}
+                userPrediction={userPrediction}
+                predictionStats={predictionStats}
+                isAuthenticated={true} // For now, assume authenticated
+                isPredicting={isPredicting}
+                canPredict={match?.status === 'scheduled'}
+                onPrediction={handlePrediction}
+              />
+            )}
+            
+            {activeTab === 'stats' && (
+              <MatchStats
+                homeTeam={homeTeam}
+                awayTeam={awayTeam}
+              />
+            )}
+            
+            {activeTab === 'lineups' && (
+              <MatchLineups
+                homeTeam={homeTeam}
+                awayTeam={awayTeam}
+              />
+            )}
+            
+            {activeTab === 'head-to-head' && (
+              <MatchHeadToHead
+                homeTeam={homeTeam}
+                awayTeam={awayTeam}
+              />
+            )}
+            
+            {activeTab === 'betting' && FEATURES.USE_BACKEND_BETS && (
+              <MatchBetting
+                match={{
+                  id: match.id,
+                  homeTeam: homeTeam?.name || match.homeTeamId || '',
+                  awayTeam: awayTeam?.name || match.awayTeamId || '',
+                  homeScore: match.homeScore || 0,
+                  awayScore: match.awayScore || 0,
+                  status: match.status as 'live' | 'upcoming' | 'finished',
+                  date: match.date.toISOString().split('T')[0],
+                  time: match.date.toLocaleTimeString('es-ES', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                  }),
+                  location: match.venue || 'Campo de Quidditch'
+                }}
+                canBet={match.status !== 'finished'}
+              />
+            )}
+            
+            {activeTab === 'analysis' && (
+              <MatchDetailedAnalysis 
+                match={{
+                  id: match.id,
+                  homeTeam: match.homeTeamId || '',
+                  awayTeam: match.awayTeamId || '',
+                  homeScore: match.homeScore,
+                  awayScore: match.awayScore,
+                  status: match.status,
+                  date: match.date,
+                  location: match.venue
+                }} 
+                isLoading={isLoading} 
+              />
+            )}
+            
+            {activeTab === 'related' && (
+              <MatchRelatedMatches
+                relatedMatches={relatedMatches}
+              />
+            )}
+          </div>
         </div>
-      </nav>
-
-      {/* Tab Content */}
-      <main className={styles.tabContent}>
-        {activeTab === 'overview' && (
-          <MatchOverview
-            match={match}
-            realMatch={realMatch}
-            homeTeam={homeTeam}
-            awayTeam={awayTeam}
-            showLiveSimulation={showLiveSimulation}
-            isStartingMatch={isStartingMatch}
-            userPrediction={userPrediction}
-            finishedMatchData={finishedMatchData}
-            onStartMatch={handleStartMatch}
-            onMatchEnd={(endedMatchState) => {
-              console.log('Match ended:', endedMatchState);
-              virtualTimeManager.finalizarPartidoEnVivo(realMatch!.id);
-              setShowLiveSimulation(false);
-              window.location.reload();
-            }}
-          />
-        )}        {activeTab === 'predictions' && (
-          <MatchPredictions
-            match={match}
-            userPrediction={userPrediction}
-            predictionStats={predictionStats}
-            isAuthenticated={isAuthenticated}
-            isPredicting={isPredicting}
-            canPredict={!!canPredict()}
-            onPrediction={handlePrediction}
-          />
-        )}
-
-        {activeTab === 'stats' && (
-          <MatchStats
-            homeTeam={homeTeam}
-            awayTeam={awayTeam}
-          />
-        )}
-
-        {activeTab === 'lineups' && (
-          <MatchLineups
-            homeTeam={homeTeam}
-            awayTeam={awayTeam}
-            getTeamRosterData={getTeamRosterData}
-          />
-        )}
-
-        {activeTab === 'head-to-head' && (
-          <MatchHeadToHead
-            homeTeam={homeTeam}
-            awayTeam={awayTeam}
-          />
-        )}        {activeTab === 'betting' && (
-          <MatchBetting
-            match={match}
-            canBet={!!canBet()}
-          />
-        )}
-
-        {activeTab === 'detailed-analysis' && (
-          <MatchDetailedAnalysis
-            match={match}
-            hasDetailedResults={hasDetailedResults}
-          />
-        )}
-      </main>
-
-      {/* Related Matches */}
-      <MatchRelatedMatches relatedMatches={relatedMatches} />
-    </div>
+      </div>
+    </MatchDetailErrorBoundary>
   );
 };
 

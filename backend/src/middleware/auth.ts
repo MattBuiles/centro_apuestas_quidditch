@@ -23,20 +23,11 @@ export const authenticate = async (
       return;
     }
 
-    const jwtSecret = process.env.JWT_SECRET;
-    if (!jwtSecret) {
-      res.status(500).json({
-        success: false,
-        error: 'Server configuration error.',
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
-
-    const decoded = jwt.verify(token, jwtSecret) as JWTPayload;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JWTPayload;
     req.user = decoded;
     next();
-  } catch {
+  } catch (error) {
+    console.error('Auth error:', error);
     res.status(401).json({
       success: false,
       error: 'Invalid token.',

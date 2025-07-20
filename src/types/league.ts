@@ -77,6 +77,8 @@ export interface Match {
   // Backward compatibility
   homeTeamId: string;
   awayTeamId: string;
+  homeTeamName?: string; // Team names from backend joins
+  awayTeamName?: string;
   date: Date;
   events: GameEvent[];
   // Match status and metadata
@@ -203,6 +205,7 @@ export interface MatchState {
   lastEventTime: number;
   spectators?: number;
   weather?: string;
+  backendSaved?: boolean; // Track if already saved to backend
 }
 
 // Event configuration for simulation engine

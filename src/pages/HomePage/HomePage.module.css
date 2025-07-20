@@ -523,6 +523,41 @@
   font-weight: 600;
   z-index: 2;
   box-shadow: 0 4px 12px rgba(106, 13, 173, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.liveBadge {
+  background: linear-gradient(135deg, #ff4444, #ff6b6b);
+  animation: pulse 2s infinite;
+  box-shadow: 0 4px 12px rgba(255, 68, 68, 0.4);
+}
+
+.liveDot {
+  width: 6px;
+  height: 6px;
+  background: white;
+  border-radius: 50%;
+  animation: blink 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 4px 12px rgba(255, 68, 68, 0.4);
+  }
+  50% {
+    box-shadow: 0 4px 20px rgba(255, 68, 68, 0.6);
+  }
+}
+
+@keyframes blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0.3;
+  }
 }
 
 .matchHeader {
