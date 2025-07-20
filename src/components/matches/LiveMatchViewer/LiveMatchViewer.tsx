@@ -61,7 +61,13 @@ const LiveMatchViewer: React.FC<LiveMatchViewerProps> = ({
         
         // Save detailed match result
         console.log('🎯 Match ended, saving detailed results...');
-        liveMatchSimulator.saveDetailedMatchResult(match.id, match, homeTeam, awayTeam);
+        liveMatchSimulator.saveDetailedMatchResult(match.id, match, homeTeam, awayTeam)
+          .then(() => {
+            console.log('📋 Match result saving completed');
+          })
+          .catch((error) => {
+            console.error('❌ Error saving match result:', error);
+          });
         
         // Resolve bets for finished match
         console.log('💰 Resolving bets for finished match...');
