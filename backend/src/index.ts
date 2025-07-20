@@ -14,6 +14,7 @@ import { notFound } from './middleware/notFound';
 import { Database } from './database/Database';
 import { WebSocketService } from './services/WebSocketService';
 import { MatchSimulationService } from './services/MatchSimulationService';
+import { VirtualTimeService } from './services/VirtualTimeService';
 
 // Routes
 import authRoutes from './routes/auth';
@@ -144,7 +145,12 @@ async function startServer() {
     // Initialize WebSocket server
     const wsPort = parseInt(process.env.WS_PORT || '3002');
     const wss = new WebSocketServer({ port: wsPort });
-    const wsService = new WebSocketService(wss);
+    
+    // Initialize VirtualTimeService
+    const virtualTimeService = VirtualTimeService.getInstance();
+    await virtualTimeService.initialize();
+    
+    const wsService = new WebSocketService(wss, virtualTimeService);
     
     // Initialize match simulation service and connect with WebSocket
     const matchSimulationService = new MatchSimulationService();
