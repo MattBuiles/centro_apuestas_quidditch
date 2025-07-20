@@ -2,7 +2,9 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import Button from '@/components/common/Button';
 import TeamLogo from '@/components/teams/TeamLogo';
+import AdminMessage from '@/components/common/AdminMessage';
 import { MatchPredictionStats, Prediction } from '@/services/predictionsService';
+import { useAuth } from '@/context/AuthContext';
 import styles from './MatchPredictions.module.css';
 
 interface MatchPredictionsProps {
@@ -35,6 +37,21 @@ const MatchPredictions: React.FC<MatchPredictionsProps> = ({
   canPredict,
   onPrediction
 }) => {
+  const { user } = useAuth();
+
+  // Show admin message if user is admin
+  if (user?.role === 'admin') {
+    return (
+      <AdminMessage
+        title="Predicciones No Disponibles"
+        message="Los administradores no pueden realizar predicciones. Tu rol está destinado a la gestión y supervisión del sistema de predicciones."
+        redirectTo="/account"
+        redirectLabel="Ir al Panel de Control"
+        icon="🔮"
+      />
+    );
+  }
+
   return (
     <div className={styles.predictionsTab}>
       <div className={styles.sectionCard}>

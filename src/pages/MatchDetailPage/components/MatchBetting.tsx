@@ -2,6 +2,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
+import AdminMessage from '@/components/common/AdminMessage';
+import { useAuth } from '@/context/AuthContext';
 import styles from './MatchBetting.module.css';
 
 interface MatchBettingProps {
@@ -21,6 +23,21 @@ interface MatchBettingProps {
 }
 
 const MatchBetting: React.FC<MatchBettingProps> = ({ match }) => {
+  const { user } = useAuth();
+
+  // Show admin message if user is admin
+  if (user?.role === 'admin') {
+    return (
+      <AdminMessage
+        title="Apuestas No Disponibles"
+        message="Los administradores no pueden realizar apuestas. Tu rol está destinado a la gestión y supervisión del sistema de apuestas."
+        redirectTo="/account"
+        redirectLabel="Ir al Panel de Control"
+        icon="💰"
+      />
+    );
+  }
+
   // Solo mostrar mensaje si el partido ya terminó
   if (match.status === 'finished') {
     return (
