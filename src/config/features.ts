@@ -4,10 +4,11 @@ export const FEATURES = {
   USE_BACKEND_TEAMS: import.meta.env.VITE_USE_BACKEND === 'true',
   USE_BACKEND_AUTH: import.meta.env.VITE_USE_BACKEND === 'true',
   USE_BACKEND_MATCHES: import.meta.env.VITE_USE_BACKEND === 'true',
-  USE_BACKEND_SEASONS: import.meta.env.VITE_USE_BACKEND === 'true', // Nuevo
-  USE_BACKEND_BETS: false, // Gradual  
-  USE_BACKEND_PREDICTIONS: false, // Gradual
-  USE_WEBSOCKETS: false, // Última fase
+  USE_BACKEND_SEASONS: import.meta.env.VITE_USE_BACKEND === 'true',
+  USE_BACKEND_LEAGUE_TIME: import.meta.env.VITE_USE_BACKEND === 'true', // Nuevo - tiempo de liga
+  USE_BACKEND_BETS: import.meta.env.VITE_USE_BACKEND === 'true', // Habilitado para integración completa  
+  USE_BACKEND_PREDICTIONS: true, // Habilitado para testing
+  USE_WEBSOCKETS: true, // Habilitado para simulación de partidos
   
   // API URLs
   API_BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:3001/api',

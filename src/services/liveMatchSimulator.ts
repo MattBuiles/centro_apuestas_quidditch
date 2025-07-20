@@ -10,36 +10,36 @@ export class LiveMatchSimulator {
   private readonly EVENTOS: EventConfig[] = [
     { 
       tipo: 'QUAFFLE_GOAL', 
-      probAtaque: 0.05, 
-      probDefensa: 0.03, 
+      probAtaque: 0.15, // Increased from 0.05
+      probDefensa: 0.08, // Increased from 0.03
       puntos: 10,
       description: '¡Gol de Quaffle!'
     },
     { 
       tipo: 'QUAFFLE_ATTEMPT', 
-      probAtaque: 0.10, 
-      probDefensa: 0.08, 
+      probAtaque: 0.25, // Increased from 0.10
+      probDefensa: 0.20, // Increased from 0.08
       puntos: 0,
       description: 'Intento de gol con la Quaffle'
     },
     { 
       tipo: 'QUAFFLE_SAVE', 
-      probAtaque: 0.08, 
-      probDefensa: 0.12, 
+      probAtaque: 0.20, // Increased from 0.08
+      probDefensa: 0.25, // Increased from 0.12
       puntos: 0,
       description: '¡Parada del Guardián!'
     },
     { 
       tipo: 'SNITCH_SPOTTED', 
-      probAtaque: 0.02, 
-      probDefensa: 0.02, 
+      probAtaque: 0.05, // Increased from 0.02
+      probDefensa: 0.05, // Increased from 0.02
       puntos: 0,
       description: '¡La Snitch Dorada ha sido avistada!'
     },
     { 
       tipo: 'SNITCH_CAUGHT', 
-      probAtaque: 0.005, 
-      probDefensa: 0.002, 
+      probAtaque: 0.015, // Increased from 0.005
+      probDefensa: 0.010, // Increased from 0.002
       puntos: 150,
       description: '¡La Snitch Dorada ha sido atrapada!',
       endsMatch: true,
@@ -47,7 +47,7 @@ export class LiveMatchSimulator {
     },
     { 
       tipo: 'BLUDGER_HIT', 
-      probAtaque: 0.08, 
+      probAtaque: 0.15, // Increased from 0.08 
       probDefensa: 0.10, 
       puntos: 0,
       description: '¡Jugador golpeado por una Bludger!'
@@ -69,7 +69,9 @@ export class LiveMatchSimulator {
   ];
 
   private liveMatches: Map<string, MatchState> = new Map();
-  private matchIntervals: Map<string, number> = new Map();
+  private matchIntervals: Map<string, NodeJS.Timeout> = new Map();
+  private matchTeams: Map<string, { home: Team; away: Team }> = new Map(); // Store teams for each match
+  private backendSavePromises: Map<string, Promise<void>> = new Map(); // Track ongoing backend saves to prevent duplicates
 
   /**
    * Starts a live match simulation
@@ -81,6 +83,9 @@ export class LiveMatchSimulator {
     visitanteTeam: Team, 
     duracionEnMinutos: number = 90
   ): MatchState {
+    // Store teams for later reference
+    this.matchTeams.set(match.id, { home: localTeam, away: visitanteTeam });
+    
     // Initialize match state
     const estado: MatchState = {
       matchId: match.id,
@@ -94,7 +99,8 @@ export class LiveMatchSimulator {
       duration: duracionEnMinutos,
       lastEventTime: 0,
       spectators: match.attendance || Math.floor(Math.random() * 50000) + 10000,
-      weather: match.weather || 'sunny'
+      weather: match.weather || 'sunny',
+      backendSaved: false
     };
 
     this.liveMatches.set(match.id, estado);
@@ -139,6 +145,8 @@ export class LiveMatchSimulator {
    * Following schema: "Itera eventos, lanza Math.random() y registra los que suceden"
    */
   private processMinuteEvents(estado: MatchState, local: Team, visitante: Team): void {
+    console.log(`🎮 Processing minute ${estado.minuto} events`);
+    
     this.EVENTOS.forEach(evento => {
       // Check minimum time restrictions
       if (evento.minTime && estado.minuto < evento.minTime) {
@@ -147,16 +155,27 @@ export class LiveMatchSimulator {
 
       // Calculate probabilities for both teams
       const probLocal = this.ajustarProb(evento, local, visitante, 'home');
-      const probVisitante = this.ajustarProb(evento, visitante, local, 'away');      // Check if local team event occurs
-      if (Math.random() < probLocal) {
+      const probVisitante = this.ajustarProb(evento, visitante, local, 'away');
+      
+      const randomLocal = Math.random();
+      const randomVisitante = Math.random();
+      
+      console.log(`🎯 Event ${evento.tipo}: Local(${probLocal.toFixed(4)}, roll: ${randomLocal.toFixed(4)}) Away(${probVisitante.toFixed(4)}, roll: ${randomVisitante.toFixed(4)})`);
+      
+      // Check if local team event occurs
+      if (randomLocal < probLocal) {
+        console.log(`⚡ LOCAL EVENT: ${evento.tipo} for ${local.name}`);
         this.registrarEvento(estado, evento, local.id, local.name, true);
       }
 
       // Check if visiting team event occurs (unless match has ended)
-      if (estado.isActive && Math.random() < probVisitante) {
+      if (estado.isActive && randomVisitante < probVisitante) {
+        console.log(`⚡ AWAY EVENT: ${evento.tipo} for ${visitante.name}`);
         this.registrarEvento(estado, evento, visitante.id, visitante.name, false);
       }
     });
+    
+    console.log(`📊 Minute ${estado.minuto} complete. Events: ${estado.eventos.length}, Score: ${estado.golesLocal}-${estado.golesVisitante}`);
   }
 
   /**
@@ -169,8 +188,16 @@ export class LiveMatchSimulator {
     equipoDefensor: Team, 
     venue: 'home' | 'away'
   ): number {
-    const fuerzaAtaque = equipoAtacante.fuerzaAtaque || equipoAtacante.attackStrength;
-    const fuerzaDefensa = equipoDefensor.fuerzaDefensa || equipoDefensor.defenseStrength;
+    const fuerzaAtaque = equipoAtacante.fuerzaAtaque || equipoAtacante.attackStrength || 50;
+    const fuerzaDefensa = equipoDefensor.fuerzaDefensa || equipoDefensor.defenseStrength || 50;
+
+    console.log(`🔧 Adjusting probability for ${evento.tipo}:`, {
+      team: equipoAtacante.name,
+      attackStrength: fuerzaAtaque,
+      defenseStrength: fuerzaDefensa,
+      baseProb: evento.probAtaque,
+      venue
+    });
 
     // Base probability
     let prob = evento.probAtaque;
@@ -182,7 +209,9 @@ export class LiveMatchSimulator {
     // Home advantage (5% boost for home team)
     if (venue === 'home') {
       prob *= 1.05;
-    }    // Special adjustments for specific events
+    }
+
+    // Special adjustments for specific events
     switch (evento.tipo) {
       case 'SNITCH_CAUGHT': {
         // Seeker skill matters more for snitch
@@ -217,13 +246,18 @@ export class LiveMatchSimulator {
     teamName: string,
     isLocalTeam: boolean
   ): void {
+    // Validate inputs to prevent object interpolation errors
+    const safeTeamId = typeof teamId === 'string' ? teamId : 'unknown';
+    const safeTeamName = typeof teamName === 'string' ? teamName : 'Equipo Desconocido';
+    const safeEventDescription = typeof evento.description === 'string' ? evento.description : 'Evento desconocido';
+    
     const gameEvent: GameEvent = {
       id: `${estado.matchId}-${estado.eventos.length + 1}`,
       type: evento.tipo,
       minute: estado.minuto,
       second: Math.floor(Math.random() * 60),
-      teamId,
-      description: `${teamName}: ${evento.description}`,
+      teamId: safeTeamId,
+      description: `${safeTeamName}: ${safeEventDescription}`,
       points: evento.puntos,
       success: true
     };
@@ -242,7 +276,8 @@ export class LiveMatchSimulator {
     // Handle special events
     if (evento.tipo === 'SNITCH_CAUGHT') {
       estado.snitchCaught = true;
-      estado.snitchCaughtBy = teamId;
+      // Ensure teamId is a string before assignment
+      estado.snitchCaughtBy = typeof teamId === 'string' ? teamId : 'unknown';
       if (evento.endsMatch) {
         estado.isActive = false;
       }
@@ -285,6 +320,12 @@ export class LiveMatchSimulator {
       return null;
     }
 
+    const teams = this.matchTeams.get(matchId);
+    if (!teams) {
+      console.warn(`Cannot end match ${matchId}: Teams not found`);
+      return null;
+    }
+
     estado.isActive = false;
     estado.duration = estado.minuto;
     
@@ -292,6 +333,11 @@ export class LiveMatchSimulator {
     console.log(`📊 Match ready for detailed result saving: ${matchId}`);
     console.log(`📈 Events recorded: ${estado.eventos.length}`);
     console.log(`⏱️ Final duration: ${estado.minuto} minutes`);
+    console.log(`🔄 Backend save will be handled by LiveMatchViewer component`);
+    
+    // Don't save to backend here - let saveDetailedMatchResult handle it
+    // This prevents the race condition where both endMatch and saveDetailedMatchResult
+    // try to save simultaneously
     
     this.stopMatch(matchId);
     return estado;
@@ -310,6 +356,12 @@ export class LiveMatchSimulator {
     if (estado) {
       estado.isActive = false;
     }
+
+    // Clean up teams reference
+    this.matchTeams.delete(matchId);
+    
+    // Clean up any pending backend save promises
+    this.backendSavePromises.delete(matchId);
   }
 
   /**
@@ -382,12 +434,12 @@ export class LiveMatchSimulator {
   /**
    * Saves detailed match result (called from components with full match data)
    */
-  saveDetailedMatchResult(
+  async saveDetailedMatchResult(
     matchId: string,
     match: Match,
     homeTeam: Team,
     awayTeam: Team
-  ): void {
+  ): Promise<void> {
     const estado = this.liveMatches.get(matchId);
     if (!estado) {
       console.warn(`Cannot save match result: Match state not found for ${matchId}`);
@@ -396,22 +448,124 @@ export class LiveMatchSimulator {
 
     try {
       // Import the service here to avoid circular dependencies
-      import('./matchResultsService').then(({ matchResultsService }) => {
-        const detailedResult = matchResultsService.saveMatchResult(match, estado, homeTeam, awayTeam);
-        console.log(`✅ Detailed match result saved successfully for ${matchId}`);
-        console.log(`📊 Result ID: ${detailedResult.id}`);
-        
-        // Emit custom event for components to listen to
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('matchResultSaved', {
-            detail: { matchId, resultId: detailedResult.id, result: detailedResult }
-          }));
-        }
-      }).catch(error => {
-        console.error('Error importing matchResultsService:', error);
-      });
+      const { matchResultsService } = await import('./matchResultsService');
+      const detailedResult = matchResultsService.saveMatchResult(match, estado, homeTeam, awayTeam);
+      console.log(`✅ Detailed match result saved successfully for ${matchId}`);
+      console.log(`📊 Result ID: ${detailedResult.id}`);
+      
+      // Always try to save to backend - the saveMatchToBackend method will handle duplicates
+      console.log('💾 Saving to backend...');
+      await this.saveMatchToBackend(matchId, estado, homeTeam, awayTeam);
+      
+      // Emit custom event for components to listen to
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('matchResultSaved', {
+          detail: { matchId, resultId: detailedResult.id, result: detailedResult }
+        }));
+      }
     } catch (error) {
       console.error('Error saving detailed match result:', error);
+    }
+  }
+
+  /**
+   * Save match result to backend database
+   */
+  private async saveMatchToBackend(
+    matchId: string,
+    estado: MatchState,
+    homeTeam: Team,
+    awayTeam: Team
+  ): Promise<void> {
+    // Check if already saved
+    if (estado.backendSaved) {
+      console.log(`ℹ️ Match ${matchId} already saved to backend, skipping`);
+      return;
+    }
+
+    // Check if there's already an ongoing save for this match
+    const existingPromise = this.backendSavePromises.get(matchId);
+    if (existingPromise) {
+      console.log(`⏩ Backend save already in progress for match ${matchId}, waiting...`);
+      return existingPromise;
+    }
+
+    // Create and store the save promise
+    const savePromise = this.performBackendSave(matchId, estado, homeTeam, awayTeam);
+    this.backendSavePromises.set(matchId, savePromise);
+
+    try {
+      await savePromise;
+    } finally {
+      // Clean up the promise once completed
+      this.backendSavePromises.delete(matchId);
+    }
+  }
+
+  /**
+   * Performs the actual backend save operation
+   */
+  private async performBackendSave(
+    matchId: string,
+    estado: MatchState,
+    homeTeam: Team,
+    awayTeam: Team
+  ): Promise<void> {
+    try {
+      const { apiClient } = await import('@/utils/apiClient');
+      
+      const matchResult = {
+        matchId,
+        homeTeamId: homeTeam.id,
+        awayTeamId: awayTeam.id,
+        homeScore: estado.golesLocal,
+        awayScore: estado.golesVisitante,
+        status: 'finished',
+        events: estado.eventos.map(event => ({
+          id: event.id,
+          type: event.type,
+          minute: event.minute,
+          second: event.second,
+          teamId: event.teamId,
+          description: event.description,
+          points: event.points,
+          success: event.success
+        })),
+        duration: estado.minuto,
+        snitchCaught: estado.snitchCaught,
+        snitchCaughtBy: estado.snitchCaughtBy,
+        finishedAt: new Date().toISOString()
+      };
+
+      console.log('💾 Saving match result to backend:', matchResult);
+
+      const response = await apiClient.post(`/matches/${matchId}/finish`, matchResult);
+      
+      if (response.success) {
+        console.log('✅ Match result saved to backend successfully');
+        // Mark as saved in backend
+        const matchState = this.liveMatches.get(matchId);
+        if (matchState) {
+          matchState.backendSaved = true;
+        }
+      } else {
+        console.error('❌ Failed to save match result to backend:', response.error);
+      }
+    } catch (error) {
+      console.error('❌ Error saving match result to backend:', error);
+      
+      // If the error is because the match is already finished, that's actually OK
+      if (error instanceof Error && (error.message.includes('400') || error.message.includes('already finished'))) {
+        console.log('ℹ️ Match was already finished on backend (this is expected in some cases)');
+        // Mark as saved since it's already finished
+        const matchState = this.liveMatches.get(matchId);
+        if (matchState) {
+          matchState.backendSaved = true;
+        }
+      } else {
+        // Re-throw other errors
+        throw error;
+      }
     }
   }
 }

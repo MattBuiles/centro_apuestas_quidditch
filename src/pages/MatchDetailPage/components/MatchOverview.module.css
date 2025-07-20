@@ -2104,3 +2104,420 @@
     animation: none;
   }
 }
+
+/* ========================================
+   SIMULATION BUTTON STYLES
+   ======================================== */
+
+.liveReadyCard {
+  background: linear-gradient(135deg, 
+    rgba(16, 185, 129, 0.1) 0%, 
+    rgba(5, 150, 105, 0.08) 50%, 
+    rgba(4, 120, 87, 0.06) 100%);
+  border: 2px solid rgba(16, 185, 129, 0.3);
+  border-radius: 20px;
+  padding: 2rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  animation: simulationReadyGlow 4s ease-in-out infinite;
+  backdrop-filter: blur(10px);
+  box-shadow: 
+    0 15px 35px rgba(16, 185, 129, 0.1),
+    0 5px 15px rgba(0, 0, 0, 0.05);
+}
+
+.liveReadyCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(16, 185, 129, 0.1) 50%, 
+    transparent 100%);
+  animation: simulationShimmer 3s ease-in-out infinite;
+  z-index: 1;
+}
+
+@keyframes simulationReadyGlow {
+  0%, 100% { 
+    box-shadow: 
+      0 15px 35px rgba(16, 185, 129, 0.1),
+      0 5px 15px rgba(0, 0, 0, 0.05);
+  }
+  50% { 
+    box-shadow: 
+      0 20px 45px rgba(16, 185, 129, 0.15),
+      0 8px 25px rgba(0, 0, 0, 0.08);
+  }
+}
+
+@keyframes simulationShimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+.liveReadyIcon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  display: inline-block;
+  animation: simulationIconBounce 2s ease-in-out infinite;
+}
+
+@keyframes simulationIconBounce {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50% { transform: translateY(-5px) scale(1.05); }
+}
+
+.liveReadyCard h3 {
+  color: #047857;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  position: relative;
+  z-index: 2;
+}
+
+.liveReadyCard p {
+  color: #065f46;
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+  position: relative;
+  z-index: 2;
+}
+
+.startSimulationButton {
+  background: linear-gradient(135deg, 
+    #10b981 0%, 
+    #059669 50%, 
+    #047857 100%);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 0.8rem 2rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  position: relative;
+  z-index: 2;
+  overflow: hidden;
+  box-shadow: 
+    0 8px 20px rgba(16, 185, 129, 0.3),
+    0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.startSimulationButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255, 255, 255, 0.2) 50%, 
+    transparent 100%);
+  transition: left 0.5s ease-in-out;
+}
+
+.startSimulationButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 12px 30px rgba(16, 185, 129, 0.4),
+    0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.startSimulationButton:hover::before {
+  left: 100%;
+}
+
+.startSimulationButton:active {
+  transform: translateY(0px);
+}
+
+.startSimulationButton:disabled {
+  background: linear-gradient(135deg, 
+    #6b7280 0%, 
+    #4b5563 50%, 
+    #374151 100%);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 
+    0 4px 10px rgba(107, 114, 128, 0.2),
+    0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.actionIcon {
+  margin-right: 0.5rem;
+  font-size: 1.2rem;
+  display: inline-block;
+  animation: actionIconPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes actionIconPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.startSimulationButton:disabled .actionIcon {
+  animation: none;
+}
+
+/* Live updates container */
+.liveUpdateContainer {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(239, 246, 255, 0.8);
+  border-radius: 12px;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.liveUpdate {
+  text-align: center;
+}
+
+.liveScore {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e40af;
+  margin-bottom: 0.5rem;
+}
+
+.liveEvent {
+  font-size: 0.9rem;
+  color: #1e3a8a;
+  line-height: 1.4;
+}
+
+/* Responsive design for simulation button */
+@media (max-width: 768px) {
+  .liveReadyCard {
+    padding: 1.5rem;
+  }
+  
+  .liveReadyIcon {
+    font-size: 2.5rem;
+  }
+  
+  .liveReadyCard h3 {
+    font-size: 1.3rem;
+  }
+  
+  .liveReadyCard p {
+    font-size: 0.9rem;
+  }
+  
+  .startSimulationButton {
+    font-size: 1rem;
+    padding: 0.7rem 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .liveReadyCard {
+    padding: 1rem;
+  }
+  
+  .liveReadyIcon {
+    font-size: 2rem;
+  }
+  
+  .liveReadyCard h3 {
+    font-size: 1.2rem;
+  }
+  
+  .startSimulationButton {
+    width: 100%;
+    padding: 0.8rem 1rem;
+  }
+  
+  .simulationStatus {
+    width: 100%;
+    margin: 1rem 0;
+  }
+  
+  .scoreDisplay {
+    font-size: 1.5rem;
+  }
+}
+
+/* ===== SIMULATION STATUS STYLES ===== */
+.simulationStatus {
+  background: linear-gradient(135deg, 
+    rgba(34, 197, 94, 0.1) 0%,
+    rgba(16, 185, 129, 0.05) 100%);
+  border: 2px solid rgba(34, 197, 94, 0.2);
+  border-radius: 20px;
+  padding: clamp(1.5rem, 3vw, 2rem);
+  margin-top: clamp(1rem, 2vw, 1.5rem);
+  animation: simulationPulse 3s ease-in-out infinite;
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+
+.simulationStatus::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%,
+    rgba(34, 197, 94, 0.1) 50%,
+    transparent 100%);
+  animation: simulationShimmer 2s ease-in-out infinite;
+}
+
+@keyframes simulationPulse {
+  0%, 100% { 
+    border-color: rgba(34, 197, 94, 0.2);
+    box-shadow: 0 8px 25px rgba(34, 197, 94, 0.1);
+  }
+  50% { 
+    border-color: rgba(34, 197, 94, 0.4);
+    box-shadow: 
+      0 8px 25px rgba(34, 197, 94, 0.2),
+      0 0 30px rgba(34, 197, 94, 0.1);
+  }
+}
+
+@keyframes simulationShimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+.simulationStatus h4 {
+  color: #059669;
+  font-size: clamp(1.2rem, 2.5vw, 1.5rem);
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: clamp(1rem, 2vw, 1.5rem);
+  text-shadow: 0 2px 8px rgba(5, 150, 105, 0.3);
+  animation: titleGlow 2s ease-in-out infinite;
+}
+
+@keyframes titleGlow {
+  0%, 100% { 
+    text-shadow: 0 2px 8px rgba(5, 150, 105, 0.3);
+  }
+  50% { 
+    text-shadow: 
+      0 2px 8px rgba(5, 150, 105, 0.5),
+      0 0 20px rgba(5, 150, 105, 0.2);
+  }
+}
+
+.scoreDisplay {
+  text-align: center;
+  margin: clamp(1rem, 2vw, 1.5rem) 0;
+  position: relative;
+}
+
+.scoreDisplay span {
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  font-weight: 900;
+  background: linear-gradient(135deg, #059669, #10b981);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 4px 15px rgba(5, 150, 105, 0.4);
+  animation: scoreUpdate 1s ease-in-out;
+}
+
+@keyframes scoreUpdate {
+  0% { 
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% { 
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
+  100% { 
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.simulationDetails {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.8rem, 2vw, 1rem);
+  margin-top: clamp(1rem, 2vw, 1.5rem);
+}
+
+.simulationDetails p {
+  background: rgba(255, 255, 255, 0.7);
+  padding: clamp(0.8rem, 2vw, 1rem);
+  border-radius: 15px;
+  border: 1px solid rgba(5, 150, 105, 0.2);
+  font-weight: 600;
+  color: #047857;
+  font-size: clamp(1rem, 2.2vw, 1.2rem);
+  text-align: center;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(5px);
+}
+
+.simulationDetails p:hover {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(5, 150, 105, 0.4);
+  transform: scale(1.02);
+}
+
+/* Scheduled Match Info Styles */
+.scheduledMatchInfo {
+  background: linear-gradient(135deg, 
+    rgba(255, 193, 7, 0.1) 0%,
+    rgba(255, 193, 7, 0.05) 100%);
+  border-radius: 20px;
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+  border: 2px solid rgba(255, 193, 7, 0.2);
+  box-shadow: 0 10px 30px rgba(255, 193, 7, 0.1);
+}
+
+.scheduledMatchInfo p {
+  color: rgba(0, 0, 0, 0.8);
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.scheduledMatchInfo ol {
+  color: rgba(0, 0, 0, 0.7);
+  padding-left: 1.5rem;
+  line-height: 1.6;
+}
+
+.scheduledMatchInfo li {
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.scheduledMatchInfo li:last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+  .scheduledMatchInfo {
+    padding: 1rem;
+    margin-top: 1rem;
+  }
+  
+  .scheduledMatchInfo p {
+    font-size: 0.9rem;
+  }
+  
+  .scheduledMatchInfo li {
+    font-size: 0.85rem;
+  }
+}

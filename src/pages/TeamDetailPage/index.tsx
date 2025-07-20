@@ -3,7 +3,54 @@ import { useParams, Link } from 'react-router-dom';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import Card from '@/components/common/Card';
 import TeamLogo from '@/components/teams/TeamLogo';
+import { apiClient } from '@/utils/apiClient';
+import { formatTeamColors } from '@/utils/colorUtils';
+import { generateEnhancedTeamHistory, generateEnhancedAchievements } from '@/utils/teamEnhancementUtils';
 import styles from './TeamDetailPage.module.css';
+
+// Define interfaces for backend data
+interface BackendPlayer {
+  id: string;
+  name: string;
+  position: string;
+  number: number;
+  yearsActive: number;
+  achievements: string[];
+}
+
+interface BackendMatch {
+  id: string;
+  opponent: string;
+  date: string;
+  venue: string;
+  result?: 'win' | 'loss' | 'draw';
+  score?: string;
+}
+
+interface BackendIdol {
+  id: string;
+  name: string;
+  position: string;
+  period: string;
+  achievements: string[];
+  description: string;
+  legendaryStats: string;
+}
+
+interface BackendRivalry {
+  opponentId: string;
+  opponentName: string;
+  totalMatches: number;
+  wins: number;
+  losses: number;
+  draws: number;
+  winPercentage: number;
+  lastMatch?: {
+    date: string;
+    result: string;
+    score: string;
+  };
+}
 
 interface Player {
   id: string;
@@ -689,15 +736,125 @@ const TeamDetailPage = () => {
   const [activeTab, setActiveTab] = useState('historia');
 
   useEffect(() => {
-    setIsLoading(true);
-    setTimeout(() => {
-      if (teamId && mockTeamDetails[teamId]) {
-        setTeam(mockTeamDetails[teamId]);
-      } else {
-        setTeam(null);
+    const loadTeamDetails = async () => {
+      if (!teamId) return;
+      
+      setIsLoading(true);
+      
+      try {
+        // Try to get team from backend first
+        const response = await apiClient.get(`/teams/${teamId}`) as { 
+          success?: boolean; 
+          data?: Record<string, unknown>
+        };
+        
+        if (response.success && response.data) {
+          const teamData = response.data;
+          
+          // Transform backend data to match frontend interface
+          const transformedTeam: TeamDetails = {
+            id: String(teamData.id || teamId),
+            name: String(teamData.name || ''),
+            slogan: String(teamData.slogan || 'A proud Quidditch team'),
+            history: generateEnhancedTeamHistory(
+              String(teamData.name || ''),
+              Number(teamData.founded) || 1000,
+              String(teamData.history || '')
+            ),
+            wins: Number(teamData.wins) || 0,
+            losses: Number(teamData.losses) || 0,
+            draws: Number(teamData.draws) || 0,
+            titles: Number(teamData.titles) || 0,
+            founded: Number(teamData.founded) || 1000,
+            stadium: String(teamData.stadium || 'Unknown Stadium'),
+            colors: Array.isArray(teamData.colors) ? teamData.colors.map(String) : ['Unknown'],
+            achievements: generateEnhancedAchievements(
+              String(teamData.name || ''),
+              Number(teamData.titles) || 0,
+              Array.isArray(teamData.achievements) ? teamData.achievements.map(String) : []
+            ),
+            
+            // Transform roster data from backend
+            roster: Array.isArray(teamData.roster) ? teamData.roster.map((player: BackendPlayer) => ({
+              id: String(player.id || ''),
+              name: String(player.name || ''),
+              position: String(player.position || ''),
+              number: Number(player.number) || 0,
+              yearsActive: Number(player.yearsActive) || 0,
+              achievements: Array.isArray(player.achievements) ? player.achievements.map(String) : []
+            })) : [],
+            
+            // Transform upcoming matches from backend
+            upcomingMatches: Array.isArray(teamData.upcomingMatches) ? teamData.upcomingMatches.map((match: BackendMatch) => ({
+              id: String(match.id || ''),
+              opponent: String(match.opponent || ''),
+              date: String(match.date || ''),
+              venue: String(match.venue || ''),
+              result: undefined // upcoming matches don't have results
+            })) : [],
+            
+            // Transform recent matches from backend
+            recentMatches: Array.isArray(teamData.recentMatches) ? teamData.recentMatches.map((match: BackendMatch) => ({
+              id: String(match.id || ''),
+              opponent: String(match.opponent || ''),
+              date: String(match.date || ''),
+              venue: String(match.venue || ''),
+              result: match.result as 'win' | 'loss' | 'draw' | undefined,
+              score: String(match.score || '')
+            })) : [],
+            
+            // Transform historical idols from backend
+            historicalIdols: Array.isArray(teamData.historicalIdols) ? teamData.historicalIdols.map((idol: BackendIdol) => ({
+              id: String(idol.id || ''),
+              name: String(idol.name || ''),
+              position: String(idol.position || ''),
+              period: String(idol.period || ''),
+              achievements: Array.isArray(idol.achievements) ? idol.achievements.map(String) : [],
+              description: String(idol.description || ''),
+              legendaryStats: String(idol.legendaryStats || '')
+            })) : [],
+            
+            // Transform rivalries from backend
+            rivalries: Array.isArray(teamData.rivalries) ? teamData.rivalries.map((rivalry: BackendRivalry) => ({
+              opponentId: String(rivalry.opponentId || ''),
+              opponentName: String(rivalry.opponentName || ''),
+              totalMatches: Number(rivalry.totalMatches) || 0,
+              wins: Number(rivalry.wins) || 0,
+              losses: Number(rivalry.losses) || 0,
+              draws: Number(rivalry.draws) || 0,
+              winPercentage: Number(rivalry.winPercentage) || 0,
+              lastMatch: rivalry.lastMatch ? {
+                date: String(rivalry.lastMatch.date || ''),
+                result: (rivalry.lastMatch.result as 'win' | 'loss' | 'draw') || 'draw',
+                score: String(rivalry.lastMatch.score || '')
+              } : undefined
+            })) : []
+          };
+          
+          setTeam(transformedTeam);
+        } else {
+          throw new Error('Team not found in backend');
+        }
+      } catch (error) {
+        console.error(`Failed to load team ${teamId} from backend:`, error);
+        console.error('Error details:', {
+          message: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined
+        });
+        
+        // Fallback to mock data
+        if (teamId && mockTeamDetails[teamId]) {
+          console.warn(`Using mock data for team ${teamId}`);
+          setTeam(mockTeamDetails[teamId]);
+        } else {
+          setTeam(null);
+        }
       }
+      
       setIsLoading(false);
-    }, 1000);
+    };
+
+    loadTeamDetails();
   }, [teamId]);
 
   const handleTabClick = (tabName: string) => {
@@ -767,7 +924,7 @@ const TeamDetailPage = () => {
           </div>
           {team.colors && (
             <div className={styles.teamColors}>
-              <span>🎨 Colores del equipo: {team.colors.join(', ')}</span>
+              <span>🎨 Colores del equipo: {formatTeamColors(team.colors)}</span>
             </div>
           )}
           <div className={styles.teamQuickStats}>
@@ -775,13 +932,13 @@ const TeamDetailPage = () => {
               <div className={styles.statValue}>{team.wins}</div>
               <div className={styles.statLabel}>Victorias</div>
             </div>
-            {team.losses && (
+            {team.losses !== undefined && (
               <div className={styles.stat}>
                 <div className={styles.statValue}>{team.losses}</div>
                 <div className={styles.statLabel}>Derrotas</div>
               </div>
             )}
-            {team.draws && (
+            {team.draws !== undefined && (
               <div className={styles.stat}>
                 <div className={styles.statValue}>{team.draws}</div>
                 <div className={styles.statLabel}>Empates</div>

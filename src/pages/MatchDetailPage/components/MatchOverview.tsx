@@ -1,9 +1,34 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Button from '@/components/common/Button';
 import LiveMatchViewer from '@/components/matches/LiveMatchViewer';
+import MatchChronology from './MatchChronology';
 import { Team, Match } from '@/types/league';
-import { FinishedMatchData, Prediction } from '@/services/predictionsService';
+import { Prediction } from '@/services/predictionsService';
+import { FEATURES } from '@/config/features';
 import styles from './MatchOverview.module.css';
+
+// Tipos temporales para datos extendidos
+interface ExtendedPrediction extends Prediction {
+  predictedWinner?: 'home' | 'away' | 'draw';
+  isCorrect?: boolean;
+  timestamp?: string;
+}
+
+interface FinishedMatchData {
+  predictions: {
+    totalPredictions: number;
+    homeWinPredictions: number;
+    awayWinPredictions: number;
+    drawPredictions: number;
+  };
+  winner: 'home' | 'away' | 'draw';
+  finishedAt: string;
+  timeline?: Array<{
+    minute: string;
+    event: string;
+    score?: { home: number; away: number };
+  }>;
+}
 
 interface MatchOverviewProps {
   match: {
@@ -12,7 +37,7 @@ interface MatchOverviewProps {
     awayTeam: string;
     homeScore: number;
     awayScore: number;
-    status: 'live' | 'upcoming' | 'finished';
+    status: 'live' | 'upcoming' | 'finished' | 'scheduled';
     minute?: string;
     date: string;
     time: string;
@@ -23,7 +48,7 @@ interface MatchOverviewProps {
   awayTeam: Team | null;
   showLiveSimulation: boolean;
   isStartingMatch: boolean;
-  userPrediction: Prediction | null;
+  userPrediction: ExtendedPrediction | null;
   finishedMatchData: FinishedMatchData | null;
   onStartMatch: () => void;
   onMatchEnd: (endedMatchState: unknown) => void;
@@ -41,12 +66,19 @@ const MatchOverview: React.FC<MatchOverviewProps> = ({
   onStartMatch,
   onMatchEnd
 }) => {
+  const [currentMatchStatus, setCurrentMatchStatus] = useState(match.status); // Estado local del partido
+
+  // Sincronizar estado local con prop cuando cambie externamente
+  useEffect(() => {
+    setCurrentMatchStatus(match.status);
+  }, [match.status]);
+
   return (
     <div className={styles.overviewTab}>
       <div className={styles.sectionCard}>
         <h2 className={styles.sectionTitle}>
           <span className={styles.sectionIcon}>⚡</span>
-          Cronología en Vivo
+          {match.status === 'finished' ? 'Resumen del Partido' : 'Cronología en Vivo'}
         </h2>
         
         {match.status === 'upcoming' && (
@@ -66,51 +98,94 @@ const MatchOverview: React.FC<MatchOverviewProps> = ({
           </div>
         )}
 
-        {match.status === 'live' && (
+        {/* Estado scheduled: Mostrar mensaje informativo */}
+        {currentMatchStatus === 'scheduled' && FEATURES.USE_BACKEND_MATCHES && (
+          <div className={styles.liveTimeline}>
+            <div className={styles.timelineUnavailable}>
+              <div className={styles.unavailableIcon}>⏳</div>
+              <h3>Partido Aún No Iniciado</h3>
+              <p>
+                Este partido está programado pero aún no ha comenzado. 
+                Para simularlo, primero debe estar en estado "En Vivo".
+              </p>
+              <div className={styles.scheduledMatchInfo}>
+                <p>💡 <strong>Cómo simular este partido:</strong></p>
+                <ol>
+                  <li>Usa el botón "Al Próximo Partido" para activar este partido</li>
+                  <li>El estado cambiará a "En Vivo"</li>
+                  <li>Entonces podrás iniciar la simulación</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Simulación para partidos en vivo */}
+        {currentMatchStatus === 'live' && (
           <div className={styles.liveTimeline}>
             {realMatch && homeTeam && awayTeam ? (
-              <>
-                {!showLiveSimulation && (
-                  <div className={styles.liveReadyCard}>
-                    <div className={styles.liveReadyIcon}>🔴</div>
-                    <h3>Partido Listo para Comenzar</h3>
-                    <p>La cronología en vivo comenzará cuando inicies la simulación del duelo.</p>
-                    <Button 
-                      onClick={onStartMatch} 
-                      className={styles.startMatchButton}
-                      isLoading={isStartingMatch}
-                      disabled={isStartingMatch}
-                    >
-                      <span className={styles.actionIcon}>⚡</span>
-                      {isStartingMatch ? 'Invocando la Magia...' : 'Iniciar Cronología'}
-                    </Button>
-                  </div>
-                )}
-
-                {showLiveSimulation && (
-                  <div className={styles.liveTimelineContainer}>
-                    <div className={styles.timelineHeader}>
-                      <div className={styles.liveIndicator}>
-                        <span className={styles.liveDot}></span>
-                        EN VIVO
-                      </div>
+              FEATURES.USE_BACKEND_MATCHES ? (
+                // Nuevo sistema backend: usar LiveMatchViewer directamente
+                <LiveMatchViewer 
+                  match={realMatch} 
+                  homeTeam={homeTeam} 
+                  awayTeam={awayTeam}
+                  refreshInterval={3}
+                  onMatchEnd={onMatchEnd}
+                />
+              ) : (
+                // Sistema anterior: mostrar botón de inicio primero, luego LiveMatchViewer
+                <>
+                  {!showLiveSimulation && (
+                    <div className={styles.liveReadyCard}>
+                      <div className={styles.liveReadyIcon}>🔴</div>
+                      <h3>Partido Listo para Comenzar</h3>
+                      <p>La cronología en vivo comenzará cuando inicies la simulación del duelo.</p>
+                      <Button 
+                        onClick={onStartMatch} 
+                        className={styles.startMatchButton}
+                        isLoading={isStartingMatch}
+                        disabled={isStartingMatch}
+                      >
+                        <span className={styles.actionIcon}>⚡</span>
+                        {isStartingMatch ? 'Invocando la Magia...' : 'Iniciar Cronología'}
+                      </Button>
                     </div>
-                    
-                    <LiveMatchViewer 
-                      match={realMatch} 
-                      homeTeam={homeTeam} 
-                      awayTeam={awayTeam}
-                      refreshInterval={3}
-                      onMatchEnd={onMatchEnd}
-                    />
-                  </div>
-                )}
-              </>
+                  )}
+
+                  {showLiveSimulation && (
+                    <div className={styles.liveTimelineContainer}>
+                      <div className={styles.timelineHeader}>
+                        <div className={styles.liveIndicator}>
+                          <span className={styles.liveDot}></span>
+                          EN VIVO
+                        </div>
+                        <div className={styles.currentMinute}>
+                          Minuto: {realMatch.currentMinute || 0}'
+                        </div>
+                      </div>
+                      
+                      <LiveMatchViewer 
+                        match={realMatch} 
+                        homeTeam={homeTeam} 
+                        awayTeam={awayTeam}
+                        refreshInterval={3}
+                        onMatchEnd={onMatchEnd}
+                      />
+                    </div>
+                  )}
+                </>
+              )
             ) : (
               <div className={styles.timelineError}>
                 <div className={styles.errorIcon}>⚠️</div>
-                <h3>Error al Cargar Cronología</h3>
-                <p>No se pudieron cargar los datos del partido en vivo.</p>
+                <h3>Error al Cargar Simulación</h3>
+                <p>No se pudieron cargar los datos del partido para la simulación.</p>
+                <div style={{ fontSize: '12px', marginTop: '10px' }}>
+                  • RealMatch: {realMatch ? '✅' : '❌'}<br/>
+                  • HomeTeam: {homeTeam ? '✅' : '❌'}<br/>
+                  • AwayTeam: {awayTeam ? '✅' : '❌'}
+                </div>
               </div>
             )}
           </div>
@@ -184,7 +259,7 @@ const MatchOverview: React.FC<MatchOverviewProps> = ({
                       </span>
                     </div>
                     <div className={styles.predictionTimestamp}>
-                      <small>📅 Predicción realizada: {new Date(userPrediction.timestamp).toLocaleString('es-ES')}</small>
+                      <small>📅 Predicción realizada: {userPrediction.timestamp ? new Date(userPrediction.timestamp).toLocaleString('es-ES') : 'Fecha no disponible'}</small>
                     </div>
                   </div>
                 )}
@@ -205,46 +280,13 @@ const MatchOverview: React.FC<MatchOverviewProps> = ({
                 )}
               </div>
               
-              {/* Show detailed timeline only for non-finished matches */}
-              {match.status !== 'finished' && (
-                <div className={styles.timelineHistoryCard}>
-                  <h4>Cronología del Partido</h4>
-                  <div className={styles.timelineHistory}>
-                    {finishedMatchData && finishedMatchData.timeline ? (
-                      finishedMatchData.timeline.map((event, index) => (
-                        <div key={index} className={styles.timelineEvent}>
-                          <span className={styles.eventTime}>{event.minute}'</span>
-                          <span className={styles.eventDescription}>{event.event}</span>
-                          {event.score && (
-                            <span className={styles.eventScore}>
-                              {event.score.home} - {event.score.away}
-                            </span>
-                          )}
-                        </div>
-                      ))
-                    ) : (
-                      <>
-                        <div className={styles.timelineEvent}>
-                          <span className={styles.eventTime}>0'</span>
-                          <span className={styles.eventDescription}>🏃‍♂️ Inicio del duelo mágico</span>
-                        </div>
-                        <div className={styles.timelineEvent}>
-                          <span className={styles.eventTime}>Final</span>
-                          <span className={styles.eventDescription}>
-                            🟡 Snitch capturada - {match.homeScore > match.awayScore ? match.homeTeam : match.awayTeam} obtiene la victoria
-                          </span>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                  <div className={styles.timelineNote}>
-                    <small>
-                      {finishedMatchData ? 
-                        '✨ Cronología completa guardada del partido simulado' : 
-                        '💡 La cronología detallada estará disponible en futuras simulaciones'}
-                    </small>
-                  </div>
-                </div>
+              {/* Show MatchChronology component for finished matches */}
+              {match.status === 'finished' && (
+                <MatchChronology 
+                  matchId={match.id}
+                  homeTeamName={match.homeTeam}
+                  awayTeamName={match.awayTeam}
+                />
               )}
             </div>
           </div>

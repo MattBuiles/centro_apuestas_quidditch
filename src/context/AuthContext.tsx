@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../utils/apiClient';
 import { FEATURES } from '../config/features';
@@ -56,6 +56,14 @@ interface UserTransaction {
   date: string;
   description: string;
   userId: string;
+}
+
+// Interfaz para las estadísticas del usuario
+interface UserStats {
+  totalBets: number;
+  winRate: number;
+  totalWinnings: number;
+  favoriteTeam: string;
 }
 
 // 5 cuentas predefinidas
@@ -402,24 +410,33 @@ interface AuthContextType {
   isLoading: boolean;
   isAdmin: boolean;
   canBet: boolean;
+  isBackendAuthenticated: boolean; // New property to indicate backend auth status
   login: (email: string, password: string, remember?: boolean) => Promise<void>;
   register: (username: string, email: string, password: string, birthdate: string) => Promise<void>;
   logout: () => void;
   updateUserBalance: (newBalance: number) => void;
-  updateUserProfile: (userData: Partial<Pick<User, 'username' | 'email' | 'avatar'>>) => void;
+  syncUserBalance: () => Promise<void>;
+  updateUserProfile: (userData: Partial<Pick<User, 'username' | 'email' | 'avatar'>>) => Promise<void>;
   validateCurrentPassword: (password: string) => boolean;
   validatePassword: (password: string) => string | null;
-  updatePassword: (newPassword: string) => void;  // Nueva función para restablecer contraseña por email
-  resetPasswordByEmail: (email: string, newPassword: string) => boolean;
+  updatePassword: (currentPassword: string, newPassword: string) => Promise<void>;  // Nueva función para cambiar contraseña
+  checkEmailForRecovery: (email: string) => Promise<boolean>; // Nueva función para verificar email
+  resetPasswordByEmail: (email: string, newPassword: string) => Promise<boolean>;
+
   // Nueva función para obtener las cuentas predefinidas (útil para debugging)
   getPredefinedAccounts: () => { email: string; username: string; role: string }[];  // Funciones para manejo de apuestas
   placeBet: (bet: Omit<UserBet, 'id' | 'userId' | 'date' | 'status'>) => Promise<boolean>;
   getUserBets: () => UserBet[];
+  loadUserBetsFromBackend: () => Promise<UserBet[]>;
   getTodayBetsCount: () => number;
   canPlaceBet: (amount: number) => { canBet: boolean; reason?: string };
   // Funciones para manejo de transacciones
   getUserTransactions: () => UserTransaction[];
-  addTransaction: (transaction: Omit<UserTransaction, 'id' | 'userId' | 'date'>) => void;
+  addTransaction: (transaction: Omit<UserTransaction, 'id' | 'userId' | 'date'>) => Promise<void>;
+  loadUserTransactionsFromBackend: () => Promise<UserTransaction[]>;
+  // Funciones para manejo de estadísticas
+  getUserStats: () => UserStats;
+  loadUserStatsFromBackend: () => Promise<UserStats>;
   error: string | null;
 }
 
@@ -443,6 +460,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [currentAccounts, setCurrentAccounts] = useState<UserAccount[]>(PREDEFINED_ACCOUNTS);
   const [userBets, setUserBets] = useState<UserBet[]>([]);
   const [userTransactions, setUserTransactions] = useState<UserTransaction[]>([]);
+  const [userStats, setUserStats] = useState<UserStats>({
+    totalBets: 0,
+    winRate: 0,
+    totalWinnings: 0,
+    favoriteTeam: 'Gryffindor'
+  });
   const navigate = useNavigate();
 
   // Función para encontrar una cuenta por email
@@ -513,6 +536,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                 
                 setUser(backendUser);
                 
+                // Load user bets from backend after successful auth verification
+                try {
+                  await loadUserBetsFromBackend();
+                } catch (error) {
+                  console.error('Error loading user bets during auth check:', error);
+                }
+                
                 // Update stored user data
                 if (localStorage.getItem('user')) {
                   localStorage.setItem('user', JSON.stringify(backendUser));
@@ -529,16 +559,27 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               }
             } catch (error) {
               console.warn('Backend auth verification failed, using stored user data:', error);
+              // Clear invalid token from apiClient
+              apiClient.clearToken();
+              // Also clear stored tokens since they're invalid
+              localStorage.removeItem('auth_token');
+              sessionStorage.removeItem('auth_token');
               // Fallback to local user data
               setUser(parsedUser);
               loadUserBets(parsedUser.id);
               loadUserTransactions(parsedUser.id);
+              
+              // Store flag to indicate we're using local auth fallback
+              sessionStorage.setItem('auth_fallback', 'true');
             }
           } else {
             // Local authentication or no token
             setUser(parsedUser);
             loadUserBets(parsedUser.id);
             loadUserTransactions(parsedUser.id);
+            
+            // Store flag to indicate we're using local auth
+            sessionStorage.setItem('auth_fallback', 'true');
           }
         }
       } catch (error) {
@@ -586,6 +627,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           } else {
             sessionStorage.setItem('user', JSON.stringify(user));
             sessionStorage.setItem('auth_token', tokens.accessToken);
+          }
+
+          // Load user bets from backend after successful login
+          try {
+            await loadUserBetsFromBackend();
+          } catch (error) {
+            console.error('Error loading user bets after login:', error);
           }
 
           // Navigate based on role
@@ -812,6 +860,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     localStorage.removeItem('auth_token');
     sessionStorage.removeItem('user');
     sessionStorage.removeItem('auth_token');
+    sessionStorage.removeItem('auth_fallback');
     
     navigate('/login');
   };
@@ -831,30 +880,122 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         sessionStorage.setItem('user', JSON.stringify(updatedUser));
       }
     }
-  };  const updateUserProfile = (userData: Partial<Pick<User, 'username' | 'email' | 'avatar'>>) => {
-    if (user) {
-      const updatedUser = { ...user, ...userData };
-      setUser(updatedUser);
+  };
+
+  // Sync user balance from backend
+  const syncUserBalance = async () => {
+    if (!user || !FEATURES.USE_BACKEND_BETS) return;
+
+    try {
+      console.log('🔄 Syncing user balance from backend...');
+      const response = await apiClient.get('/auth/me') as any;
       
-      // Update the account in the current accounts list
-      setCurrentAccounts(prev => 
-        prev.map(account => 
-          account.user.id === user.id 
-            ? { ...account, user: updatedUser }
-            : account
-        )
-      );
-      
-      // Update the stored user data
-      const storedInLocal = localStorage.getItem('user');
-      const storedInSession = sessionStorage.getItem('user');
-      
-      if (storedInLocal) {
-        localStorage.setItem('user', JSON.stringify(updatedUser));
+      if (response?.data?.success && response?.data?.data?.balance !== undefined) {
+        const newBalance = response.data.data.balance;
+        if (newBalance !== user.balance) {
+          console.log(`💰 Balance updated: ${user.balance}G → ${newBalance}G`);
+          updateUserBalance(newBalance);
+        }
       }
-      if (storedInSession) {
-        sessionStorage.setItem('user', JSON.stringify(updatedUser));
+    } catch (error) {
+      console.error('❌ Error syncing user balance:', error);
+    }
+  };
+
+  // Effect to sync user balance periodically when backend is enabled
+  useEffect(() => {
+    if (!user || !FEATURES.USE_BACKEND_BETS) return;
+
+    // Sync balance immediately on mount
+    syncUserBalance();
+
+    // Set up periodic sync every 30 seconds
+    const intervalId = setInterval(() => {
+      syncUserBalance();
+    }, 30000); // 30 seconds
+
+    // Cleanup on unmount
+    return () => clearInterval(intervalId);
+  }, [user?.id, FEATURES.USE_BACKEND_BETS]);
+
+  // ...existing code...
+  const updateUserProfile = async (userData: Partial<Pick<User, 'username' | 'email' | 'avatar'>>) => {
+    if (!user) return;
+    
+    try {
+      // Si tenemos username o email y el backend está habilitado, actualizamos en el backend
+      if (FEATURES.USE_BACKEND_BETS && (userData.username || userData.email)) {
+        const updateData: { username?: string; email?: string } = {};
+        if (userData.username) updateData.username = userData.username;
+        if (userData.email) updateData.email = userData.email;
+        
+        const response = await apiClient.put('/users/profile', updateData);
+        
+        if (response.success && response.data) {
+          // Actualizar con los datos del backend
+          const backendUser = response.data as any;
+          const updatedUser = { 
+            ...user, 
+            username: backendUser.username,
+            email: backendUser.email,
+            // Mantener el avatar local si no viene del backend
+            avatar: userData.avatar || user.avatar
+          };
+          
+          setUser(updatedUser);
+          
+          // Update the account in the current accounts list
+          setCurrentAccounts(prev => 
+            prev.map(account => 
+              account.user.id === user.id 
+                ? { ...account, user: updatedUser }
+                : account
+            )
+          );
+          
+          // Update the stored user data
+          const storedInLocal = localStorage.getItem('user');
+          const storedInSession = sessionStorage.getItem('user');
+          
+          if (storedInLocal) {
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+          }
+          if (storedInSession) {
+            sessionStorage.setItem('user', JSON.stringify(updatedUser));
+          }
+          
+          return; // Salir early si el backend fue exitoso
+        } else {
+          throw new Error(response.error || 'Failed to update profile');
+        }
       }
+    } catch (error) {
+      console.error('Error updating profile in backend:', error);
+      throw error; // Re-throw para que el frontend pueda manejar el error
+    }
+    
+    // Si no hay backend o solo se actualiza el avatar, actualizar localmente
+    const updatedUser = { ...user, ...userData };
+    setUser(updatedUser);
+    
+    // Update the account in the current accounts list
+    setCurrentAccounts(prev => 
+      prev.map(account => 
+        account.user.id === user.id 
+          ? { ...account, user: updatedUser }
+          : account
+      )
+    );
+    
+    // Update the stored user data
+    const storedInLocal = localStorage.getItem('user');
+    const storedInSession = sessionStorage.getItem('user');
+    
+    if (storedInLocal) {
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+    }
+    if (storedInSession) {
+      sessionStorage.setItem('user', JSON.stringify(updatedUser));
     }
   };
   // Función para validar la contraseña actual
@@ -866,14 +1007,30 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return account ? account.password === password : false;
   };
   // Función para actualizar la contraseña
-  const updatePassword = (newPassword: string) => {
-    if (user) {
-      // Validar la nueva contraseña
-      const passwordError = validatePassword(newPassword);
-      if (passwordError) {
-        throw new Error(passwordError);
+  const updatePassword = async (currentPassword: string, newPassword: string): Promise<void> => {
+    if (!user) {
+      throw new Error('No user authenticated');
+    }
+
+    // Validar la nueva contraseña
+    const passwordError = validatePassword(newPassword);
+    if (passwordError) {
+      throw new Error(passwordError);
+    }
+
+    try {
+      const response = await apiClient.put('/users/password', {
+        currentPassword,
+        newPassword
+      });
+
+      if (!response.success) {
+        throw new Error(response.error || 'Error updating password');
       }
 
+      // También actualizar en localStorage para compatibilidad con el sistema actual
+      saveUserCredentials(user.id, newPassword);
+      
       // Actualizar en la lista de cuentas actuales
       setCurrentAccounts(prev => 
         prev.map(account => 
@@ -882,9 +1039,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             : account
         )
       );
-      
-      // También guardar en localStorage para compatibilidad
-      saveUserCredentials(user.id, newPassword);
+
+    } catch (error) {
+      console.error('Error updating password:', error);
+      throw error;
     }
   };
 
@@ -936,9 +1094,151 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  // Obtener todas las apuestas del usuario
+  // Obtener todas las apuestas del usuario desde el backend
   const getUserBets = (): UserBet[] => {
     return userBets;
+  };
+
+  // Cargar apuestas del usuario desde el backend
+  const loadUserBetsFromBackend = useCallback(async (): Promise<UserBet[]> => {
+    console.log('🔍 loadUserBetsFromBackend called');
+    console.log('🔍 User:', user);
+    console.log('🔍 USE_BACKEND_BETS:', FEATURES.USE_BACKEND_BETS);
+    
+    if (!user || !FEATURES.USE_BACKEND_BETS) {
+      console.log('🔍 Returning early - no user or backend disabled');
+      return userBets;
+    }
+
+    try {
+      console.log('🔍 Making API call to /bets');
+      const response = await apiClient.get('/bets') as any;
+      console.log('🔍 API Response:', response);
+      
+      if (response.success && response.data) {
+        const backendBets = response.data;
+        console.log('🔍 Backend bets:', backendBets);
+        
+        // Filtrar apuestas del usuario actual
+        const userBackendBets = backendBets.filter((bet: any) => bet.user_id === user.id);
+        console.log('🔍 User bets from backend:', userBackendBets);
+        
+        // Transformar datos del backend al formato del frontend
+        const transformedBets: UserBet[] = userBackendBets.map((bet: any) => ({
+          id: bet.id,
+          userId: bet.user_id,
+          matchId: bet.match_id,
+          matchName: `${bet.homeTeamName || 'Equipo Local'} vs ${bet.awayTeamName || 'Equipo Visitante'}`,
+          options: [{
+            id: bet.id,
+            type: bet.type,
+            selection: bet.prediction,
+            odds: bet.odds,
+            description: `${bet.type}: ${bet.prediction}`,
+            matchId: bet.match_id
+          }],
+          amount: bet.amount,
+          combinedOdds: bet.odds,
+          potentialWin: bet.potential_win,
+          date: bet.placed_at, // Esta es la fecha virtual del backend
+          status: bet.status === 'pending' ? 'active' : bet.status
+        }));
+
+        console.log('🔍 Transformed bets:', transformedBets);
+        setUserBets(transformedBets);
+        return transformedBets;
+      } else {
+        console.log('🔍 No data in response or response failed');
+      }
+    } catch (error) {
+      console.error('🔍 Error loading user bets from backend:', error);
+    }
+
+    return userBets;
+  }, [user, userBets]);
+
+  // Cargar transacciones del usuario desde el backend
+  const loadUserTransactionsFromBackend = useCallback(async (): Promise<UserTransaction[]> => {
+    console.log('🔍 loadUserTransactionsFromBackend called');
+    
+    if (!user || !FEATURES.USE_BACKEND_BETS) {
+      console.log('🔍 Returning early - no user or backend disabled');
+      return userTransactions;
+    }
+
+    try {
+      console.log('🔍 Making API call to /transactions');
+      const response = await apiClient.get('/transactions') as any;
+      console.log('🔍 Transactions API Response:', response);
+      
+      if (response.success && response.data) {
+        const backendTransactions = response.data;
+        console.log('🔍 Backend transactions:', backendTransactions);
+        
+        // Transformar datos del backend al formato del frontend
+        const transformedTransactions: UserTransaction[] = backendTransactions.map((transaction: any) => ({
+          id: transaction.id,
+          userId: transaction.user_id,
+          type: transaction.type,
+          amount: transaction.amount,
+          description: transaction.description,
+          date: transaction.created_at ? new Date(transaction.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
+        }));
+
+        console.log('🔍 Transformed transactions:', transformedTransactions);
+        setUserTransactions(transformedTransactions);
+        return transformedTransactions;
+      } else {
+        console.log('🔍 No data in response or response failed');
+      }
+    } catch (error) {
+      console.error('🔍 Error loading user transactions from backend:', error);
+    }
+
+    return userTransactions;
+  }, [user, userTransactions]);
+
+  // Cargar estadísticas del usuario desde el backend
+  const loadUserStatsFromBackend = useCallback(async (): Promise<UserStats> => {
+    console.log('📊 loadUserStatsFromBackend called');
+    
+    if (!user || !FEATURES.USE_BACKEND_BETS) {
+      console.log('📊 Returning early - no user or backend disabled');
+      return userStats;
+    }
+
+    try {
+      console.log('📊 Making API call to /users/stats');
+      const response = await apiClient.get('/users/stats') as any;
+      console.log('📊 User stats API Response:', response);
+      
+      if (response.success && response.data) {
+        const backendStats = response.data;
+        console.log('📊 Backend stats:', backendStats);
+        
+        const transformedStats: UserStats = {
+          totalBets: backendStats.totalBets || 0,
+          winRate: backendStats.winRate || 0,
+          totalWinnings: backendStats.totalWinnings || 0,
+          favoriteTeam: backendStats.favoriteTeam || 'Gryffindor'
+        };
+
+        console.log('📊 Transformed stats:', transformedStats);
+        setUserStats(transformedStats);
+        return transformedStats;
+      } else {
+        console.log('📊 No data in response or response failed');
+      }
+    } catch (error) {
+      console.error('📊 Error loading user stats from backend:', error);
+    }
+
+    return userStats;
+  }, [user, userStats]);
+
+  // Obtener estadísticas del usuario
+  const getUserStats = (): UserStats => {
+    return userStats;
   };
 
   // Obtener el número de apuestas realizadas hoy
@@ -985,31 +1285,113 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
 
     try {
-      // Crear la nueva apuesta
-      const newBet: UserBet = {
-        ...betData,
-        id: `bet_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        userId: user.id,
-        date: new Date().toISOString(),
-        status: 'active'
-      };
+      // Check if backend integration is enabled
+      if (FEATURES.USE_BACKEND_BETS) {
+        // For combined bets, create a single bet with combined odds in the backend
+        // Use the first option's type as the main type and create a combined prediction
+        const mainOption = betData.options[0];
+        const combinedPrediction = betData.options.map(opt => `${opt.type}:${opt.selection}`).join(',');
+        
+        const backendBetData = {
+          matchId: betData.matchId,
+          type: betData.options.length === 1 ? mainOption.type : 'combined',
+          prediction: betData.options.length === 1 ? mainOption.selection : combinedPrediction,
+          odds: betData.combinedOdds,
+          amount: betData.amount
+        };
 
-      // Descontar el monto del saldo
-      const newBalance = user.balance - betData.amount;
-      updateUserBalance(newBalance);      // Agregar la apuesta al historial
-      const updatedBets = [...userBets, newBet];
-      saveUserBets(updatedBets);
+        try {
+          const response = await apiClient.post('/bets', backendBetData);
+          if (response.success) {
+            // Backend bet creation successful
+            console.log('Bet created successfully in backend:', response.data);
+            
+            // Create local bet for UI consistency
+            const newBet: UserBet = {
+              ...betData,
+              id: `bet_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+              userId: user.id,
+              date: new Date().toISOString(),
+              status: 'active'
+            };
 
-      // Registrar la transacción de la apuesta
-      addTransaction({
-        type: 'bet',
-        amount: -betData.amount,
-        description: `Apuesta: ${betData.matchName}`
-      });
+            // Get updated user data from backend to ensure balance is correct
+            try {
+              const userResponse = await apiClient.get('/auth/me');
+              if (userResponse.success && userResponse.data && typeof userResponse.data === 'object') {
+                const userData = userResponse.data as any;
+                const updatedUser = {
+                  ...user,
+                  balance: userData.balance || user.balance
+                };
+                setUser(updatedUser);
+                setCurrentAccounts(prev => 
+                  prev.map(account => 
+                    account.user.id === user.id 
+                      ? { ...account, user: updatedUser }
+                      : account
+                  )
+                );
+              }
+            } catch (error) {
+              console.error('Error fetching updated user data:', error);
+              // Fallback: update balance locally
+              const newBalance = user.balance - betData.amount;
+              updateUserBalance(newBalance);
+            }
 
-      return true;
+            // Add to local bets for UI
+            const updatedBets = [...userBets, newBet];
+            saveUserBets(updatedBets);
+
+            // Register transaction locally for UI
+            addTransaction({
+              type: 'bet',
+              amount: -betData.amount,
+              description: `Apuesta: ${betData.matchName}`
+            });
+
+            return true;
+          } else {
+            throw new Error('Error al crear apuesta en el backend');
+          }
+        } catch (error) {
+          console.error('Error creating bet in backend:', error);
+          throw new Error('Error al comunicarse con el servidor');
+        }
+      } else {
+        // Fallback to local storage if backend is not available
+        console.warn('Backend betting not available, using local storage');
+        
+        // Crear la nueva apuesta
+        const newBet: UserBet = {
+          ...betData,
+          id: `bet_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          userId: user.id,
+          date: new Date().toISOString(),
+          status: 'active'
+        };
+
+        // Descontar el monto del saldo
+        const newBalance = user.balance - betData.amount;
+        updateUserBalance(newBalance);
+
+        // Agregar la apuesta al historial
+        const updatedBets = [...userBets, newBet];
+        saveUserBets(updatedBets);
+
+        // Registrar la transacción de la apuesta
+        addTransaction({
+          type: 'bet',
+          amount: -betData.amount,
+          description: `Apuesta: ${betData.matchName}`
+        });
+
+        return true;
+      }
     } catch (error) {
-      console.error('Error al realizar la apuesta:', error);      return false;
+      console.error('Error al realizar la apuesta:', error);
+      return false;
     }
   };
 
@@ -1028,45 +1410,104 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return userTransactions;
   };
 
-  // Agregar una nueva transacción
-  const addTransaction = (transactionData: Omit<UserTransaction, 'id' | 'userId' | 'date'>) => {
-    if (!user) return;
+  // Agregar una nueva transacción al backend
+  const addTransaction = async (transactionData: Omit<UserTransaction, 'id' | 'userId' | 'date'>) => {
+    if (!user || !FEATURES.USE_BACKEND_BETS) {
+      // Fallback al comportamiento anterior si no hay backend
+      const newTransaction: UserTransaction = {
+        ...transactionData,
+        id: Date.now(),
+        userId: user?.id || '',
+        date: new Date().toISOString().split('T')[0]
+      };
+      const updatedTransactions = [...userTransactions, newTransaction];
+      saveUserTransactions(updatedTransactions);
+      return;
+    }
 
-    const newTransaction: UserTransaction = {
-      ...transactionData,
-      id: Date.now(),
-      userId: user.id,
-      date: new Date().toISOString().split('T')[0] // YYYY-MM-DD format
-    };
+    try {
+      // Determinar el endpoint según el tipo de transacción
+      const endpoint = transactionData.type === 'deposit' ? 
+        '/transactions/deposit' : 
+        transactionData.type === 'withdraw' ? '/transactions/withdraw' : null;
+      
+      if (!endpoint) {
+        console.error('Tipo de transacción no soportado:', transactionData.type);
+        return;
+      }
 
-    const updatedTransactions = [...userTransactions, newTransaction];
-    saveUserTransactions(updatedTransactions);
+      const response = await apiClient.post(endpoint, {
+        amount: Math.abs(transactionData.amount), // Siempre enviar positivo
+        description: transactionData.description
+      }) as any;
+
+      if (response.success) {
+        console.log('✅ Transacción guardada en backend:', response.data);
+        
+        // Actualizar el balance del usuario en el contexto
+        if (response.data.balanceAfter !== undefined) {
+          setUser(prev => prev ? { ...prev, balance: response.data.balanceAfter } : null);
+        }
+        
+        // Recargar transacciones desde el backend
+        await loadUserTransactionsFromBackend();
+      } else {
+        console.error('❌ Error guardando transacción:', response.error);
+        throw new Error(response.error);
+      }
+    } catch (error) {
+      console.error('❌ Error en addTransaction:', error);
+      throw error;
+    }
+  };
+
+  // Función para verificar si un email existe para recuperación
+  const checkEmailForRecovery = async (email: string): Promise<boolean> => {
+    try {
+      const response = await apiClient.post<{ exists: boolean }>('/auth/check-email', { email });
+      return response.success && response.data?.exists === true;
+    } catch (error) {
+      console.error('Error checking email for recovery:', error);
+      return false;
+    }
   };
 
   // Función para restablecer contraseña por email
-  const resetPasswordByEmail = (email: string, newPassword: string): boolean => {
-    const account = findAccountByEmail(email);
-    if (account) {
+  const resetPasswordByEmail = async (email: string, newPassword: string): Promise<boolean> => {
+    try {
       // Validar la nueva contraseña
       const passwordError = validatePassword(newPassword);
       if (passwordError) {
         throw new Error(passwordError);
       }
 
-      // Actualizar en la lista de cuentas actuales
-      setCurrentAccounts(prev => 
-        prev.map(acc => 
-          acc.user.email === email 
-            ? { ...acc, password: newPassword }
-            : acc
-        )
-      );
-      
-      // También guardar en localStorage para compatibilidad
-      saveUserCredentials(account.user.id, newPassword);
-      return true;
+      // Llamar al backend para restablecer la contraseña
+      const response = await apiClient.post('/auth/reset-password', {
+        email,
+        newPassword
+      });
+
+      if (response.success) {
+        // También actualizar en localStorage para compatibilidad con sistema actual
+        const account = findAccountByEmail(email);
+        if (account) {
+          setCurrentAccounts(prev => 
+            prev.map(acc => 
+              acc.user.email === email 
+                ? { ...acc, password: newPassword }
+                : acc
+            )
+          );
+          saveUserCredentials(account.user.id, newPassword);
+        }
+        return true;
+      }
+      return false;
+
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      throw error;
     }
-    return false;
   };
 
   // Función para obtener información de las cuentas predefinidas (sin contraseñas)
@@ -1084,22 +1525,33 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         isLoading,
         isAdmin: user?.role === 'admin',
         canBet: !!user && user.role !== 'admin',
+        isBackendAuthenticated: !!user && !sessionStorage.getItem('auth_fallback') && FEATURES.USE_BACKEND_AUTH,
         login,
         register,
         logout,
         updateUserBalance,
+        syncUserBalance,
         updateUserProfile,
         validateCurrentPassword,
         validatePassword,
-        updatePassword,        resetPasswordByEmail,
-        getPredefinedAccounts,        // Funciones de apuestas
+        updatePassword,
+        checkEmailForRecovery,
+        resetPasswordByEmail,
+        getPredefinedAccounts,
+
+        // Funciones de apuestas
         placeBet,
         getUserBets,
+        loadUserBetsFromBackend,
         getTodayBetsCount,
         canPlaceBet,
         // Funciones de transacciones
         getUserTransactions,
         addTransaction,
+        loadUserTransactionsFromBackend,
+        // Funciones para manejo de estadísticas
+        getUserStats,
+        loadUserStatsFromBackend,
         error,
       }}
     >

@@ -8,8 +8,6 @@ import './styles/global.css'
 // Import Quidditch System for console access and testing
 import './services/quidditchSystem'
 import './services/systemValidation'
-// Import VirtualTimeManager to ensure it initializes
-import { virtualTimeManager } from './services/virtualTimeManager'
 // Import test de inicialización
 import './services/testInicializacion'
 // Import validation completa
@@ -18,18 +16,6 @@ import { validacionCompleta } from './services/validacionCompleta'
 import './services/testFinal'
 // Import results validation system
 import './services/resultsValidation'
-
-// Force initialization check on app start
-console.log('🎮 App starting - VirtualTimeManager state:', {
-  hasActiveSeasonAtStart: !!virtualTimeManager.getState().temporadaActiva
-});
-
-// Run complete validation after a brief delay
-setTimeout(async () => {
-  console.log('🔍 Ejecutando validación completa del sistema...');
-  await validacionCompleta.validarInicializacionCompleta();
-  validacionCompleta.mostrarEstadoDetallado();
-}, 500);
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

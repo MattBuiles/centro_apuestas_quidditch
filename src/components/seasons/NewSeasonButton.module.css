@@ -1,0 +1,275 @@
+.newSeasonContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 50vh;
+  padding: 2rem;
+}
+
+.newSeasonCard {
+  background: rgba(255, 255, 255, 0.98) !important;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(106, 13, 173, 0.15) !important;
+  border-radius: 24px !important;
+  box-shadow: 
+    0 20px 40px rgba(106, 13, 173, 0.12),
+    0 0 0 1px rgba(255, 255, 255, 0.6) inset !important;
+  max-width: 600px;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.newSeasonCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(106, 13, 173, 0.6) 20%, 
+    rgba(255, 215, 0, 0.8) 50%, 
+    rgba(106, 13, 173, 0.6) 80%, 
+    transparent 100%);
+}
+
+.newSeasonContent {
+  text-align: center;
+  padding: 3rem 2.5rem;
+}
+
+.newSeasonIcon {
+  font-size: 4rem;
+  margin-bottom: 1.5rem;
+  display: block;
+  filter: drop-shadow(0 4px 8px rgba(106, 13, 173, 0.3));
+  animation: float 3s ease-in-out infinite;
+}
+
+.newSeasonTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #6a0dad;
+  margin-bottom: 1rem;
+  font-family: 'Playfair Display', serif;
+  background: linear-gradient(135deg, #6a0dad 0%, #9333ea 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.newSeasonDescription {
+  color: rgba(106, 13, 173, 0.8);
+  margin-bottom: 2rem;
+  line-height: 1.6;
+  font-size: 1.1rem;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.errorMessage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  color: #dc2626;
+  font-weight: 500;
+}
+
+.errorIcon {
+  font-size: 1.25rem;
+}
+
+.createButton {
+  font-size: 1.1rem !important;
+  font-weight: 600 !important;
+  padding: 1rem 2rem !important;
+  border-radius: 16px !important;
+  background: linear-gradient(135deg, #6a0dad 0%, #9333ea 100%) !important;
+  box-shadow: 
+    0 8px 25px rgba(106, 13, 173, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.2) inset !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  margin-bottom: 2rem;
+  min-width: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.createButton:hover:not(:disabled) {
+  transform: translateY(-2px) !important;
+  box-shadow: 
+    0 12px 35px rgba(106, 13, 173, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.3) inset !important;
+}
+
+.createButton:disabled {
+  opacity: 0.7 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+.spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.seasonDetails {
+  background: rgba(106, 13, 173, 0.05);
+  border: 1px solid rgba(106, 13, 173, 0.1);
+  border-radius: 16px;
+  padding: 1.5rem;
+  text-align: left;
+}
+
+.detailsTitle {
+  font-weight: 600;
+  color: #6a0dad;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  text-align: center;
+}
+
+.detailsList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.detailsList li {
+  display: flex;
+  align-items: center;
+  color: rgba(106, 13, 173, 0.8);
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.detailsList li::before {
+  content: '✨';
+  margin-right: 0.75rem;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.alternativeActions {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(106, 13, 173, 0.15);
+  text-align: center;
+}
+
+.alternativeText {
+  color: rgba(106, 13, 173, 0.7);
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  font-style: italic;
+}
+
+.resetButton {
+  background: rgba(220, 38, 38, 0.1) !important;
+  border: 1px solid rgba(220, 38, 38, 0.3) !important;
+  color: #dc2626 !important;
+  font-weight: 500 !important;
+  padding: 0.75rem 1.5rem !important;
+  border-radius: 12px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-width: 180px;
+  margin: 0 auto;
+}
+
+.resetButton:hover:not(:disabled) {
+  background: rgba(220, 38, 38, 0.15) !important;
+  border-color: rgba(220, 38, 38, 0.5) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2) !important;
+}
+
+.resetButton:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 768px) {
+  .newSeasonContainer {
+    padding: 1rem;
+  }
+  
+  .newSeasonContent {
+    padding: 2rem 1.5rem;
+  }
+  
+  .newSeasonTitle {
+    font-size: 1.5rem;
+  }
+  
+  .newSeasonDescription {
+    font-size: 1rem;
+  }
+  
+  .createButton {
+    font-size: 1rem !important;
+    padding: 0.875rem 1.5rem !important;
+    min-width: 200px;
+  }
+  
+  .alternativeActions {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+  }
+  
+  .resetButton {
+    font-size: 0.9rem !important;
+    padding: 0.625rem 1.25rem !important;
+    min-width: 160px;
+  }
+}
+
+.adminOnlyText {
+  color: rgba(106, 13, 173, 0.7);
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: rgba(106, 13, 173, 0.05);
+  border: 1px solid rgba(106, 13, 173, 0.1);
+  border-radius: 8px;
+}

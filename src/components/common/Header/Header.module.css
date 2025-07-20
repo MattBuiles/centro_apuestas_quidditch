@@ -867,13 +867,18 @@
 /* ===== LOGOUT CONFIRMATION MODAL ===== */
 .modal {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(15px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 9999;
   animation: modalFadeIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   padding: 1rem;
 }

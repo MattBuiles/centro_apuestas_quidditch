@@ -473,120 +473,992 @@
   }
 }
 
-/* Responsive Design */
-@media (max-width: 992px) {
-  .predictionBars {
-    gap: 1rem;
+/* Prediction Result Section - MAGIC REVEAL */
+.predictionResultSection {
+  background: linear-gradient(135deg, 
+    rgba(75, 0, 130, 0.08) 0%,
+    rgba(138, 43, 226, 0.05) 25%,
+    rgba(255, 255, 255, 0.95) 50%,
+    rgba(138, 43, 226, 0.05) 75%,
+    rgba(75, 0, 130, 0.08) 100%);
+  border-radius: 25px;
+  padding: clamp(1.8rem, 3.5vw, 2.8rem);
+  margin-top: clamp(1.5rem, 3vw, 2.5rem);
+  border: 2px solid rgba(138, 43, 226, 0.2);
+  backdrop-filter: blur(15px);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 
+    0 15px 40px rgba(138, 43, 226, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  animation: predictionReveal 0.8s ease-out;
+}
+
+@keyframes predictionReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+    filter: blur(5px);
   }
-  
-  .predictionBar {
-    min-height: 60px;
-    padding: 1rem 1.5rem;
+  50% {
+    opacity: 0.7;
+    transform: translateY(10px) scale(0.98);
+    filter: blur(2px);
   }
-  
-  .userPredictionCard,
-  .predictionInterface,
-  .communityPredictions {
-    padding: 1.5rem;
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
   }
 }
 
-@media (max-width: 768px) {
-  .predictionsTab {
-    padding: 1.5rem;
+.predictionResultSection::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, 
+    transparent 30%,
+    rgba(186, 104, 200, 0.1) 50%,
+    transparent 70%);
+  animation: magicShimmer 3s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes magicShimmer {
+  0% { transform: translateX(-100%) rotate(45deg); }
+  50% { transform: translateX(100%) rotate(45deg); }
+  100% { transform: translateX(200%) rotate(45deg); }
+}
+
+.predictionResultSection > * {
+  position: relative;
+  z-index: 1;
+}
+
+.predictionResultSection h4 {
+  color: #4b0082;
+  font-family: var(--font-secondary);
+  font-size: clamp(1.3rem, 2.5vw, 1.6rem);
+  margin-bottom: clamp(1.2rem, 2.5vw, 1.8rem);
+  text-align: center;
+  text-shadow: 0 2px 4px rgba(138, 43, 226, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+}
+
+.predictionComparison {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(1.2rem, 2.5vw, 2rem);
+  margin-bottom: clamp(1.5rem, 3vw, 2rem);
+}
+
+.predictionMade,
+.actualResult {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(186, 104, 200, 0.08) 25%,
+    rgba(255, 255, 255, 0.8) 50%,
+    rgba(156, 39, 176, 0.06) 75%,
+    rgba(255, 255, 255, 0.85) 100%);
+  border-radius: 20px;
+  padding: clamp(1.2rem, 2.5vw, 1.8rem);
+  border: 1px solid rgba(186, 104, 200, 0.2);
+  backdrop-filter: blur(10px);
+  position: relative;
+  transition: all 0.4s ease;
+}
+
+.predictionMade:hover,
+.actualResult:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(186, 104, 200, 0.15);
+  border-color: rgba(186, 104, 200, 0.4);
+}
+
+.predictionLabel,
+.actualLabel {
+  display: block;
+  font-size: clamp(0.9rem, 1.8vw, 1rem);
+  color: #6a5acd;
+  font-weight: 600;
+  margin-bottom: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.predictionValue,
+.actualValue {
+  display: block;
+  font-size: clamp(1.1rem, 2.2vw, 1.4rem);
+  color: #4b0082;
+  font-weight: 700;
+  font-family: var(--font-secondary);
+  text-shadow: 0 1px 2px rgba(75, 0, 130, 0.1);
+}
+
+.correctPrediction,
+.incorrectPrediction {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(34, 139, 34, 0.08) 25%,
+    rgba(255, 255, 255, 0.9) 50%,
+    rgba(34, 139, 34, 0.06) 75%,
+    rgba(255, 255, 255, 0.95) 100%);
+  border-radius: 20px;
+  padding: clamp(1.5rem, 3vw, 2.2rem);
+  border: 2px solid rgba(34, 139, 34, 0.3);
+  backdrop-filter: blur(15px);
+  display: flex;
+  align-items: center;
+  gap: clamp(1rem, 2vw, 1.5rem);
+  margin-bottom: clamp(1rem, 2vw, 1.5rem);
+  position: relative;
+  overflow: hidden;
+  animation: resultReveal 1s ease-out 0.3s both;
+}
+
+.incorrectPrediction {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(220, 20, 60, 0.08) 25%,
+    rgba(255, 255, 255, 0.9) 50%,
+    rgba(220, 20, 60, 0.06) 75%,
+    rgba(255, 255, 255, 0.95) 100%);
+  border-color: rgba(220, 20, 60, 0.3);
+}
+
+@keyframes resultReveal {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) rotateY(-15deg);
+    filter: blur(3px);
   }
-  
-  .predictionDisplay {
-    padding: 1.5rem;
-    margin: 1.5rem 0;
+  50% {
+    opacity: 0.8;
+    transform: scale(0.95) rotateY(-5deg);
+    filter: blur(1px);
   }
-  
-  .predictionTeam {
-    padding: 1rem 1.5rem;
-    font-size: 1.1rem;
-    flex-direction: column;
-    gap: 0.8rem;
-  }
-  
-  .confidenceLevel {
-    padding: 0.8rem 1.2rem;
-    font-size: 1rem;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  
-  .predictionBars {
-    gap: 0.8rem;
-  }
-  
-  .predictionBar {
-    min-height: 50px;
-    padding: 0.8rem 1.2rem;
-    font-size: 0.95rem;
-    flex-direction: column;
-    gap: 0.5rem;
-    text-align: center;
+  100% {
+    opacity: 1;
+    transform: scale(1) rotateY(0deg);
+    filter: blur(0);
   }
 }
 
-@media (max-width: 576px) {
-  .predictionsTab::before {
-    font-size: 1.5rem;
-    top: 15px;
-    right: 15px;
+.predictionIcon {
+  font-size: clamp(2rem, 4vw, 3rem);
+  animation: iconFloat 2s ease-in-out infinite;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+}
+
+@keyframes iconFloat {
+  0%, 100% { 
+    transform: translateY(0px) rotate(0deg) scale(1);
   }
-  
-  .predictionDisplay {
-    padding: 1rem;
-    border-radius: 15px;
+  25% { 
+    transform: translateY(-8px) rotate(5deg) scale(1.05);
   }
-  
-  .predictionTeam {
-    padding: 0.8rem 1rem;
-    border-radius: 12px;
-    margin: 1rem 0;
+  50% { 
+    transform: translateY(-5px) rotate(-3deg) scale(1.02);
   }
-  
-  .confidenceLevel {
-    padding: 0.6rem 1rem;
-    border-radius: 10px;
-    margin-top: 0.8rem;
-  }
-  
-  .predictionBar {
-    min-height: 45px;
-    padding: 0.7rem 1rem;
-    border-radius: 12px;
-    font-size: 0.9rem;
-  }
-  
-  .userPredictionCard,
-  .predictionInterface,
-  .communityPredictions {
-    padding: 1.2rem;
-    border-radius: 15px;
-    margin-bottom: 1.2rem;
-  }
-  
-  .comingSoon {
-    padding: 2rem 1.2rem;
-    border-radius: 15px;
+  75% { 
+    transform: translateY(-10px) rotate(8deg) scale(1.08);
   }
 }
 
-@media (max-width: 480px) {
-  .predictionsTab {
-    padding: 1rem;
-    border-radius: 20px;
+.predictionResultText {
+  flex: 1;
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  color: #4b0082;
+  font-weight: 500;
+  line-height: 1.6;
+  font-family: var(--font-body);
+}
+
+.correctPrediction .predictionResultText {
+  color: #006400;
+}
+
+.incorrectPrediction .predictionResultText {
+  color: #8b0000;
+}
+
+.predictionTimestamp {
+  text-align: center;
+  padding: clamp(1rem, 2vw, 1.5rem);
+  background: linear-gradient(135deg, 
+    rgba(138, 43, 226, 0.05) 0%,
+    rgba(255, 255, 255, 0.9) 50%,
+    rgba(138, 43, 226, 0.05) 100%);
+  border-radius: 15px;
+  border: 1px solid rgba(138, 43, 226, 0.15);
+  backdrop-filter: blur(10px);
+  animation: timestampReveal 1.2s ease-out 0.8s both;
+  position: relative;
+}
+
+.predictionTimestamp::before {
+  content: '⏰';
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.2rem;
+  animation: clockTick 2s ease-in-out infinite;
+}
+
+@keyframes timestampReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.9);
+    filter: blur(2px);
   }
-  
-  .mysticOrbs {
-    width: 25px;
-    height: 25px;
+  60% {
+    opacity: 0.8;
+    transform: translateY(5px) scale(0.95);
+    filter: blur(1px);
   }
-  
-  .totalPredictions {
-    padding: 0.8rem;
-    font-size: 1rem;
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
   }
+}
+
+@keyframes clockTick {
+  0%, 100% { 
+    transform: translateY(-50%) rotate(0deg);
+    opacity: 0.7;
+  }
+  50% { 
+    transform: translateY(-50%) rotate(10deg);
+    opacity: 1;
+  }
+}
+
+.predictionTimestamp small {
+  padding-left: 2.5rem;
+  position: relative;
+}
+
+/* Enhanced magical particles for better visual feedback */
+.correctPrediction::after {
+  content: '✨🌟⭐💫';
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  font-size: 0.8rem;
+  opacity: 0;
+  animation: successSparkles 3s ease-in-out 1s infinite;
+  z-index: 2;
+}
+
+.incorrectPrediction::after {
+  content: '🌙⭐💭🔮';
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  font-size: 0.8rem;
+  opacity: 0;
+  animation: mysticalWisps 3s ease-in-out 1s infinite;
+  z-index: 2;
+}
+
+@keyframes successSparkles {
+  0%, 100% { 
+    opacity: 0;
+    transform: scale(0.5) rotate(0deg);
+  }
+  25% { 
+    opacity: 0.8;
+    transform: scale(1) rotate(90deg);
+  }
+  50% { 
+    opacity: 1;
+    transform: scale(1.2) rotate(180deg);
+  }
+  75% { 
+    opacity: 0.6;
+    transform: scale(0.8) rotate(270deg);
+  }
+}
+
+@keyframes mysticalWisps {
+  0%, 100% { 
+    opacity: 0;
+    transform: scale(0.5) rotate(0deg) translateY(0);
+  }
+  25% { 
+    opacity: 0.6;
+    transform: scale(1) rotate(45deg) translateY(-5px);
+  }
+  50% { 
+    opacity: 0.8;
+    transform: scale(1.1) rotate(90deg) translateY(-10px);
+  }
+  75% { 
+    opacity: 0.4;
+    transform: scale(0.9) rotate(135deg) translateY(-5px);
+  }
+}
+
+/* Special glow effect for prediction comparison cards */
+.predictionMade {
+  position: relative;
+}
+
+.predictionMade::after {
+  content: '🔮';
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 1.2rem;
+  opacity: 0.6;
+  animation: crystalBallGlow 4s ease-in-out infinite;
+}
+
+.actualResult {
+  position: relative;
+}
+
+.actualResult::after {
+  content: '⚡';
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 1.2rem;
+  opacity: 0.6;
+  animation: resultFlash 3s ease-in-out infinite;
+}
+
+@keyframes crystalBallGlow {
+  0%, 100% { 
+    opacity: 0.6;
+    transform: scale(1) rotate(0deg);
+    filter: drop-shadow(0 0 5px rgba(138, 43, 226, 0.3));
+  }
+  50% { 
+    opacity: 1;
+    transform: scale(1.1) rotate(180deg);
+    filter: drop-shadow(0 0 15px rgba(138, 43, 226, 0.6));
+  }
+}
+
+@keyframes resultFlash {
+  0%, 100% { 
+    opacity: 0.6;
+    transform: scale(1);
+    filter: drop-shadow(0 0 3px rgba(255, 215, 0, 0.3));
+  }
+  25% { 
+    opacity: 0.9;
+    transform: scale(1.15);
+    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
+  }
+  75% { 
+    opacity: 0.8;
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 12px rgba(255, 215, 0, 0.8));
+  }
+}
+
+/* Enhanced hover effects for prediction result section */
+.predictionResultSection:hover {
+  transform: translateY(-3px);
+  box-shadow: 
+    0 20px 50px rgba(138, 43, 226, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  border-color: rgba(138, 43, 226, 0.4);
+}
+
+.predictionResultSection:hover::before {
+  animation-duration: 2s;
+}
+
+/* Enhanced magical glow for correct predictions */
+.correctPrediction:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 
+    0 20px 40px rgba(34, 139, 34, 0.2),
+    0 0 30px rgba(34, 139, 34, 0.3);
+  border-color: rgba(34, 139, 34, 0.5);
+}
+
+.incorrectPrediction:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 
+    0 20px 40px rgba(220, 20, 60, 0.2),
+    0 0 30px rgba(220, 20, 60, 0.3);
+  border-color: rgba(220, 20, 60, 0.5);
+}
+
+/* Magical sparkle effect on hover */
+.correctPrediction:hover .predictionIcon,
+.incorrectPrediction:hover .predictionIcon {
+  animation: magicalSparkle 1.5s ease-in-out infinite;
+}
+
+@keyframes magicalSparkle {
+  0%, 100% { 
+    transform: translateY(0px) rotate(0deg) scale(1);
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+  }
+  25% { 
+    transform: translateY(-12px) rotate(15deg) scale(1.15);
+    filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.2)) brightness(1.2);
+  }
+  50% { 
+    transform: translateY(-8px) rotate(-10deg) scale(1.1);
+    filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.15)) brightness(1.1);
+  }
+  75% { 
+    transform: translateY(-15px) rotate(20deg) scale(1.2);
+    filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.25)) brightness(1.3);
+  }
+}
+
+/* Success celebration effect */
+.correctPrediction {
+  animation: resultReveal 1s ease-out 0.3s both, successCelebration 2s ease-in-out 1.5s;
+}
+
+@keyframes successCelebration {
+  0%, 100% { 
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  10%, 30%, 50% { 
+    transform: scale(1.03);
+    filter: brightness(1.1);
+  }
+  20%, 40% { 
+    transform: scale(0.98);
+    filter: brightness(1.05);
+  }
+}
+
+/* Subtle disappointment effect for incorrect predictions */
+.incorrectPrediction {
+  animation: resultReveal 1s ease-out 0.3s both, gentleShake 0.8s ease-in-out 1.5s;
+}
+
+@keyframes gentleShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+/* Points Earned Section - MAGICAL REWARDS */
+.pointsEarned {
+  background: linear-gradient(135deg, 
+    rgba(255, 215, 0, 0.15) 0%,
+    rgba(255, 193, 7, 0.1) 25%,
+    rgba(255, 255, 255, 0.9) 50%,
+    rgba(255, 193, 7, 0.1) 75%,
+    rgba(255, 215, 0, 0.15) 100%);
+  border-radius: 20px;
+  padding: clamp(1.2rem, 2.5vw, 1.8rem) clamp(1.5rem, 3vw, 2.2rem);
+  margin-top: clamp(1rem, 2vw, 1.5rem);
+  border: 2px solid rgba(255, 193, 7, 0.3);
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+  animation: pointsReveal 0.6s ease-out 0.3s both;
+  box-shadow: 
+    0 8px 25px rgba(255, 193, 7, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+@keyframes pointsReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.pointsEarned::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%,
+    rgba(255, 215, 0, 0.4) 50%,
+    transparent 100%);
+  animation: pointsShimmer 3s ease-in-out infinite 1s;
+}
+
+@keyframes pointsShimmer {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: 100%; }
+}
+
+.pointsIcon {
+  font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+  margin-right: clamp(0.5rem, 1vw, 0.8rem);
+  animation: trophyFloat 2s ease-in-out infinite;
+  display: inline-block;
+}
+
+@keyframes trophyFloat {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-8px) rotate(5deg);
+  }
+  50% {
+    transform: translateY(-5px) rotate(0deg);
+  }
+  75% {
+    transform: translateY(-12px) rotate(-3deg);
+  }
+}
+
+.pointsText {
+  font-weight: 600;
+  font-size: clamp(1rem, 2.2vw, 1.3rem);
+  color: #B8860B;
+  text-shadow: 0 1px 3px rgba(184, 134, 11, 0.3);
+  background: linear-gradient(135deg, 
+    rgba(255, 215, 0, 0.8) 0%,
+    rgba(255, 193, 7, 0.9) 50%,
+    rgba(218, 165, 32, 0.8) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.pointsEarned:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 
+    0 15px 35px rgba(255, 193, 7, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border-color: rgba(255, 193, 7, 0.5);
+}
+
+.pointsEarned:hover .pointsIcon {
+  animation: trophyCelebration 1s ease-in-out;
+}
+
+@keyframes trophyCelebration {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg) scale(1);
+  }
+  25% {
+    transform: translateY(-15px) rotate(15deg) scale(1.2);
+  }
+  50% {
+    transform: translateY(-8px) rotate(-10deg) scale(1.1);
+  }
+  75% {
+    transform: translateY(-20px) rotate(20deg) scale(1.3);
+  }
+}
+
+/* Enhanced glow for correct predictions with points */
+.correctPrediction:has(.pointsEarned) {
+  background: linear-gradient(135deg, 
+    rgba(34, 139, 34, 0.08) 0%,
+    rgba(50, 205, 50, 0.05) 25%,
+    rgba(255, 255, 255, 0.95) 50%,
+    rgba(50, 205, 50, 0.05) 75%,
+    rgba(34, 139, 34, 0.08) 100%);
+  border-color: rgba(34, 139, 34, 0.3);
+}
+
+.correctPrediction:has(.pointsEarned)::after {
+  content: '✨🏆✨';
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+  opacity: 0.7;
+  animation: successSparkles 3s ease-in-out infinite;
+}
+
+/* Magical particle effects for points */
+.pointsEarned::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.8) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: magicalParticles 4s ease-in-out infinite;
+  box-shadow: 
+    20px -30px 0 rgba(255, 215, 0, 0.6),
+    -25px -20px 0 rgba(255, 193, 7, 0.5),
+    30px 25px 0 rgba(218, 165, 32, 0.7),
+    -15px 35px 0 rgba(255, 215, 0, 0.4),
+    40px -10px 0 rgba(255, 193, 7, 0.6);
+}
+
+@keyframes magicalParticles {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(0) rotate(0deg);
+    opacity: 0;
+  }
+  25% {
+    transform: translate(-50%, -50%) scale(1) rotate(90deg);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(0.8) rotate(180deg);
+    opacity: 0.8;
+  }
+  75% {
+    transform: translate(-50%, -50%) scale(1.2) rotate(270deg);
+    opacity: 0.6;
+  }
+}
+
+/* ========================================
+   PREDICTION BUTTONS - IMPROVED DESIGN
+   ======================================== */
+
+.predictionButtons {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1rem, 2vw, 1.5rem);
+  margin-top: clamp(1.5rem, 3vw, 2rem);
+}
+
+@media (min-width: 768px) {
+  .predictionButtons {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+.predictionButton {
+  flex: 1;
+  min-height: clamp(3rem, 6vw, 4rem);
+  font-size: clamp(1rem, 2.2vw, 1.2rem);
+  font-weight: 700;
+  border: 2px solid rgba(106, 13, 173, 0.3);
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(186, 104, 200, 0.05) 25%,
+    rgba(255, 255, 255, 0.8) 50%,
+    rgba(156, 39, 176, 0.03) 75%,
+    rgba(255, 255, 255, 0.85) 100%);
+  color: rgba(106, 13, 173, 0.9);
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 15px rgba(106, 13, 173, 0.1);
+}
+
+.predictionButton:hover {
+  transform: translateY(-2px);
+  border-color: rgba(106, 13, 173, 0.5);
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(186, 104, 200, 0.08) 25%,
+    rgba(255, 255, 255, 0.85) 50%,
+    rgba(156, 39, 176, 0.05) 75%,
+    rgba(255, 255, 255, 0.9) 100%);
+  box-shadow: 0 8px 25px rgba(106, 13, 173, 0.2);
+}
+
+.predictionButton:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(106, 13, 173, 0.2);
+}
+
+.predictionButton.selected {
+  border-color: #0568fd;
+  background: linear-gradient(135deg, 
+    rgba(5, 104, 253, 0.15) 0%,
+    rgba(5, 104, 253, 0.08) 25%,
+    rgba(230, 240, 255, 0.9) 50%,
+    rgba(5, 104, 253, 0.08) 75%,
+    rgba(5, 104, 253, 0.15) 100%);
+  color: #0568fd;
+  font-weight: bold;
+  box-shadow: 0 8px 25px rgba(5, 104, 253, 0.25);
+}
+
+.predictionButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  background: rgba(255, 255, 255, 0.5);
+  color: rgba(106, 13, 173, 0.5);
+  border-color: rgba(106, 13, 173, 0.2);
+}
+
+.predictionButton:disabled:hover {
+  transform: none;
+  box-shadow: 0 4px 15px rgba(106, 13, 173, 0.1);
+}
+
+.drawIcon {
+  font-size: clamp(1.2rem, 2.5vw, 1.5rem);
+  margin-right: 0.5rem;
+}
+
+/* ========================================
+   CLOSED PREDICTIONS MESSAGE
+   ======================================== */
+
+.closedPredictions {
+  text-align: center;
+  padding: clamp(2rem, 4vw, 3rem);
+  background: linear-gradient(135deg, 
+    rgba(156, 39, 176, 0.05) 0%,
+    rgba(255, 255, 255, 0.9) 25%,
+    rgba(255, 255, 255, 0.8) 50%,
+    rgba(186, 104, 200, 0.05) 75%,
+    rgba(156, 39, 176, 0.05) 100%);
+  border-radius: 20px;
+  border: 2px solid rgba(156, 39, 176, 0.2);
+  backdrop-filter: blur(15px);
+  position: relative;
+  overflow: hidden;
+  animation: closedMessageFloat 3s ease-in-out infinite;
+  margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+@keyframes closedMessageFloat {
+  0%, 100% { 
+    transform: translateY(0px);
+    box-shadow: 0 10px 30px rgba(156, 39, 176, 0.1);
+  }
+  50% { 
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(156, 39, 176, 0.15);
+  }
+}
+
+.closedPredictions::before {
+  content: '🔮';
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  opacity: 0.6;
+  animation: closedCrystalFloat 4s ease-in-out infinite;
+}
+
+@keyframes closedCrystalFloat {
+  0%, 100% { 
+    transform: rotate(0deg) scale(1);
+    opacity: 0.6;
+  }
+  33% { 
+    transform: rotate(10deg) scale(1.1);
+    opacity: 0.8;
+  }
+  66% { 
+    transform: rotate(-5deg) scale(1.05);
+    opacity: 0.7;
+  }
+}
+
+.closedPredictions p {
+  font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+  color: rgba(156, 39, 176, 0.8);
+  font-weight: 500;
+  margin: 0;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.closedPredictions::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, 
+    transparent 0%,
+    rgba(156, 39, 176, 0.03) 25%,
+    rgba(186, 104, 200, 0.05) 50%,
+    rgba(156, 39, 176, 0.03) 75%,
+    transparent 100%);
+  animation: closedShimmer 6s ease-in-out infinite;
+  z-index: -1;
+}
+
+@keyframes closedShimmer {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+}
+
+/* ========================================
+   PREDICTION LOADING STATE
+   ======================================== */
+
+.predictionLoadingState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(2rem, 4vw, 3rem);
+  background: linear-gradient(135deg, 
+    rgba(186, 104, 200, 0.1) 0%,
+    rgba(156, 39, 176, 0.05) 25%,
+    rgba(255, 255, 255, 0.9) 50%,
+    rgba(156, 39, 176, 0.05) 75%,
+    rgba(186, 104, 200, 0.1) 100%);
+  border-radius: 20px;
+  border: 2px solid rgba(186, 104, 200, 0.2);
+  margin: clamp(1rem, 2vw, 1.5rem) 0;
+  backdrop-filter: blur(10px);
+}
+
+.loadingSpinner {
+  font-size: clamp(2rem, 4vw, 3rem);
+  animation: crystalSpin 2s ease-in-out infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes crystalSpin {
+  0% { 
+    transform: rotate(0deg) scale(1);
+    opacity: 0.8;
+  }
+  25% { 
+    transform: rotate(90deg) scale(1.1);
+    opacity: 1;
+  }
+  50% { 
+    transform: rotate(180deg) scale(1.2);
+    opacity: 0.9;
+  }
+  75% { 
+    transform: rotate(270deg) scale(1.1);
+    opacity: 1;
+  }
+  100% { 
+    transform: rotate(360deg) scale(1);
+    opacity: 0.8;
+  }
+}
+
+.predictionLoadingState p {
+  color: #4b0082;
+  font-weight: 500;
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  font-style: italic;
+  text-align: center;
+  margin: 0;
+  animation: textPulse 2s ease-in-out infinite;
+}
+
+@keyframes textPulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+/* ========================================
+   PROCESSING INDICATOR
+   ======================================== */
+
+.processingIndicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, 
+    rgba(255, 193, 7, 0.1) 0%,
+    rgba(255, 193, 7, 0.05) 50%,
+    rgba(255, 193, 7, 0.1) 100%);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  border-radius: 15px;
+  backdrop-filter: blur(5px);
+}
+
+.processingIcon {
+  font-size: 1.2rem;
+  animation: processingRotate 2s linear infinite;
+}
+
+@keyframes processingRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.processingText {
+  color: #856404;
+  font-size: 0.9rem;
+  font-weight: 500;
+  font-style: italic;
+}
+
+/* ========================================
+   PROCESSING INDICATOR FOR OPTIMISTIC UPDATES
+   ======================================== */
+
+.processingIndicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, 
+    rgba(255, 193, 7, 0.1) 0%,
+    rgba(255, 235, 59, 0.05) 50%,
+    rgba(255, 193, 7, 0.1) 100%);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  border-radius: 15px;
+  backdrop-filter: blur(5px);
+}
+
+.processingIcon {
+  font-size: 1.2rem;
+  animation: processingPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes processingPulse {
+  0% { 
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% { 
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% { 
+    transform: scale(1);
+    opacity: 0.8;
+  }
+}
+
+.processingText {
+  color: #e65100;
+  font-weight: 500;
+  font-size: 0.9rem;
+  font-style: italic;
+  animation: textPulse 2s ease-in-out infinite;
 }

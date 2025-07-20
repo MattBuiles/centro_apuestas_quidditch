@@ -1,0 +1,303 @@
+/* League Time Control Styles */
+.container {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(106, 13, 173, 0.02) 100%);
+  border: 1px solid rgba(106, 13, 173, 0.1);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin: 1rem 0;
+  box-shadow: 0 4px 6px rgba(106, 13, 173, 0.08);
+  transition: all 0.3s ease;
+}
+
+.container:hover {
+  box-shadow: 0 6px 12px rgba(106, 13, 173, 0.15);
+  transform: translateY(-2px);
+  border-color: rgba(106, 13, 173, 0.2);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.header h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.currentInfo {
+  background: linear-gradient(135deg, rgba(106, 13, 173, 0.03) 0%, rgba(255, 215, 0, 0.05) 100%);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  border: 1px solid rgba(106, 13, 173, 0.1);
+}
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.infoRow:last-child {
+  margin-bottom: 0;
+}
+
+.label {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.value {
+  font-size: 1rem;
+  color: #6A0DAD;
+  font-weight: 600;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.btnPrimary {
+  background: linear-gradient(135deg, #6A0DAD 0%, #8B5CF6 100%);
+  color: white;
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #5A0B9A 0%, #7C3AED 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(106, 13, 173, 0.3);
+}
+
+.btnPrimary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btnSecondary {
+  background: linear-gradient(135deg, #ffd700 0%, #ffb700 100%);
+  color: #4a4a4a;
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btnSecondary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #e6c200 0%, #e6a600 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(255, 215, 0, 0.3);
+}
+
+.btnSecondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btnDanger {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: white;
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btnDanger:hover:not(:disabled) {
+  background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
+}
+
+.btnDanger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btnOutline {
+  background-color: white;
+  color: #6A0DAD;
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  border: 2px solid #6A0DAD;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btnOutline:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(106, 13, 173, 0.1) 0%, rgba(106, 13, 173, 0.05) 100%);
+  border-color: #8B5CF6;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(106, 13, 173, 0.2);
+}
+
+.btnOutline:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.seasonFinished {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(255, 215, 0, 0.1) 100%);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.seasonFinished p {
+  color: #059669;
+  font-weight: 600;
+  margin: 0 0 0.75rem 0;
+  font-size: 1rem;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: #6b7280;
+  font-style: italic;
+  padding: 2rem;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(106, 13, 173, 0.2);
+  border-top: 2px solid #6A0DAD;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.notice {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid #fde68a;
+  text-align: center;
+  font-weight: 500;
+}
+
+.error {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid #fecaca;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.success {
+  background: #dcfce7;
+  color: #166534;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid #bbf7d0;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+  
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .controls {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .infoRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+  
+  .label {
+    font-size: 0.75rem;
+  }
+  
+  .value {
+    font-size: 0.875rem;
+  }
+}

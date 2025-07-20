@@ -1,5 +1,7 @@
 import { Database } from '../database/Database';
 import { Season, Team, Match, StandingEntry, TeamRow, MatchRow } from '../types';
+import { StandingsService } from './StandingsService';
+import { HistoricalSeasonsService } from './HistoricalSeasonsService';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface SeasonCreateData {
@@ -7,19 +9,23 @@ export interface SeasonCreateData {
   startDate: Date;
   endDate: Date;
   teamIds: string[];
+  status?: 'upcoming' | 'active' | 'finished';
 }
 
 export class SeasonManagementService {
   private db = Database.getInstance();
+  private standingsService = new StandingsService();
+  private historicalSeasonsService = new HistoricalSeasonsService();
 
   async createSeason(data: SeasonCreateData): Promise<Season> {
     const seasonId = uuidv4();
+    const status = data.status || 'upcoming'; // Default to 'upcoming' if not specified
     
     // Create season record
     await this.db.run(`
       INSERT INTO seasons (id, name, start_date, end_date, status)
       VALUES (?, ?, ?, ?, ?)
-    `, [seasonId, data.name, data.startDate.toISOString(), data.endDate.toISOString(), 'upcoming']);
+    `, [seasonId, data.name, data.startDate.toISOString(), data.endDate.toISOString(), status]);
 
     // Link teams to season
     for (const teamId of data.teamIds) {
@@ -31,6 +37,9 @@ export class SeasonManagementService {
 
     // Generate matches
     await this.generateSeasonMatches(seasonId, data.teamIds, data.startDate, data.endDate);
+
+    // Inicializar standings para la nueva temporada
+    await this.standingsService.initializeSeasonStandings(seasonId);
 
     // Return the created season
     return this.getSeasonById(seasonId);
@@ -123,7 +132,7 @@ export class SeasonManagementService {
     return seasons;
   }
 
-  async activateSeason(seasonId: string): Promise<void> {
+  async activateSeason(seasonId: string): Promise<Season> {
     // Deactivate current active season
     await this.db.run(`
       UPDATE seasons SET status = 'finished' WHERE status = 'active'
@@ -133,6 +142,96 @@ export class SeasonManagementService {
     await this.db.run(`
       UPDATE seasons SET status = 'active' WHERE id = ?
     `, [seasonId]);
+
+    // Return the activated season
+    return this.getSeasonById(seasonId);
+  }
+
+  /**
+   * Verifica si todos los partidos de la temporada activa están finalizados
+   * y actualiza el estado de la temporada a 'finished' si es necesario
+   */
+  async checkAndFinishSeasonIfComplete(): Promise<{ seasonFinished: boolean; seasonId?: string }> {
+    // Obtener la temporada activa
+    const activeSeasonRow = await this.db.get(`
+      SELECT * FROM seasons 
+      WHERE status = 'active' 
+      LIMIT 1
+    `) as {
+      id: string;
+      name: string;
+      start_date: string;
+      end_date: string;
+      status: string;
+    } | undefined;
+
+    if (!activeSeasonRow) {
+      return { seasonFinished: false };
+    }
+
+    // Verificar si todos los partidos de la temporada están finalizados
+    const matchesStatus = await this.db.get(`
+      SELECT 
+        COUNT(*) as total_matches,
+        COUNT(CASE WHEN status = 'finished' THEN 1 END) as finished_matches,
+        COUNT(CASE WHEN status = 'scheduled' THEN 1 END) as scheduled_matches,
+        COUNT(CASE WHEN status = 'live' THEN 1 END) as live_matches
+      FROM matches 
+      WHERE season_id = ?
+    `, [activeSeasonRow.id]) as {
+      total_matches: number;
+      finished_matches: number;
+      scheduled_matches: number;
+      live_matches: number;
+    };
+
+    console.log(`🏆 Verificando finalización de temporada ${activeSeasonRow.name}:`);
+    console.log(`   - Total de partidos: ${matchesStatus.total_matches}`);
+    console.log(`   - Partidos finalizados: ${matchesStatus.finished_matches}`);
+    console.log(`   - Partidos programados: ${matchesStatus.scheduled_matches}`);
+    console.log(`   - Partidos en vivo: ${matchesStatus.live_matches}`);
+
+    // Si todos los partidos están finalizados, actualizar el estado de la temporada
+    if (matchesStatus.total_matches > 0 && 
+        matchesStatus.finished_matches === matchesStatus.total_matches) {
+      
+      console.log(`✅ Todos los partidos completados. Finalizando temporada ${activeSeasonRow.name}`);
+      
+      await this.db.run(`
+        UPDATE seasons 
+        SET status = 'finished' 
+        WHERE id = ?
+      `, [activeSeasonRow.id]);
+
+      // Archivar la temporada en historical_seasons
+      try {
+        await this.historicalSeasonsService.archiveFinishedSeason(activeSeasonRow.id);
+        console.log(`📚 Temporada ${activeSeasonRow.name} archivada en historical_seasons`);
+      } catch (error) {
+        console.error('Error archivando temporada en histórico:', error);
+        // No fallar el proceso principal si hay error en el archivado
+      }
+
+      return { 
+        seasonFinished: true, 
+        seasonId: activeSeasonRow.id 
+      };
+    }
+
+    return { seasonFinished: false };
+  }
+
+  /**
+   * Finaliza manualmente una temporada específica
+   */
+  async finishSeason(seasonId: string): Promise<Season> {
+    await this.db.run(`
+      UPDATE seasons 
+      SET status = 'finished' 
+      WHERE id = ?
+    `, [seasonId]);
+
+    return this.getSeasonById(seasonId);
   }
 
   private async generateSeasonMatches(
@@ -162,19 +261,70 @@ export class SeasonManagementService {
       }
     }
 
-    // Distribute matches evenly across the season
-    const totalDays = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-    const matchesPerDay = Math.ceil(matches.length / totalDays);
-    let currentDate = new Date(startDate);
+    // Get current virtual time to schedule matches from the current virtual date
+    const { VirtualTimeService } = await import('./VirtualTimeService');
+    const virtualTimeService = VirtualTimeService.getInstance();
+    const currentVirtualState = await virtualTimeService.getCurrentState();
+    
+    // Schedule matches starting from the day after current virtual time
+    const tomorrow = new Date(currentVirtualState.currentDate);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(14, 0, 0, 0); // Start at 2 PM tomorrow
+    
+    console.log(`📅 Programando partidos desde fecha virtual: ${currentVirtualState.currentDate.toISOString()}`);
+    console.log(`📅 Primer partido programado para: ${tomorrow.toISOString()}`);
+    
+    // Schedule matches with more realistic distribution
+    // Configuration for better match scheduling
+    const matchesPerDay = Math.random() < 0.3 ? 0 : Math.random() < 0.6 ? 1 : 2; // 30% chance no matches, 30% chance 1 match, 40% chance 2 matches
+    const possibleMatchTimes = ['14:00', '16:30', '19:00']; // More realistic times
+    let currentDate = new Date(tomorrow);
+    let matchesScheduledToday = 0;
+    let currentMaxMatchesForDay = Math.random() < 0.3 ? 0 : Math.random() < 0.7 ? 1 : 2;
 
     for (let i = 0; i < matches.length; i++) {
-      if (i > 0 && i % matchesPerDay === 0) {
-        currentDate = new Date(currentDate.getTime() + (1000 * 60 * 60 * 24));
-      }
-
       const match = matches[i];
+      
+      // Check if we need to move to next day
+      if (matchesScheduledToday >= currentMaxMatchesForDay) {
+        // Move to next day
+        let daysToAdd = 1;
+        
+        // Sometimes skip days (20% chance of adding extra day, 10% chance of 2 extra days)
+        if (Math.random() < 0.2) {
+          daysToAdd += 1;
+          if (Math.random() < 0.1) {
+            daysToAdd += 1;
+          }
+        }
+        
+        currentDate.setDate(currentDate.getDate() + daysToAdd);
+        matchesScheduledToday = 0;
+        
+        // Recalculate max matches for new day
+        currentMaxMatchesForDay = Math.random() < 0.3 ? 0 : Math.random() < 0.7 ? 1 : 2;
+        
+        // If no matches scheduled for this day, skip it
+        if (currentMaxMatchesForDay === 0) {
+          currentDate.setDate(currentDate.getDate() + 1);
+          currentMaxMatchesForDay = Math.random() < 0.7 ? 1 : 2; // Ensure next day has matches
+        }
+      }
+      
       const matchTime = new Date(currentDate);
-      matchTime.setHours(14 + (i % 3) * 2, 0, 0, 0); // Spread matches throughout the day
+      
+      // Select time based on how many matches are scheduled today
+      let timeIndex;
+      if (currentMaxMatchesForDay === 1) {
+        timeIndex = 1; // 16:30 for single match
+      } else {
+        timeIndex = matchesScheduledToday === 0 ? 0 : 2; // 14:00 for first, 19:00 for second
+      }
+      
+      const [hours, minutes] = possibleMatchTimes[timeIndex].split(':').map(Number);
+      matchTime.setHours(hours, minutes, 0, 0);
+
+      console.log(`📅 Scheduling match ${i + 1}/${matches.length}: ${match.homeTeamId} vs ${match.awayTeamId} at ${matchTime.toISOString()} (${matchesScheduledToday + 1}/${currentMaxMatchesForDay} today)`);
 
       // Generate realistic odds
       const odds = this.generateMatchOdds();
@@ -201,6 +351,8 @@ export class SeasonManagementService {
         odds.snitchCatch.home,
         odds.snitchCatch.away
       ]);
+      
+      matchesScheduledToday++;
     }
   }
 

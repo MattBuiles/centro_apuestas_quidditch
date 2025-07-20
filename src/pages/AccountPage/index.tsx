@@ -6,9 +6,9 @@ import Card from '@/components/common/Card';
 import userLogoSrc from '@/assets/User_Logo.png';
 import user2LogoSrc from '@/assets/User2_Logo.png';
 import { teamLogos } from '@/assets/teamLogos';
-import AdminDashboard from '@/components/admin/AdminDashboard';
+import AdminDashboardNew from '@/components/admin/AdminDashboardNew';
 import AdminBetsHistory from '@/components/admin/AdminBetsHistory';
-import AdminBetsStatistics from '@/components/admin/AdminBetsStatistics';
+import AdminAdvancedStatistics from '@/components/admin/AdminAdvancedStatistics';
 import AdminUsersManagement from '@/components/admin/AdminUsersManagement';
 import styles from './AccountPage.module.css';
 
@@ -21,10 +21,12 @@ const TrophyIcon = () => <span className={styles.icon}>🏆</span>;
 
 // Define sub-components for each account section
 const ProfileSection = () => {
-    const { user, updateUserProfile, validateCurrentPassword, validatePassword, updatePassword } = useAuth();
+    const { user, updateUserProfile, validatePassword, updatePassword, getUserStats, loadUserStatsFromBackend } = useAuth();
     const [isEditing, setIsEditing] = useState(false);
     const [isChangingAvatar, setIsChangingAvatar] = useState(false);
-    const [isChangingPassword, setIsChangingPassword] = useState(false);    const [formData, setFormData] = useState({
+    const [isChangingPassword, setIsChangingPassword] = useState(false);
+    const [isLoadingStats, setIsLoadingStats] = useState(false);
+    const [formData, setFormData] = useState({
         username: user?.username || '',
         email: user?.email || ''
     });
@@ -42,7 +44,7 @@ const ProfileSection = () => {
         { id: 'hufflepuff', src: '/src/assets/Hufflepuff_Logo.png', name: 'Hufflepuff' },
         { id: 'cannons', src: '/src/assets/Chudley Cannons_Logo.png', name: 'Chudley Cannons' },
         { id: 'harpies', src: '/src/assets/Holyhead Harpies_Logo.png', name: 'Holyhead Harpies' },
-    ];// Update form data when user changes (important for real-time sync)
+    ];    // Update form data when user changes (important for real-time sync)
     useEffect(() => {
         if (user) {
             setFormData(prev => ({
@@ -53,10 +55,35 @@ const ProfileSection = () => {
         }
     }, [user]);
 
-    const handleAvatarChange = (avatarSrc: string) => {
-        updateUserProfile({ avatar: avatarSrc });
-        setIsChangingAvatar(false);
-    };    const handleSave = (e: React.FormEvent) => {
+    // Cargar estadísticas del usuario cuando se monta el componente
+    useEffect(() => {
+        const loadStats = async () => {
+            setIsLoadingStats(true);
+            try {
+                await loadUserStatsFromBackend();
+            } catch (error) {
+                console.error('Error loading user stats:', error);
+            } finally {
+                setIsLoadingStats(false);
+            }
+        };
+        
+        loadStats();
+    }, []); // Solo ejecutar una vez al montar el componente
+
+    // Obtener estadísticas actuales del contexto
+    const userStats = getUserStats();
+
+    const handleAvatarChange = async (avatarSrc: string) => {
+        try {
+            await updateUserProfile({ avatar: avatarSrc });
+            setIsChangingAvatar(false);
+        } catch (error) {
+            console.error('Error updating avatar:', error);
+            // Avatar changes are local only, so they shouldn't fail normally
+            setIsChangingAvatar(false);
+        }
+    };    const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         
         if (!formData.username || !formData.email) {
@@ -64,24 +91,35 @@ const ProfileSection = () => {
             return;
         }
         
-        // Update user profile in context (this will update the sidebar automatically)
-        updateUserProfile({
-            username: formData.username,
-            email: formData.email
-        });
-
-        // Here you would typically call an API to update user info
-        console.log('Saving user data:', {
-            username: formData.username,
-            email: formData.email
-        });
-        
-        // Exit edit mode
-        setIsEditing(false);
-        
-        // Show success message
-        alert('Perfil actualizado exitosamente');
-    };    const handleCancel = () => {
+        try {
+            // Update user profile in context (this will update the sidebar automatically and call backend)
+            await updateUserProfile({
+                username: formData.username,
+                email: formData.email
+            });
+            
+            // Exit edit mode
+            setIsEditing(false);
+            
+            // Show success message
+            alert('Perfil actualizado exitosamente');
+        } catch (error) {
+            console.error('Error updating profile:', error);
+            
+            // Show error message based on the error
+            if (error instanceof Error) {
+                if (error.message.includes('Username already exists')) {
+                    alert('Error: El nombre de usuario ya está en uso. Por favor elige otro.');
+                } else if (error.message.includes('Email already exists')) {
+                    alert('Error: El correo electrónico ya está en uso. Por favor usa otro.');
+                } else {
+                    alert('Error al actualizar el perfil: ' + error.message);
+                }
+            } else {
+                alert('Error al actualizar el perfil. Por favor intenta de nuevo.');
+            }
+        }
+    };const handleCancel = () => {
         // Reset form data to current user data
         if (user) {
             setFormData({
@@ -90,19 +128,14 @@ const ProfileSection = () => {
             });
         }
         setIsEditing(false);
-    };    const handlePasswordChange = (e: React.FormEvent) => {
+    };    const handlePasswordChange = async (e: React.FormEvent) => {
         e.preventDefault();
         
         if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
             alert('Por favor complete todos los campos');
             return;
         }
-        
-        // Validar contraseña actual usando la función del contexto
-        if (!validateCurrentPassword(passwordData.currentPassword)) {
-            alert('La contraseña actual no es correcta. Peeves está riéndose de ti. 🃏');
-            return;
-        }// Validar nueva contraseña
+        // Solo validar que las contraseñas coincidan en el frontend
         if (passwordData.newPassword !== passwordData.confirmPassword) {
             alert('Las contraseñas no coinciden. Incluso la magia requiere precisión. ✨');
             return;
@@ -117,7 +150,7 @@ const ProfileSection = () => {
 
         try {
             // Actualizar contraseña usando la función del contexto
-            updatePassword(passwordData.newPassword);
+            await updatePassword(passwordData.currentPassword, passwordData.newPassword);
         } catch (error) {
             if (error instanceof Error) {
                 alert(`Error al cambiar contraseña: ${error.message} 🔮`);
@@ -149,13 +182,6 @@ const ProfileSection = () => {
             confirmPassword: ''
         });
         setIsChangingPassword(false);
-    };
-
-    const userStats = {
-        totalBets: 47,
-        winRate: 68,
-        totalWinnings: 1250,
-        favoriteTeam: 'Gryffindor'
     };
 
     return (
@@ -345,29 +371,35 @@ const ProfileSection = () => {
                         <TrophyIcon />
                         Estadísticas del Mago
                     </h3>
-                    <div className={styles.statsGrid}>
-                        <div className={`${styles.statCard} ${styles.yellow}`}>
-                            <div className={styles.statValue}>{userStats.totalBets}</div>
-                            <div className={styles.statLabel}>Apuestas Totales</div>
+                    {isLoadingStats ? (
+                        <div className={styles.loadingStats}>
+                            <p>🔮 Consultando el oráculo mágico...</p>
                         </div>
-                        <div className={`${styles.statCard} ${styles.green}`}>
-                            <div className={styles.statValue}>{userStats.winRate}%</div>
-                            <div className={styles.statLabel}>Tasa de Éxito</div>
-                        </div>
-                        <div className={`${styles.statCard} ${styles.purple}`}>
-                            <div className={styles.statValue}>{userStats.totalWinnings}</div>
-                            <div className={styles.statLabel}>Galeones Ganados</div>
-                        </div>                        <div className={`${styles.statCard} ${styles.blue}`}>
-                            <div className={styles.teamFavoriteIcon}>
-                                <img 
-                                    src={teamLogos[userStats.favoriteTeam]} 
-                                    alt={userStats.favoriteTeam}
-                                    className={styles.teamLogo}
-                                />
+                    ) : (
+                        <div className={styles.statsGrid}>
+                            <div className={`${styles.statCard} ${styles.yellow}`}>
+                                <div className={styles.statValue}>{userStats.totalBets}</div>
+                                <div className={styles.statLabel}>Apuestas Totales</div>
                             </div>
-                            <div className={styles.statLabel}>Equipo Favorito</div>
+                            <div className={`${styles.statCard} ${styles.green}`}>
+                                <div className={styles.statValue}>{userStats.winRate}%</div>
+                                <div className={styles.statLabel}>Tasa de Éxito</div>
+                            </div>
+                            <div className={`${styles.statCard} ${styles.purple}`}>
+                                <div className={styles.statValue}>{userStats.totalWinnings}</div>
+                                <div className={styles.statLabel}>Galeones Ganados</div>
+                            </div>                        <div className={`${styles.statCard} ${styles.blue}`}>
+                                <div className={styles.teamFavoriteIcon}>
+                                    <img 
+                                        src={teamLogos[userStats.favoriteTeam]} 
+                                        alt={userStats.favoriteTeam}
+                                        className={styles.teamLogo}
+                                    />
+                                </div>
+                                <div className={styles.statLabel}>Equipo Favorito</div>
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </Card>
             </div>
         </div>
@@ -375,7 +407,7 @@ const ProfileSection = () => {
 };
 
 const WalletSection = () => {
-    const { user, updateUserBalance, getUserTransactions, addTransaction } = useAuth();
+    const { user, getUserTransactions, addTransaction, loadUserTransactionsFromBackend } = useAuth();
     const [showDepositModal, setShowDepositModal] = useState(false);
     const [showWithdrawModal, setShowWithdrawModal] = useState(false);
     const [depositAmount, setDepositAmount] = useState('');
@@ -385,7 +417,20 @@ const WalletSection = () => {
     const [notificationMessage, setNotificationMessage] = useState('');
     const [balanceUpdated, setBalanceUpdated] = useState(false);
 
-    // Obtener transacciones del contexto, ordenadas por fecha descendente
+    // Cargar transacciones del backend cuando se monta el componente
+    useEffect(() => {
+        const loadTransactions = async () => {
+            try {
+                await loadUserTransactionsFromBackend();
+            } catch (error) {
+                console.error('Error loading user transactions:', error);
+            }
+        };
+        
+        loadTransactions();
+    }, []); // Solo ejecutar una vez al montar el componente
+
+    // Obtener transacciones del contexto, ordenadas por fecha descendente (más recientes arriba)
     const transactions = getUserTransactions().sort((a, b) => {
         const dateA = new Date(a.date).getTime();
         const dateB = new Date(b.date).getTime();
@@ -395,7 +440,7 @@ const WalletSection = () => {
             return dateB - dateA;
         }
         
-        // Si las fechas son iguales, ordenar por ID descendente (más reciente primero)
+        // Si las fechas son iguales, ordenar por ID descendente (números)
         return b.id - a.id;    });
 
     const showSuccessNotification = (message: string) => {
@@ -406,32 +451,31 @@ const WalletSection = () => {
         setTimeout(() => setBalanceUpdated(false), 600);
     };
 
-    const handleDeposit = async () => {        if (depositAmount && Number(depositAmount) > 0) {
+    const handleDeposit = async () => {
+        if (depositAmount && Number(depositAmount) > 0) {
             setIsProcessing(true);
             
-            // Simular delay de procesamiento
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            
-            const amount = Number(depositAmount);
-            
-            // Actualizar balance del usuario
-            if (updateUserBalance && user) {
-                updateUserBalance(user.balance + amount);
+            try {
+                const amount = Number(depositAmount);
+                
+                // Hacer la transacción a través del backend
+                await addTransaction({
+                    type: 'deposit',
+                    amount: amount,
+                    description: `Depósito de ${amount} galeones`
+                });
+                
+                setShowDepositModal(false);
+                setDepositAmount('');
+                
+                // Mostrar notificación de éxito
+                showSuccessNotification(`✨ ¡Depósito exitoso! +${amount} galeones añadidos a tu bóveda`);
+            } catch (error) {
+                console.error('Error en depósito:', error);
+                alert('❌ Error al procesar el depósito. Inténtalo nuevamente.');
+            } finally {
+                setIsProcessing(false);
             }
-            
-            // Agregar transacción al historial usando el contexto
-            addTransaction({
-                type: 'deposit',
-                amount: amount,
-                description: `Depósito de ${amount} galeones`
-            });
-            
-            setShowDepositModal(false);
-            setDepositAmount('');
-            setIsProcessing(false);
-            
-            // Mostrar notificación de éxito
-            showSuccessNotification(`✨ ¡Depósito exitoso! +${amount} galeones añadidos a tu bóveda`);
         }
     };
 
@@ -444,29 +488,28 @@ const WalletSection = () => {
                 alert('🚫 ¡No tienes suficientes galeones para este retiro!');
                 return;
             }
-              setIsProcessing(true);
             
-            // Simular delay de procesamiento
-            await new Promise(resolve => setTimeout(resolve, 1500));
+            setIsProcessing(true);
             
-            // Actualizar balance del usuario
-            if (updateUserBalance && user) {
-                updateUserBalance(user.balance - amount);
+            try {
+                // Hacer la transacción a través del backend
+                await addTransaction({
+                    type: 'withdraw',
+                    amount: -amount, // Negativo para retiros
+                    description: `Retiro de ${amount} galeones a Gringotts`
+                });
+                
+                setShowWithdrawModal(false);
+                setWithdrawAmount('');
+                
+                // Mostrar notificación de éxito
+                showSuccessNotification(`🏦 ¡Retiro exitoso! ${amount} galeones transferidos a Gringotts`);
+            } catch (error) {
+                console.error('Error en retiro:', error);
+                alert('❌ Error al procesar el retiro. Inténtalo nuevamente.');
+            } finally {
+                setIsProcessing(false);
             }
-            
-            // Agregar transacción al historial usando el contexto
-            addTransaction({
-                type: 'withdraw',
-                amount: -amount,
-                description: `Retiro de ${amount} galeones a Gringotts`
-            });
-            
-            setShowWithdrawModal(false);
-            setWithdrawAmount('');
-            setIsProcessing(false);
-            
-            // Mostrar notificación de éxito
-            showSuccessNotification(`🏦 ¡Retiro exitoso! ${amount} galeones transferidos a Gringotts`);
         }
     };
 
@@ -630,8 +673,41 @@ const WalletSection = () => {
 };
 
 const BetsSection = () => {
-    const { getUserBets } = useAuth();
-    const [activeTab, setActiveTab] = useState<'active' | 'history'>('active');    // Get user bets from AuthContext
+    const { getUserBets, loadUserBetsFromBackend } = useAuth();
+    const [activeTab, setActiveTab] = useState<'active' | 'history'>('active');
+    const [isLoading, setIsLoading] = useState(false);
+    
+    // Cargar apuestas del backend cuando se monta el componente
+    useEffect(() => {
+        const loadBets = async () => {
+            setIsLoading(true);
+            try {
+                await loadUserBetsFromBackend();
+            } catch (error) {
+                console.error('Error loading user bets:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        
+        loadBets();
+    }, []); // Solo ejecutar una vez al montar el componente
+    
+    // Función para formatear la fecha virtual
+    const formatVirtualDate = (dateString: string) => {
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('es-ES', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        } catch {
+            return 'Fecha inválida';
+        }
+    };
+    
+    // Get user bets from AuthContext
     const allUserBets = getUserBets();
     
     // Separate active and historical bets
@@ -660,7 +736,11 @@ const BetsSection = () => {
                 </button>
             </div>            {activeTab === 'active' && (
                 <div className={styles.betsContainer}>
-                    {activeBets.length > 0 ? (                        activeBets.map((bet) => (
+                    {isLoading ? (
+                        <div className={styles.loadingContainer}>
+                            <p>⚡ Consultando las profecías mágicas...</p>
+                        </div>
+                    ) : activeBets.length > 0 ? (                        activeBets.map((bet) => (
                             <div key={bet.id} className={`${styles.betCard} ${styles.active}`}>
                                 <div className={styles.betHeader}>
                                     <h3 className={styles.betMatch}>{bet.matchName}</h3>
@@ -670,8 +750,8 @@ const BetsSection = () => {
                                 </div>
                                 <div className={styles.betDetails}>
                                     <div className={styles.betDetail}>
-                                        <p className={styles.betDetailLabel}>Fecha de Apuesta</p>
-                                        <p className={styles.betDetailValue}>{new Date(bet.date).toLocaleDateString('es-ES')}</p>
+                                        <p className={styles.betDetailLabel}>Fecha de Apuesta (Tiempo Virtual)</p>
+                                        <p className={styles.betDetailValue}>{formatVirtualDate(bet.date)}</p>
                                     </div>
                                     <div className={styles.betDetail}>
                                         <p className={styles.betDetailLabel}>Tipo de Apuesta</p>
@@ -717,7 +797,11 @@ const BetsSection = () => {
                 </div>
             )}            {activeTab === 'history' && (
                 <div className={styles.betsContainer}>
-                    {betHistory.length > 0 ? (
+                    {isLoading ? (
+                        <div className={styles.loadingContainer}>
+                            <p>⚡ Consultando el historial de profecías...</p>
+                        </div>
+                    ) : betHistory.length > 0 ? (
                         betHistory.map((bet) => (
                             <div key={bet.id} className={`${styles.betCard} ${styles[bet.status]}`}>
                                 <div className={styles.betHeader}>
@@ -728,8 +812,8 @@ const BetsSection = () => {
                                 </div>
                                 <div className={styles.betDetails}>
                                     <div className={styles.betDetail}>
-                                        <p className={styles.betDetailLabel}>Fecha</p>
-                                        <p className={styles.betDetailValue}>{new Date(bet.date).toLocaleDateString('es-ES')}</p>
+                                        <p className={styles.betDetailLabel}>Fecha (Tiempo Virtual)</p>
+                                        <p className={styles.betDetailValue}>{formatVirtualDate(bet.date)}</p>
                                     </div>
                                     <div className={styles.betDetail}>
                                         <p className={styles.betDetailLabel}>Tipo de Apuesta</p>
@@ -776,7 +860,6 @@ const BetsSection = () => {
         </div>
     );
 };
-
 
 const AccountPage = () => {
   const { user, logout } = useAuth();
@@ -903,9 +986,9 @@ const AdminAccountPage = ({ user, logout }: { user: any; logout: () => void }) =
 
         {/* Admin Main Content */}
         <main className={styles.mainContent}>          <Routes>
-            <Route index element={<AdminDashboard />} />
+            <Route index element={<AdminDashboardNew />} />
             <Route path="bets-history" element={<AdminBetsHistory />} />
-            <Route path="bets-statistics" element={<AdminBetsStatistics />} />
+            <Route path="bets-statistics" element={<AdminAdvancedStatistics />} />
             <Route path="users-management" element={<AdminUsersManagement />} />            <Route path="*" element={<Navigate to="/account" replace />} />
           </Routes>
           <Outlet />

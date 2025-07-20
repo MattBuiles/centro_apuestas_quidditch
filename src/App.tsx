@@ -9,10 +9,11 @@ const HomePage = lazy(() => import('./pages/HomePage/HomePage'))
 const LoginPage = lazy(() => import('./pages/LoginPage'))
 const RegisterPage = lazy(() => import('./pages/RegisterPage'))
 const MatchesPage = lazy(() => import('./pages/MatchesPage'))
-const MatchDetailPage = lazy(() => import('./pages/MatchDetailPage'))
+const MatchDetailPage = lazy(() => import('./pages/MatchDetailPage/index'))
 const MatchResultDetail = lazy(() => import('./components/matches/MatchResultDetail'))
 const TeamsPage = lazy(() => import('./pages/TeamsPage'))
 const StandingsPage = lazy(() => import('./pages/StandingsPage'))
+const HistoricalSeasonDetail = lazy(() => import('./pages/StandingsPage/HistoricalSeasonDetail'))
 const TeamDetailPage = lazy(() => import('./pages/TeamDetailPage'))
 const BettingPage = lazy(() => import('./pages/BettingPage'))
 const ResultsPage = lazy(() => import('./pages/ResultsPage'))
@@ -23,6 +24,8 @@ const AboutPage = lazy(() => import('./pages/AboutPage'))
 const TermsPage = lazy(() => import('./pages/TermsPage'))
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage'))
 const ContactPage = lazy(() => import('./pages/ContactPage'))
+const WebSocketTest = lazy(() => import('./pages/WebSocketTest/WebSocketTest'))
+const MatchSimulationTest = lazy(() => import('./pages/MatchSimulationTest/MatchSimulationTest'))
 
 function App() {
   return (
@@ -37,12 +40,15 @@ function App() {
           <Route path="matches/:matchId/result" element={<MatchResultDetail />} />
           <Route path="teams" element={<TeamsPage />} />
           <Route path="standings" element={<StandingsPage />} />
+          <Route path="historical-seasons/:id" element={<HistoricalSeasonDetail />} />
           <Route path="results" element={<ResultsPage />} /><Route path="teams/:teamId" element={<TeamDetailPage />} />
           {/* Footer pages */}
           <Route path="about" element={<AboutPage />} />
           <Route path="terms" element={<TermsPage />} />
           <Route path="privacy" element={<PrivacyPage />} />
           <Route path="contact" element={<ContactPage />} />
+          <Route path="websocket-test" element={<WebSocketTest />} />
+          <Route path="simulation-test" element={<MatchSimulationTest />} />
           {/* Protected routes */}
           <Route element={<ProtectedRoute />}>
             <Route path="betting" element={<BettingPage />} />
