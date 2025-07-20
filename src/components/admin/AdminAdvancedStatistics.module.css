@@ -584,6 +584,150 @@
   color: #9CA3AF;
 }
 
+/* User Segments */
+.segmentsList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.segmentItem {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.segmentHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.segmentIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  color: white;
+  flex-shrink: 0;
+}
+
+.segmentName {
+  font-weight: 600;
+  color: #374151;
+  flex: 1;
+}
+
+.segmentCount {
+  font-size: 0.875rem;
+  color: #6B7280;
+  font-weight: 500;
+}
+
+.segmentProgress {
+  width: 100%;
+  height: 8px;
+  background-color: #F3F4F6;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.segmentBar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.segmentStats {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #6B7280;
+}
+
+/* Team Performance */
+.teamPerformanceList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.teamPerformanceItem {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.teamPerformanceHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.teamPerformanceIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: white;
+  flex-shrink: 0;
+}
+
+.teamPerformanceInfo {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.teamPerformanceName {
+  font-weight: 600;
+  color: #374151;
+  font-size: 1rem;
+}
+
+.teamPerformanceWinRate {
+  font-size: 0.875rem;
+  color: #6B7280;
+}
+
+.teamPerformanceMetrics {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.teamPerformanceVolume {
+  font-weight: 600;
+  color: #059669;
+  font-size: 0.875rem;
+}
+
+.teamPerformanceBets {
+  font-size: 0.75rem;
+  color: #6B7280;
+}
+
+.teamPerformanceProgress {
+  width: 100%;
+  height: 12px;
+  background-color: #F3F4F6;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.teamPerformanceBar {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.3s ease;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .advancedStats {
