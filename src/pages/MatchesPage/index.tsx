@@ -20,7 +20,8 @@ const MatchesPage = () => {
     isLoading: isLoadingTime, 
     error: timeError, 
     getCurrentLeagueDate,
-    forceRefresh
+    forceRefresh,
+    lastUpdateTime
   } = useLeagueTime();
 
   // Estado local para la carga de datos de partidos
@@ -130,9 +131,18 @@ const MatchesPage = () => {
     }
   }, []);
 
+  // Effect separado para inicializar la temporada cuando cambie la info del tiempo de liga
   useEffect(() => {
     initializeSeason();
-  }, [initializeSeason]); // Recargar cuando cambie la información de tiempo
+  }, [initializeSeason]);
+
+  // Effect adicional para refrescar cuando cambie leagueTimeInfo o lastUpdateTime
+  useEffect(() => {
+    if (leagueTimeInfo) {
+      console.log('🔄 League time info changed, refreshing season data...');
+      initializeSeason();
+    }
+  }, [leagueTimeInfo, lastUpdateTime, initializeSeason]);
 
   const handleTimeAdvanced = async (_newDate: Date, simulatedMatches: Match[]) => {
     // Forzar actualización del tiempo de liga
@@ -146,9 +156,31 @@ const MatchesPage = () => {
     }
   };
 
-  const handleSeasonReset = () => {
-    // Reset season when virtual time is reset
-    forceRefresh();
+  const handleSeasonReset = async () => {
+    // Reset season when virtual time is reset or new season is created
+    console.log('🔄 Season reset triggered, refreshing data...');
+    
+    try {
+      // Clear any local state immediately
+      setSeason(null);
+      setError(null);
+      
+      // Force refresh league time info first
+      console.log('🔄 Force refreshing league time...');
+      await forceRefresh();
+      
+      // Wait a moment for the data to be synchronized
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Re-initialize season data
+      console.log('🔄 Re-initializing season data...');
+      await initializeSeason();
+      
+      console.log('✅ Season reset refresh completed');
+    } catch (error) {
+      console.error('❌ Error refreshing after season reset:', error);
+      setError('Error refrescando después del cambio de temporada. Intenta recargar la página.');
+    }
   };
 
   const handleNewSeasonCreated = async () => {
