@@ -336,30 +336,55 @@ const AdminAdvancedStatistics = () => {
                 </h3>
               </div>
               <div className={styles.pieChartContainer}>
-                <div className={styles.pieChart}>
-                  {data.statusDistribution.map((item) => (
-                    <div
-                      key={item.label}
-                      className={styles.pieSlice}
-                      style={{
-                        '--percentage': `${item.percentage}%`,
-                        '--color': item.color
-                      } as React.CSSProperties}
-                    />
-                  ))}
-                </div>
+                <div 
+                  className={styles.pieChart}
+                  style={{
+                    '--pie-gradient': (() => {
+                      const activeItems = data.statusDistribution.filter(item => item.value > 0);
+                      
+                      if (activeItems.length === 0) {
+                        return '#f3f4f6';
+                      }
+                      
+                      if (activeItems.length === 1) {
+                        return activeItems[0].color;
+                      }
+                      
+                      // Recalculate percentages for only active items
+                      const total = activeItems.reduce((sum, item) => sum + item.value, 0);
+                      let currentDegree = 0;
+                      
+                      const gradientParts = activeItems.map((item) => {
+                        const percentage = (item.value / total) * 100;
+                        const startDegree = currentDegree;
+                        const endDegree = currentDegree + (percentage * 3.6);
+                        currentDegree = endDegree;
+                        
+                        return `${item.color} ${startDegree.toFixed(1)}deg ${endDegree.toFixed(1)}deg`;
+                      });
+                      
+                      return `conic-gradient(${gradientParts.join(', ')})`;
+                    })()
+                  } as React.CSSProperties}
+                />
                 <div className={styles.pieChartLegend}>
-                  {data.statusDistribution.map((item) => (
-                    <div key={item.label} className={styles.legendItem}>
-                      <div 
-                        className={styles.legendColor}
-                        style={{ backgroundColor: item.color }}
-                      />
-                      <span className={styles.legendLabel}>
-                        {item.label}: {item.value} ({item.percentage.toFixed(1)}%)
-                      </span>
+                  {data.statusDistribution.length > 0 ? (
+                    data.statusDistribution.map((item) => (
+                      <div key={item.label} className={styles.legendItem}>
+                        <div 
+                          className={styles.legendColor}
+                          style={{ backgroundColor: item.color }}
+                        />
+                        <span className={styles.legendLabel}>
+                          {item.label}: {item.value} ({item.percentage.toFixed(1)}%)
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <div style={{ padding: '20px', textAlign: 'center', color: '#666', fontSize: '0.875rem' }}>
+                      No hay apuestas en el período seleccionado
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             </Card>
