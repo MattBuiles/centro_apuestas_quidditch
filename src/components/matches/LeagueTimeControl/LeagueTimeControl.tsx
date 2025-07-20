@@ -161,7 +161,12 @@ const LeagueTimeControl: React.FC<VirtualTimeControlProps> = ({
         // Clear message after 3 seconds
         setTimeout(() => setLastActionMessage(null), 3000);
         
+        // Wait a moment for backend to fully process the new season
+        console.log('⏳ Waiting for backend to process new season...');
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
         // Trigger season reset callback
+        console.log('🔄 Triggering onSeasonReset callback...');
         onSeasonReset?.();
       } else {
         setError(result.message || 'Error iniciando nueva temporada');
