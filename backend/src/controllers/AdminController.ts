@@ -1363,6 +1363,47 @@ export class AdminController {
             }
           ],
 
+          // Bet distribution by amount ranges
+          betDistribution: [
+            {
+              range: '€1-€10',
+              count: await this.getBetCountByRange(1, 10, whereClause, params),
+              percentage: 0,
+              color: '#10B981'
+            },
+            {
+              range: '€11-€50',
+              count: await this.getBetCountByRange(11, 50, whereClause, params),
+              percentage: 0,
+              color: '#3B82F6'
+            },
+            {
+              range: '€51-€100',
+              count: await this.getBetCountByRange(51, 100, whereClause, params),
+              percentage: 0,
+              color: '#F59E0B'
+            },
+            {
+              range: '€100+',
+              count: await this.getBetCountByRange(101, 999999, whereClause, params),
+              percentage: 0,
+              color: '#EF4444'
+            }
+          ].map(item => {
+            const totalBetsByAmount = item.count;
+            const totalBets = stats.totalBets;
+            return {
+              ...item,
+              percentage: totalBets > 0 ? (totalBetsByAmount / totalBets) * 100 : 0
+            };
+          }),
+
+          // User segments
+          userSegments: await this.getUserSegments(whereClause, params),
+
+          // Team performance
+          teamPerformance: await this.getTeamPerformance(whereClause, params),
+
           // Daily volume chart data
           dailyVolume: {
             data: dailyData,
@@ -1412,6 +1453,181 @@ export class AdminController {
       });
     }
   };
+
+  /**
+   * Get bet count by amount range
+   */
+  private async getBetCountByRange(minAmount: number, maxAmount: number, whereClause: string, params: (string | number)[]): Promise<number> {
+    try {
+      const rangeWhereClause = whereClause + ' AND b.amount >= ? AND b.amount <= ?';
+      const rangeParams = [...params, minAmount, maxAmount];
+      
+      const result = await this.db.get(`
+        SELECT COUNT(*) as count
+        FROM bets b
+        JOIN users u ON b.user_id = u.id
+        ${rangeWhereClause}
+      `, rangeParams) as { count: number } | undefined;
+
+      return result?.count || 0;
+    } catch (error) {
+      console.error('Error getting bet count by range:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Get user segments
+   */
+  private async getUserSegments(whereClause: string, params: (string | number)[]): Promise<Array<{
+    segment: string;
+    userCount: number;
+    avgBetAmount: number;
+    totalVolume: number;
+    color: string;
+  }>> {
+    try {
+      // Get user spending stats
+      const userStats = await this.db.all(`
+        SELECT 
+          u.id,
+          u.username,
+          COUNT(b.id) as betCount,
+          COALESCE(SUM(b.amount), 0) as totalAmount,
+          COALESCE(AVG(b.amount), 0) as avgAmount
+        FROM users u
+        LEFT JOIN bets b ON u.id = b.user_id
+        ${whereClause}
+        GROUP BY u.id, u.username
+        HAVING betCount > 0
+        ORDER BY totalAmount DESC
+      `, params) as Array<{
+        id: string;
+        username: string;
+        betCount: number;
+        totalAmount: number;
+        avgAmount: number;
+      }>;
+
+      if (!userStats || userStats.length === 0) {
+        return [
+          { segment: 'Activos', userCount: 0, avgBetAmount: 0, totalVolume: 0, color: '#10B981' },
+          { segment: 'Regulares', userCount: 0, avgBetAmount: 0, totalVolume: 0, color: '#3B82F6' },
+          { segment: 'Inactivos', userCount: 0, avgBetAmount: 0, totalVolume: 0, color: '#6B7280' }
+        ];
+      }
+
+      // Segment users (removed VIP, adjusted ranges)
+      const activeUsers = userStats.filter(user => user.totalAmount >= 100);
+      const regularUsers = userStats.filter(user => user.totalAmount >= 20 && user.totalAmount < 100);
+      const inactiveUsers = userStats.filter(user => user.totalAmount < 20);
+
+      return [
+        {
+          segment: 'Activos',
+          userCount: activeUsers.length,
+          avgBetAmount: activeUsers.length > 0 ? activeUsers.reduce((sum, user) => sum + user.avgAmount, 0) / activeUsers.length : 0,
+          totalVolume: activeUsers.reduce((sum, user) => sum + user.totalAmount, 0),
+          color: '#10B981'
+        },
+        {
+          segment: 'Regulares',
+          userCount: regularUsers.length,
+          avgBetAmount: regularUsers.length > 0 ? regularUsers.reduce((sum, user) => sum + user.avgAmount, 0) / regularUsers.length : 0,
+          totalVolume: regularUsers.reduce((sum, user) => sum + user.totalAmount, 0),
+          color: '#3B82F6'
+        },
+        {
+          segment: 'Inactivos',
+          userCount: inactiveUsers.length,
+          avgBetAmount: inactiveUsers.length > 0 ? inactiveUsers.reduce((sum, user) => sum + user.avgAmount, 0) / inactiveUsers.length : 0,
+          totalVolume: inactiveUsers.reduce((sum, user) => sum + user.totalAmount, 0),
+          color: '#6B7280'
+        }
+      ];
+    } catch (error) {
+      console.error('Error getting user segments:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get team performance
+   */
+  private async getTeamPerformance(whereClause: string, params: (string | number)[]): Promise<Array<{
+    teamName: string;
+    teamColor: string;
+    totalBets: number;
+    wonBets: number;
+    winRate: number;
+    totalVolume: number;
+  }>> {
+    try {
+      // First, get all teams
+      const teams = await this.db.all(`
+        SELECT id, name, colors
+        FROM teams
+        ORDER BY name
+      `) as Array<{
+        id: string;
+        name: string;
+        colors: string;
+      }>;
+
+      console.log('🏆 Found teams:', teams);
+
+      const teamPerformance = [];
+
+      for (const team of teams) {
+        // Get bet statistics for this team
+        const teamBets = await this.db.get(`
+          SELECT 
+            COUNT(b.id) as totalBets,
+            COUNT(CASE WHEN b.status = 'won' THEN 1 END) as wonBets,
+            COALESCE(SUM(b.amount), 0) as totalVolume
+          FROM bets b
+          JOIN matches m ON b.match_id = m.id
+          JOIN users u ON b.user_id = u.id
+          WHERE (m.home_team_id = ? OR m.away_team_id = ?)
+          ${whereClause.replace('WHERE 1=1', 'AND 1=1')}
+        `, [team.id, team.id, ...params]) as {
+          totalBets: number;
+          wonBets: number;
+          totalVolume: number;
+        } | undefined;
+
+        const stats = teamBets || { totalBets: 0, wonBets: 0, totalVolume: 0 };
+        
+        // Parse colors from JSON string and get first color
+        let teamColor = '#6B7280'; // default color
+        try {
+          if (team.colors) {
+            const colorsArray = JSON.parse(team.colors);
+            if (Array.isArray(colorsArray) && colorsArray.length > 0) {
+              teamColor = colorsArray[0];
+            }
+          }
+        } catch (error) {
+          console.warn('Error parsing team colors:', error);
+        }
+        
+        teamPerformance.push({
+          teamName: team.name,
+          teamColor: teamColor,
+          totalBets: stats.totalBets,
+          wonBets: stats.wonBets,
+          winRate: stats.totalBets > 0 ? (stats.wonBets / stats.totalBets) * 100 : 0,
+          totalVolume: stats.totalVolume
+        });
+      }
+
+      console.log('🏆 Team performance results:', teamPerformance);
+      return teamPerformance.sort((a, b) => b.totalVolume - a.totalVolume);
+    } catch (error) {
+      console.error('Error getting team performance:', error);
+      return [];
+    }
+  }
 
   /**
    * Get users list for filters
