@@ -1101,16 +1101,61 @@ export class AdminController {
         period, status, userId, dateFrom, dateTo
       });
 
+      // Get current virtual time for calculations
+      const virtualTimeState = await this.virtualTimeService.getCurrentState();
+      const currentVirtualDate = virtualTimeState.currentDate;
+      console.log('⏰ Using virtual time:', currentVirtualDate.toISOString());
+
       // Build WHERE clause for filters
       let whereClause = 'WHERE 1=1';
       const params: (string | number)[] = [];
 
-      // Date range filter
+      // Date range filter - prioritize custom date range over period
       if (dateFrom && dateTo) {
+        // Validate date format and ensure dateFrom is before dateTo
+        const fromDate = new Date(dateFrom as string);
+        const toDate = new Date(dateTo as string);
+        
+        if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+          console.error('❌ Invalid date format:', { dateFrom, dateTo });
+          res.status(400).json({
+            success: false,
+            message: 'Invalid date format. Please use YYYY-MM-DD format.'
+          });
+          return;
+        }
+        
+        if (fromDate > toDate) {
+          console.error('❌ Invalid date range: dateFrom is after dateTo');
+          res.status(400).json({
+            success: false,
+            message: 'Start date must be before end date.'
+          });
+          return;
+        }
+        
+        // Also validate that dates are not in the future relative to virtual time
+        const virtualDateOnly = new Date(currentVirtualDate.getFullYear(), currentVirtualDate.getMonth(), currentVirtualDate.getDate());
+        if (toDate > virtualDateOnly) {
+          console.warn('⚠️ End date is in the future relative to virtual time, adjusting...');
+          toDate.setTime(virtualDateOnly.getTime());
+        }
+        
+        console.log('📅 Using custom date range:', { dateFrom, dateTo });
         whereClause += ' AND DATE(b.placed_at) BETWEEN ? AND ?';
         params.push(dateFrom as string, dateTo as string);
       } else if (period !== 'all') {
-        whereClause += ' AND b.placed_at >= datetime("now", "-' + period + ' days")';
+        console.log('📅 Using predefined period:', period, 'days from virtual time');
+        // Calculate the start date based on virtual time, not real time
+        const periodStartDate = new Date(currentVirtualDate);
+        periodStartDate.setDate(periodStartDate.getDate() - parseInt(period as string));
+        const periodStartString = periodStartDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+        
+        console.log('📅 Period start date (virtual):', periodStartString);
+        whereClause += ' AND DATE(b.placed_at) >= ?';
+        params.push(periodStartString);
+      } else {
+        console.log('📅 No date filter applied - showing all data');
       }
 
       // Status filter
@@ -1128,7 +1173,7 @@ export class AdminController {
       console.log('📊 SQL WHERE clause:', whereClause);
       console.log('📊 SQL params:', params);
 
-      // Calculate previous period for comparison
+      // Calculate previous period for comparison using virtual time
       let previousPeriodClause = '';
       if (dateFrom && dateTo) {
         const fromDate = new Date(dateFrom as string);
@@ -1140,7 +1185,17 @@ export class AdminController {
         previousPeriodClause = `AND DATE(b.placed_at) BETWEEN '${previousFrom.toISOString().split('T')[0]}' AND '${previousTo.toISOString().split('T')[0]}'`;
       } else if (period !== 'all') {
         const periodDays = parseInt(period as string);
-        previousPeriodClause = `AND b.placed_at >= datetime("now", "-${periodDays * 2} days") AND b.placed_at < datetime("now", "-${periodDays} days")`;
+        // Calculate previous period dates based on virtual time
+        const periodEnd = new Date(currentVirtualDate);
+        periodEnd.setDate(periodEnd.getDate() - periodDays);
+        const periodStart = new Date(periodEnd);
+        periodStart.setDate(periodStart.getDate() - periodDays);
+        
+        const previousFromString = periodStart.toISOString().split('T')[0];
+        const previousToString = periodEnd.toISOString().split('T')[0];
+        
+        console.log('📊 Previous period (virtual):', { from: previousFromString, to: previousToString });
+        previousPeriodClause = `AND DATE(b.placed_at) BETWEEN '${previousFromString}' AND '${previousToString}'`;
       }
 
       // Main statistics query
@@ -1656,6 +1711,40 @@ export class AdminController {
         success: false,
         error: 'Internal server error',
         message: 'Failed to retrieve users list',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
+
+  /**
+   * Get current virtual time state
+   */
+  public getCurrentVirtualTime = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+      const virtualTimeState = await this.virtualTimeService.getCurrentState();
+      
+      res.json({
+        success: true,
+        data: {
+          currentDate: virtualTimeState.currentDate,
+          timeSpeed: virtualTimeState.timeSpeed,
+          autoMode: virtualTimeState.autoMode,
+          lastUpdate: virtualTimeState.lastUpdate,
+          activeSeason: virtualTimeState.activeSeason ? {
+            id: virtualTimeState.activeSeason.id,
+            name: virtualTimeState.activeSeason.name,
+            startDate: virtualTimeState.activeSeason.startDate,
+            endDate: virtualTimeState.activeSeason.endDate
+          } : null
+        },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error getting virtual time state:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error',
+        message: 'Failed to retrieve virtual time state',
         timestamp: new Date().toISOString()
       });
     }

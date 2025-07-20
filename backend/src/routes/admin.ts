@@ -57,4 +57,7 @@ router.get('/statistics/advanced', adminController.getAdvancedStatistics);
 // GET /api/admin/users/list - Get users list for filters
 router.get('/users/list', adminController.getUsersList);
 
+// GET /api/admin/virtual-time - Get current virtual time state
+router.get('/virtual-time', adminController.getCurrentVirtualTime);
+
 export default router;

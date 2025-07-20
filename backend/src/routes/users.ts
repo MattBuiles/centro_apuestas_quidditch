@@ -402,15 +402,6 @@ router.put('/:id', authenticate, async (req: AuthenticatedRequest, res) => {
       });
     }
 
-    // Prevent editing admin users (except by super admin)
-    if (targetUser.role === 'admin' && user.userId !== targetUser.id) {
-      return res.status(403).json({
-        success: false,
-        error: 'Cannot edit admin users',
-        timestamp: new Date().toISOString()
-      });
-    }
-
     // Check if new username is taken (if username is being changed)
     if (username && username !== targetUser.username) {
       const existingUser = await db.get(
@@ -443,7 +434,7 @@ router.put('/:id', authenticate, async (req: AuthenticatedRequest, res) => {
 
     // Build update query dynamically
     const updates: string[] = [];
-    const params: any[] = [];
+    const params: (string | number)[] = [];
 
     if (username) {
       updates.push('username = ?');
