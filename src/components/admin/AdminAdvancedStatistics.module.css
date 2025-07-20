@@ -262,12 +262,9 @@
   height: 120px;
   border-radius: 50%;
   position: relative;
-  background: conic-gradient(
-    #10B981 0deg 72deg,
-    #EF4444 72deg 216deg,
-    #F59E0B 216deg 360deg
-  );
   flex-shrink: 0;
+  background: var(--pie-gradient, #f3f4f6);
+  transition: background 0.3s ease;
 }
 
 .pieChartLegend {
