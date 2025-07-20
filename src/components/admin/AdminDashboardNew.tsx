@@ -337,19 +337,43 @@ const AdminDashboardNew = () => {
         <div className={styles.chartCard}>
           <h3>📊 Apuestas por Día</h3>
           <div className={styles.barChart}>
-            {betsByDay && betsByDay.length > 0 ? betsByDay.map((day) => (
-              <div key={day.day} className={styles.barItem}>
-                <div 
-                  className={styles.bar} 
-                  style={{ 
-                    height: `${Math.max((day.count / Math.max(...betsByDay.map(d => d.count))) * 100, 5)}%` 
-                  }}
-                >
-                  <span className={styles.barValue}>{day.count}</span>
+            {betsByDay && betsByDay.length > 0 ? (
+              <>
+                <div className={styles.chartGrid}>
+                  {betsByDay.map((day) => {
+                    const maxCount = Math.max(...betsByDay.map(d => d.count));
+                    const heightPercentage = maxCount > 0 ? (day.count / maxCount) * 100 : 0;
+                    const minHeight = 12; // altura mínima en pixels
+                    const maxHeight = 140; // altura máxima en pixels (un poco menos que chartGrid)
+                    
+                    // Calcular altura real en pixels
+                    const calculatedHeight = day.count === 0 
+                      ? minHeight 
+                      : Math.max(minHeight, (heightPercentage / 100) * maxHeight);
+                    
+                    return (
+                      <div key={day.day} className={styles.barItem}>
+                        <div 
+                          className={styles.bar} 
+                          style={{ 
+                            height: `${calculatedHeight}px`
+                          }}
+                        >
+                          <span className={styles.barValue}>{day.count}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-                <span className={styles.barLabel}>{day.day}</span>
-              </div>
-            )) : (
+                <div className={styles.barLabels}>
+                  {betsByDay.map((day) => (
+                    <span key={`label-${day.day}`} className={styles.barLabel}>
+                      {day.day}
+                    </span>
+                  ))}
+                </div>
+              </>
+            ) : (
               <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>
                 No hay datos disponibles
               </div>
