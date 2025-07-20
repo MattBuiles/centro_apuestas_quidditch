@@ -214,8 +214,8 @@ const AdminUsersManagement = () => {
         formData.email !== selectedUser.email ||
         formData.role !== selectedUser.role;
 
-      // Update user information if changed (and user is not admin)
-      if (userDataChanged && selectedUser.role !== 'admin') {
+      // Update user information if changed
+      if (userDataChanged) {
         const updateData: any = {};
         
         if (formData.username !== selectedUser.username) {
