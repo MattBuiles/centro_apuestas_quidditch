@@ -72,10 +72,17 @@ const MatchPredictions: React.FC<MatchPredictionsProps> = ({
               <span className={styles.confidenceLevel}>
                 Confianza: {userPrediction.confidence}/5 ⭐
               </span>
+              {/* Show if this is a temporary prediction (optimistic update) */}
+              {userPrediction.id.startsWith('temp_') && (
+                <div className={styles.processingIndicator}>
+                  <span className={styles.processingIcon}>⏳</span>
+                  <span className={styles.processingText}>Guardando tu predicción...</span>
+                </div>
+              )}
             </div>
             
             {/* Show prediction result if match is finished */}
-            {match.status === 'finished' && userPrediction.status && (
+            {match.status === 'finished' && userPrediction.status && !userPrediction.id.startsWith('temp_') && (
               <div className={styles.predictionResultSection}>
                 <h4>🔮 Resultado de tu Predicción</h4>
                 <div className={styles.predictionComparison}>
@@ -125,8 +132,13 @@ const MatchPredictions: React.FC<MatchPredictionsProps> = ({
             )}
           </div>
         ) : (
-          // Show closed predictions message if can't predict and no existing prediction
-          !canPredict && !userPrediction ? (
+          // Show loading state while predicting or closed predictions message
+          isPredicting ? (
+            <div className={styles.predictionLoadingState}>
+              <div className={styles.loadingSpinner}>🔮</div>
+              <p>Procesando tu predicción...</p>
+            </div>
+          ) : !canPredict && !userPrediction ? (
             <div className={styles.closedPredictions}>
               <p>Las predicciones para este partido ya están cerradas.</p>
             </div>

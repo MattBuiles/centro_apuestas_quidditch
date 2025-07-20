@@ -1311,3 +1311,154 @@
   0%, 100% { opacity: 0.3; }
   50% { opacity: 0.6; }
 }
+
+/* ========================================
+   PREDICTION LOADING STATE
+   ======================================== */
+
+.predictionLoadingState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(2rem, 4vw, 3rem);
+  background: linear-gradient(135deg, 
+    rgba(186, 104, 200, 0.1) 0%,
+    rgba(156, 39, 176, 0.05) 25%,
+    rgba(255, 255, 255, 0.9) 50%,
+    rgba(156, 39, 176, 0.05) 75%,
+    rgba(186, 104, 200, 0.1) 100%);
+  border-radius: 20px;
+  border: 2px solid rgba(186, 104, 200, 0.2);
+  margin: clamp(1rem, 2vw, 1.5rem) 0;
+  backdrop-filter: blur(10px);
+}
+
+.loadingSpinner {
+  font-size: clamp(2rem, 4vw, 3rem);
+  animation: crystalSpin 2s ease-in-out infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes crystalSpin {
+  0% { 
+    transform: rotate(0deg) scale(1);
+    opacity: 0.8;
+  }
+  25% { 
+    transform: rotate(90deg) scale(1.1);
+    opacity: 1;
+  }
+  50% { 
+    transform: rotate(180deg) scale(1.2);
+    opacity: 0.9;
+  }
+  75% { 
+    transform: rotate(270deg) scale(1.1);
+    opacity: 1;
+  }
+  100% { 
+    transform: rotate(360deg) scale(1);
+    opacity: 0.8;
+  }
+}
+
+.predictionLoadingState p {
+  color: #4b0082;
+  font-weight: 500;
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  font-style: italic;
+  text-align: center;
+  margin: 0;
+  animation: textPulse 2s ease-in-out infinite;
+}
+
+@keyframes textPulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+/* ========================================
+   PROCESSING INDICATOR
+   ======================================== */
+
+.processingIndicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, 
+    rgba(255, 193, 7, 0.1) 0%,
+    rgba(255, 193, 7, 0.05) 50%,
+    rgba(255, 193, 7, 0.1) 100%);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  border-radius: 15px;
+  backdrop-filter: blur(5px);
+}
+
+.processingIcon {
+  font-size: 1.2rem;
+  animation: processingRotate 2s linear infinite;
+}
+
+@keyframes processingRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.processingText {
+  color: #856404;
+  font-size: 0.9rem;
+  font-weight: 500;
+  font-style: italic;
+}
+
+/* ========================================
+   PROCESSING INDICATOR FOR OPTIMISTIC UPDATES
+   ======================================== */
+
+.processingIndicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, 
+    rgba(255, 193, 7, 0.1) 0%,
+    rgba(255, 235, 59, 0.05) 50%,
+    rgba(255, 193, 7, 0.1) 100%);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  border-radius: 15px;
+  backdrop-filter: blur(5px);
+}
+
+.processingIcon {
+  font-size: 1.2rem;
+  animation: processingPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes processingPulse {
+  0% { 
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% { 
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% { 
+    transform: scale(1);
+    opacity: 0.8;
+  }
+}
+
+.processingText {
+  color: #e65100;
+  font-weight: 500;
+  font-size: 0.9rem;
+  font-style: italic;
+  animation: textPulse 2s ease-in-out infinite;
+}

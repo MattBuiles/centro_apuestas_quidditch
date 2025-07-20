@@ -1,4 +1,4 @@
-import React, { Component, ReactNode, useState, useEffect, useRef } from 'react';
+import React, { Component, ReactNode, useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Match, Team } from '@/types/league';
 import { getMatchDetails, getRelatedMatches } from '@/services/matchesService';
@@ -132,40 +132,75 @@ const MatchDetailPage: React.FC = () => {
   }
   const predictionsService = predictionsServiceRef.current;
 
-  useEffect(() => {
-    const loadPredictionsData = async (matchId: string) => {
-      if (!FEATURES.USE_BACKEND_PREDICTIONS) return;
+  // Function to load predictions data - preserves optimistic updates
+  const loadPredictionsData = useCallback(async (matchId: string, preserveOptimistic = false) => {
+    if (!FEATURES.USE_BACKEND_PREDICTIONS) return;
+    
+    try {
+      console.log('🔄 Loading predictions data for match:', matchId, { preserveOptimistic });
       
-      try {
-        console.log('🔄 Loading predictions data for match:', matchId);
-        
-        // Load user prediction
-        const userPred = await predictionsService.getUserPrediction(matchId);
-        console.log('📊 User prediction loaded:', userPred ? 'Found prediction' : 'No prediction');
-        setUserPrediction(userPred);
-        
-        // Load prediction stats
-        const stats = await predictionsService.getMatchPredictionStats(matchId);
-        console.log('📈 Prediction stats loaded:', stats);
-        setPredictionStats(stats);
-      } catch (error) {
-        console.warn('Failed to load predictions data:', error);
-        // Clear any incorrect data
+      // Don't clear state if we want to preserve optimistic updates
+      if (!preserveOptimistic) {
         setUserPrediction(null);
         setPredictionStats(null);
       }
-    };
-
-    if (matchId) {
-      loadMatchData(matchId);
-      loadPredictionsData(matchId);
-    } else {
-      setError('ID de partido no proporcionado');
-      setIsLoading(false);
+      
+      // Force a small delay to ensure any backend processing is complete
+      await new Promise(resolve => setTimeout(resolve, 50));
+      
+      // Load user prediction with retry logic
+      let userPred = null;
+      let retryCount = 0;
+      const maxRetries = preserveOptimistic ? 1 : 3; // Less retries when preserving optimistic
+      
+      while (retryCount < maxRetries) {
+        try {
+          userPred = await predictionsService.getUserPrediction(matchId);
+          if (userPred) break;
+          
+          if (retryCount < maxRetries - 1) {
+            console.log(`⏳ Retry ${retryCount + 1}/${maxRetries} for user prediction...`);
+            await new Promise(resolve => setTimeout(resolve, 200));
+          }
+        } catch (retryError) {
+          console.warn(`Retry ${retryCount + 1} failed:`, retryError);
+        }
+        retryCount++;
+      }
+      
+      console.log('📊 User prediction loaded:', userPred ? {
+        id: userPred.id,
+        prediction: userPred.prediction,
+        confidence: userPred.confidence,
+        status: userPred.status
+      } : 'No prediction found');
+      
+      // Only update user prediction if we got valid data or not preserving optimistic
+      if (userPred || !preserveOptimistic) {
+        setUserPrediction(userPred);
+      }
+      
+      // Load prediction stats
+      const stats = await predictionsService.getMatchPredictionStats(matchId);
+      console.log('📈 Prediction stats loaded:', stats ? {
+        totalPredictions: stats.totalPredictions,
+        userHasPrediction: !!stats.userPrediction
+      } : 'No stats found');
+      
+      setPredictionStats(stats);
+      
+      console.log('✅ Predictions data reload completed successfully');
+    } catch (error) {
+      console.error('❌ Failed to load predictions data:', error);
+      // Only clear data if not preserving optimistic updates
+      if (!preserveOptimistic) {
+        setUserPrediction(null);
+        setPredictionStats(null);
+      }
     }
-  }, [matchId, predictionsService]); // Now predictionsService is stable through useRef
+  }, [predictionsService]);
 
-  const loadMatchData = async (id: string) => {
+  const loadMatchData = useCallback(async (id: string) => {
     try {
       setIsLoading(true);
       setError(null);
@@ -334,9 +369,20 @@ const MatchDetailPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  // Handle making a prediction
+  useEffect(() => {
+    if (matchId) {
+      loadMatchData(matchId);
+      // Load predictions data but preserve any optimistic updates
+      loadPredictionsData(matchId, false);
+    } else {
+      setError('ID de partido no proporcionado');
+      setIsLoading(false);
+    }
+  }, [matchId, loadMatchData, loadPredictionsData]);
+
+  // Handle making a prediction with simplified logic
   const handlePrediction = async (winner: 'home' | 'away' | 'draw') => {
     if (!match || isPredicting) return;
     
@@ -346,35 +392,64 @@ const MatchDetailPage: React.FC = () => {
       return;
     }
     
+    console.log('🎯 Making prediction for match:', {
+      matchId: match.id,
+      prediction: winner,
+      confidence: 3
+    });
+    
+    // Set loading state
+    setIsPredicting(true);
+    
     try {
-      setIsPredicting(true);
-      
-      console.log('🎯 Submitting prediction for match:', {
+      // Create optimistic prediction immediately
+      const optimisticPrediction: Prediction = {
+        id: `temp_${Date.now()}`,
+        userId: 'current_user',
+        userName: 'Current User',
         matchId: match.id,
-        matchStatus: match.status,
         prediction: winner,
-        confidence: 3
-      });
+        confidence: 3,
+        points: 0,
+        createdAt: new Date(),
+        status: 'pending'
+      };
       
-      // For now, use a default confidence of 3/5
+      // Update UI immediately
+      setUserPrediction(optimisticPrediction);
+      console.log('✨ UI updated with selected team:', winner);
+      
+      // Submit to backend
       const success = await predictionsService.submitPrediction(match.id, winner, 3);
       
       if (success) {
-        console.log('✅ Prediction submitted successfully, reloading data...');
-        // Reload predictions data
-        const userPred = await predictionsService.getUserPrediction(match.id);
-        setUserPrediction(userPred);
+        console.log('✅ Prediction submitted successfully');
         
-        const stats = await predictionsService.getMatchPredictionStats(match.id);
-        setPredictionStats(stats);
+        // Give backend time to process
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Try to get real data from backend
+        try {
+          const realPrediction = await predictionsService.getUserPrediction(match.id);
+          if (realPrediction) {
+            setUserPrediction(realPrediction);
+            console.log('✅ Updated with real backend data');
+          }
+        } catch (backendError) {
+          console.warn('⚠️ Could not get backend data, keeping optimistic update:', backendError);
+        }
       } else {
-        console.error('❌ Prediction submission failed');
+        console.warn('⚠️ Backend submission failed, keeping optimistic update');
       }
+      
     } catch (error) {
-      console.error('Failed to submit prediction:', error);
-    } finally {
-      setIsPredicting(false);
+      console.error('❌ Prediction error:', error);
+      // Keep the optimistic prediction for better UX
     }
+    
+    // Always clear loading state
+    setIsPredicting(false);
+    console.log('🎉 Prediction process completed');
   };
 
   const handleStartMatch = async () => {
