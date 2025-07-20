@@ -54,6 +54,30 @@ interface RiskAnalysis {
   netProfit: number;
 }
 
+interface BetDistribution {
+  range: string;
+  count: number;
+  percentage: number;
+  color: string;
+}
+
+interface UserSegment {
+  segment: string;
+  userCount: number;
+  avgBetAmount: number;
+  totalVolume: number;
+  color: string;
+}
+
+interface TeamPerformance {
+  teamName: string;
+  teamColor: string;
+  totalBets: number;
+  wonBets: number;
+  winRate: number;
+  totalVolume: number;
+}
+
 interface AdvancedStatisticsData {
   indicators: {
     totalBets: Indicator;
@@ -62,6 +86,9 @@ interface AdvancedStatisticsData {
     averageBet: Indicator;
   };
   statusDistribution: StatusDistribution[];
+  betDistribution: BetDistribution[];
+  userSegments: UserSegment[];
+  teamPerformance: TeamPerformance[];
   dailyVolume: {
     data: DailyVolumeData[];
     maxDaily: number;
@@ -511,6 +538,171 @@ const AdminAdvancedStatistics = () => {
                     </span>
                   </div>
                 </div>
+              </div>
+            </Card>
+          </div>
+
+          {/* Advanced Charts Row */}
+          <div className={styles.chartsRow}>
+            {/* Bet Distribution by Amount */}
+            <Card className={styles.chartCard}>
+              <div className={styles.chartHeader}>
+                <h3>
+                  <span className={styles.chartIcon}>💰</span>
+                  Distribución por Monto de Apuesta
+                </h3>
+              </div>
+              <div className={styles.pieChartContainer}>
+                <div 
+                  className={styles.pieChart}
+                  style={{
+                    '--pie-gradient': (() => {
+                      const activeItems = data.betDistribution?.filter(item => item.count > 0) || [];
+                      
+                      if (activeItems.length === 0) {
+                        return '#f3f4f6';
+                      }
+                      
+                      if (activeItems.length === 1) {
+                        return activeItems[0].color;
+                      }
+                      
+                      // Recalculate percentages for only active items
+                      const total = activeItems.reduce((sum, item) => sum + item.count, 0);
+                      let currentDegree = 0;
+                      
+                      const gradientParts = activeItems.map((item) => {
+                        const percentage = (item.count / total) * 100;
+                        const startDegree = currentDegree;
+                        const endDegree = currentDegree + (percentage * 3.6);
+                        currentDegree = endDegree;
+                        
+                        return `${item.color} ${startDegree.toFixed(1)}deg ${endDegree.toFixed(1)}deg`;
+                      });
+                      
+                      return `conic-gradient(${gradientParts.join(', ')})`;
+                    })()
+                  } as React.CSSProperties}
+                />
+                <div className={styles.pieChartLegend}>
+                  {data.betDistribution?.length > 0 ? (
+                    data.betDistribution.map((item) => (
+                      <div key={item.range} className={styles.legendItem}>
+                        <div 
+                          className={styles.legendColor}
+                          style={{ backgroundColor: item.color }}
+                        />
+                        <span className={styles.legendLabel}>
+                          {item.range}: {item.count} ({item.percentage.toFixed(1)}%)
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <div style={{ padding: '20px', textAlign: 'center', color: '#666', fontSize: '0.875rem' }}>
+                      No hay datos de distribución disponibles
+                    </div>
+                  )}
+                </div>
+              </div>
+            </Card>
+
+            {/* User Segments */}
+            <Card className={styles.chartCard}>
+              <div className={styles.chartHeader}>
+                <h3>
+                  <span className={styles.chartIcon}>👥</span>
+                  Segmentación de Usuarios
+                </h3>
+              </div>
+              <div className={styles.segmentsList}>
+                {data.userSegments?.length > 0 ? data.userSegments.map((segment) => (
+                  <div key={segment.segment} className={styles.segmentItem}>
+                    <div className={styles.segmentHeader}>
+                      <div 
+                        className={styles.segmentIcon}
+                        style={{ backgroundColor: segment.color }}
+                      >
+                        {segment.segment === 'Activos' ? '⚡' :
+                         segment.segment === 'Regulares' ? '👤' : '😴'}
+                      </div>
+                      <span className={styles.segmentName}>{segment.segment}</span>
+                      <span className={styles.segmentCount}>{segment.userCount} usuarios</span>
+                    </div>
+                    <div className={styles.segmentProgress}>
+                      <div 
+                        className={styles.segmentBar}
+                        style={{ 
+                          width: `${segment.userCount > 0 ? Math.min(100, (segment.userCount / Math.max(...(data.userSegments?.map(s => s.userCount) || [1]))) * 100) : 0}%`,
+                          backgroundColor: segment.color
+                        }}
+                      />
+                    </div>
+                    <div className={styles.segmentStats}>
+                      <span>Promedio: {formatCurrency(segment.avgBetAmount)}</span>
+                      <span>Volumen: {formatCurrency(segment.totalVolume)}</span>
+                    </div>
+                  </div>
+                )) : (
+                  <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>
+                    No hay datos de segmentación disponibles
+                  </div>
+                )}
+              </div>
+            </Card>
+          </div>
+
+          {/* Team Performance Row */}
+          <div className={styles.chartsRow}>
+            <Card className={styles.chartCard}>
+              <div className={styles.chartHeader}>
+                <h3>
+                  <span className={styles.chartIcon}>🏆</span>
+                  Rendimiento por Equipo
+                </h3>
+              </div>
+              <div className={styles.teamPerformanceList}>
+                {data.teamPerformance?.length > 0 ? data.teamPerformance.map((team) => (
+                  <div key={team.teamName} className={styles.teamPerformanceItem}>
+                    <div className={styles.teamPerformanceHeader}>
+                      <div 
+                        className={styles.teamPerformanceIcon}
+                        style={{ backgroundColor: team.teamColor }}
+                      >
+                        {team.teamName === 'Gryffindor' ? '🦁' : 
+                         team.teamName === 'Slytherin' ? '🐍' :
+                         team.teamName === 'Ravenclaw' ? '🦅' : '🦡'}
+                      </div>
+                      <div className={styles.teamPerformanceInfo}>
+                        <span className={styles.teamPerformanceName}>{team.teamName}</span>
+                        <span className={styles.teamPerformanceWinRate}>
+                          {team.winRate.toFixed(1)}% tasa de acierto
+                        </span>
+                      </div>
+                      <div className={styles.teamPerformanceMetrics}>
+                        <span className={styles.teamPerformanceVolume}>
+                          {formatCurrency(team.totalVolume)}
+                        </span>
+                        <span className={styles.teamPerformanceBets}>
+                          {team.wonBets}/{team.totalBets} ganadas
+                        </span>
+                      </div>
+                    </div>
+                    <div className={styles.teamPerformanceProgress}>
+                      <div 
+                        className={styles.teamPerformanceBar}
+                        style={{ 
+                          width: `${team.winRate}%`,
+                          backgroundColor: team.teamColor,
+                          opacity: 0.8
+                        }}
+                      />
+                    </div>
+                  </div>
+                )) : (
+                  <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>
+                    No hay datos de rendimiento por equipo disponibles
+                  </div>
+                )}
               </div>
             </Card>
           </div>
