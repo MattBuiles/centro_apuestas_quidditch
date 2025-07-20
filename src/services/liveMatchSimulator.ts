@@ -69,8 +69,9 @@ export class LiveMatchSimulator {
   ];
 
   private liveMatches: Map<string, MatchState> = new Map();
-  private matchIntervals: Map<string, number> = new Map();
+  private matchIntervals: Map<string, NodeJS.Timeout> = new Map();
   private matchTeams: Map<string, { home: Team; away: Team }> = new Map(); // Store teams for each match
+  private backendSavePromises: Map<string, Promise<void>> = new Map(); // Track ongoing backend saves to prevent duplicates
 
   /**
    * Starts a live match simulation
@@ -98,7 +99,8 @@ export class LiveMatchSimulator {
       duration: duracionEnMinutos,
       lastEventTime: 0,
       spectators: match.attendance || Math.floor(Math.random() * 50000) + 10000,
-      weather: match.weather || 'sunny'
+      weather: match.weather || 'sunny',
+      backendSaved: false
     };
 
     this.liveMatches.set(match.id, estado);
@@ -331,9 +333,11 @@ export class LiveMatchSimulator {
     console.log(`📊 Match ready for detailed result saving: ${matchId}`);
     console.log(`📈 Events recorded: ${estado.eventos.length}`);
     console.log(`⏱️ Final duration: ${estado.minuto} minutes`);
+    console.log(`🔄 Backend save will be handled by LiveMatchViewer component`);
     
-    // Guardar los resultados del partido en el backend
-    this.saveMatchToBackend(matchId, estado, teams.home, teams.away);
+    // Don't save to backend here - let saveDetailedMatchResult handle it
+    // This prevents the race condition where both endMatch and saveDetailedMatchResult
+    // try to save simultaneously
     
     this.stopMatch(matchId);
     return estado;
@@ -355,6 +359,9 @@ export class LiveMatchSimulator {
 
     // Clean up teams reference
     this.matchTeams.delete(matchId);
+    
+    // Clean up any pending backend save promises
+    this.backendSavePromises.delete(matchId);
   }
 
   /**
@@ -427,12 +434,12 @@ export class LiveMatchSimulator {
   /**
    * Saves detailed match result (called from components with full match data)
    */
-  saveDetailedMatchResult(
+  async saveDetailedMatchResult(
     matchId: string,
     match: Match,
     homeTeam: Team,
     awayTeam: Team
-  ): void {
+  ): Promise<void> {
     const estado = this.liveMatches.get(matchId);
     if (!estado) {
       console.warn(`Cannot save match result: Match state not found for ${matchId}`);
@@ -441,23 +448,21 @@ export class LiveMatchSimulator {
 
     try {
       // Import the service here to avoid circular dependencies
-      import('./matchResultsService').then(({ matchResultsService }) => {
-        const detailedResult = matchResultsService.saveMatchResult(match, estado, homeTeam, awayTeam);
-        console.log(`✅ Detailed match result saved successfully for ${matchId}`);
-        console.log(`📊 Result ID: ${detailedResult.id}`);
-        
-        // Also try to save to backend
-        this.saveMatchToBackend(matchId, estado, homeTeam, awayTeam);
-        
-        // Emit custom event for components to listen to
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('matchResultSaved', {
-            detail: { matchId, resultId: detailedResult.id, result: detailedResult }
-          }));
-        }
-      }).catch(error => {
-        console.error('Error importing matchResultsService:', error);
-      });
+      const { matchResultsService } = await import('./matchResultsService');
+      const detailedResult = matchResultsService.saveMatchResult(match, estado, homeTeam, awayTeam);
+      console.log(`✅ Detailed match result saved successfully for ${matchId}`);
+      console.log(`📊 Result ID: ${detailedResult.id}`);
+      
+      // Always try to save to backend - the saveMatchToBackend method will handle duplicates
+      console.log('💾 Saving to backend...');
+      await this.saveMatchToBackend(matchId, estado, homeTeam, awayTeam);
+      
+      // Emit custom event for components to listen to
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('matchResultSaved', {
+          detail: { matchId, resultId: detailedResult.id, result: detailedResult }
+        }));
+      }
     } catch (error) {
       console.error('Error saving detailed match result:', error);
     }
@@ -467,6 +472,40 @@ export class LiveMatchSimulator {
    * Save match result to backend database
    */
   private async saveMatchToBackend(
+    matchId: string,
+    estado: MatchState,
+    homeTeam: Team,
+    awayTeam: Team
+  ): Promise<void> {
+    // Check if already saved
+    if (estado.backendSaved) {
+      console.log(`ℹ️ Match ${matchId} already saved to backend, skipping`);
+      return;
+    }
+
+    // Check if there's already an ongoing save for this match
+    const existingPromise = this.backendSavePromises.get(matchId);
+    if (existingPromise) {
+      console.log(`⏩ Backend save already in progress for match ${matchId}, waiting...`);
+      return existingPromise;
+    }
+
+    // Create and store the save promise
+    const savePromise = this.performBackendSave(matchId, estado, homeTeam, awayTeam);
+    this.backendSavePromises.set(matchId, savePromise);
+
+    try {
+      await savePromise;
+    } finally {
+      // Clean up the promise once completed
+      this.backendSavePromises.delete(matchId);
+    }
+  }
+
+  /**
+   * Performs the actual backend save operation
+   */
+  private async performBackendSave(
     matchId: string,
     estado: MatchState,
     homeTeam: Team,
@@ -504,11 +543,29 @@ export class LiveMatchSimulator {
       
       if (response.success) {
         console.log('✅ Match result saved to backend successfully');
+        // Mark as saved in backend
+        const matchState = this.liveMatches.get(matchId);
+        if (matchState) {
+          matchState.backendSaved = true;
+        }
       } else {
         console.error('❌ Failed to save match result to backend:', response.error);
       }
     } catch (error) {
       console.error('❌ Error saving match result to backend:', error);
+      
+      // If the error is because the match is already finished, that's actually OK
+      if (error instanceof Error && (error.message.includes('400') || error.message.includes('already finished'))) {
+        console.log('ℹ️ Match was already finished on backend (this is expected in some cases)');
+        // Mark as saved since it's already finished
+        const matchState = this.liveMatches.get(matchId);
+        if (matchState) {
+          matchState.backendSaved = true;
+        }
+      } else {
+        // Re-throw other errors
+        throw error;
+      }
     }
   }
 }

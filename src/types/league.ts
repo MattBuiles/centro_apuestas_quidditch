@@ -205,6 +205,7 @@ export interface MatchState {
   lastEventTime: number;
   spectators?: number;
   weather?: string;
+  backendSaved?: boolean; // Track if already saved to backend
 }
 
 // Event configuration for simulation engine
