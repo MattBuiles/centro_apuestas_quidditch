@@ -287,7 +287,6 @@ const AdminDashboardNew = () => {
           <div className={styles.statContent}>
             <h3>{stats?.totalUsers || 0}</h3>
             <p>Usuarios Totales</p>
-            <span className={styles.statChange}>+12% este mes</span>
           </div>
         </div>
 
@@ -296,7 +295,6 @@ const AdminDashboardNew = () => {
           <div className={styles.statContent}>
             <h3>{stats?.activeUsers || 0}</h3>
             <p>Usuarios Activos</p>
-            <span className={styles.statChange}>+8% hoy</span>
           </div>
         </div>
 
@@ -305,7 +303,6 @@ const AdminDashboardNew = () => {
           <div className={styles.statContent}>
             <h3>{stats?.totalBets || 0}</h3>
             <p>Apuestas Totales</p>
-            <span className={styles.statChange}>+{stats?.betsToday || 0} hoy</span>
           </div>
         </div>
 
@@ -314,7 +311,6 @@ const AdminDashboardNew = () => {
           <div className={styles.statContent}>
             <h3>{formatCurrency(stats?.totalRevenue || 0)}</h3>
             <p>Ingresos Totales</p>
-            <span className={styles.statChange}>+23% este mes</span>
           </div>
         </div>
 
@@ -323,7 +319,6 @@ const AdminDashboardNew = () => {
           <div className={styles.statContent}>
             <h3>{formatCurrency(stats?.averageBet || 0)}</h3>
             <p>Apuesta Promedio</p>
-            <span className={styles.statChange}>Sin cambios</span>
           </div>
         </div>
 
@@ -332,7 +327,6 @@ const AdminDashboardNew = () => {
           <div className={styles.statContent}>
             <h3>{stats?.winRate || 0}%</h3>
             <p>Tasa de Ganancia</p>
-            <span className={`${styles.statChange} ${styles.negative}`}>-2% este mes</span>
           </div>
         </div>
       </div>
