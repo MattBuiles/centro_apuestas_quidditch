@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { apiClient } from '@/utils/apiClient';
 import { useAuth } from '@/context/AuthContext';
 import styles from './AdminDashboardNew.module.css';
@@ -65,6 +66,7 @@ interface RiskAlert {
 
 const AdminDashboardNew = () => {
   const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [betsByDay, setBetsByDay] = useState<BetsByDay[]>([]);
   const [popularTeams, setPopularTeams] = useState<PopularTeam[]>([]);
@@ -240,6 +242,10 @@ const AdminDashboardNew = () => {
     if (level >= 9) return { text: 'Alto', class: styles.riskHigh };
     if (level >= 7) return { text: 'Medio', class: styles.riskMedium };
     return { text: 'Bajo', class: styles.riskLow };
+  };
+
+  const handleViewAdvancedStats = () => {
+    navigate('/account/bets-statistics');
   };
 
   if (isLoading) {
@@ -439,11 +445,11 @@ const AdminDashboardNew = () => {
             </div>
           </div>
           <div className={styles.riskActions}>
-            <button className={styles.viewStatsButton}>
+            <button 
+              className={styles.viewStatsButton}
+              onClick={handleViewAdvancedStats}
+            >
               📊 Ver Estadísticas Completas
-            </button>
-            <button className={styles.viewHistoryButton}>
-              📋 Historial Detallado
             </button>
           </div>
         </div>
