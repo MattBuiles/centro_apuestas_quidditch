@@ -105,9 +105,23 @@ interface User {
   betCount: number;
 }
 
+interface VirtualTimeState {
+  currentDate: string;
+  timeSpeed: string;
+  autoMode: boolean;
+  lastUpdate: string;
+  activeSeason: {
+    id: string;
+    name: string;
+    startDate: string;
+    endDate: string;
+  } | null;
+}
+
 const AdminAdvancedStatistics = () => {
   const [data, setData] = useState<AdvancedStatisticsData | null>(null);
   const [users, setUsers] = useState<User[]>([]);
+  const [virtualTime, setVirtualTime] = useState<VirtualTimeState | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState<FilterOptions>({
     period: '30',
@@ -118,18 +132,28 @@ const AdminAdvancedStatistics = () => {
   });
 
   useEffect(() => {
-    const loadUsersData = async () => {
+    const loadInitialData = async () => {
       try {
-        const response = await apiClient.get('/admin/users/list');
-        if (response.success) {
-          setUsers(response.data as User[]);
+        // Load users and virtual time in parallel
+        const [usersResponse, virtualTimeResponse] = await Promise.all([
+          apiClient.get('/admin/users/list'),
+          apiClient.get('/admin/virtual-time')
+        ]);
+        
+        if (usersResponse.success) {
+          setUsers(usersResponse.data as User[]);
+        }
+        
+        if (virtualTimeResponse.success) {
+          setVirtualTime(virtualTimeResponse.data as VirtualTimeState);
+          console.log('⏰ Loaded virtual time:', virtualTimeResponse.data);
         }
       } catch (error) {
-        console.error('Error loading users data:', error);
+        console.error('Error loading initial data:', error);
       }
     };
 
-    loadUsersData();
+    loadInitialData();
   }, []);
 
   useEffect(() => {
@@ -138,22 +162,22 @@ const AdminAdvancedStatistics = () => {
       try {
         const params = new URLSearchParams();
         
-        if (filters.period !== 'all') {
+        // Only send period if no custom date range is set
+        if (filters.dateFrom && filters.dateTo) {
+          params.append('dateFrom', filters.dateFrom);
+          params.append('dateTo', filters.dateTo);
+        } else if (filters.period !== 'all') {
           params.append('period', filters.period);
         }
+        
         if (filters.status !== 'all') {
           params.append('status', filters.status);
         }
         if (filters.userId !== 'all') {
           params.append('userId', filters.userId);
         }
-        if (filters.dateFrom) {
-          params.append('dateFrom', filters.dateFrom);
-        }
-        if (filters.dateTo) {
-          params.append('dateTo', filters.dateTo);
-        }
 
+        console.log('🔍 Sending request with params:', params.toString());
         const response = await apiClient.get(`/admin/statistics/advanced?${params.toString()}`);
         if (response.success) {
           setData(response.data as AdvancedStatisticsData);
@@ -168,10 +192,22 @@ const AdminAdvancedStatistics = () => {
   }, [filters]);
 
   const handleFilterChange = (key: keyof FilterOptions, value: string) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: value
-    }));
+    setFilters(prev => {
+      const newFilters = { ...prev, [key]: value };
+      
+      // If user selects a predefined period, clear custom date range
+      if (key === 'period' && value !== 'all') {
+        newFilters.dateFrom = '';
+        newFilters.dateTo = '';
+      }
+      
+      // If user sets custom date range, set period to 'all' to use custom range
+      if ((key === 'dateFrom' || key === 'dateTo') && value) {
+        newFilters.period = 'all';
+      }
+      
+      return newFilters;
+    });
   };
 
   const clearFilters = () => {
@@ -211,7 +247,17 @@ const AdminAdvancedStatistics = () => {
           Panel de Estadísticas de Apuestas
         </h1>
         <p className={styles.subtitle}>
-          Análisis completo y visualización de datos en tiempo real
+          Análisis completo y visualización de datos en tiempo virtual
+          {virtualTime && (
+            <span className={styles.virtualTimeIndicator}>
+              🕒 Tiempo virtual: {new Date(virtualTime.currentDate).toLocaleDateString('es-ES', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })}
+            </span>
+          )}
         </p>
       </div>
 
@@ -222,6 +268,22 @@ const AdminAdvancedStatistics = () => {
             <span className={styles.filterIcon}>🔍</span>
             Filtros y Período de Análisis
           </h3>
+          {/* Filter Status Indicator */}
+          <div className={styles.filterStatus}>
+            {filters.dateFrom && filters.dateTo ? (
+              <span className={styles.statusBadge}>
+                📅 Rango personalizado: {filters.dateFrom} a {filters.dateTo}
+              </span>
+            ) : filters.period !== 'all' ? (
+              <span className={styles.statusBadge}>
+                ⏰ Últimos {filters.period} días
+              </span>
+            ) : (
+              <span className={styles.statusBadge}>
+                🌍 Todos los períodos
+              </span>
+            )}
+          </div>
         </div>
         
         <div className={styles.filtersContent}>
@@ -288,7 +350,8 @@ const AdminAdvancedStatistics = () => {
                 value={filters.dateFrom}
                 onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
                 className={styles.filterInput}
-                placeholder="dd----yyyy"
+                max={filters.dateTo || (virtualTime ? virtualTime.currentDate.split('T')[0] : new Date().toISOString().split('T')[0])}
+                title="Fecha de inicio del rango personalizado (basado en tiempo virtual)"
               />
             </div>
 
@@ -299,7 +362,9 @@ const AdminAdvancedStatistics = () => {
                 value={filters.dateTo}
                 onChange={(e) => handleFilterChange('dateTo', e.target.value)}
                 className={styles.filterInput}
-                placeholder="dd----yyyy"
+                min={filters.dateFrom}
+                max={virtualTime ? virtualTime.currentDate.split('T')[0] : new Date().toISOString().split('T')[0]}
+                title="Fecha de fin del rango personalizado (basado en tiempo virtual)"
               />
             </div>
           </div>
