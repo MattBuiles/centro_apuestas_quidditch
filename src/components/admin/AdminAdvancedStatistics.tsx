@@ -166,27 +166,6 @@ const AdminAdvancedStatistics = () => {
     }).format(amount);
   };
 
-  const formatChange = (change: number) => {
-    const sign = change > 0 ? '+' : '';
-    return `${sign}${change.toFixed(1)}% vs período anterior`;
-  };
-
-  const getTrendIcon = (trend: string) => {
-    switch (trend) {
-      case 'up': return '📈';
-      case 'down': return '📉';
-      default: return '➡️';
-    }
-  };
-
-  const getTrendColor = (trend: string) => {
-    switch (trend) {
-      case 'up': return '#10B981';
-      case 'down': return '#EF4444';
-      default: return '#6B7280';
-    }
-  };
-
   if (isLoading) {
     return (
       <div className={styles.loadingContainer}>
@@ -318,12 +297,6 @@ const AdminAdvancedStatistics = () => {
               <div className={styles.indicatorContent}>
                 <div className={styles.indicatorValue}>{data.indicators.totalBets.value}</div>
                 <div className={styles.indicatorLabel}>TOTAL APUESTAS</div>
-                <div 
-                  className={styles.indicatorChange}
-                  style={{ color: getTrendColor(data.indicators.totalBets.trend) }}
-                >
-                  {getTrendIcon(data.indicators.totalBets.trend)} {formatChange(data.indicators.totalBets.change)}
-                </div>
               </div>
             </Card>
 
@@ -332,12 +305,6 @@ const AdminAdvancedStatistics = () => {
               <div className={styles.indicatorContent}>
                 <div className={styles.indicatorValue}>{formatCurrency(data.indicators.totalVolume.value)}</div>
                 <div className={styles.indicatorLabel}>VOLUMEN TOTAL</div>
-                <div 
-                  className={styles.indicatorChange}
-                  style={{ color: getTrendColor(data.indicators.totalVolume.trend) }}
-                >
-                  {getTrendIcon(data.indicators.totalVolume.trend)} {formatChange(data.indicators.totalVolume.change)}
-                </div>
               </div>
             </Card>
 
@@ -346,12 +313,6 @@ const AdminAdvancedStatistics = () => {
               <div className={styles.indicatorContent}>
                 <div className={styles.indicatorValue}>{data.indicators.winRate.value.toFixed(1)}%</div>
                 <div className={styles.indicatorLabel}>TASA DE ACIERTO</div>
-                <div 
-                  className={styles.indicatorChange}
-                  style={{ color: getTrendColor(data.indicators.winRate.trend) }}
-                >
-                  {getTrendIcon(data.indicators.winRate.trend)} {formatChange(data.indicators.winRate.change)}
-                </div>
               </div>
             </Card>
 
@@ -360,12 +321,6 @@ const AdminAdvancedStatistics = () => {
               <div className={styles.indicatorContent}>
                 <div className={styles.indicatorValue}>{formatCurrency(data.indicators.averageBet.value)}</div>
                 <div className={styles.indicatorLabel}>APUESTA PROMEDIO</div>
-                <div 
-                  className={styles.indicatorChange}
-                  style={{ color: getTrendColor(data.indicators.averageBet.trend) }}
-                >
-                  {getTrendIcon(data.indicators.averageBet.trend)} {formatChange(data.indicators.averageBet.change)}
-                </div>
               </div>
             </Card>
           </div>
