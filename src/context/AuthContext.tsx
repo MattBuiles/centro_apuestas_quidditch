@@ -51,7 +51,7 @@ interface UserAccount {
 // Interfaz para las transacciones del usuario
 interface UserTransaction {
   id: number;
-  type: 'deposit' | 'withdraw' | 'bet' | 'win';
+  type: 'deposit' | 'withdraw' | 'bet' | 'bet_placed' | 'bet_won' | 'bet_lost' | 'win' | 'refund';
   amount: number;
   date: string;
   description: string;
@@ -1344,13 +1344,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             const updatedBets = [...userBets, newBet];
             saveUserBets(updatedBets);
 
-            // Register transaction locally for UI
-            addTransaction({
-              type: 'bet',
-              amount: -betData.amount,
-              description: `Apuesta: ${betData.matchName}`
-            });
-
+            // Note: Transaction is already recorded in the backend when the bet is created
+            // Reload transactions from backend to show the new bet transaction
+            try {
+              await loadUserTransactionsFromBackend();
+            } catch (error) {
+              console.error('Error reloading transactions after bet:', error);
+            }
+            
             return true;
           } else {
             throw new Error('Error al crear apuesta en el backend');
@@ -1426,6 +1427,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
 
     try {
+      // Para apuestas, no necesitamos registrar transacciones manualmente
+      // ya que el backend las maneja automáticamente
+      if (transactionData.type === 'bet' || transactionData.type === 'bet_placed' || 
+          transactionData.type === 'bet_won' || transactionData.type === 'bet_lost') {
+        console.log('Las transacciones de apuestas se manejan automáticamente en el backend');
+        return;
+      }
+
       // Determinar el endpoint según el tipo de transacción
       const endpoint = transactionData.type === 'deposit' ? 
         '/transactions/deposit' : 
