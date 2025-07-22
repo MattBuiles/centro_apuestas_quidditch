@@ -101,6 +101,22 @@ router.post('/', authenticate, async (req: AuthenticatedRequest, res) => {
       });
     }
 
+    // Check daily betting limit (3 bets per day)
+    const { VirtualTimeService } = await import('../services/VirtualTimeService');
+    const virtualTimeService = VirtualTimeService.getInstance();
+    await virtualTimeService.initialize();
+    const currentState = await virtualTimeService.getCurrentState();
+    const virtualDate = currentState.currentDate.toISOString();
+    
+    const dailyBetsCount = await db.getUserDailyBetsCount(user.userId, virtualDate);
+    if (dailyBetsCount >= 3) {
+      return res.status(400).json({
+        success: false,
+        error: 'Daily betting limit reached. You can only place 3 bets per day.',
+        timestamp: new Date().toISOString()
+      });
+    }
+
     // Verify match exists and is bettable
     const match = await db.getMatchById(matchId) as any;
     if (!match) {
@@ -210,6 +226,52 @@ router.get('/statistics', authenticate, async (req: AuthenticatedRequest, res) =
 
   } catch (error) {
     console.error('Error fetching bet statistics:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// GET /api/bets/daily-count - Get user's daily bets count
+router.get('/daily-count', authenticate, async (req: AuthenticatedRequest, res) => {
+  try {
+    const user = req.user!;
+    console.log('🔄 Daily count request for user:', user.userId);
+    
+    // Get current virtual time
+    const { VirtualTimeService } = await import('../services/VirtualTimeService');
+    const virtualTimeService = VirtualTimeService.getInstance();
+    await virtualTimeService.initialize();
+    const currentState = await virtualTimeService.getCurrentState();
+    const virtualDate = currentState.currentDate.toISOString();
+    
+    console.log('📅 Virtual date for count:', virtualDate);
+    
+    // Get user's daily bets count
+    const dailyCount = await db.getUserDailyBetsCount(user.userId, virtualDate);
+    
+    console.log('📊 Daily bets count for user', user.userId, ':', dailyCount);
+    
+    const responseData = {
+      dailyCount,
+      maxDaily: 3,
+      remaining: Math.max(0, 3 - dailyCount),
+      canBet: dailyCount < 3,
+      virtualDate: virtualDate.split('T')[0] // Return just the date part
+    };
+    
+    console.log('📤 Sending response:', responseData);
+    
+    return res.json({
+      success: true,
+      data: responseData,
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('❌ Error fetching daily bets count:', error);
     return res.status(500).json({
       success: false,
       error: 'Internal server error',

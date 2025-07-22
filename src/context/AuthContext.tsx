@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../utils/apiClient';
+import { BetsService, type DailyBetsResponse } from '../services/betsService';
 import { FEATURES } from '../config/features';
 
 interface User {
@@ -431,6 +432,7 @@ interface AuthContextType {
   getUserBets: () => UserBet[];
   loadUserBetsFromBackend: () => Promise<UserBet[]>;
   getTodayBetsCount: () => number;
+  refreshDailyBetsCount: () => Promise<void>;
   canPlaceBet: (amount: number) => { canBet: boolean; reason?: string };
   // Funciones para manejo de transacciones
   getUserTransactions: () => UserTransaction[];
@@ -468,6 +470,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     totalWinnings: 0,
     favoriteTeam: 'Gryffindor'
   });
+  // Estado para el conteo diario de apuestas basado en tiempo virtual
+  const [dailyBetsInfo, setDailyBetsInfo] = useState<DailyBetsResponse | null>(null);
   // Force re-render trigger for balance updates
   const [balanceUpdateTrigger, setBalanceUpdateTrigger] = useState(0);
   const navigate = useNavigate();
@@ -934,6 +938,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return () => clearInterval(intervalId);
   }, [user?.id, FEATURES.USE_BACKEND_BETS]);
 
+  // Effect to load daily bets count when user changes
+  useEffect(() => {
+    if (!user || user.role === 'admin' || !FEATURES.USE_BACKEND_BETS) return;
+
+    console.log('User effect triggered for daily bets count, user:', user.id);
+    // Load daily bets count immediately when user changes
+    loadDailyBetsCount();
+  }, [user?.id, FEATURES.USE_BACKEND_BETS]);
+
   // ...existing code...
   const updateUserProfile = async (userData: Partial<Pick<User, 'username' | 'email' | 'avatar'>>) => {
     if (!user) return;
@@ -1257,8 +1270,47 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return userStats;
   };
 
+  // Cargar el conteo diario de apuestas desde el backend
+  const loadDailyBetsCount = async (): Promise<void> => {
+    if (!user || user.role === 'admin') {
+      console.log('No loading daily bets count - user not available or is admin');
+      return;
+    }
+    
+    // Solo cargar si el backend está habilitado
+    if (!FEATURES.USE_BACKEND_BETS) {
+      console.log('No loading daily bets count - backend disabled');
+      return;
+    }
+    
+    try {
+      console.log('Loading daily bets count for user:', user.id);
+      const dailyInfo = await BetsService.getDailyBetsCount();
+      console.log('Daily bets info received:', dailyInfo);
+      setDailyBetsInfo(dailyInfo);
+    } catch (error) {
+      console.error('Error loading daily bets count:', error);
+      // En caso de error, mantener el estado anterior o usar valores por defecto
+      if (!dailyBetsInfo) {
+        setDailyBetsInfo({
+          dailyCount: 0,
+          maxDaily: 3,
+          remaining: 3,
+          canBet: true,
+          virtualDate: new Date().toISOString().split('T')[0]
+        });
+      }
+    }
+  };
+
   // Obtener el número de apuestas realizadas hoy
   const getTodayBetsCount = (): number => {
+    // Si tenemos información del backend, usarla
+    if (dailyBetsInfo) {
+      return dailyBetsInfo.dailyCount;
+    }
+    
+    // Fallback al método anterior si no hay información del backend
     const today = new Date().toDateString();
     return userBets.filter(bet => new Date(bet.date).toDateString() === today).length;
   };
@@ -1281,9 +1333,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       return { canBet: false, reason: 'Saldo insuficiente' };
     }
 
-    const todayBets = getTodayBetsCount();
-    if (todayBets >= 3) {
-      return { canBet: false, reason: 'Has alcanzado el límite de 3 apuestas por hoy. Intenta nuevamente mañana.' };
+    // Usar información del backend si está disponible
+    if (dailyBetsInfo) {
+      if (!dailyBetsInfo.canBet) {
+        return { canBet: false, reason: 'Has alcanzado el límite de 3 apuestas por día virtual. Intenta nuevamente mañana.' };
+      }
+    } else {
+      // Fallback al método anterior
+      const todayBets = getTodayBetsCount();
+      if (todayBets >= 3) {
+        return { canBet: false, reason: 'Has alcanzado el límite de 3 apuestas por hoy. Intenta nuevamente mañana.' };
+      }
     }
 
     return { canBet: true };
@@ -1352,6 +1412,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               await loadUserTransactionsFromBackend();
             } catch (error) {
               console.error('Error reloading transactions after bet:', error);
+            }
+
+            // Recargar el conteo diario de apuestas después de una apuesta exitosa
+            try {
+              await loadDailyBetsCount();
+            } catch (error) {
+              console.error('Error reloading daily bets count after bet:', error);
             }
 
             // Note: Removed automatic balance verification since the backend bet creation
@@ -1557,6 +1624,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         getUserBets,
         loadUserBetsFromBackend,
         getTodayBetsCount,
+        refreshDailyBetsCount: loadDailyBetsCount,
         canPlaceBet,
         // Funciones de transacciones
         getUserTransactions,
