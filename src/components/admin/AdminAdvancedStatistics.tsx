@@ -131,6 +131,9 @@ const AdminAdvancedStatistics = () => {
     dateTo: ''
   });
 
+  // Debug initial state
+  console.log('🚀 AdminAdvancedStatistics initialized with filters:', filters);
+
   useEffect(() => {
     const loadInitialData = async () => {
       try {
@@ -162,11 +165,13 @@ const AdminAdvancedStatistics = () => {
       try {
         const params = new URLSearchParams();
         
-        // Only send period if no custom date range is set
+        // Always send period parameter, including 'all'
         if (filters.dateFrom && filters.dateTo) {
           params.append('dateFrom', filters.dateFrom);
           params.append('dateTo', filters.dateTo);
-        } else if (filters.period !== 'all') {
+          // When custom date range is set, don't send period
+        } else {
+          // Always send period, including 'all' to get all data
           params.append('period', filters.period);
         }
         
@@ -178,12 +183,55 @@ const AdminAdvancedStatistics = () => {
         }
 
         console.log('🔍 Sending request with params:', params.toString());
+        console.log('🔍 Current filters state:', filters);
+        
         const response = await apiClient.get(`/admin/statistics/advanced?${params.toString()}`);
         if (response.success) {
-          setData(response.data as AdvancedStatisticsData);
+          console.log('✅ Received data:', response.data);
+          const receivedData = response.data as AdvancedStatisticsData;
+          
+          // Log key indicators to understand what data we're getting
+          console.log('📊 Data summary:', {
+            totalBets: receivedData.indicators?.totalBets?.value || 0,
+            totalVolume: receivedData.indicators?.totalVolume?.value || 0,
+            statusDistribution: receivedData.statusDistribution?.length || 0,
+            dailyVolumeData: receivedData.dailyVolume?.data?.length || 0,
+            activeUsers: receivedData.activeUsers?.length || 0
+          });
+          
+          setData(receivedData);
+        } else {
+          console.error('❌ API request failed:', response);
+          // Try to show some error state or fallback data
         }
       } catch (error) {
         console.error('Error loading statistics data:', error);
+        // Set some fallback empty data to prevent UI errors
+        setData({
+          indicators: {
+            totalBets: { value: 0, change: 0, trend: 'stable' },
+            totalVolume: { value: 0, change: 0, trend: 'stable' },
+            winRate: { value: 0, change: 0, trend: 'stable' },
+            averageBet: { value: 0, change: 0, trend: 'stable' }
+          },
+          statusDistribution: [],
+          dailyVolume: {
+            data: [],
+            maxDaily: 0,
+            avgDaily: 0
+          },
+          activeUsers: [],
+          popularMatches: [],
+          riskAnalysis: {
+            highRiskBets: 0,
+            hyperactiveUsers: 0,
+            profitLossRatio: 0,
+            netProfit: 0
+          },
+          betDistribution: [],
+          userSegments: [],
+          teamPerformance: []
+        });
       }
       setIsLoading(false);
     };
@@ -192,6 +240,8 @@ const AdminAdvancedStatistics = () => {
   }, [filters]);
 
   const handleFilterChange = (key: keyof FilterOptions, value: string) => {
+    console.log('🎯 Changing filter:', key, 'to:', value);
+    
     setFilters(prev => {
       const newFilters = { ...prev, [key]: value };
       
@@ -199,18 +249,22 @@ const AdminAdvancedStatistics = () => {
       if (key === 'period' && value !== 'all') {
         newFilters.dateFrom = '';
         newFilters.dateTo = '';
+        console.log('📅 Cleared custom date range for period:', value);
       }
       
       // If user sets custom date range, set period to 'all' to use custom range
       if ((key === 'dateFrom' || key === 'dateTo') && value) {
         newFilters.period = 'all';
+        console.log('📅 Set period to "all" for custom date range');
       }
       
+      console.log('✅ New filters state:', newFilters);
       return newFilters;
     });
   };
 
   const clearFilters = () => {
+    console.log('🧹 Clearing all filters');
     setFilters({
       period: '30',
       status: 'all',
@@ -296,17 +350,25 @@ const AdminAdvancedStatistics = () => {
                 { value: '30', label: '30 días' },
                 { value: '90', label: '90 días' },
                 { value: 'all', label: 'Todo' }
-              ].map((period) => (
-                <Button
-                  key={period.value}
-                  variant={filters.period === period.value ? 'primary' : 'secondary'}
-                  size="sm"
-                  onClick={() => handleFilterChange('period', period.value)}
-                  className={filters.period === period.value ? styles.activeButton : ''}
-                >
-                  {period.label}
-                </Button>
-              ))}
+              ].map((period) => {
+                const isActive = filters.period === period.value;
+                console.log(`Button ${period.label}: active=${isActive}, currentPeriod=${filters.period}`);
+                
+                return (
+                  <Button
+                    key={period.value}
+                    variant={isActive ? 'primary' : 'secondary'}
+                    size="sm"
+                    onClick={() => {
+                      console.log(`🔘 Clicked period button: ${period.value}`);
+                      handleFilterChange('period', period.value);
+                    }}
+                    className={`${isActive ? styles.activeButton : ''}`}
+                  >
+                    {period.label}
+                  </Button>
+                );
+              })}
             </div>
           </div>
 
@@ -382,6 +444,24 @@ const AdminAdvancedStatistics = () => {
 
       {data && (
         <>
+          {/* Data availability check */}
+          {data.indicators.totalBets.value === 0 && (
+            <div style={{ marginBottom: '24px', padding: '20px', textAlign: 'center', background: '#fff3cd', border: '1px solid #ffeaa7', borderRadius: '12px' }}>
+              <div style={{ color: '#856404', fontSize: '1.1rem', fontWeight: 600, marginBottom: '8px' }}>
+                📊 No hay datos disponibles para el período seleccionado
+              </div>
+              <div style={{ color: '#856404', fontSize: '0.95rem' }}>
+                {filters.period === 'all' 
+                  ? 'No se encontraron apuestas en toda la base de datos. Asegúrate de que el backend esté ejecutándose y tenga datos.'
+                  : `No se encontraron apuestas en los últimos ${filters.period} días. Prueba seleccionando "Todo" para ver todos los datos disponibles.`
+                }
+              </div>
+              <div style={{ color: '#856404', fontSize: '0.85rem', marginTop: '8px', fontStyle: 'italic' }}>
+                URL de API: {import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/admin/statistics/advanced
+              </div>
+            </div>
+          )}
+
           {/* Main Indicators */}
           <div className={styles.indicatorsGrid}>
             <Card className={styles.indicatorCard}>
