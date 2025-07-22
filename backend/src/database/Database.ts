@@ -304,6 +304,10 @@ export class Database {
     return await this.bets.getBetTypeStatistics();
   }
 
+  public async getUserDailyBetsCount(userId: string, virtualDate: string): Promise<number> {
+    return await this.bets.getUserDailyBetsCount(userId, virtualDate);
+  }
+
   // ============== PREDICTIONS METHODS ==============
   
   public async createPrediction(predictionData: PredictionData): Promise<DatabaseResult> {
