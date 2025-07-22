@@ -457,6 +457,40 @@
   50% { transform: scale(1.05); }
 }
 
+.filtersContent {
+  padding: 20px 32px;
+}
+
+.periodSection {
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(106, 90, 205, 0.2);
+}
+
+.periodSection label {
+  display: block;
+  font-family: 'Cinzel', serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #4b0082;
+  margin-bottom: 12px;
+  letter-spacing: 0.5px;
+}
+
+.periodButtons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.activeButton {
+  background: linear-gradient(135deg, #4b0082, #6a5acd) !important;
+  border-color: #4b0082 !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(75, 0, 130, 0.3) !important;
+  transform: translateY(-1px);
+}
+
 .filtersGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));

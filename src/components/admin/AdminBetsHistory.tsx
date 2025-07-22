@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Card from '@/components/common/Card';
 import Button from '@/components/common/Button';
 import { apiClient } from '@/utils/apiClient';
+import { leagueTimeService } from '@/services/leagueTimeService';
 import styles from './AdminBetsHistory.module.css';
 
 interface BetRecord {
@@ -24,6 +25,7 @@ interface FilterOptions {
   dateFrom: string;
   dateTo: string;
   user: string;
+  period: '7' | '30' | '90' | 'all';
 }
 
 interface ApiResponse<T> {
@@ -39,17 +41,31 @@ const AdminBetsHistory = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  const [virtualTime, setVirtualTime] = useState<Date | null>(null);
   
   const [filters, setFilters] = useState<FilterOptions>({
     status: 'all',
     dateFrom: '',
     dateTo: '',
-    user: ''
+    user: '',
+    period: '30'
   });
 
   useEffect(() => {
     loadBetsData();
+    loadVirtualTime();
   }, []);
+
+  const loadVirtualTime = async () => {
+    try {
+      const timeInfo = await leagueTimeService.getLeagueTimeInfo();
+      setVirtualTime(new Date(timeInfo.currentDate));
+    } catch (error) {
+      console.error('Error loading virtual time:', error);
+      // Fallback to real time if virtual time is not available
+      setVirtualTime(new Date());
+    }
+  };
 
   const loadBetsData = async () => {
     setIsLoading(true);
@@ -93,9 +109,30 @@ const AdminBetsHistory = () => {
   useEffect(() => {
     let filtered = [...bets];
 
+    console.log('🔍 Aplicando filtros:', {
+      totalBets: bets.length,
+      period: filters.period,
+      status: filters.status,
+      virtualTime: virtualTime?.toISOString(),
+      dateFrom: filters.dateFrom,
+      dateTo: filters.dateTo
+    });
+
     // Status filter
     if (filters.status !== 'all') {
       filtered = filtered.filter(bet => bet.status === filters.status);
+    }
+
+    // Period filter (only apply if no custom date range is set)
+    if (filters.period !== 'all' && !filters.dateFrom && !filters.dateTo && virtualTime) {
+      const periodDays = parseInt(filters.period);
+      const cutoffDate = new Date(virtualTime.getTime() - periodDays * 24 * 60 * 60 * 1000);
+      console.log('📅 Filtro de período:', {
+        periodDays,
+        cutoffDate: cutoffDate.toISOString(),
+        virtualTime: virtualTime.toISOString()
+      });
+      filtered = filtered.filter(bet => new Date(bet.placedAt) >= cutoffDate);
     }
 
     // User filter
@@ -117,7 +154,24 @@ const AdminBetsHistory = () => {
 
     setFilteredBets(filtered);
     setCurrentPage(1); // Reset to first page when filters change
-  }, [bets, filters]);
+    
+    console.log('✅ Resultado del filtrado:', {
+      betsOriginales: bets.length,
+      betsFiltradas: filtered.length,
+      fechasDeApuestas: filtered.slice(0, 5).map(bet => bet.placedAt)
+    });
+  }, [bets, filters, virtualTime]);
+
+  // Handle period filter changes
+  const handlePeriodChange = (period: '7' | '30' | '90' | 'all') => {
+    setFilters(prev => ({
+      ...prev,
+      period,
+      // Clear custom date range when selecting a predefined period
+      dateFrom: period !== 'all' ? '' : prev.dateFrom,
+      dateTo: period !== 'all' ? '' : prev.dateTo
+    }));
+  };
 
   // Pagination
   const totalPages = Math.ceil(filteredBets.length / itemsPerPage);
@@ -229,12 +283,38 @@ const AdminBetsHistory = () => {
           </h3>
           <div className={styles.filtersToggle}>
             <span className={styles.filtersCount}>
-              {Object.values(filters).filter(value => value && value !== 'all').length} activos
+              {Object.entries(filters).filter(([key, value]) => 
+                value && value !== 'all' && (key !== 'period' || value !== '30')
+              ).length} activos
             </span>
           </div>
         </div>
         
-        <div className={styles.filtersGrid}>
+        <div className={styles.filtersContent}>
+          {/* Period Section */}
+          <div className={styles.periodSection}>
+            <label>Período:</label>
+            <div className={styles.periodButtons}>
+              {[
+                { value: '7', label: '7 días' },
+                { value: '30', label: '30 días' },
+                { value: '90', label: '90 días' },
+                { value: 'all', label: 'Todo' }
+              ].map((period) => (
+                <Button
+                  key={period.value}
+                  variant={filters.period === period.value ? 'primary' : 'secondary'}
+                  size="sm"
+                  onClick={() => handlePeriodChange(period.value as '7' | '30' | '90' | 'all')}
+                  className={filters.period === period.value ? styles.activeButton : ''}
+                >
+                  {period.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          <div className={styles.filtersGrid}>
           <div className={styles.filterGroup}>
             <label className={styles.filterLabel}>
               <span className={styles.labelIcon}>📊</span>
@@ -304,6 +384,7 @@ const AdminBetsHistory = () => {
               <span className={styles.inputIcon}>📆</span>
             </div>
           </div>
+          </div>
         </div>
 
         <div className={styles.filtersActions}>
@@ -314,7 +395,8 @@ const AdminBetsHistory = () => {
                 status: 'all',
                 dateFrom: '',
                 dateTo: '',
-                user: ''
+                user: '',
+                period: '30'
               });
             }}
             className={styles.clearFiltersButton}

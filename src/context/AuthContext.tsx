@@ -10,6 +10,7 @@ interface User {
   balance: number;
   role: 'user' | 'admin';
   avatar?: string;
+  lastUpdated?: string; // For tracking balance updates
 }
 
 // Interfaz para las apuestas del usuario
@@ -51,7 +52,7 @@ interface UserAccount {
 // Interfaz para las transacciones del usuario
 interface UserTransaction {
   id: number;
-  type: 'deposit' | 'withdraw' | 'bet' | 'bet_placed' | 'bet_won' | 'bet_lost' | 'win' | 'refund';
+  type: 'deposit' | 'withdraw' | 'bet' | 'win';
   amount: number;
   date: string;
   description: string;
@@ -410,6 +411,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAdmin: boolean;
   canBet: boolean;
+  balanceUpdateTrigger: number; // For forcing re-renders on balance changes
   isBackendAuthenticated: boolean; // New property to indicate backend auth status
   login: (email: string, password: string, remember?: boolean) => Promise<void>;
   register: (username: string, email: string, password: string, birthdate: string) => Promise<void>;
@@ -466,6 +468,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     totalWinnings: 0,
     favoriteTeam: 'Gryffindor'
   });
+  // Force re-render trigger for balance updates
+  const [balanceUpdateTrigger, setBalanceUpdateTrigger] = useState(0);
   const navigate = useNavigate();
 
   // Función para encontrar una cuenta por email
@@ -868,6 +872,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     if (user) {
       const updatedUser = { ...user, balance: newBalance };
       setUser(updatedUser);
+      
+      // Trigger re-render for balance-dependent components
+      setBalanceUpdateTrigger(prev => prev + 1);
+      
+      // Update current accounts as well
+      setCurrentAccounts(prev => 
+        prev.map(account => 
+          account.user.id === user.id 
+            ? { ...account, user: updatedUser }
+            : account
+        )
+      );
       
       // Update the stored user data
       const storedInLocal = localStorage.getItem('user');
@@ -1315,43 +1331,32 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               status: 'active'
             };
 
-            // Get updated user data from backend to ensure balance is correct
-            try {
-              const userResponse = await apiClient.get('/auth/me');
-              if (userResponse.success && userResponse.data && typeof userResponse.data === 'object') {
-                const userData = userResponse.data as any;
-                const updatedUser = {
-                  ...user,
-                  balance: userData.balance || user.balance
-                };
-                setUser(updatedUser);
-                setCurrentAccounts(prev => 
-                  prev.map(account => 
-                    account.user.id === user.id 
-                      ? { ...account, user: updatedUser }
-                      : account
-                  )
-                );
-              }
-            } catch (error) {
-              console.error('Error fetching updated user data:', error);
-              // Fallback: update balance locally
-              const newBalance = user.balance - betData.amount;
-              updateUserBalance(newBalance);
-            }
+            // Immediately update balance locally for instant UI update
+            const newBalance = user.balance - betData.amount;
+            console.log(`💰 Updating balance immediately: ${user.balance} -> ${newBalance}`);
+            updateUserBalance(newBalance);
+
+            // Force multiple state updates to ensure re-render
+            setUser(prevUser => prevUser ? { ...prevUser, balance: newBalance, lastUpdated: new Date().toISOString() } : null);
+            setBalanceUpdateTrigger(prev => prev + 1);
 
             // Add to local bets for UI
             const updatedBets = [...userBets, newBet];
             saveUserBets(updatedBets);
 
-            // Note: Transaction is already recorded in the backend when the bet is created
-            // Reload transactions from backend to show the new bet transaction
+            // No need to call addTransaction for bets since backend already handles the transaction
+            // and updates the balance automatically when creating the bet
+            
+            // Reload transactions from backend to get the new bet transaction
             try {
               await loadUserTransactionsFromBackend();
             } catch (error) {
               console.error('Error reloading transactions after bet:', error);
             }
-            
+
+            // Note: Removed automatic balance verification since the backend bet creation
+            // already updates the balance correctly, and we trust our local calculation
+
             return true;
           } else {
             throw new Error('Error al crear apuesta en el backend');
@@ -1381,12 +1386,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         const updatedBets = [...userBets, newBet];
         saveUserBets(updatedBets);
 
-        // Registrar la transacción de la apuesta
-        addTransaction({
+        // Para el modo local, crear la transacción manualmente sin usar addTransaction
+        // ya que addTransaction solo soporta 'deposit' y 'withdraw'
+        const newTransaction: UserTransaction = {
           type: 'bet',
           amount: -betData.amount,
-          description: `Apuesta: ${betData.matchName}`
-        });
+          description: `Apuesta: ${betData.matchName}`,
+          id: Date.now(),
+          userId: user.id,
+          date: new Date().toISOString().split('T')[0]
+        };
+        const updatedTransactions = [...userTransactions, newTransaction];
+        saveUserTransactions(updatedTransactions);
 
         return true;
       }
@@ -1427,14 +1438,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
 
     try {
-      // Para apuestas, no necesitamos registrar transacciones manualmente
-      // ya que el backend las maneja automáticamente
-      if (transactionData.type === 'bet' || transactionData.type === 'bet_placed' || 
-          transactionData.type === 'bet_won' || transactionData.type === 'bet_lost') {
-        console.log('Las transacciones de apuestas se manejan automáticamente en el backend');
-        return;
-      }
-
       // Determinar el endpoint según el tipo de transacción
       const endpoint = transactionData.type === 'deposit' ? 
         '/transactions/deposit' : 
@@ -1534,6 +1537,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         isLoading,
         isAdmin: user?.role === 'admin',
         canBet: !!user && user.role !== 'admin',
+        balanceUpdateTrigger,
         isBackendAuthenticated: !!user && !sessionStorage.getItem('auth_fallback') && FEATURES.USE_BACKEND_AUTH,
         login,
         register,
