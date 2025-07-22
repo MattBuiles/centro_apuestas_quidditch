@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { AuthController } from '../controllers/AuthController';
 import { validateRequest } from '../middleware/validation';
 import { authenticate } from '../middleware/auth';
+import { authRateLimit, profileRateLimit, refreshRateLimit } from '../middleware/rateLimiter';
+import { profileCache } from '../middleware/cache';
 import { body } from 'express-validator';
 
 const router = Router();
@@ -30,12 +32,12 @@ const resetPasswordValidation = [
 ];
 
 // Routes
-router.post('/login', loginValidation, validateRequest, authController.login);
-router.post('/register', registerValidation, validateRequest, authController.register);
-router.post('/refresh', authController.refreshToken);
-router.get('/me', authenticate, authController.getProfile);
-router.post('/forgot-password', forgotPasswordValidation, validateRequest, authController.forgotPassword);
-router.post('/check-email', forgotPasswordValidation, validateRequest, authController.checkEmailExists);
-router.post('/reset-password', resetPasswordValidation, validateRequest, authController.resetPassword);
+router.post('/login', authRateLimit, loginValidation, validateRequest, authController.login);
+router.post('/register', authRateLimit, registerValidation, validateRequest, authController.register);
+router.post('/refresh', refreshRateLimit, authController.refreshToken);
+router.get('/me', profileRateLimit, authenticate, profileCache, authController.getProfile);
+router.post('/forgot-password', authRateLimit, forgotPasswordValidation, validateRequest, authController.forgotPassword);
+router.post('/check-email', authRateLimit, forgotPasswordValidation, validateRequest, authController.checkEmailExists);
+router.post('/reset-password', authRateLimit, resetPasswordValidation, validateRequest, authController.resetPassword);
 
 export default router;
