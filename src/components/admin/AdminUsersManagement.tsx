@@ -538,7 +538,7 @@ const AdminUsersManagement = () => {
                   <td className={`${styles.successText} ${styles.balanceCell}`}>{formatCurrency(user.totalWinnings)}</td>
                   <td className={styles.predictionsCell}>
                     {(user.totalPredictions || 0) > 0 
-                      ? `${user.correctPredictions || 0}/${user.totalPredictions || 0} (${(((user.correctPredictions || 0) / (user.totalPredictions || 1)) * 100).toFixed(1)}%)`
+                      ? `${user.correctPredictions || 0}/${user.totalPredictions || 0}`
                       : 'N/A'
                     }
                   </td>
