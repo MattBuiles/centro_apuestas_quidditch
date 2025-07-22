@@ -33,7 +33,7 @@
 ## 👥 Equipo de Desarrollo
 
 - **Mateo Builes Duque** (GitHub: @MattBuiles)
-- **Samuel Castaño Mira**
+- **Samuel Castaño Mira** (GitHub: @SamuCasta)
 
 ## 🚀 Instrucciones de Instalación y Ejecución
 
@@ -264,7 +264,6 @@ centro_apuestas_quidditch/
   - Resultado exacto
   - Captura de la Snitch
   - Duración del partido
-  - Primer equipo en anotar
 - **Apuestas Combinadas**: Múltiples selecciones en un solo boleto
 - **Cuotas Dinámicas**: Cálculo automático basado en probabilidades
 - **Límites de Apuesta**: Control de riesgo y juego responsable
@@ -325,21 +324,6 @@ centro_apuestas_quidditch/
 - **Jest**: Framework de testing configurado para el backend
 - **Archivos de Validación**: Scripts personalizados para validar el sistema
 - **Health Checks**: Endpoints de verificación de estado
-
-### 📋 Scripts de Validación Disponibles
-```bash
-# Validar sistema completo
-node validate-system.js
-
-# Validar inicialización
-node src/services/testInicializacion.ts
-
-# Validar funcionalidades finales
-node src/services/testFinal.ts
-
-# Validación completa
-node src/services/validacionCompleta.ts
-```
 
 ### 🛠️ Debug y Desarrollo
 - **Logging**: Sistema de logs con Morgan en desarrollo
@@ -482,7 +466,6 @@ WS_PORT=3002
 ### 🎯 Características del Sistema
 
 #### � Sistema de Tiempo de Liga
-- **Tiempo Acelerado**: 1 hora real = 1 día de liga
 - **Control Administrativo**: Los admins pueden pausar/acelerar el tiempo
 - **Sincronización**: Tiempo consistente entre todos los clientes
 - **Eventos Programados**: Partidos y resoluciones automáticas
@@ -598,8 +581,8 @@ Este proyecto fue desarrollado como parte del curso de **Desarrollo Web Full-Sta
 - **Branch de Desarrollo**: `backend-integration`
 
 ### 📞 Contacto del Equipo
-- **Mateo Builes Duque**: Desarrollo Full-Stack, Arquitectura del Sistema
-- **Samuel Castaño Mira**: Desarrollo Frontend, UI/UX Design
+- **Mateo Builes Duque**: The nightmare
+- **Samuel Castaño Mira**: The crack
 
 ### 📝 Licencia
 Este proyecto es con fines educativos y no tiene fines comerciales. Desarrollado como parte del curso de Desarrollo Web en 2024-2025.
