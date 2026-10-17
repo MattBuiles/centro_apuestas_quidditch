@@ -89,7 +89,8 @@ app.use(helmet({
 
 app.use(cors({
   origin: [
-    process.env.FRONTEND_URL || 'http://localhost:5173',
+    // FRONTEND_URL accepts several origins separated by commas
+    ...(process.env.FRONTEND_URL || 'http://localhost:5173').split(',').map((url) => url.trim()),
     'http://localhost:5174',
     'http://localhost:5175'
   ],
@@ -224,10 +225,9 @@ async function startServer() {
       });
     });
 
-    // Initialize WebSocket server with error handling
-    const wsPort = parseInt(process.env.WS_PORT || '3002');
-    const wss = new WebSocketServer({ 
-      port: wsPort,
+    // WebSocket server sharing the HTTP port (hosts like Render expose a single port)
+    const wss = new WebSocketServer({
+      server,
       perMessageDeflate: false,
       maxPayload: 1024 * 1024 // 1MB limit
     });
@@ -238,7 +238,7 @@ async function startServer() {
     const matchSimulationService = new MatchSimulationService();
     matchSimulationService.setWebSocketService(wsService);
     
-    logger.info(`🔌 WebSocket server running on port ${wsPort}`, { wsPort });
+    logger.info(`🔌 WebSocket server attached to HTTP port ${PORT}`, { port: PORT });
 
     // Start system monitoring
     systemMonitor.start(60000); // Monitor every minute
