@@ -417,7 +417,7 @@ export class VirtualTimeService {
       awayScore,
       duration,
       snitchCaught,
-      snitchCaughtBy: snitchCaughtBy || null,
+      snitchCaughtBy: snitchCaughtBy || undefined,
       events,
       weather: randomWeather,
       attendance: Math.floor(Math.random() * 50000) + 10000

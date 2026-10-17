@@ -273,4 +273,28 @@ export class BetsRepository {
     `;
     return await this.connection.all(sql);
   }
+
+  public async getUserDailyBetsCount(userId: string, virtualDate: string): Promise<number> {
+    // Extract just the date part (YYYY-MM-DD) from the virtual date
+    const dateOnly = virtualDate.split('T')[0];
+    
+    console.log('🔍 Getting daily bets count for user:', userId, 'date:', dateOnly);
+    
+    const sql = `
+      SELECT COUNT(*) as count
+      FROM bets 
+      WHERE user_id = ? 
+      AND DATE(placed_at) = ?
+    `;
+    
+    console.log('📝 SQL Query:', sql, 'with params:', [userId, dateOnly]);
+    
+    const result = await this.connection.get(sql, [userId, dateOnly]) as any;
+    console.log('🎯 Query result:', result);
+    
+    const count = result?.count || 0;
+    console.log('📈 Final count:', count);
+    
+    return count;
+  }
 }

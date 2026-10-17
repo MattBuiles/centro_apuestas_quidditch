@@ -47,7 +47,11 @@ interface BackendMatch {
 
 const BettingPage: React.FC = () => {
   const { matchId: paramMatchId } = useParams<{ matchId?: string }>();
-  const { user, canBet, placeBet, getTodayBetsCount, canPlaceBet } = useAuth(); // Get user for balance and betting permissions
+  const { user, canBet, placeBet, getTodayBetsCount, canPlaceBet, refreshDailyBetsCount } = useAuth(); // Get user for balance and betting permissions
+  
+  // Debug: Check if backend is enabled
+  console.log('🔧 Backend bets enabled:', import.meta.env.VITE_USE_BACKEND === 'true');
+  console.log('🔧 Current daily bets count:', getTodayBetsCount());
   
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedMatch, setSelectedMatch] = useState<string | undefined>(paramMatchId || '');
@@ -206,6 +210,11 @@ const BettingPage: React.FC = () => {
         const success = await placeBet(betData);
         
         if (success) {
+          // Refrescar el conteo diario inmediatamente después de una apuesta exitosa
+          console.log('🎯 Bet successful, refreshing daily count...');
+          await refreshDailyBetsCount();
+          console.log('✅ Daily count refreshed, new count:', getTodayBetsCount());
+          
           alert(`¡Apuesta realizada con éxito! ✨\n\nDetalles:\n- Apuestas: ${selectedBets.length}\n- Monto: ${betAmount} G\n- Cuota combinada: ${calculateCombinedOdds().toFixed(2)}\n- Ganancia potencial: ${calculatePotentialWin().toFixed(2)} G\n\nEl monto ha sido descontado de tu saldo.`);
           
           // Reset form
@@ -262,6 +271,26 @@ const BettingPage: React.FC = () => {
                 {getTodayBetsCount()}/3
                 {getTodayBetsCount() >= 3 && <span className={styles.limitReached}> (Límite alcanzado)</span>}
               </span>
+              {/* Botón temporal de debug */}
+              <button 
+                onClick={async () => {
+                  console.log('🔄 Manual refresh triggered');
+                  await refreshDailyBetsCount();
+                  console.log('✅ Manual refresh completed, new count:', getTodayBetsCount());
+                }}
+                style={{ 
+                  marginLeft: '10px', 
+                  padding: '4px 8px', 
+                  fontSize: '12px',
+                  background: '#6a5acd',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                🔄
+              </button>
             </div>
             {getTodayBetsCount() >= 3 && (
               <div className={styles.limitWarning}>

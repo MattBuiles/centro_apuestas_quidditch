@@ -105,17 +105,6 @@ export class MatchSimulationService {
       let awayScore = 0;
       let currentMinute = 0;
 
-      // Array to collect events for finishMatch
-      const eventsForFinish: Array<{
-        id: string;
-        minute: number;
-        type: string;
-        team: string;
-        player?: string;
-        description: string;
-        points: number;
-      }> = [];
-
       // Simular eventos paso a paso
       for (const event of events) {
         // Esperar tiempo realista entre eventos (2-8 segundos)
@@ -140,17 +129,17 @@ export class MatchSimulationService {
           }
         }
 
-        // Prepare event for finishMatch instead of saving individually during live simulation
-        const eventForFinish = {
+        // Guardar evento en base de datos
+        await this.db.createMatchEvent({
           id: `event_${matchId}_${Date.now()}_${Math.random()}`,
+          matchId,
           minute: event.minute,
           type: event.type,
           team: event.team,
           player: event.player,
           description: event.description,
           points: event.points
-        };
-        eventsForFinish.push(eventForFinish);
+        });
 
         // Actualizar scores en tiempo real
         await this.db.updateMatchScore(matchId, homeScore, awayScore);
@@ -169,27 +158,23 @@ export class MatchSimulationService {
           }
         });
 
-        // Si se captura la snitch, el partido termina DESPUÉS de agregar el evento
+        // Si se captura la snitch, el partido termina
         if (event.type === 'snitch') {
           break;
         }
       }
 
-      // Finalizar partido - usar el método centralizado de Database con eventos
-      // Find the snitch catch event to get the correct snitchCaughtBy
-      const snitchEvent = eventsForFinish.find(event => event.type === 'snitch');
-      const snitchCaught = !!snitchEvent;
-      const snitchCaughtBy = snitchEvent ? snitchEvent.team : '';
-      
+      // Finalizar partido - usar el método centralizado de Database
+      const snitchCaught = homeScore > awayScore + 140 || awayScore > homeScore + 140;
       const matchResult = {
         homeScore,
         awayScore,
         status: 'finished' as const,
         finishedAt: new Date().toISOString(),
         snitchCaught,
-        snitchCaughtBy,
+        snitchCaughtBy: snitchCaught ? (homeScore > awayScore + 140 ? 'home' : 'away') : '',
         duration: currentMinute,
-        events: eventsForFinish // Pass collected events to finishMatch
+        events: [] // Los eventos ya se guardaron durante la simulación
       };
       await this.db.finishMatch(matchId, matchResult);
 
@@ -229,17 +214,6 @@ export class MatchSimulationService {
       let snitchCaught = false;
       let snitchCaughtBy: string | null = null;
 
-      // Prepare array to collect events for finishMatch
-      const eventsForFinish: Array<{
-        id: string;
-        minute: number;
-        type: string;
-        team: string;
-        player?: string;
-        description: string;
-        points: number;
-      }> = [];
-
       // Procesar todos los eventos instantáneamente
       for (const event of events) {
         duration = Math.max(duration, event.minute);
@@ -260,34 +234,31 @@ export class MatchSimulationService {
           } else {
             awayScore += 150;
           }
+          // El partido termina cuando se captura la snitch
+          break;
         }
 
-        // Prepare event for finishMatch instead of saving individually
-        const eventForFinish = {
+        // Guardar evento en base de datos
+        await this.db.createMatchEvent({
           id: `event_${matchId}_${Date.now()}_${Math.random()}`,
+          matchId,
           minute: event.minute,
           type: event.type,
           team: event.team,
           player: event.player,
           description: event.description,
           points: event.points
-        };
-        eventsForFinish.push(eventForFinish);
-
-        // El partido termina cuando se captura la snitch DESPUÉS de guardar el evento
-        if (event.type === 'snitch') {
-          break;
-        }
+        });
       }
 
-      // Use the centralized finishMatch method with events
+      // Use the centralized finishMatch method
       const matchResult = {
         homeScore,
         awayScore,
         duration,
         snitchCaught,
         snitchCaughtBy: snitchCaughtBy || '',
-        events: eventsForFinish, // Pass events to finishMatch for proper saving
+        events: [], // Events were already saved individually above
         finishedAt: new Date().toISOString()
       };
 

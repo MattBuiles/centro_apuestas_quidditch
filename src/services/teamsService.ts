@@ -448,30 +448,17 @@ export const getMatchChronology = async (matchId: string): Promise<MatchChronolo
     try {
       console.log(`🌐 Fetching match chronology for ${matchId}...`);
       
-      // Obtener detalles del partido, eventos y equipos
-      const [matchResponse, eventsResponse, teamsResponse] = await Promise.all([
+      // Obtener detalles del partido y eventos por separado
+      const [matchResponse, eventsResponse] = await Promise.all([
         apiClient.get(`/matches/${matchId}`),
-        apiClient.get(`/matches/${matchId}/events`),
-        apiClient.get('/teams')
+        apiClient.get(`/matches/${matchId}/events`)
       ]);
       
       if (eventsResponse.success && eventsResponse.data && Array.isArray(eventsResponse.data)) {
         const rawEvents = eventsResponse.data;
         const matchData = matchResponse.success ? matchResponse.data : null;
-        const teamsData = teamsResponse.success && teamsResponse.data ? teamsResponse.data : [];
         
         console.log('✅ Raw events from database:', rawEvents);
-        console.log('✅ Teams data:', teamsData);
-        
-        // Crear un mapa de ID de equipo a nombre de equipo
-        const teamNameMap: Record<string, string> = {};
-        if (Array.isArray(teamsData)) {
-          teamsData.forEach((team: any) => {
-            teamNameMap[team.id] = team.name;
-          });
-        }
-        
-        console.log('✅ Team name mapping:', teamNameMap);
         
         // Transformar eventos de la base de datos al formato esperado
         const transformedEvents: MatchEvent[] = rawEvents.map((event: any, index: number) => ({
@@ -481,7 +468,7 @@ export const getMatchChronology = async (matchId: string): Promise<MatchChronolo
           timestamp: (event.minute || 0) * 60,
           type: event.type || 'QUAFFLE_GOAL',
           teamId: event.team || 'unknown',
-          teamName: teamNameMap[event.team] || event.team || 'Equipo Desconocido',
+          teamName: event.team || 'Equipo Desconocido',
           playerId: event.player || undefined,
           playerName: event.player || undefined,
           description: event.description || 'Evento sin descripción',
