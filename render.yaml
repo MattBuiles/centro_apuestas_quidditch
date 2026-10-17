@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: quidditch-betting-api
+    runtime: node
+    plan: free
+    rootDir: backend
+    # devDependencies incluidas: el build usa tsc
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      # Origen(es) del frontend, separados por comas (p. ej. https://centro-apuestas-quidditch.vercel.app)
+      - key: FRONTEND_URL
+        sync: false

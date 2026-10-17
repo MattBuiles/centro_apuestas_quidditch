@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Base de datos local: contiene usuarios reales; en despliegue se siembra al arrancar
+backend/database/*.db
+backend/database/*.db-*
